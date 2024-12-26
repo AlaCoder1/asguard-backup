@@ -1,19 +1,19 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-# Create your models here.
 
 class Identities(models.Model):
     ref_identitie = models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
     attribute_identitie = models.CharField(max_length=500, null=True, blank=True)
     type = models.CharField(max_length=200)
-    hostname = models.CharField(max_length=200,null=True, blank=True)
-    description = models.CharField(max_length=800,null=True,blank=True)
+    hostname = models.CharField(max_length=200, null=True, blank=True)
+    description = models.CharField(max_length=800, null=True, blank=True)
     is_admin = models.BooleanField(default=False)
     date_creation = models.DateTimeField()
     date_expiration = models.DateTimeField(null=True, blank=True)
     token = models.CharField(max_length=1000, null=True, blank=True)
-    os=models.CharField(max_length=50,null=True, blank=True)
+    os=models.CharField(max_length=50, null=True, blank=True)
     class Meta:
         db_table = 'identities'
     def __str__(self):
@@ -29,13 +29,13 @@ class Enrollements(models.Model):
 
 class InterceptConfigs(models.Model):
     ref_intercept=models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
     protocol = models.CharField(max_length=10)
     address = models.CharField(max_length=100)
     low = models.IntegerField()
     high = models.IntegerField()
     date_creation = models.DateTimeField()
-    description = models.CharField(max_length=800,null=True,blank=True)
+    description = models.CharField(max_length=800, null=True, blank=True)
     class Meta:
         db_table = 'interceptconfigs'
     def __str__(self):
@@ -43,12 +43,12 @@ class InterceptConfigs(models.Model):
     
 class HostConfigs(models.Model):
     ref_host=models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
     protocol = models.CharField(max_length=10)
     address = models.CharField(max_length=100)
     port = models.IntegerField()
     date_creation = models.DateTimeField()
-    description = models.CharField(max_length=800,null=True,blank=True)
+    description = models.CharField(max_length=800, null=True, blank=True)
     class Meta:
         db_table = 'hostconfigs'
     def __str__(self):
@@ -56,9 +56,9 @@ class HostConfigs(models.Model):
     
 class Services(models.Model):
     ref_service = models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
     attribute_service = models.CharField(max_length=500, null=True, blank=True)
-    description = models.CharField(max_length=800,null=True,blank=True)
+    description = models.CharField(max_length=800, null=True, blank=True)
     encryption = models.BooleanField(default=False)
     intercept = models.ForeignKey(InterceptConfigs, on_delete=models.CASCADE)
     host = models.ForeignKey(HostConfigs, on_delete=models.CASCADE)
@@ -68,7 +68,7 @@ class Services(models.Model):
 
 class Relays(models.Model):
     ref_relay=models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
     attribute_relay = models.CharField(max_length=500, null=True, blank=True)
     tunneler = models.BooleanField(default=False)
     traversal = models.BooleanField(default=False)
@@ -76,7 +76,7 @@ class Relays(models.Model):
     verified = models.BooleanField(default=False)
     token = models.CharField(max_length=1000, unique=True, null=True, blank=True)
     date_creation = models.DateTimeField()
-    description = models.CharField(max_length=800,null=True,blank=True)
+    description = models.CharField(max_length=800, null=True, blank=True)
     class Meta:
         db_table = 'relays'
     def __str__(self):
@@ -84,9 +84,9 @@ class Relays(models.Model):
     
 class RelaysPolicy(models.Model):
     ref_relay_policy = models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
     semantique = models.CharField(max_length=10, blank=False)
-    description = models.CharField(max_length=800,null=True,blank=True)
+    description = models.CharField(max_length=800, null=True, blank=True)
     relay = models.ForeignKey(Relays, on_delete=models.CASCADE)
     identity = models.ForeignKey(Identities, on_delete=models.CASCADE)
     identity_attribute=models.CharField(max_length=500, null=True, blank=True)
@@ -98,10 +98,10 @@ class RelaysPolicy(models.Model):
 
 class ServicesPolicy(models.Model):
     ref_service_policy = models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
     semantique = models.CharField(max_length=10, blank=False)
     type = models.CharField(max_length=10, blank=False)
-    description = models.CharField(max_length=800,null=True,blank=True)
+    description = models.CharField(max_length=800, null=True, blank=True)
     service_attribute = models.CharField(max_length=100, blank=False)
     identity_attribute = models.CharField(max_length=100, blank=False)
     service = models.ForeignKey(Services, on_delete=models.CASCADE)
@@ -112,9 +112,9 @@ class ServicesPolicy(models.Model):
 
 class ServicesRelaysPolicy(models.Model):
     ref_service_relay_policy = models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
     semantique = models.CharField(max_length=10, blank=False)
-    description = models.CharField(max_length=800,null=True,blank=True)
+    description = models.CharField(max_length=800, null=True, blank=True)
     service_attribute = models.CharField(max_length=100, blank=False)
     relay_attribute = models.CharField(max_length=100, blank=False)
     service = models.ForeignKey(Services, on_delete=models.CASCADE)

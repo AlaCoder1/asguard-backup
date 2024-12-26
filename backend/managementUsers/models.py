@@ -1,10 +1,9 @@
-from django.utils import timezone
 from django.db import models
-from backend.managementGroup.models import *
-from backend.subscription.models import *
+from backend.managementGroup.models import Group
+from backend.subscription.models import Organization
 from backend.LdapServer.models import ADServer
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager)
-# Create your models here.
+from django.utils.translation import gettext_lazy as _
 
 
 class Permission(models.Model):
@@ -18,7 +17,7 @@ class Permission(models.Model):
         return self.name
     
 class Roles(models.Model):
-    name = models.CharField(max_length=200, null=True, unique=True)
+    name = models.CharField(max_length=200, null=True, unique=True, verbose_name=_("name"))
     fonctionalities = models.CharField(max_length=200, null=True)
 
     class Meta:
@@ -26,9 +25,6 @@ class Roles(models.Model):
 
     def __str__(self):
         return self.name
-
-##
-# Create your models here
 
 
 class MyUserManager(BaseUserManager):
@@ -63,7 +59,7 @@ class MyUserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
-    username = models.CharField(max_length=200, null=True, unique=True)
+    username = models.CharField(max_length=200, null=True, unique=True, verbose_name=_("username"))
     password = models.CharField(max_length=800, null=True)
     email = models.CharField(max_length=800, null=True, unique=True)
     fullname = models.CharField(max_length=800, null=True)
@@ -89,17 +85,15 @@ class User(AbstractBaseUser):
     class Meta:
         db_table = 'user'
 
-    # def __str__(self):
-    #     return self.username
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    phone_number = models.CharField(max_length=20, blank=False,null=True)
-    region = models.CharField(max_length=100, blank=False,null=True)
-    code_postal = models.CharField(max_length=20, blank=True,null=True)
-    address = models.TextField(blank=False,null=True)
-    country = models.CharField(max_length=100, blank=False,null=True)
-    photo_url = models.CharField(blank=True,null=True,default='/media/profile/profile.jpg',max_length=1000)
+    phone_number = models.CharField(max_length=20, blank=False, null=True)
+    region = models.CharField(max_length=100, blank=False, null=True)
+    code_postal = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=False, null=True)
+    country = models.CharField(max_length=100, blank=False, null=True)
+    photo_url = models.CharField(blank=True, null=True, default='/media/profile/profile.jpg',max_length=1000)
     is_enable_2FA = models.BooleanField(default=False)
     language = models.CharField(max_length=100, default='en', null=True, blank=True)
 

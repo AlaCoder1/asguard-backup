@@ -15,6 +15,7 @@ from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
 from backend.sdwan.utils import routing_table_id
 from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
 from utils.errors_utils import CommandExecutionError
+from utils.utils_functions import fix_ipv4_address
 
 
 # Constants
@@ -180,6 +181,9 @@ def create_sdwan_rule(request):
     """Creating a new SDWAN rule and adding it to the database"""
     try:
         data = request.data
+        # Apply correction for ipv4 addresses
+        data["source_address"] = fix_ipv4_address(data["source_address"])
+
         data["table_id"] = routing_table_id()
         if data["algorythme_type"] == "failover":
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
@@ -243,6 +247,9 @@ def update_sdwan_rule(request, id):
     """Updating a new SDWAN rule"""
     try:
         data = request.data
+        # Apply correction for ipv4 addresses
+        data["source_address"] = fix_ipv4_address(data["source_address"])
+        
         if data["algorythme_type"] == "failover":
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
         sdwan_rule = SdwanRules.objects.get(id=id)

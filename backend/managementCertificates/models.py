@@ -1,10 +1,11 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
 
 class CertificateAuthority(models.Model):
     """Model of activated authority certificates"""
-    name = models.CharField(max_length=300, unique=True, default=None, blank=True, null=True)
+    name = models.CharField(max_length=300, unique=True, default=None, blank=True, null=True, verbose_name=_("name"))
     method_name = models.CharField(max_length=300, default='create')
     valid_from = models.DateTimeField(default=None, blank=True, null=True)
     valid_until = models.DateTimeField(default=None, blank=True, null=True)

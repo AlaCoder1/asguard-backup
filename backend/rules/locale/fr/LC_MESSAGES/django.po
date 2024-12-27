@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-16 13:10+0000\n"
+"POT-Creation-Date: 2024-12-25 20:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -53,3 +53,7 @@ msgstr "existe déjà"
 #: backend/rules/functions.py:18
 msgid "does not exist"
 msgstr "n'existe pas"
+
+#: backend/rules/models.py:12
+msgid "rule description"
+msgstr "description de la Règle"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-06 19:01+0000\n"
+"POT-Creation-Date: 2024-12-25 20:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,6 +33,10 @@ msgstr "Informations d'identification du serveur invalides"
 #: backend/LdapServer/list_Remote_servers.py:13 backend/LdapServer/views.py:25
 msgid "Please provide a valid Search Base"
 msgstr "Veuillez fournir une base de recherche valide"
+
+#: backend/LdapServer/models.py:9
+msgid "server name"
+msgstr "nom du serveur"
 
 #: backend/LdapServer/views.py:24
 msgid "Authentication failed"

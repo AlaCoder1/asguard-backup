@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 13:48+0100\n"
+"POT-Creation-Date: 2024-12-25 20:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,27 +26,27 @@ msgstr "Configuration VxLAN"
 msgid "Saved"
 msgstr "Sauvegardé"
 
-#: backend/vxlan/models.py:6
+#: backend/vxlan/models.py:8
 msgid "interface Name"
 msgstr "nom d'interface "
 
-#: backend/vxlan/models.py:7
+#: backend/vxlan/models.py:9
 msgid "vxlan id"
 msgstr "vxlan id"
 
-#: backend/vxlan/models.py:8
+#: backend/vxlan/models.py:10
 msgid "source address"
 msgstr "adresse source"
 
-#: backend/vxlan/models.py:9
+#: backend/vxlan/models.py:11
 msgid "destination address"
 msgstr "adresse destination"
 
-#: backend/vxlan/models.py:10
+#: backend/vxlan/models.py:12
 msgid "port"
 msgstr "port"
 
-#: backend/vxlan/models.py:11
+#: backend/vxlan/models.py:13
 msgid "connection name"
 msgstr "nom de la connection"
 

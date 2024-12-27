@@ -1,9 +1,9 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-# Create your models here.
 
 class Timezone(models.Model):
-    name = models.CharField(max_length=800, null=True,unique=True)
+    name = models.CharField(max_length=800, null=True, unique=True, verbose_name=_("name"))
 
     class Meta:
         db_table = 'timezone'
@@ -31,7 +31,7 @@ class Network(models.Model):
         
 class ServerReseau(models.Model):
     circular_logs = models.BooleanField(default=False, null=True)
-    size_log_files = models.CharField(max_length=800,null=True)
+    size_log_files = models.CharField(max_length=800, null=True)
     log_firewall_default_blocks = models.CharField(max_length=800, null=True)
     exclude_interfaces = models.CharField(max_length=800, null=True)
     xxx = models.BooleanField(default=False, null=True)

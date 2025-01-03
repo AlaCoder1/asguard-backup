@@ -22,7 +22,7 @@
                     v-model="state.formData.urlList"
                     :items="state.formData.secondAclList"
                     :no-data-text="$t('squid.pleaseType')"
-                    :label="$t('squid.selectItem')"
+                    :label="`${$t('squid.selectItem')} *`"
                     chips
                     closable-chips
                     item-title="url"
@@ -69,6 +69,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"

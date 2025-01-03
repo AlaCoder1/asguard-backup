@@ -17,7 +17,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    :label="$t('nat.interface')"
+                    :label="`${$t('nat.interface')} *`"
                     :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
@@ -32,7 +32,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    :label="$t('nat.ent_saddr')"
+                    :label="`${$t('nat.ent_saddr')} *`"
                     v-model="state.sourceAddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
@@ -44,8 +44,8 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    :label="$t('nat.prefix')"
                     v-model="state.sourcePrefix"
+                    :label="`${$t('nat.prefix')} *`"
                     :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
                   ></v-select>
@@ -56,7 +56,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    :label="$t('nat.ent_tran_add')"
+                    :label="`${$t('nat.ent_tran_add')} *`"
                     v-model="state.translationAddress"
                   ></v-text-field>
                   <p
@@ -71,7 +71,7 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    :label="$t('nat.prefix')"
+                    :label="`${$t('nat.prefix')} *`"
                     v-model="state.translationPrefix"
                     :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
@@ -126,6 +126,13 @@
           </v-card-text>
 
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"
@@ -204,7 +211,7 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const { isOpen, editRow, modalMode } = toRefs(props);
-    const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
+    const numberList = ref(Array.from({ length: 33 }, (_, i) => i));
 
     const state = reactive({
       //list

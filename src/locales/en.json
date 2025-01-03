@@ -61,6 +61,7 @@
   },
 
   "errors": {
+    "oblig":"Fields required",
     "format_address": "Format must be like : example.com",
     "errorServer": "Internal Server Error. Please try again later",
     "valueRequired": "Value is required",

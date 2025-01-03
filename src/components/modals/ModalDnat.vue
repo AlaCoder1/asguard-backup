@@ -17,7 +17,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    :label="$t('nat.interface')"
+                    :label="`${$t('nat.interface')} *`"
                     :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
@@ -136,7 +136,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('nat.ent_ext_add')"
+                    :label="`${$t('nat.ent_ext_add')} *`"
                     v-model="state.externalAddress"
                   ></v-text-field>
                   <p
@@ -149,7 +149,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('nat.ent_int_add')"
+                    :label="`${$t('nat.ent_int_add')} *`"
                     v-model="state.internalAddress"
                   ></v-text-field>
                   <p
@@ -175,7 +175,7 @@
                   </v-col>
                   <v-col cols="3" class="mb-n6">
                     <v-select
-                      :label="$t('nat.from')"
+                      :label="`${$t('nat.from')} *`"
                       :no-data-text="$t('nat.msg_no_data')"
                       v-model="state.destinationRangeFrom"
                       :items="state.listPort"
@@ -185,7 +185,7 @@
                     ></v-select>
                     <v-text-field
                       v-if="state.destinationRangeFrom.slug === 'other'"
-                      :label="$t('nat.from')"
+                      :label="`${$t('nat.from')} *`"
                       v-model="state.specificDestinationFrom"
                     ></v-text-field>
                     <p
@@ -204,7 +204,7 @@
                   </v-col>
                   <v-col cols="3" class="mb-n6">
                     <v-select
-                      :label="$t('nat.to')"
+                      :label="`${$t('nat.to')} *`"
                       v-model="state.destinationRangeTo"
                       :items="state.listPortDestinationTo"
                       :no-data-text="$t('nat.msg_no_data')"
@@ -214,7 +214,7 @@
                     ></v-select>
                     <v-text-field
                       v-if="state.destinationRangeTo.slug === 'other'"
-                      :label="$t('nat.to')"
+                      :label="`${$t('nat.to')} *`"
                       v-model="state.specificDestinationTo"
                     ></v-text-field>
                     <p
@@ -245,7 +245,7 @@
 
                   <v-col cols="12" class="mb-n6">
                     <v-select
-                      :label="$t('nat.port')"
+                      :label="`${$t('nat.port')} *`"
                       v-model.number="state.port"
                       :no-data-text="$t('nat.msg_no_data')"
                       :items="state.listPort"
@@ -256,7 +256,7 @@
 
                     <v-text-field
                       v-if="state.port.slug === 'other'"
-                      :label="$t('nat.port')"
+                      :label="`${$t('nat.port')} *`"
                       v-model="state.specificPort"
                     ></v-text-field>
                     <p
@@ -283,6 +283,13 @@
           </v-card-text>
 
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"
@@ -362,7 +369,7 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const { isOpen, editRow, modalMode } = toRefs(props);
-    const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
+    const numberList = ref(Array.from({ length: 33 }, (_, i) => i));
 
     const state = reactive({
       id: null,

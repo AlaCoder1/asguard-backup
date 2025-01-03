@@ -1,4 +1,4 @@
 
-const netmasks = Array.from({ length: 32 }, (_, i) => i + 1);
+const netmasks = Array.from({ length: 33 }, (_, i) => i);
 
 export default netmasks;

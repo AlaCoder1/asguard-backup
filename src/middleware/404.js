@@ -8,17 +8,25 @@ import error from "../views/404.vue";
 import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
+import { get_lang } from '../mixins/storage_language.js';
+
 const app = createApp(error);
 const vuetify = createVuetify({
   components,
   directives,
 });
-const i18n = new createI18n({
-  locale: "en",
-  messages: {
-    en: enJson,
-    fr: frJson,
-  },
-});
 
-app.use(store).use(vuetify).use(i18n).mount("#app");
+(async () => {
+  const locale = await get_lang();
+
+  const i18n = new createI18n({
+    legacy: false,
+    locale,
+    messages: {
+      en: enJson,
+      fr: frJson,
+    },
+  });
+
+  app.use(store).use(i18n).use(vuetify).mount('#app');
+})();

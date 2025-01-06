@@ -1,7 +1,7 @@
 import { createApp } from "vue";
-import vuetify from "@/plugins/vuetify";
 import store from "../store/index.js";
 import "vuetify/styles";
+import vuetify from "@/plugins/vuetify";
 import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
@@ -11,24 +11,41 @@ import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
 
+import axios from "axios";
+import { getCookie } from "@/mixins/csrftoken.js";
+
+const csrfToken = getCookie("csrftoken");
+axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 const app = createApp(login);
 const vuetifyComponents = createVuetify({
   components,
   directives,
 });
 
-let lang = localStorage.getItem("lang");
-if (lang) {
-  var langLocle = JSON.parse(lang);
+async function get_lang() {
+  let lang = null;
+  try {
+    let res = await axios.get(`/settings/getLanguage`);
+    lang = res.data.language;
+    return lang;
+  } catch (error) {
+    console.error(error);
+  }
 }
-const i18n = new createI18n({
-  legacy: false,
-  locale: langLocle ? langLocle[0].lang.toLowerCase() : "en",
-  // locale: "en",
-  messages: {
-    en: enJson,
-    fr: frJson,
-  },
-});
+get_lang();
 
-app.use(store).use(vuetifyComponents).use(vuetify).use(i18n).mount("#app");
+(async () => {
+  const locale = await get_lang();
+  console.log('****************',locale)
+
+  const i18n = new createI18n({
+    legacy: false,
+    locale,
+    messages: {
+      en: enJson,
+      fr: frJson,
+    },
+  });
+
+  app.use(store).use(i18n).use(vuetifyComponents).use(vuetify).mount("#app");
+})();

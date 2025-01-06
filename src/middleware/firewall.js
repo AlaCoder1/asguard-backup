@@ -10,15 +10,12 @@ import { startTimer } from "../mixins/timer_token.js";
 import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
+import { get_lang } from '../mixins/storage_language.js';
 
 const app = createApp(firewall);
 
 const emitter = mitt();
 app.provide("emitter", emitter);
-let lang = localStorage.getItem("lang");
-if (lang) {
-  var langLocle = JSON.parse(lang);
-}
 
 const vuetify = createVuetify({
   components,
@@ -29,15 +26,21 @@ const currentPath = window.location.pathname;
 function hrefPath() {
   localStorage.setItem("href-path", currentPath);
 }
-const i18n = new createI18n({
-  legacy: false,
-  locale: langLocle ? langLocle[0].lang.toLowerCase() : "en",
-  messages: {
-    en: enJson,
-    fr: frJson,
-  },
-});
+
 hrefPath();
 startTimer();
 
-app.use(store).use(vuetify).use(i18n).mount("#app");
+(async () => {
+  const locale = await get_lang();
+
+  const i18n = new createI18n({
+    legacy: false,
+    locale,
+    messages: {
+      en: enJson,
+      fr: frJson,
+    },
+  });
+
+  app.use(store).use(i18n).use(vuetify).mount('#app');
+})();

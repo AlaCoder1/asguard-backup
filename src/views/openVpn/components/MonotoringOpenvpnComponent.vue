@@ -226,7 +226,7 @@ import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
 import { user_privilege } from "@/mixins/user_privilege.js";
 import VButton from "@/components/VButton.vue";
-
+import { get_lang } from "@/mixins/storage_language.js";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
@@ -523,7 +523,10 @@ export default {
     };
 
     onMounted(async () => {
-      state.lang = localStorage.getItem("lang-slug");
+      (async () => {
+        state.lang = await get_lang();
+      })();
+
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);

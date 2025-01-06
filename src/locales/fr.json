@@ -711,7 +711,7 @@
     "ServerName": "Nom du serveur",
     "Type": "Type",
     "HostName": "Nom d'hôte",
-    "IPAddress": "adresse IP",
+    "IPAddress": "adresse IP ou nom de l'hote",
     "SearchBase": "Base de recherche",
     "ServerType": "Type de serveur",
     "UserDN": "Nom distinctif de l'utilisateur",

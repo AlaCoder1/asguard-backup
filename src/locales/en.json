@@ -713,7 +713,7 @@
     "ServerName": "Server Name",
     "Type": "Type",
     "HostName": "Host Name",
-    "IPAddress": "IP address",
+    "IPAddress": "IP address or host name",
     "SearchBase": "Search Base",
     "ServerType": "Server Type",
     "UserDN": "User distinguished name",

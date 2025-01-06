@@ -83,7 +83,7 @@
         </p>
       </v-col>
       <v-col cols="4" v-if="isBridge" align-self="center">
-        <label>E{{$t('openvpn.EndDHCPbridge')}}</label>
+        <label>{{$t('openvpn.EndDHCPbridge')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6" v-if="isBridge">
         <v-text-field

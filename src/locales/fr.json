@@ -580,8 +580,8 @@
   },
 
   "ztna": {
-    "identite": "IDENTITE",
-    "configuration": "CONFIGURATIONS",
+    "identities": "IDENTITES",
+    "configurations": "CONFIGURATIONS",
     "services": "Services",
     "relays": "Relais",
     "terminators": "TERMINATEURS",
@@ -681,7 +681,8 @@
     "servicerouterpolCreated":"Politique de relais de service créée avec succès",
     "servicerouterpolUpdated":"Politique de relais de service mise à jour avec succès",
     "ztnadate":"Date",
-    "ztnatime":"Temps"
+    "ztnatime":"Temps",
+    "namerelay":"Nom du relais doit suivre le format: {nom-service}.relay"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

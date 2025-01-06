@@ -1,19 +1,10 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog
-      v-model="state.isLoadingDialogue"
-      :scrim="false"
-      persistent
-      width="auto"
-    >
+    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear
-            indeterminate
-            color="white"
-            class="mb-0"
-          ></v-progress-linear>
+          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -89,16 +80,18 @@
                   <!-- <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
                   <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact"
-                    item-title="attribute_service" item-value="id" return-object :rules="rules" :items="ServList"
-                    background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
+                    item-title="attribute_service" item-value="id" return-object :rules="rules" :items="ServList.filter((item, index, self) =>
+                      index === self.findIndex((t) => t.attribute_service === item.attribute_service)
+                    )" background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
                   <v-select v-model="identityatt" :label="$t('ztna.identityRoleAttribute')" density="compact"
-                    item-title="attribute_identitie" item-value="id" return-object :rules="rules" :items="identityList"
-                    background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
+                    item-title="attribute_identitie" item-value="id" return-object :rules="rules" :items="identityList.filter((item, index, self) =>
+                      index === self.findIndex((t) => t.attribute_identitie === item.attribute_identitie)
+                    )" background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
@@ -162,12 +155,14 @@ export default {
     const idServ = ref("");
     const serviceRA = ref(null);
     const identityatt = ref(null);
+    const lastname = ref("");
     const Description = ref("");
     const selectedTitle = ref("Dial");
     const selectedsemantic = ref("AllOf");
     const rulesName = [
       (value) => {
-        if (!value) return true;
+        if (!value) return t("ztna.enterValue");
+        if (modalMode.value === "edit" && value === lastname.value) return true;
         if (existingName(value)) return t("ztna.nameExist");
         return ValidName(value) ? true : t("ztna.validName");
       },
@@ -280,7 +275,7 @@ export default {
     })
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("dataHost", data);
+        lastname.value = data.name;
         idServ.value = data.id
         name.value = data.name;
 
@@ -311,93 +306,95 @@ export default {
     };
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(name.value) === true );
-      if (isFieldValid) {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const isFieldValid = rulesName.every(rule => rule(name.value) === true);
+      if (isFieldValid || modalMode.value === "edit"
+      ) {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
 
-      let identityAttribute = `#${identityatt.value.attribute_identitie}`;
-      let serviceAttribute = `#${serviceRA.value.attribute_service}`;
-      let payload = {
-        name: name.value,
-        type: selectedTitle.value,
-        semantic: selectedsemantic.value,
-        identityRoles: [identityAttribute],
-        serviceRoles: [serviceAttribute],
-        Description: Description.value
-      };
+        let identityAttribute = `#${identityatt.value.attribute_identitie}`;
+        let serviceAttribute = `#${serviceRA.value.attribute_service}`;
+        let payload = {
+          name: name.value,
+          type: selectedTitle.value,
+          semantic: selectedsemantic.value,
+          identityRoles: [identityAttribute],
+          serviceRoles: [serviceAttribute],
+          Description: Description.value
+        };
 
-      let token = document.getElementById("app").getAttribute("token");
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      if (modalMode.value === "edit") {
-        axios
-          .put(`/ztna/update_services_policies/${idServ.value}`, payload, {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = t("ztna.servicepolUpdated");
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
-            }
-          });
+        let token = document.getElementById("app").getAttribute("token");
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        if (modalMode.value === "edit") {
+          axios
+            .put(`/ztna/update_services_policies/${idServ.value}`, payload, {
+              headers: {
+                "zt-session": token,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.servicepolUpdated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        } else {
+          axios
+            .post("/ztna/add_services_policies", payload, {
+              headers: {
+                "zt-session": token,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.openModal = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.servicepolCreated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        }
       } else {
-        axios
-          .post("/ztna/add_services_policies", payload, {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            if (response.status == "200") {
-              state.openModal = false;
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = t("ztna.servicepolCreated");
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-      state.isLoadingDialogue = false;
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
-            }
-          });
-      }} else {
-      state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = t("ztna.missingFields");
       }
     };
     const resetForm = () => {

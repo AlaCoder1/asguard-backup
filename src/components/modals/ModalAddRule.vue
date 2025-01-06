@@ -16,7 +16,7 @@
           <v-row>
             <v-col cols="12" class="mb-n6">
               <v-text-field
-                :label="$t('sdwan.ruleName')"
+                :label="`${$t('sdwan.ruleName')} *`"
                 v-model="state.formData.ruleName"
               ></v-text-field>
               <p class="error-feedback mb-5" v-if="v$.formData.ruleName.$error">
@@ -28,7 +28,7 @@
             <template v-if="!state.formData.time">
               <v-col cols="12" class="mb-n6">
                 <v-select
-                  :label="$t('squid.routageType')"
+                  :label="`${$t('squid.routageType')} *`"
                   v-model="state.formData.routageType"
                   item-title="name"
                   item-value="slug"
@@ -47,7 +47,7 @@
             <template v-else>
               <v-col cols="12" class="mb-n6">
                 <v-select
-                  :label="$t('squid.routageType')"
+                  :label="`${$t('squid.routageType')} *`"
                   v-model="state.formData.routageTypeDomain"
                   item-title="name"
                   item-value="slug"
@@ -218,44 +218,59 @@
         </v-row>
       </form>
       <template #footer>
-        <span class="dialog-footer">
-          <v-btn
-            color="indigo-darken-3"
-            :rounded="true"
-            large
-            rounded
-            outlined
-            label-color="#213E9F"
-            variant="flat"
-            @click="closeModal"
-            class="mt-3 btn-add"
-          >
-            <span class="text-white pr-3 pl-3">{{ $t("buttons.close") }}</span>
-          </v-btn>
+        <div class="d-flex justify-content-between">
+          <div class="text-start align-end mt-5">
+            <span class="text-sm">
+              <span class="text-red text-lg">*</span>
+              {{ $t("errors.oblig") }}</span
+            >
+          </div>
+          <v-spacer></v-spacer>
 
-          <v-btn
-            large
-            rounded
-            outlined
-            :disabled="isValidTime"
-            label-color="#213E9F"
-            @click="submitForm"
-            color="indigo-darken-3"
-            :rounded="true"
-            variant="flat"
-            class="mt-3 ml-2 btn-add"
-          >
-            <span
-              class="text-white pr-3 pl-3"
-              v-if="modalModeRule === 'create'"
+          <span class="dialog-footer">
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              variant="flat"
+              @click="closeModal"
+              class="mt-3 btn-add"
             >
-              {{ $t("buttons.create") }}</span
+              <span class="text-white pr-3 pl-3">{{
+                $t("buttons.close")
+              }}</span>
+            </v-btn>
+
+            <v-btn
+              large
+              rounded
+              outlined
+              :disabled="isValidTime"
+              label-color="#213E9F"
+              @click="submitForm"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 ml-2 btn-add"
             >
-            <span class="text-white pr-3 pl-3" v-if="modalModeRule === 'edit'">
-              {{ $t("buttons.update") }}</span
-            >
-          </v-btn>
-        </span>
+              <span
+                class="text-white pr-3 pl-3"
+                v-if="modalModeRule === 'create'"
+              >
+                {{ $t("buttons.create") }}</span
+              >
+              <span
+                class="text-white pr-3 pl-3"
+                v-if="modalModeRule === 'edit'"
+              >
+                {{ $t("buttons.update") }}</span
+              >
+            </v-btn>
+          </span>
+        </div>
       </template>
     </el-dialog>
 
@@ -416,19 +431,23 @@ export default {
               error,
               requiredIf(
                 () =>
-                  modalModeRule.value === "create" &&
-                  state.formData.routageType.slug === "domain"
+                  (modalModeRule.value === "create" ||
+                    modalModeRule.value === "edit") &&
+                  state.formData.routageType.slug === "domain" &&
+                  !state.formData.time
               )
             ),
             isValidName: helpers.withMessage(
               format,
 
-              helpers.regex(/^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/)
+              helpers.regex(
+                /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/
+              )
             ),
-            isNotZero: helpers.withMessage(zeroNumber, (value) => {
-              const numericValue = Number(value);
-              return numericValue !== 0;
-            }),
+            // isNotZero: helpers.withMessage(zeroNumber, (value) => {
+            //   const numericValue = Number(value);
+            //   return numericValue !== 0;
+            // }),
           },
 
           valueIp: {
@@ -452,7 +471,15 @@ export default {
               requiredIf(
                 () =>
                   modalModeRule.value === "create" &&
-                  state.formData.routageTypeDomain.slug === "domain"
+                  state.formData.routageTypeDomain.slug === "domain" &&
+                  state.formData.time
+              )
+            ),
+            isValidName: helpers.withMessage(
+              format,
+
+              helpers.regex(
+                /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/
               )
             ),
           },
@@ -518,12 +545,15 @@ export default {
       state,
       () => {
         if (state.formData.time) {
+          v$.value.$reset();
           state.formData.routageType = "";
           state.formData.status = false;
           state.formData.value = "";
           state.formData.value2 = "";
           state.formData.valueIp = "";
           state.formData.prefix = "";
+        } else {
+          state.formData.valueDomainTime = "";
         }
       },
       { immediate: true }
@@ -613,6 +643,7 @@ export default {
     };
 
     const submitForm = async () => {
+      console.log("state.formData.value2"), state.formData.value2;
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();

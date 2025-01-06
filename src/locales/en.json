@@ -61,13 +61,14 @@
   },
 
   "errors": {
+    "oblig":"Fields required",
     "format_address": "Format must be like : example.com",
     "errorServer": "Internal Server Error. Please try again later",
     "valueRequired": "Value is required",
     "invalidPassword": "There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
     "passwordConfirmation": "Your password does not match",
     "ChampIncludeOnlyNumbers": "Champs can include only Numbers",
-    "ChampNoInclude": "Field cannot contain only numbers or spaces",
+    "ChampNoInclude": "Field cannot contain only numbers or spaces or the word 'test'",
     "formatMustBeLikeAdresseIP": "Format must be like adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format must be like: X.X.X.X/XX",
     "subnetNotAccepted": "Subnet mask 32 is not accepted. Format must be like: X.X.X.X/XX",
@@ -396,7 +397,7 @@
 
   "sdwan": {
     "listOfAreas": "List of areas",
-    "addKey": "Add Key",
+    "addArea": "Add Area",
     "areaName": "Area Name",
     "members": "Members",
     "createNewArea": "Create New Area",
@@ -417,7 +418,7 @@
     "updateRule": "Update Rule",
     "prefix": "Prefix",
     "healthCheckMilliseconds": "Health check milliseconds",
-    "healthCheckTargetMilliseconds": "Health check target milliseconds"
+    "healthCheckTargetMilliseconds": "Health check target"
   },
   "dhcpV4": {
     "generalInformation": "General information",
@@ -553,6 +554,7 @@
     "indication": "Champs can include only letters & Numbers & underscores & hyphens without space.",
     "champNumber": "Champs lifeTime can include only Numbers.",
     "champNumberAndMax": "LifeTime field must contain only numbers and be ≤ 825.",
+    "champNumberMax": "Field must contain numbers between 1 and 2147483647.",
     "champletter": "Champs can include only letters.",
     "champplaceletter": "Champs place can include only letters.",
     "validAddress": "Please enter a valid email address.",
@@ -712,7 +714,7 @@
     "ServerName": "Server Name",
     "Type": "Type",
     "HostName": "Host Name",
-    "IPAddress": "IP address",
+    "IPAddress": "IP address or host name",
     "SearchBase": "Search Base",
     "ServerType": "Server Type",
     "UserDN": "User distinguished name",

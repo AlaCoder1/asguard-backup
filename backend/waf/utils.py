@@ -126,11 +126,10 @@ def convert_actions_str_to_list(actions: str):
     return []
 
 
-def create_reverse_proxy_config(app_config_path, app_sites_available_config_path, app_modsecurity_config_path, 
+def create_reverse_proxy_config(app_config_path, app_sites_available_config_path, 
                                 application_type, application_protocol, application_value, 
                                 application_port, certificate_name=""):
     """Create configuration for the reverse proxy of the WAF application"""
-    execute_command_without_arguments(["sudo", "cp", PATH_WAF_CONFIG, app_modsecurity_config_path])
     
     # Add reverse proxy config for the app 
     modsecurity = f"""

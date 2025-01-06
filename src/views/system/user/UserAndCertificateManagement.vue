@@ -46,7 +46,6 @@ export default {
 
   data() {
     return {
-      localStorageValue: localStorage.getItem("lang-slug"),
       tabs: [
         { id: 1, value: "tabs.userManagement", component: DataManagment },
         {

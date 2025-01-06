@@ -858,7 +858,7 @@ export default defineComponent({
             setTimeout(() => {
               location.reload();
               state.textAlert = [];
-            }, 2000);
+            }, 3000);
           })
           .catch((i) => {
             if (i.response.status === 500) {
@@ -873,7 +873,8 @@ export default defineComponent({
               state.Saverulesstate = false;
               setTimeout(() => {
                 state.textAlert = [];
-              }, 2000);
+                location.reload();
+              }, 3000);
             }
           });
       }

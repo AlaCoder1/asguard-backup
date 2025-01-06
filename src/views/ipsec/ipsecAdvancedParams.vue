@@ -655,7 +655,7 @@ export default {
       }
     };
 
-    const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
+    const numberList = ref(Array.from({ length: 33 }, (_, i) => i));
     const CertificateList = ref([]);
     const CertificateListRemote = ref([]);
     const mapedInterfaceType = ref([]);

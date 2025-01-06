@@ -1,9 +1,9 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-# Create your models here.
 
 class ServerOpenvpn(models.Model):
-    name = models.CharField(max_length=100, default=None, null=True, blank=True, unique=True)
+    name = models.CharField(max_length=100, default=None, null=True, blank=True, unique=True, verbose_name=_("name"))
     description = models.CharField(max_length=300, default=None, null=True, blank=True)
     server_mode = models.CharField(max_length=100, default="remote_access", null=True, blank=True)
     proto = models.CharField(max_length=10, default="udp", null=True, blank=True)
@@ -47,7 +47,7 @@ class ServerOpenvpn(models.Model):
 
 
 class ClientOpenvpn(models.Model):
-    name = models.CharField(max_length=255, default=None, null=True, blank=True, unique=True)
+    name = models.CharField(max_length=255, default=None, null=True, blank=True, unique=True, verbose_name=_("name"))
     description = models.CharField(max_length=300, default=None, null=True, blank=True)
     server_mode = models.CharField(max_length=100, default="peer-to-peer", null=True, blank=True)
     proto = models.CharField(max_length=10, default=None, null=True, blank=True)

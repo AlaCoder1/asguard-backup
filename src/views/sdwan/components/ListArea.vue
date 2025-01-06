@@ -40,7 +40,7 @@
               outlined
               color="#213E9F"
               label-color="#ffffff"
-              :label="$t('sdwan.addKey')"
+              :label="$t('sdwan.addArea')"
               :isLarge="true"
               type="submit"
               class="ml-2"

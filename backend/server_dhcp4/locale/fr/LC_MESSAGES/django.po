@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-16 10:29+0000\n"
+"POT-Creation-Date: 2024-12-25 20:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,6 +25,22 @@ msgstr "Serveur DHCP"
 #: backend/server_dhcp4/functions.py:14
 msgid "Saved"
 msgstr "Sauvegardé"
+
+#: backend/server_dhcp4/models.py:10
+msgid "subnet address"
+msgstr "adresse de sous-réseau"
+
+#: backend/server_dhcp4/models.py:12
+msgid "available range"
+msgstr "plage disponible"
+
+#: backend/server_dhcp4/models.py:13
+msgid "range from"
+msgstr "plage de"
+
+#: backend/server_dhcp4/models.py:14
+msgid "range to"
+msgstr "plage à"
 
 #: backend/server_dhcp4/views.py:17
 msgid "The specified range is outside the available range"

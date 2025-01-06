@@ -20,7 +20,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.username')"
+                    :label="`${$t('form.username')} *`"
                     v-model="state.formData.username"
                   ></v-text-field>
                   <span
@@ -32,7 +32,7 @@
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.password')"
+                    :label="`${$t('form.password')} *`"
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
@@ -45,7 +45,7 @@
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.confirmPassword')"
+                    :label="`${$t('form.confirmPassword')} *`"
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
@@ -60,7 +60,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.fullname')"
+                    :label="`${$t('form.fullname')} *`"
                     v-model="state.formData.fullname"
                   ></v-text-field>
                   <span
@@ -72,7 +72,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.emailForLdapAuth')"
+                    :label="`${$t('form.emailForLdapAuth')} *`"
                     v-model="state.formData.email"
                   ></v-text-field>
                   <span
@@ -96,7 +96,7 @@
                   <v-col cols="12" class="mb-n5">
                     <v-select
                       v-model="state.formData.dnValue"
-                      :label="$t('form.server')"
+                      :label="`${$t('form.server')} *`"
                       item-title="name"
                       item-value="id"
                       return-object
@@ -110,7 +110,7 @@
                   </v-col>
                   <v-col cols="12" class="mb-n5">
                     <v-text-field
-                      :label="$t('form.password')"
+                      :label="`${$t('form.password')} *`"
                       v-model="state.formData.passwordDN"
                       :append-inner-icon="
                         state.show1 ? 'mdi-eye' : 'mdi-eye-off'
@@ -129,7 +129,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
-                    :label="$t('form.roleUser')"
+                    :label="`${$t('form.roleUser')} *`"
                     v-model="state.formData.role"
                     item-title="name"
                     item-value="id"
@@ -170,6 +170,12 @@
             <!-- <small>*indicates required field</small> -->
           </v-card-text>
           <v-card-actions>
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
             <span></span>
             <v-spacer></v-spacer>
 

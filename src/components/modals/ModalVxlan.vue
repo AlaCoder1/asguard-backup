@@ -390,14 +390,27 @@ export default {
         connectionName: {
           required: helpers.withMessage(error, required),
         },
+        // interfaceName: {
+        //   required: helpers.withMessage(error, required),
+        //   isValidName: helpers.withMessage(
+        //     champNoInclude,
+
+        //     helpers.regex(
+        //       /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/
+        //     )
+        //   ),
+        // },
         interfaceName: {
           required: helpers.withMessage(error, required),
           isValidName: helpers.withMessage(
             champNoInclude,
 
-            helpers.regex(
-              /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/
-            )
+            (value) => {
+              const regex =
+                /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+              if (!regex.test(value)) return false;
+              return !/\btest\b/i.test(value);
+            }
           ),
         },
 

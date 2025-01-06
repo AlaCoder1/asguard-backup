@@ -1,17 +1,17 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
-# Create your models here.
+
 
 ##model interface
 class Interface(models.Model):
-    ifname = models.CharField(max_length=200, null=True,unique=True)
+    ifname = models.CharField(max_length=200, null=True, unique=True)
     private_aux= models.BooleanField(default=False)
     bogon_aux = models.BooleanField(default=False)
     service_status = models.CharField(max_length=200, null=True, default=None)
     name_interface = models.CharField(max_length=200, null=True, default=None, unique=True)
     is_main = models.BooleanField(default=False)
-    description = models.CharField(max_length=200, null=True, default=None,blank=True)
+    description = models.CharField(max_length=200, null=True, default=None, blank=True)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(default=timezone.now, editable=False)
 
@@ -26,7 +26,6 @@ class Interface(models.Model):
         db_table = 'interface'
 
 
-
 class GenericConfig(models.Model):
     interface = models.ForeignKey(
             Interface, on_delete=models.CASCADE)
@@ -35,8 +34,8 @@ class GenericConfig(models.Model):
     mssv=models.IntegerField(null=True)
     speed_duplex=models.CharField(max_length=200, null=True)
       # Created and updated timestamps
-    created_at = models.DateTimeField(default=timezone.now, editable=False,null=True)
-    updated_at = models.DateTimeField(default=timezone.now,editable=False,null=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False, null=True)
+    updated_at = models.DateTimeField(default=timezone.now, editable=False, null=True)
     created_by = models.IntegerField(null=True)
     updated_by = models.IntegerField(null=True)
 
@@ -53,39 +52,38 @@ class GenericConfig(models.Model):
 
 #model to configure ipv4
 class IP4Config(models.Model):
-     ##
-    interface = models.ForeignKey(
-            Interface, on_delete=models.CASCADE, null=True)
+    ##
+    interface = models.ForeignKey(Interface, on_delete=models.CASCADE, null=True)
 
-    typeip4=models.CharField(max_length=200, null=True,default=None)
-    typedhcp=models.CharField(max_length=200, null=True,default=None)
+    typeip4=models.CharField(max_length=200, null=True, default=None)
+    typedhcp=models.CharField(max_length=200, null=True, default=None)
     ##static
-    ip_address=models.CharField(max_length=200, null=True,default=None)
-    netmask=models.IntegerField(null=True,default=None)
-    addrgw=models.CharField(max_length=200, null=True,default=None)
+    ip_address=models.CharField(max_length=200, null=True, default=None)
+    netmask=models.IntegerField(null=True, default=None)
+    addrgw=models.CharField(max_length=200, null=True, default=None)
     ##dhcp base 
-    reject=models.CharField(max_length=200, null=True,default=None)
-    hostname=models.CharField(max_length=200, null=True,default=None)
-    alias_add=models.CharField(max_length=200, null=True,default=None)
-    alias_mask=models.CharField(max_length=200, null=True,default=None)
+    reject=models.CharField(max_length=200, null=True, default=None)
+    hostname=models.CharField(max_length=200, null=True, default=None)
+    alias_add=models.CharField(max_length=200, null=True, default=None)
+    alias_mask=models.CharField(max_length=200, null=True, default=None)
     ##dhcp advanced
      #time protocol
-    timeout=models.IntegerField(null=True,default=None)
+    timeout=models.IntegerField(null=True, default=None)
     retry=models.IntegerField(null=True, default=None)
     reboot=models.IntegerField(null=True, default=None)
     backoff=models.IntegerField(null=True, default=None)
     select_timeout=models.IntegerField(null=True, default=None)
     initial_interval=models.IntegerField(null=True, default=None)
     #other
-    dhcp_client=models.CharField(max_length=200,null=True,default=None)
-    domain_name=models.CharField(max_length=200,null=True,default=None)
-    domain_server=models.CharField(max_length=200,null=True,default=None)
-    lease_time=models.CharField(max_length=200, null=True,default=None)
-    request=models.CharField(max_length=200, null=True,default=None)
-    require=models.CharField(max_length=200,null=True,default=None)
+    dhcp_client=models.CharField(max_length=200, null=True, default=None)
+    domain_name=models.CharField(max_length=200, null=True, default=None)
+    domain_server=models.CharField(max_length=200, null=True, default=None)
+    lease_time=models.CharField(max_length=200, null=True, default=None)
+    request=models.CharField(max_length=200, null=True, default=None)
+    require=models.CharField(max_length=200, null=True, default=None)
       # Created and updated timestamps
     created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(default=timezone.now,editable=False)
+    updated_at = models.DateTimeField(default=timezone.now, editable=False)
     created_by = models.IntegerField(null=True)
     updated_by = models.IntegerField(null=True)
     
@@ -103,57 +101,56 @@ class IP4Config(models.Model):
 #model to configure ipv6
 class IP6Config(models.Model):
 
-    interface = models.ForeignKey(
-            Interface, on_delete=models.CASCADE, null=True)
+    interface = models.ForeignKey(Interface, on_delete=models.CASCADE, null=True)
 
-    typeip6=models.CharField(max_length=200, null=True,default=None)
-    typedhcp6=models.CharField(max_length=200, null=True,default=None)
+    typeip6=models.CharField(max_length=200, null=True, default=None)
+    typedhcp6=models.CharField(max_length=200, null=True, default=None)
     ##static
-    ip_address6=models.CharField(max_length=200, null=True,default=None)
-    netmask6=models.IntegerField(null=True,default=None)
+    ip_address6=models.CharField(max_length=200, null=True, default=None)
+    netmask6=models.IntegerField(null=True, default=None)
     ##dhcp base 
     request_only= models.BooleanField(default=False)
-    prefix_delegation_size=models.IntegerField(null=True,default=None)
+    prefix_delegation_size=models.IntegerField(null=True, default=None)
     prefix_hint= models.BooleanField(default=False)
     ###base and advanced
     ipv4_connectivity= models.BooleanField(default=False)
-    vlan_priority=models.CharField(max_length=200, null=True,default=None)
+    vlan_priority=models.CharField(max_length=200, null=True, default=None)
     ##dhcp advanced
      #interface status
     information_only=models.BooleanField(default=False)
-    send_options=models.CharField(max_length=200, null=True,default=None)
-    request_options=models.CharField(max_length=200, null=True,default=None)
-    script=models.CharField(max_length=200, null=True,default=None)
+    send_options=models.CharField(max_length=200, null=True, default=None)
+    request_options=models.CharField(max_length=200, null=True, default=None)
+    script=models.CharField(max_length=200, null=True, default=None)
     non_temporary=models.BooleanField(default=False)
     ####if non_temporary is true
-    id_assoc=models.CharField(max_length=200, null=True,default=None)
-    address=models.CharField(max_length=200, null=True,default=None)
-    nlifetime=models.CharField(max_length=200, null=True,default=None)
-    nvalid_time=models.CharField(max_length=200, null=True,default=None)
+    id_assoc=models.CharField(max_length=200, null=True, default=None)
+    address=models.CharField(max_length=200, null=True, default=None)
+    nlifetime=models.CharField(max_length=200, null=True, default=None)
+    nvalid_time=models.CharField(max_length=200, null=True, default=None)
     ####
     
     prefix_delegation=models.BooleanField(default=False)
     ####if prefix_delegation is true
-    id_assoc_pd=models.CharField(max_length=200, null=True,default=None)
-    ipv6_prefix=models.CharField(max_length=200, null=True,default=None)
-    plifetime=models.CharField(max_length=200, null=True,default=None)
-    pvalid_time=models.CharField(max_length=200, null=True,default=None)
+    id_assoc_pd=models.CharField(max_length=200, null=True, default=None)
+    ipv6_prefix=models.CharField(max_length=200, null=True, default=None)
+    plifetime=models.CharField(max_length=200, null=True, default=None)
+    pvalid_time=models.CharField(max_length=200, null=True, default=None)
     #####
     
     #authentification
-    authname=models.CharField(max_length=200,null=True,default=None)
-    protocol=models.CharField(max_length=200,null=True,default=None)
-    algorithm=models.CharField(max_length=200, null=True,default=None)
-    rdm=models.CharField(max_length=200, null=True,default=None)
+    authname=models.CharField(max_length=200, null=True, default=None)
+    protocol=models.CharField(max_length=200, null=True, default=None)
+    algorithm=models.CharField(max_length=200, null=True, default=None)
+    rdm=models.CharField(max_length=200, null=True, default=None)
     #key info
-    keyname=models.CharField(max_length=200,null=True,default=None)
-    royaume=models.CharField(max_length=200,null=True,default=None)
-    keyid=models.CharField(max_length=200,null=True,default=None)
-    secret=models.CharField(max_length=200, null=True,default=None)
-    expire=models.CharField(max_length=200, null=True,default=None)
+    keyname=models.CharField(max_length=200, null=True, default=None)
+    royaume=models.CharField(max_length=200, null=True, default=None)
+    keyid=models.CharField(max_length=200, null=True, default=None)
+    secret=models.CharField(max_length=200, null=True, default=None)
+    expire=models.CharField(max_length=200, null=True, default=None)
  # Created and updated timestamps
     created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(default=timezone.now,editable=False)
+    updated_at = models.DateTimeField(default=timezone.now, editable=False)
     created_by = models.IntegerField(null=True)
     updated_by = models.IntegerField(null=True)
     
@@ -166,6 +163,7 @@ class IP6Config(models.Model):
         super(IP6Config, self).save(*args, **kwargs)
     class Meta:
         db_table = 'ip6config'
+
 
 class tempsExucution(models.Model):
     type=models.CharField(max_length=200, null=True)

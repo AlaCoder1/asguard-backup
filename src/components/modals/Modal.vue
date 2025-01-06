@@ -30,9 +30,9 @@
                     v-model="state.hostIp"
                   ></v-text-field>
 
-                  <p class="error-feedback mb-5" v-if="v$.hostIp.$error">
+                  <!-- <p class="error-feedback mb-5" v-if="v$.hostIp.$error">
                     {{ v$.hostIp.$errors[0].$message }}
-                  </p>
+                  </p> -->
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
@@ -356,15 +356,15 @@ export default {
           ),
         },
         serverType: { required: helpers.withMessage(error, required) },
-        hostIp: {
-          isValidHostIp: helpers.withMessage(
-            formaaddress,
+        // hostIp: {
+        //   isValidHostIp: helpers.withMessage(
+        //     formaaddress,
 
-            helpers.regex(
-              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
-            )
-          ),
-        },
+        //     helpers.regex(
+        //       /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+        //     )
+        //   ),
+        // },
         searchBase: { required: helpers.withMessage(error, required) },
 
         port: {

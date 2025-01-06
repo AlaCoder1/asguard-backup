@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-06 19:01+0000\n"
+"POT-Creation-Date: 2024-12-26 06:37+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,54 +18,62 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/sdwan/views.py:21
+#: backend/sdwan/models.py:8 backend/sdwan/models.py:17
+msgid "name"
+msgstr "nom"
+
+#: backend/sdwan/views.py:23
 msgid "SDwan rule"
 msgstr "régle SDwan"
 
-#: backend/sdwan/views.py:22
+#: backend/sdwan/views.py:24
 msgid "Area"
 msgstr "Zone"
 
-#: backend/sdwan/views.py:24
+#: backend/sdwan/views.py:26
 msgid "is created"
 msgstr "est créé"
 
-#: backend/sdwan/views.py:25
+#: backend/sdwan/views.py:27
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/sdwan/views.py:26
+#: backend/sdwan/views.py:28
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/sdwan/views.py:27
+#: backend/sdwan/views.py:29
 msgid "is started"
 msgstr "est démarré"
 
-#: backend/sdwan/views.py:28
+#: backend/sdwan/views.py:30
 msgid "is stoped"
 msgstr "est arrêté"
 
-#: backend/sdwan/views.py:30
+#: backend/sdwan/views.py:32
 msgid "System error in creating"
 msgstr "Erreur système lors de la création de"
 
-#: backend/sdwan/views.py:31
+#: backend/sdwan/views.py:33
 msgid "System error in deleting"
 msgstr "Erreur système lors de la suppression de"
 
-#: backend/sdwan/views.py:32
+#: backend/sdwan/views.py:34
 msgid "System error in updating"
 msgstr "Erreur système lors de la modification de"
 
-#: backend/sdwan/views.py:33
+#: backend/sdwan/views.py:35
 msgid "System error in starting"
 msgstr "Erreur système lors de la démarrage de"
 
-#: backend/sdwan/views.py:34
+#: backend/sdwan/views.py:36
 msgid "System error in stoping"
 msgstr "Erreur système lors de l'arrêt de"
 
-#: backend/sdwan/views.py:35
+#: backend/sdwan/views.py:37
 msgid "does not exist"
 msgstr "n'existe pas"
+
+#: backend/sdwan/views.py:38
+msgid "Check your interfaces and its gateways"
+msgstr "Vérifier les interfaces et ces passerelles"

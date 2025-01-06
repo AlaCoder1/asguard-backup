@@ -6,15 +6,17 @@ from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_OBJECT, TYPE_STRING, TYPE_
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
+from backend.gateway.models import GatewayInterface
 from backend.network.models import Interface
 
 from backend.sdwan.list_area import get_list_all_area, get_one_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule, get_one_sdwan_rule
-from backend.sdwan.models import Area, SdwanRules
+from backend.sdwan.models import Area, AreaInterface, SdwanRules
 from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
 from backend.sdwan.utils import routing_table_id
-from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
+from backend.sdwan.utils_system import check_celery, create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
 from utils.errors_utils import CommandExecutionError
+from utils.utils_functions import fix_ipv4_address
 
 
 # Constants
@@ -33,6 +35,7 @@ ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_STARTING = _("System error in starting")
 ERROR_MESSAGES_STOPING = _("System error in stoping")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_CHECK_INTERFACES = _("Check your interfaces and its gateways")
 
 
 ########################################
@@ -180,6 +183,9 @@ def create_sdwan_rule(request):
     """Creating a new SDWAN rule and adding it to the database"""
     try:
         data = request.data
+        # Apply correction for ipv4 addresses
+        data["source_address"] = fix_ipv4_address(data["source_address"])
+
         data["table_id"] = routing_table_id()
         if data["algorythme_type"] == "failover":
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
@@ -243,6 +249,9 @@ def update_sdwan_rule(request, id):
     """Updating a new SDWAN rule"""
     try:
         data = request.data
+        # Apply correction for ipv4 addresses
+        data["source_address"] = fix_ipv4_address(data["source_address"])
+        
         if data["algorythme_type"] == "failover":
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
         sdwan_rule = SdwanRules.objects.get(id=id)
@@ -283,12 +292,29 @@ def update_sdwan_rule(request, id):
 def start_sdwan_rule(request, id):
     """Start an SDWAN rule on background using celery. Change rule_status to True to start the script"""
     try:
+        # Get the SDWAN rule
         sdwan_rule = SdwanRules.objects.get(id=id)
+
+        # Check existing of the interfaces and its gateways
+        list_area_interface = AreaInterface.objects.filter(area=sdwan_rule.area)
+        list_interface = [area_intefrace.interface for area_intefrace in list_area_interface]
+        for interface in list_interface:
+            if len(GatewayInterface.objects.filter(interface=interface)) == 0:
+                return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}. {ERROR_MESSAGES_CHECK_INTERFACES}"}, status=400) 
+        
+        # Change status of the rule to True to start the process
         sdwan_rule.rule_status = True
         sdwan_rule.save()
         
+        # Start the rule in system
         start_sdwan_rule_in_system(id)
-        
+
+        # Check if the rules are working by checking the celery
+        celery_exist = check_celery()
+        if celery_exist <= 2:
+            SdwanRules.objects.update(rule_status=False)
+            return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}. {ERROR_MESSAGES_CHECK_INTERFACES}"}, status=400) 
+
         return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STARTING}"}, status=201)
         
     except CommandExecutionError:
@@ -297,6 +323,8 @@ def start_sdwan_rule(request, id):
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}"}, status=400)
     except SdwanRules.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except (Area.DoesNotExist, AreaInterface):
+        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @api_view(['PUT'])

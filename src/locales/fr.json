@@ -62,13 +62,14 @@
   },
 
   "errors": {
+    "oblig":"Champs obligatoires",
     "format_address":"Format doit correspondre à : exemple.com",
     "errorServer": "Erreur de serveur interne. Veuillez réessayer plus tard",
     "valueRequired": "Champs est obligatoire",
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers": "Champ ne peut inclure que des numéros",
-    "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces",
+    "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces ou le mot 'test'",
     "formatMustBeLikeAdresseIP": "Format doit correspondre à l'adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format doit correspondre à l'adresse : X.X.X.X/XX",
     "subnetNotAccepted": "Le masque de sous-réseau 32 n'est pas accepté. Le format doit être le suivant : X.X.X.X/XX",
@@ -394,7 +395,7 @@
   },
   "sdwan": {
     "listOfAreas": "Liste des zones",
-    "addKey": "Ajouter une clé",
+    "addArea": "Ajouter une zone",
     "areaName": "Nom de la zone",
     "members": "Membres",
     "createNewArea": "Créer une nouvelle zone",
@@ -415,7 +416,7 @@
     "updateRule": "Modifier la règle",
     "prefix": "Préfixe",
     "healthCheckMilliseconds": "Contrôle de santé en millisecondes",
-    "healthCheckTargetMilliseconds": "Objectif du contrôle de santé millisecondes"
+    "healthCheckTargetMilliseconds": "Objectif du contrôle de santé"
   },
   "dhcpV4": {
     "generalInformation": "Informations générales",
@@ -551,7 +552,8 @@
     "existGateway": "Adresse de la passerelle existe deja",
     "indication": "Champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
     "champNumber": "Champs lifeTime ne peuvent inclure que des nombres.",
-    "champNumberAndMax": "champ lifeTime doit contenir uniquement des nombres et être ≤ 825.",
+    "champNumberAndMax": "Champ lifeTime doit contenir uniquement des nombres et être ≤ 825.",
+    "champNumberMax": "Champ doit contenir des nombres entre 1 et 2147483647.",
     "champletter": "Champs ne peut inclure que des lettres.",
     "champplaceletter": "Champs Lieu peut inclure que des lettres.",
     "validAddress": "Veuillez saisir une adresse e-mail valide.",
@@ -710,7 +712,7 @@
     "ServerName": "Nom du serveur",
     "Type": "Type",
     "HostName": "Nom d'hôte",
-    "IPAddress": "adresse IP",
+    "IPAddress": "adresse IP ou nom de l'hote",
     "SearchBase": "Base de recherche",
     "ServerType": "Type de serveur",
     "UserDN": "Nom distinctif de l'utilisateur",

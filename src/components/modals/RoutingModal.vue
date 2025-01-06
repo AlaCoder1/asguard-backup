@@ -38,7 +38,7 @@
                     {{ v$.gateway.$errors[0].$message }}
                   </p>
                 </v-col>
-                <template v-if="state.gateway.name === 'Other'">
+                <template v-if="state.gateway?.name === 'Other'">
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
                       label="Gateway Address"
@@ -195,8 +195,8 @@ export default {
             (i) =>
               !i.ifname.startsWith("tun_") &&
               !i.ifname.startsWith("tap_") &&
-              !i.name_interface.startsWith("VLAN") &&  
-              !i.name_interface.startsWith("VXLAN") 
+              !i.name_interface.startsWith("VLAN") &&
+              !i.name_interface.startsWith("VXLAN")
           );
 
           let interfaces = filtredInterface.map((i) => {
@@ -231,6 +231,7 @@ export default {
       gatewayAddress: "",
       metric: "",
       interface: "",
+      test: "create",
     });
 
     watch(
@@ -242,10 +243,11 @@ export default {
     watch(
       () => state.gateway,
       (val) => {
-        if (val.slug != "Other") {
+        if (val.name != "Other") {
           state.gatewayAddress = "";
-          state.metric = " ";
+          state.metric = "";
           state.interface = "";
+          v$.value.$reset();
         }
       }
     );
@@ -279,11 +281,6 @@ export default {
           (i) => i.id === data?.gateway
         );
         state.gateway = filtredGateway[0];
-        // if (filtredGateway.length == 0) {
-        //   state.gateway = { id: 0, name: "Other" };
-        // } else {
-
-        // }
         state.network = data.destination_address;
         state.description = data.description;
       }
@@ -312,7 +309,7 @@ export default {
       if (result) {
         let gateway = null;
 
-        if (state.gateway.name === "Other") {
+        if (state.gateway?.name === "Other") {
           gateway = {
             gateway_address: state.gatewayAddress,
             interface: state.interface.id,
@@ -324,7 +321,7 @@ export default {
 
         let payload = {
           destination_address: state.network,
-          gateway_create: state.gateway.name === "Other" ? true : false,
+          gateway_create: state.gateway?.name === "Other" ? true : false,
           gateway: gateway,
           description: state.description,
         };
@@ -404,10 +401,9 @@ export default {
     const addressForma = computed(() => {
       return t("errors.formatMustBeLikeAdresseIP");
     });
-    const onlynumbers = computed(() => {
-      return t("errors.ChampIncludeOnlyNumbers");
+    const champNumberMax = computed(() => {
+      return t("champs.champNumberMax");
     });
-    
 
     const rules = computed(() => {
       return {
@@ -425,12 +421,28 @@ export default {
           required: helpers.withMessage(error, required),
         },
 
+        metric: {
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.gateway.name === "Other")
+          ),
+          isValid: helpers.withMessage(
+            champNumberMax,
+            helpers.regex(/^(?:[1-9][0-9]{0,8}|1[0-9]{9}|2(?:[0-9]{9}|1(?:[0-9]{8}|4(?:[0-9]{7}|7(?:[0-9]{6}|4(?:[0-9]{5}|8(?:[0-9]{4}|3(?:[0-9]{3}|6(?:[0-7])))))))))$/)
+
+            // (value) =>
+            //   !!value &&
+            //   /^[0-9]+$/.test(value) &&
+            //   parseInt(value, 10) <= 2147483647
+          ),
+        },
+
         //
 
         gatewayAddress: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.gateway.name === "Other")
+            requiredIf(() => state.gateway?.name === "Other")
           ),
           isValidGateway: helpers.withMessage(
             addressForma,
@@ -443,23 +455,7 @@ export default {
         interface: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.gateway.name === "Other")
-          ),
-        },
-        metric: {
-          // isValidMetric: helpers.withMessage(
-          //   `Champs can include only Numbers.`,
-
-          //   helpers.regex(/^[0-9]+$/)
-          // ),
-          requiredIfFuction: helpers.withMessage(
-            error,
-            requiredIf(() => state.gateway.name === "Other")
-          ),
-          isValidMetric: helpers.withMessage(
-            onlynumbers,
-
-            helpers.regex(/^[0-9]+$/)
+            requiredIf(() => state.gateway?.name === "Other")
           ),
         },
       };

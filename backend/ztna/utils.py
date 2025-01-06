@@ -162,7 +162,8 @@ def local_domain_windows_name():
             windows_host = host_append_shell.read()
             return windows_host
     except Exception as e:
-        print("error: ",e)    
+        print("error: ",e) 
+           
 def check_host_templates():
    
     current_dir = get_current_directory()

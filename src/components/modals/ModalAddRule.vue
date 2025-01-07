@@ -441,7 +441,7 @@ export default {
               format,
 
               helpers.regex(
-                /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/
+               /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/
               )
             ),
             // isNotZero: helpers.withMessage(zeroNumber, (value) => {
@@ -479,7 +479,7 @@ export default {
               format,
 
               helpers.regex(
-                /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/
+               /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/
               )
             ),
           },

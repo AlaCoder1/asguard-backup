@@ -35,7 +35,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n5 mb-1 mt-0">
                   <v-expansion-panels v-model="state.panel">
-                    <v-expansion-panel >
+                    <v-expansion-panel>
                       <v-expansion-panel-title>{{
                         $t("Waf.parameters")
                       }}</v-expansion-panel-title>
@@ -498,25 +498,27 @@ export default {
       rowDataWafApp.value = mapedRow;
     });
     const { t } = useI18n();
-    const ListofErrorsParams =[ "applicationName",
-  "type",
-  "protocol",
-  "serverCertif",
-  "value",
-  "port"];
-  const ListofErrorsConfigs = [
-  "rule_engine",
-"maximum_request",
-"size_file",
-"limit_action",
-"max_parsing",
-"max_number",
-"pcre_match_limit",
-"pcre_limit_recursion",
-"body_mimetype",
-"response_body_limit",
-"response_limit_action"
-];
+    const ListofErrorsParams = [
+      "applicationName",
+      "type",
+      "protocol",
+      "serverCertif",
+      "value",
+      "port",
+    ];
+    const ListofErrorsConfigs = [
+      "rule_engine",
+      "maximum_request",
+      "size_file",
+      "limit_action",
+      "max_parsing",
+      "max_number",
+      "pcre_match_limit",
+      "pcre_limit_recursion",
+      "body_mimetype",
+      "response_body_limit",
+      "response_limit_action",
+    ];
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const rowDataWafApp = ref([]);
@@ -554,10 +556,6 @@ export default {
       country: [],
       port: "",
       //config
-
-      loading: false,
-      isLoadingDialogue: false,
-      id: null,
       //
       engineList: ["On", "Off", "DetectionOnly"],
       requestBodyList: ["ProcessPartial", "Reject"],
@@ -582,10 +580,6 @@ export default {
       pcre_match_limit: null,
       pcre_limit_recursion: null,
       //
-
-      snackbar: false,
-      color: "",
-      textAlert: "",
     });
 
     watch(
@@ -897,11 +891,12 @@ export default {
         }
       } else {
         if (ListofErrorsParams.includes(v$.value.$errors[0].$property)) {
-  state.panel = 0;
-} else if (ListofErrorsConfigs.includes(v$.value.$errors[0].$property)) {
-
-  state.panel = 2;
-}
+          state.panel = 0;
+        } else if (
+          ListofErrorsConfigs.includes(v$.value.$errors[0].$property)
+        ) {
+          state.panel = 2;
+        }
       }
     };
 
@@ -972,12 +967,23 @@ export default {
     const and = computed(() => {
       return t("Waf.and");
     });
+    const port = computed(() => {
+      return t("errors.port");
+    });
     const formaaddress = computed(() => {
       return t("errors.formatMustBeLikeAdresseIP");
     });
+
     const isValidRemoteGateway = helpers.regex(
       /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
     );
+    const isValidDomaineName = helpers.regex(
+      /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/
+    );
+    const format = computed(() => {
+      return t("errors.format_address");
+    });
+
     const rules = computed(() => {
       return {
         applicationName: {
@@ -989,12 +995,25 @@ export default {
         },
         value: {
           required: helpers.withMessage(error, required),
-          isValidAddress: helpers.withMessage(formaaddress, (value) => {
-            if (state.type === "ip") {
-              return isValidRemoteGateway(value);
+          isValidAddress: helpers.withMessage(
+            (value) => {
+              if (state.type === "ip") {
+                return formaaddress;
+              }
+              if (state.type === "domain") {
+                return format;
+              }
+            },
+            (value) => {
+              if (state.type === "ip") {
+                return isValidRemoteGateway(value);
+              }
+              if (state.type === "domain") {
+                return isValidDomaineName(value);
+              }
+              return true;
             }
-            return true;
-          }),
+          ),
         },
 
         // value: {
@@ -1029,7 +1048,7 @@ export default {
             helpers.regex(/^[0-9]+$/)
           ),
           endsWith443: helpers.withMessage(
-            "Port must end with 443",
+            port,
             (value) => {
               if (state.protocol.slug === "https") {
                 return value.toString().endsWith("443");

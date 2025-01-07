@@ -2,6 +2,25 @@
   <v-row justify="center">
     <!-- <v-dialog v-model="isOpen" persistent width="600">
        -->
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <v-dialog v-model="openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
@@ -253,6 +272,8 @@ export default {
   },
   setup() {
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       formData: {
         mapedServer: [],
         activateStatus: false,
@@ -531,6 +552,10 @@ export default {
 
         const csrfToken = this.getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+        this.state.loading = true;
+        this.state.isLoadingDialogue = true;
+
         if (this.mode == "create") {
           axios
             .post("/users/createUser", payload)
@@ -541,6 +566,9 @@ export default {
                 this.snackbar = true;
                 this.color = "success";
                 this.textAlert = response.data.msg;
+
+                this.state.loading = false;
+                this.state.isLoadingDialogue = false;
 
                 setTimeout(() => {
                   location.reload();
@@ -554,6 +582,8 @@ export default {
               }
             })
             .catch((i) => {
+              this.state.loading = false;
+              this.state.isLoadingDialogue = false;
               if (i.response.status === 500) {
                 this.snackbar = true;
                 this.color = "red";
@@ -591,6 +621,9 @@ export default {
                 this.color = "success";
                 this.textAlert = response.data.msg;
 
+                this.state.loading = false;
+                this.state.isLoadingDialogue = false;
+
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -602,6 +635,9 @@ export default {
               }
             })
             .catch((i) => {
+              this.state.loading = false;
+              this.state.isLoadingDialogue = false;
+
               if (i.response.status === 500) {
                 this.snackbar = true;
                 this.color = "red";

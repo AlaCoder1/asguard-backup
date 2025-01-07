@@ -1,5 +1,25 @@
 <template>
   <v-row justify="center">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
+
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
@@ -47,7 +67,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     label="Port"
-                    v-model.number="state.port"
+                    v-model="state.port"
                   ></v-text-field>
 
                   <p class="error-feedback mb-5" v-if="v$.port.$error">
@@ -184,6 +204,8 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       listServers: [
         {
           slug: "ad",
@@ -213,6 +235,12 @@ export default {
       () => editRow.value,
       (val) => {
         populate(val);
+      }
+    );
+    watch(
+      () => state.activateStatus,
+      (val) => {
+        if (val) state.port = "636";
       }
     );
     watch(
@@ -276,6 +304,10 @@ export default {
           ssl_tls_activation: state.activateStatus,
           server_type: state.serverType?.slug,
         };
+
+        state.loading = true;
+        state.isLoadingDialogue = true;
+
         if (modalMode.value === "edit") {
           axios
             .put(`/ldap/updateldap_Server/${state.id}`, payload)
@@ -284,12 +316,19 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
+
+                state.loading = false;
+                state.isLoadingDialogue = false;
+
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
               }
             })
             .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
               if (i.response.status === 500) {
                 state.snackbar = true;
                 state.color = "red";
@@ -309,12 +348,19 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
+
+                state.loading = false;
+                state.isLoadingDialogue = false;
+
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
               }
             })
             .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
               if (i.response.status === 500) {
                 state.snackbar = true;
                 state.color = "red";

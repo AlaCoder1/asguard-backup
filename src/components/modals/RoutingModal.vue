@@ -401,6 +401,9 @@ export default {
     const addressForma = computed(() => {
       return t("errors.formatMustBeLikeAdresseIP");
     });
+    const end_address = computed(() => {
+      return t("errors.endAddress");
+    });
     const champNumberMax = computed(() => {
       return t("champs.champNumberMax");
     });
@@ -428,7 +431,9 @@ export default {
           ),
           isValid: helpers.withMessage(
             champNumberMax,
-            helpers.regex(/^(?:[1-9][0-9]{0,8}|1[0-9]{9}|2(?:[0-9]{9}|1(?:[0-9]{8}|4(?:[0-9]{7}|7(?:[0-9]{6}|4(?:[0-9]{5}|8(?:[0-9]{4}|3(?:[0-9]{3}|6(?:[0-7])))))))))$/)
+            helpers.regex(
+              /^(?:[1-9][0-9]{0,8}|1[0-9]{9}|2(?:[0-9]{9}|1(?:[0-9]{8}|4(?:[0-9]{7}|7(?:[0-9]{6}|4(?:[0-9]{5}|8(?:[0-9]{4}|3(?:[0-9]{3}|6(?:[0-7])))))))))$/
+            )
 
             // (value) =>
             //   !!value &&
@@ -445,10 +450,9 @@ export default {
             requiredIf(() => state.gateway?.name === "Other")
           ),
           isValidGateway: helpers.withMessage(
-            addressForma,
-
+            end_address,
             helpers.regex(
-              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+              /^(25[0-4]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-4]|2[0-4][0-9]|[1-9][0-9]?)$/
             )
           ),
         },

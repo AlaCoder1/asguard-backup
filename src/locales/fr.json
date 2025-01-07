@@ -43,11 +43,10 @@
     "Load": "charger"
   },
 
-  "noDesc":"Pas de description",
-  "noApp":"Aucune application pour cette règle",
-  "zeroNumber":"Valeur ne peut pas être 0.",
-  "plageAddresse":"Il faut des plages d'adresses différentes.",
-
+  "noDesc": "Pas de description",
+  "noApp": "Aucune application pour cette règle",
+  "zeroNumber": "Valeur ne peut pas être 0.",
+  "plageAddresse": "Il faut des plages d'adresses différentes.",
 
   "requiredfield": {
     "indicatesrequiredfield": "Indique champ obligatoire",
@@ -62,8 +61,10 @@
   },
 
   "errors": {
-    "oblig":"Champs obligatoires",
-    "format_address":"Format doit correspondre à : exemple.com",
+    "endAddress":"Format doit correspondre à l'adresse IP : X.X.X.X (dernier octet ne doit pas être 0 ou 255)",
+    "port": "Port doit se terminer par 443",
+    "oblig": "Champs obligatoires",
+    "format_address": "Format doit correspondre à : exemple.com",
     "errorServer": "Erreur de serveur interne. Veuillez réessayer plus tard",
     "valueRequired": "Champs est obligatoire",
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
@@ -430,8 +431,8 @@
     "domainName": "Nom de domaine",
     "rangeFrom": "Plage de",
     "rangeTo": "Plage à",
-    "range":"Plage",
-    "exist":"existe déjà.",
+    "range": "Plage",
+    "exist": "existe déjà.",
     "addRange": "Ajouter une plage",
     "editRange": "Modifier la plage"
   },
@@ -1071,7 +1072,7 @@
     "nombreMustBe": "Nombre doit etre compris entre",
     "and": "et"
   },
-  "mustBe":"L'adresse Deux doit être supérieure à l'adresse Un.",
+  "mustBe": "L'adresse Deux doit être supérieure à l'adresse Un.",
   "rangeFrom": "La plage",
   "outBounds": "est hors limites.",
   "settings": {

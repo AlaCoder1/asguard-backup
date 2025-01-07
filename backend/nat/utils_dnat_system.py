@@ -1,4 +1,4 @@
-from backend.nat.utils import get_rule_handle_in_system
+from backend.nat.utils_system import get_rule_content_in_system, get_rule_handle_in_system
 from backend.nat.utils_system import delete_nat_rule_in_system, save_ruleset_nft
 from utils.commands_utils import execute_command_without_arguments
 
@@ -48,7 +48,8 @@ def create_dnat_rule_in_system(iifname, source, destination, protocol, next_rule
 
     # Get the rule handle
     handle_number = get_rule_handle_in_system("prerouting", rule_position)
-    return handle_number
+    rule_content = get_rule_content_in_system("prerouting", rule_position)
+    return handle_number, rule_content
 
 
 def delete_dnat_rule_in_system(handle_number):
@@ -59,11 +60,13 @@ def delete_dnat_rule_in_system(handle_number):
     save_ruleset_nft()
 
 
-def update_dnat_rule_in_system(iifname, source, destination, protocol, handle_number, next_rule_handle, rule_position):
+def update_dnat_rule_in_system(iifname, source, destination, protocol, handle_number, next_rule_handle, 
+                               rule_position):
     """Update an DNAT rule in system"""
     delete_nat_rule_in_system("prerouting", handle_number)
-    new_handle_number = create_dnat_rule_in_system(iifname, source, destination, protocol, next_rule_handle, rule_position)
+    new_handle_number, new_rule_content = create_dnat_rule_in_system(
+        iifname, source, destination, protocol, next_rule_handle, rule_position)
 
     # Save ruleset in ruleset file
     save_ruleset_nft()
-    return new_handle_number
+    return new_handle_number, new_rule_content

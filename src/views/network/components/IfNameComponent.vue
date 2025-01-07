@@ -631,8 +631,7 @@
                         class="error-feedback ml-4"
                         v-if="!isValidDomain_name"
                       >
-                        {{ $t("champs.champletter") }}
-                        {{ $t("champs.max") }}
+                        {{ $t("errors.format_address") }}
                       </p>
                     </td>
                   </tr>
@@ -1102,13 +1101,11 @@ export default {
       return true;
     },
     isValidDomain_name() {
-      const charRegex = /^[a-zA-Z]+$/;
-      const maxLength = 63;
-
+      const charRegex =
+        /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/;
       if (
         this.AdvancedConfigDHCPv4.domain_name &&
-        (!charRegex.test(this.AdvancedConfigDHCPv4.domain_name) ||
-          this.AdvancedConfigDHCPv4.domain_name.length > maxLength)
+        !charRegex.test(this.AdvancedConfigDHCPv4.domain_name)
       ) {
         return false;
       }
@@ -1628,7 +1625,8 @@ export default {
       }
     }, 1000);
 
-    this.advancedParameters = this.IPV4Config.IPV4Config.typedhcp === 'Advanced' ? true : false;
+    this.advancedParameters =
+      this.IPV4Config.IPV4Config.typedhcp === "Advanced" ? true : false;
 
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
     this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;
@@ -1724,6 +1722,7 @@ export default {
 .new-style {
   width: 70%;
 }
+
 .title-text {
   color: #020202;
   font-family: Nunito;
@@ -1732,6 +1731,7 @@ export default {
   font-weight: 700;
   line-height: normal;
 }
+
 .error-feedback {
   color: red;
   font-size: 0.85em;

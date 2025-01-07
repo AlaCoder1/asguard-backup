@@ -1,19 +1,10 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog
-      v-model="state.isLoadingDialogue"
-      :scrim="false"
-      persistent
-      width="auto"
-    >
+    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear
-            indeterminate
-            color="white"
-            class="mb-0"
-          ></v-progress-linear>
+          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -24,53 +15,32 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addRelay") }}</span
-            >
+              {{ $t("ztna.addRelay") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateRelay") }}</span
-            >
+              {{ $t("ztna.updateRelay") }}</span>
           </v-card-title>
 
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="RouterName"
-                    v-model="RouterName"
-                    :placeholder="$t('ztna.relayName')"
-                    :rules="rulesName"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="RouterName" v-model="RouterName" :placeholder="$t('ztna.relayName')"
+                    :rules="rulesName" persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="RouterAttribute"
-                    v-model="RouterAttribute"
-                    :placeholder="$t('ztna.relayAttribute')"
-                    :rules="rulesName"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="RouterAttribute" v-model="RouterAttribute" :placeholder="$t('ztna.relayAttribute')"
+                    :rules="rulesatt" persistent-placeholder />
                 </v-col>
                 <v-col cols="12" class="mb-n3">
                   <label for="Traversal" class="mr-3">{{
                     $t("ztna.traversal")
                   }}</label>
-                  <input
-                    type="checkbox"
-                    id="Traversal"
-                    value="Traversal"
-                    v-model="Traversal"
-                  />
+                  <input type="checkbox" id="Traversal" value="Traversal" v-model="Traversal" />
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field
-                    id="Description"
-                    v-model="Description"
-                    placeholder="Description"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="Description" v-model="Description" placeholder="Description"
+                    persistent-placeholder />
                 </v-col>
               </v-row>
             </v-container>
@@ -78,49 +48,21 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              text
-              @click="cancel"
-              ><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span
-              ></v-btn
-            >
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 ml-2 btn-add"
-              type="submit"
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
+              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span></v-btn>
+            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
+              class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
+                {{ $t("buttons.create") }}</span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+                {{ $t("buttons.update") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -154,6 +96,7 @@ export default {
     const RouterName = ref("");
     const RouterAttribute = ref("");
     const Description = ref("");
+    const lastname = ref("");
     const Relays = ref([]);
     const Tunneler = ref(true);
     const Traversal = ref(false);
@@ -163,8 +106,16 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
     const rulesName = [
       (value) => {
-        if (!value) return true;
+        if (!value) return t("ztna.enterValue");
+        if (modalMode.value === "edit" && value === lastname.value) return true;
         if (existingName(value)) return t("ztna.nameExist");
+        if (inValidRelay(value)) return t("ztna.namerelay");
+        return ValidName(value) ? true : t("ztna.validName");
+      },
+    ];
+    const rulesatt = [
+      (value) => {
+        if (!value) return t("ztna.enterValue");
         return ValidName(value) ? true : t("ztna.validName");
       },
     ];
@@ -190,6 +141,17 @@ export default {
 
       return false;
     }
+    function inValidRelay(value) {
+      const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*\.relay$/;
+
+      // Check if the value matches the hostname pattern and is not entirely numeric
+      if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+        return false;
+      }
+
+      return true;
+    }
+
     const state = reactive({
       loading: false,
       isLoadingDialogue: false,
@@ -225,7 +187,7 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("dataService", data);
+        lastname.value = data.name;
 
         RouterId.value = data.id;
         RouterName.value = data.name;
@@ -257,93 +219,95 @@ export default {
     });
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(RouterName.value) === true && rule(RouterAttribute.value) === true );
-      if (isFieldValid) {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const isFieldValid = rulesName.every(rule => rule(RouterName.value) === true);
+      const isattValid = rulesatt.every(rule => rule(RouterAttribute.value) === true);
+      if (isFieldValid && isattValid || modalMode.value === "edit") {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      if (Traversal.value === "Traversal") {
-        Traversal.value = true;
-      }
+        if (Traversal.value === "Traversal") {
+          Traversal.value = true;
+        }
 
-      let payload = {
-        name: RouterName.value,
-        noTraversal: Traversal.value,
-        isTunnelerEnabled: Tunneler.value,
-        roleAttributes: [RouterAttribute.value],
-        Description: Description.value,
-      };
+        let payload = {
+          name: RouterName.value,
+          noTraversal: Traversal.value,
+          isTunnelerEnabled: Tunneler.value,
+          roleAttributes: [RouterAttribute.value],
+          Description: Description.value,
+        };
 
-      let token = document.getElementById("app").getAttribute("token");
-      
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      if (modalMode.value === "edit") {
-        axios
-          .put(`/ztna/update_routers/${RouterId.value}`, payload, {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = t("ztna.routerUpdated");
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
-            }
-          });
+        let token = document.getElementById("app").getAttribute("token");
+
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        if (modalMode.value === "edit") {
+          axios
+            .put(`/ztna/update_routers/${RouterId.value}`, payload, {
+              headers: {
+                "zt-session": token,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.routerUpdated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        } else {
+          axios
+            .post("/ztna/add_routers", payload, {
+              headers: {
+                "zt-session": token,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.routerCreated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        }
       } else {
-        axios
-          .post("/ztna/add_routers", payload, {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
-              state.color = "success";     
-              state.textAlert = t("ztna.routerCreated");
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
-            }
-          });
-      }} else {
-      state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = t("ztna.missingFields");
       }
     };
 
@@ -368,6 +332,7 @@ export default {
       rules,
       submitForm,
       rulesName,
+      rulesatt
     };
   },
 };

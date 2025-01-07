@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from backend.network.models import Interface
 
@@ -20,6 +21,7 @@ class SNat(models.Model):
     snat_position = models.IntegerField(default=None, null=True, unique=True) # Rule in database in snat table
     rule_number = models.IntegerField(default=None, null=True)
     rule_status = models.BooleanField(default=True, null=True)
+    rule_content = models.CharField(max_length=1000, default=None, null=True, blank=True, unique=True, verbose_name=_("Content"))
 
     class Meta:
         db_table = 'nat_snat'
@@ -35,6 +37,7 @@ class OneToOneNat(models.Model):
     one_to_one_nat_position = models.IntegerField(default=None, null=True, unique=True) # Rule in database in One To One Nat table
     rule_number = models.IntegerField(default=None, null=True)
     rule_status = models.BooleanField(default=True, null=True)
+    rule_content = models.CharField(max_length=1000, default=None, null=True, blank=True, unique=True, verbose_name=_("Content"))
 
     class Meta:
         db_table = 'nat_one_to_one'
@@ -57,6 +60,7 @@ class DNat(models.Model):
     dnat_position = models.IntegerField(default=None, null=True, unique=True) # Rule in database in dNat table
     rule_number = models.IntegerField(default=None, null=True)
     rule_status = models.BooleanField(default=True, null=True)
+    rule_content = models.CharField(max_length=1000, default=None, null=True, blank=True, unique=True, verbose_name=_("Content"))
 
     class Meta:
         db_table = 'nat_dnat'

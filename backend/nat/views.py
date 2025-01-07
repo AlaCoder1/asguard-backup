@@ -120,8 +120,9 @@ def create_snat(request):
                 masking = ["snat", "ip", "to",  masking]
 
             # Add the rule in system
-            rule_number = create_snat_rule_in_system(interface_ifname, source, destination, data["protocol"], masking)
+            rule_number, rule_content = create_snat_rule_in_system(interface_ifname, source, destination, data["protocol"], masking)
             data["rule_number"] = int(rule_number)
+            data["rule_content"] = rule_content
 
             data["snat_position"] = 1
             for snat_rule in SNat.objects.all().order_by("-snat_position"):
@@ -230,10 +231,12 @@ def update_snat(request, id):
                 # Get the rule handle of the next rule (by position)
                 next_postrouting_handle = get_next_nat_handle(snat)
                 # Update the rule in system
-                rule_number = update_snat_rule_in_system(interface_ifname, source, destination, data["protocol"], masking, 
-                                                         snat.rule_number, next_postrouting_handle, snat.postrouting_position-1)
+                rule_number, rule_content = update_snat_rule_in_system(
+                    interface_ifname, source, destination, data["protocol"], masking, snat.rule_number, 
+                    next_postrouting_handle, snat.postrouting_position-1)
 
                 data["rule_number"] = int(rule_number)
+                data["rule_content"] = rule_content
 
                 serializer_snat = SNatSerializer(snat, data=data)
                 if serializer_snat.is_valid():
@@ -275,8 +278,9 @@ def start_snat(request, id):
             next_snat = list_next_snat.order_by('snat_position')[0]
             postrouting_position = next_snat.postrouting_position - 1
             position_insert = next_snat.rule_number
-        rule_number = create_snat_rule_in_system(snat.interface.ifname, source, destination, snat.protocol, masking, 
-                                                 position_insert, postrouting_position)
+        rule_number, _ = create_snat_rule_in_system(
+            snat.interface.ifname, source, destination, snat.protocol, masking, position_insert, 
+            postrouting_position)
         snat.rule_number = int(rule_number)
 
         snat.rule_status = True
@@ -368,20 +372,23 @@ def change_snat_position(request, id):
             if up_position:
                 next_snat = list_active_snat_in_interval.order_by("snat_position")[0]
                 delete_snat_rule_in_system(snat.rule_number)
-                rule_number = create_snat_rule_in_system(snat.interface.ifname, source, destination, snat.protocol, masking,
-                                                         next_snat.rule_number, next_snat.postrouting_position-1)
+                rule_number, _ = create_snat_rule_in_system(
+                    snat.interface.ifname, source, destination, snat.protocol, masking, 
+                    next_snat.rule_number, next_snat.postrouting_position-1)
             else:
                 list_next_snat = SNat.objects.filter(rule_status=True, snat_position__gt=new_position)
                 if len(list_next_snat) > 0:
                     next_snat = list_next_snat.order_by("snat_position")[0]
                     delete_snat_rule_in_system(snat.rule_number)
-                    rule_number = create_snat_rule_in_system(snat.interface.ifname, source, destination, snat.protocol,
-                                                             masking, next_snat.rule_number, next_snat.postrouting_position-2)
+                    rule_number, _ = create_snat_rule_in_system(
+                        snat.interface.ifname, source, destination, snat.protocol, masking, 
+                        next_snat.rule_number, next_snat.postrouting_position-2)
                 else:
                     new_position_in_system = len(SNat.objects.filter(rule_status=True)) + len(OneToOneNat.objects.filter(rule_status=True)) - 1
                     delete_snat_rule_in_system(snat.rule_number)
-                    rule_number = create_snat_rule_in_system(snat.interface.ifname, source, destination, snat.protocol, 
-                                                             masking, -1, new_position_in_system)
+                    rule_number, _ = create_snat_rule_in_system(
+                        snat.interface.ifname, source, destination, snat.protocol, masking, -1, 
+                        new_position_in_system)
             snat.rule_number = int(rule_number)
             snat.save()
         
@@ -461,8 +468,10 @@ def create_one_to_one_nat(request):
                 destination = data["destination_address"]
             
             # Add the rule in system
-            rule_number = create_one_to_one_nat_rule_in_system(interface_ifname, data["source_address"], destination, data["translation_address"])
+            rule_number, rule_content = create_one_to_one_nat_rule_in_system(
+                interface_ifname, data["source_address"], destination, data["translation_address"])
             data["rule_number"] = int(rule_number)
+            data["rule_content"] = rule_content
 
             data["one_to_one_nat_position"] = 1
             for one_to_one_nat_rule in OneToOneNat.objects.all().order_by("-one_to_one_nat_position"):
@@ -597,8 +606,9 @@ def start_one_to_one_nat(request, id):
             next_one_to_one_nat = list_next_one_to_one_nat.order_by('one_to_one_nat_position')[0]
             postrouting_position = next_one_to_one_nat.postrouting_position - 1
             position_insert = next_one_to_one_nat.rule_number
-        rule_number = create_one_to_one_nat_rule_in_system(one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination,
-                                                           one_to_one_nat.translation_address, position_insert, postrouting_position)
+        rule_number, _ = create_one_to_one_nat_rule_in_system(
+            one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination,
+            one_to_one_nat.translation_address, position_insert, postrouting_position)
         one_to_one_nat.rule_number = int(rule_number)
 
         one_to_one_nat.rule_status = True
@@ -693,7 +703,7 @@ def change_one_to_one_nat_position(request, id):
             if up_position:
                 next_one_to_one_nat = list_active_one_to_one_nat_in_interval.order_by("one_to_one_nat_position")[0]
                 delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
-                rule_number = create_one_to_one_nat_rule_in_system(
+                rule_number, _ = create_one_to_one_nat_rule_in_system(
                     one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination, 
                     one_to_one_nat.translation_address, next_one_to_one_nat.rule_number, 
                     next_one_to_one_nat.postrouting_position-1)
@@ -702,14 +712,14 @@ def change_one_to_one_nat_position(request, id):
                 if len(list_next_one_to_one_nat) > 0:
                     next_one_to_one_nat = list_next_one_to_one_nat.order_by("one_to_one_nat_position")[0]
                     delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
-                    rule_number = create_one_to_one_nat_rule_in_system(
+                    rule_number, _ = create_one_to_one_nat_rule_in_system(
                         one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination, 
                         one_to_one_nat.translation_address, next_one_to_one_nat.rule_number, 
                         next_one_to_one_nat.postrouting_position-2)
                 else:
                     new_position_in_system = len(SNat.objects.filter(rule_status=True)) + len(OneToOneNat.objects.filter(rule_status=True)) - 1
                     delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
-                    rule_number = create_one_to_one_nat_rule_in_system(
+                    rule_number, _ = create_one_to_one_nat_rule_in_system(
                         one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination, 
                         one_to_one_nat.translation_address, -1, new_position_in_system)
             one_to_one_nat.rule_number = int(rule_number)
@@ -807,8 +817,10 @@ def create_dnat(request):
                 destination["port_forwarding"] = f'{data["destination_port_from"]}-{data["destination_port_to"]}'
                 destination["port"] = f' : {data["destination_port"]}'
             
-            rule_number = create_dnat_rule_in_system(interface_ifname, source, destination, data["protocol"])
+            rule_number, rule_content = create_dnat_rule_in_system(
+                interface_ifname, source, destination, data["protocol"])
             data["rule_number"] = int(rule_number)
+            data["rule_content"] = rule_content
 
             data["dnat_position"] = 1
             for dnat_rule in DNat.objects.all().order_by("-dnat_position"):
@@ -919,9 +931,11 @@ def update_dnat(request, id):
                 # Get the rule handle of the next rule (by position)
                 next_postrouting_handle = get_next_nat_handle(dnat, "prerouting")
                 # Update the rule in system
-                rule_number = update_dnat_rule_in_system(interface_ifname, source, destination, data["protocol"],
-                                                         dnat.rule_number, next_postrouting_handle, dnat.prerouting_position-1)
+                rule_number, rule_content = update_dnat_rule_in_system(
+                    interface_ifname, source, destination, data["protocol"], dnat.rule_number, 
+                    next_postrouting_handle, dnat.prerouting_position-1)
                 data["rule_number"] = int(rule_number)
+                data["rule_content"] = rule_content
 
                 serializer_dnat = DNatSerializer(dnat, data=data)
                 if serializer_dnat.is_valid():
@@ -961,8 +975,9 @@ def start_dnat(request, id):
             next_dnat = list_next_dnat.order_by('dnat_position')[0]
             prerouting_position = next_dnat.prerouting_position - 1
             position_insert = next_dnat.rule_number
-        rule_number = create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol, position_insert,
-                                                 prerouting_position)
+        rule_number, _ = create_dnat_rule_in_system(
+            dnat.interface.ifname, source, destination, dnat.protocol, position_insert, 
+            prerouting_position)
         dnat.rule_number = int(rule_number)
 
         dnat.rule_status = True
@@ -1049,20 +1064,23 @@ def change_dnat_position(request, id):
             if up_position:
                 next_dnat = list_active_dnat_in_interval.order_by("dnat_position")[0]
                 delete_dnat_rule_in_system(dnat.rule_number)
-                rule_number = create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol,
-                                                         next_dnat.rule_number, next_dnat.prerouting_position-1)
+                rule_number, _ = create_dnat_rule_in_system(
+                    dnat.interface.ifname, source, destination, dnat.protocol, next_dnat.rule_number, 
+                    next_dnat.prerouting_position-1)
             else:
                 list_next_dnat = DNat.objects.filter(rule_status=True, dnat_position__gt=new_position)
                 if len(list_next_dnat) > 0:
                     next_dnat = list_next_dnat.order_by("dnat_position")[0]
                     delete_dnat_rule_in_system(dnat.rule_number)
-                    rule_number = create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol,
-                                                             next_dnat.rule_number, next_dnat.prerouting_position-2)
+                    rule_number, _ = create_dnat_rule_in_system(
+                        dnat.interface.ifname, source, destination, dnat.protocol, next_dnat.rule_number, 
+                        next_dnat.prerouting_position-2)
                 else:
                     new_position_in_system = len(DNat.objects.filter(rule_status=True)) - 1
                     delete_dnat_rule_in_system(dnat.rule_number)
-                    rule_number = create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol, 
-                                                             -1, new_position_in_system)
+                    rule_number, _ = create_dnat_rule_in_system(
+                        dnat.interface.ifname, source, destination, dnat.protocol, -1, 
+                        new_position_in_system)
             dnat.rule_number = int(rule_number)
             dnat.save()
         

@@ -770,17 +770,22 @@ def add_edge_routers_policies(request):
             cleaned_identity_att= identity_att[1:]
         payload['relay_attribute']=cleaned_relay_att
         payload['identity_attribute']=cleaned_identity_att
-        relay = Relays.objects.get(attribute_relay=payload['relay_attribute'])
-        identity = Identities.objects.get(attribute_identitie=payload['identity_attribute'])
-        payload['identity_id']=identity.pk
-        payload['relay_id']=relay.pk
+        relay = Relays.objects.filter(attribute_relay=payload['relay_attribute'])
+        identity = Identities.objects.filter(attribute_identitie=payload['identity_attribute'])
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        serializer = RelaysPolicySerializer(data=payload, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+        for rel in relay:
+            for id in identity:
+                payload['relay_id'] = rel.pk
+                payload['identity_id'] = id.pk
+                serializer = RelaysPolicySerializer(data=payload, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+
+                else:
+                    return JsonResponse({"error": serializer.errors}, status=400)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
 
 
@@ -828,16 +833,19 @@ def update_edge_routers_policies(request, id):
         cleaned_identity_att= identity_att[1:]
     payload['relay_attribute']=cleaned_relay_att
     payload['identity_attribute']=cleaned_identity_att
-    relay = Relays.objects.get(attribute_relay=payload['relay_attribute'])
-    identity = Identities.objects.get(attribute_identitie=payload['identity_attribute'])
-    payload['identity_id']=identity.pk
-    payload['relay_id']=relay.pk
-    relay_policy = RelaysPolicy.objects.get(id=id)
-    serializer = RelaysPolicySerializerUpdate(relay_policy,data=payload, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        response = requests.put(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{relay_policy}", headers=headers, json=data_without_description, verify=False)
-        return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    relay = Relays.objects.filter(attribute_relay=payload['relay_attribute'])
+    identity = Identities.objects.filter(attribute_identitie=payload['identity_attribute'])
+    relay_policy = RelaysPolicy.objects.filter(id=id)
+    for rel_pol in relay_policy:
+        for ser in relay:
+            for id in identity:
+                payload['identity_id']=id.pk
+                payload['relay_id']=ser.pk
+                serializer_svc_policy_update = RelaysPolicySerializerUpdate(rel_pol,data=payload, partial=True)
+                if serializer_svc_policy_update.is_valid():
+                    serializer_svc_policy_update.save()
+                    response = requests.put(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{relay_policy}", headers=headers, json=data_without_description, verify=False)
+                    return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
 
 
@@ -887,17 +895,21 @@ def add_services_policies(request):
             cleaned_identity_att= identity_att[1:]
         payload['service_attribute']=cleaned_Service_att
         payload['identity_attribute']=cleaned_identity_att
-        service = Services.objects.get(attribute_service=payload['service_attribute'])
-        identity = Identities.objects.get(attribute_identitie=payload['identity_attribute'])
-        payload['identity_id']=identity.pk
-        payload['service_id']=service.pk
+        service = Services.objects.filter(attribute_service=payload['service_attribute'])
+        identity = Identities.objects.filter(attribute_identitie=payload['identity_attribute'])
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
-        payload['date_creation'] = formatted_now
-        serializer = ServicesPolicySerializer(data=payload,partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse({"message":f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+        payload['date_creation'] = formatted_now  
+        for ser in service:
+            for id in identity:
+                payload['service_id'] = ser.pk
+                payload['identity_id'] = id.pk
+                serializer = ServicesPolicySerializer(data=payload, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return JsonResponse({"message":f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+                else:
+                    return JsonResponse({"error": serializer.errors}, status=400)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
 
 
@@ -946,16 +958,19 @@ def update_services_policies(request, id):
         cleaned_identity_att= identity_att[1:]
     payload['service_attribute']=cleaned_Service_att
     payload['identity_attribute']=cleaned_identity_att
-    service = Services.objects.get(attribute_service=payload['service_attribute'])
-    identity = Identities.objects.get(attribute_identitie=payload['identity_attribute'])
-    payload['identity_id']=identity.pk
-    payload['service_id']=service.pk
-    service_policy = ServicesPolicy.objects.get(id=id)
-    serializer_svc_policy_update = ServicesPolicySerializerUpdate(service_policy,data=payload, partial=True)
-    if serializer_svc_policy_update.is_valid():
-        serializer_svc_policy_update.save()
-        response = requests.put(f"{PATH_ZTNA_SERVICES_POLICIES}/{service_policy}", headers=headers, json=data_without_description, verify=False)
-        return JsonResponse({"message": f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    service = Services.objects.filter(attribute_service=payload['service_attribute'])
+    identity = Identities.objects.filter(attribute_identitie=payload['identity_attribute'])
+    service_policy = ServicesPolicy.objects.filter(id=id)
+    for ser_policy in service_policy:
+        for ser in service:
+            for id in identity:
+                payload['identity_id']=id.pk
+                payload['service_id']=ser.pk
+                serializer_svc_policy_update = ServicesPolicySerializerUpdate(ser_policy,data=payload, partial=True)
+                if serializer_svc_policy_update.is_valid():
+                    serializer_svc_policy_update.save()
+                    response = requests.put(f"{PATH_ZTNA_SERVICES_POLICIES}/{service_policy}", headers=headers, json=data_without_description, verify=False)
+                    return JsonResponse({"message": f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
 
 # Services Edge routers policies
@@ -1003,17 +1018,21 @@ def add_services_edge_routers_policies(request):
             cleaned_Service_att= Service_att[1:]
         payload['relay_attribute']=cleaned_relay_att
         payload['service_attribute']=cleaned_Service_att
-        relay = Relays.objects.get(attribute_relay=payload['relay_attribute'])
-        service = Services.objects.get(attribute_service=payload['service_attribute'])
-        payload['service_id']=service.pk
-        payload['relay_id']=relay.pk
+        relay = Relays.objects.filter(attribute_relay=payload['relay_attribute'])
+        service = Services.objects.filter(attribute_service=payload['service_attribute'])
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        serializer = ServicesRelaysPolicySerializer(data=payload,partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+        for ser in service:
+            for id in relay:
+                payload['service_id'] = ser.pk
+                payload['relay_id'] = id.pk
+                serializer = ServicesRelaysPolicySerializer(data=payload, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+                else:
+                    return JsonResponse({"error": serializer.errors}, status=400)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)
 
 
@@ -1061,15 +1080,17 @@ def update_services_edge_routers_policies(request, id):
         cleaned_Service_att= Service_att[1:]
     payload['relay_attribute']=cleaned_relay_att
     payload['service_attribute']=cleaned_Service_att
-    relay = Relays.objects.get(attribute_relay=payload['relay_attribute'])
-    service = Services.objects.get(attribute_service=payload['service_attribute'])
-    payload['service_id']=service.pk
-    payload['relay_id']=relay.pk
-    svc_relay_policy = ServicesRelaysPolicy.objects.get(id=id)
-    serializer = ServicesRelaysPolicySerializerUpdate(svc_relay_policy,data=payload, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        response = requests.put(f"{PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES}/{svc_relay_policy}", headers=headers, json=data, verify=False)
-        return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-    
+    relay = Relays.objects.filter(attribute_relay=payload['relay_attribute'])
+    service = Services.objects.filter(attribute_service=payload['service_attribute'])
+    svc_relay_policy = ServicesRelaysPolicy.objects.filter(id=id)
+    for ser_policy in svc_relay_policy:
+        for ser in service:
+            for id in relay:
+                payload['relay_id']=id.pk
+                payload['service_id']=ser.pk
+                serializer_svc_policy_update = ServicesRelaysPolicySerializerUpdate(ser_policy,data=payload, partial=True)
+                if serializer_svc_policy_update.is_valid():
+                    serializer_svc_policy_update.save()
+                    response = requests.put(f"{PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES}/{ser_policy}", headers=headers, json=data, verify=False)
+                return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)

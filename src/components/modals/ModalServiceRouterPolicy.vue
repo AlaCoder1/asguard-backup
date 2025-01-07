@@ -1,19 +1,10 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog
-      v-model="state.isLoadingDialogue"
-      :scrim="false"
-      persistent
-      width="auto"
-    >
+    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear
-            indeterminate
-            color="white"
-            class="mb-0"
-          ></v-progress-linear>
+          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -24,8 +15,7 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addService") }}</span
-            >
+              {{ $t("ztna.addService") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
               {{ $t("ztna.updateService") }} Relay Policy
             </span>
@@ -34,13 +24,8 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="PolicyName"
-                    v-model="name"
-                    :placeholder="$t('ztna.policyName')"
-                    :rules="rulesName"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rulesName"
+                    persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12">
@@ -57,11 +42,7 @@
                         </template>
 
                         <v-list>
-                          <v-list-item
-                            v-for="(item, index) in semantic"
-                            :key="index"
-                            @click="selectsemantic(item)"
-                          >
+                          <v-list-item v-for="(item, index) in semantic" :key="index" @click="selectsemantic(item)">
                             <v-list-item-title>{{ item }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
@@ -74,92 +55,46 @@
                   <!-- <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
 
-                  <v-select
-                    v-model="serviceRA"
-                    :label="$t('ztna.serviceRoleAttribute')"
-                    density="compact"
-                    item-title="attribute_service"
-                    item-value="id"
-                    return-object
-                    :rules="rules"
-                    :items="ServList"
-                    background-color="#fffffff"
-                    :no-data-text="$t('certificat.certificatlist')"
-                  >
+                  <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact"
+                    item-title="attribute_service" item-value="id" return-object :rules="rules" :items="ServList.filter((item, index, self) =>
+                      index === self.findIndex((t) => t.attribute_service === item.attribute_service)
+                    )" background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="routerR" v-model="routerR" :placeholder="$t('ztna.edgeRelaysRole')" :rules="rules"
                     persistent-placeholder /> -->
-                  <v-select
-                    v-model="routerR"
-                    :label="$t('ztna.edgeRelaysRole')"
-                    density="compact"
-                    item-title="attribute_relay"
-                    item-value="id"
-                    return-object
-                    :rules="rules"
-                    :items="routersList"
-                    background-color="#fffffff"
-                    :no-data-text="$t('certificat.certificatlist')"
-                  >
+                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact"
+                    item-title="attribute_relay" item-value="id" return-object :rules="rules" :items="routersList.filter((item, index, self) =>
+                      index === self.findIndex((t) => t.attribute_relay === item.attribute_relay)
+                    )" background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="name_description"
-                    v-model="name_description"
-                    placeholder="Description"
-                  />
+                  <v-text-field id="name_description" v-model="name_description" placeholder="Description" />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              text
-              @click="cancel"
-              ><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span
-              ></v-btn
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large outlined label-color="#213E9F" variant="flat"
+              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span></v-btn>
 
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              color="indigo-darken-3"
-              variant="flat"
-              class="mt-3 ml-2 btn-add"
-              type="submit"
-            >
+            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" variant="flat"
+              class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
+                {{ $t("buttons.create") }}</span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+                {{ $t("buttons.update") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -194,6 +129,7 @@ export default {
     const routersList = ref([]);
     const name = ref("");
     const serviceRA = ref(null);
+    const lastname = ref("");
     const routerR = ref(null);
     const name_description = ref(null);
     const selectedsemantic = ref("AllOf");
@@ -206,7 +142,8 @@ export default {
     ];
     const rulesName = [
       (value) => {
-        if (!value) return true;
+        if (!value) return t("ztna.enterValue");
+        if (modalMode.value === "edit" && value === lastname.value) return true;
         if (existingName(value)) return t("ztna.nameExist");
         return ValidName(value) ? true : t("ztna.validName");
       },
@@ -313,7 +250,7 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("name_description", data.description);
+        lastname.value = data.name;
 
         idServRouter.value = data.id;
         name.value = data.name;
@@ -342,94 +279,96 @@ export default {
     };
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(name.value) === true );
-      if (isFieldValid) {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      let routerAttribute = `#${routerR.value.attribute_relay}`;
-      let serviceAttribute = `#${serviceRA.value.attribute_service}`;
-      let payload = {
-        name: name.value,
-        semantic: selectedsemantic.value,
-        edgeRouterRoles: [routerAttribute],
-        serviceRoles: [serviceAttribute],
-        Description: name_description.value,
-      };
+      const isFieldValid = rulesName.every(rule => rule(name.value) === true);
+      if (isFieldValid || modalMode.value === "edit") {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        let routerAttribute = `#${routerR.value.attribute_relay}`;
+        let serviceAttribute = `#${serviceRA.value.attribute_service}`;
+        let payload = {
+          name: name.value,
+          semantic: selectedsemantic.value,
+          edgeRouterRoles: [routerAttribute],
+          serviceRoles: [serviceAttribute],
+          Description: name_description.value,
+        };
+        console.log(payload)
 
-      let token = document.getElementById("app").getAttribute("token");
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      if (modalMode.value === "edit") {
-        axios
-          .put(
-            `/ztna/update_services_edge_routers_policies/${idServRouter.value}`,
-            payload,
-            {
+        let token = document.getElementById("app").getAttribute("token");
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        if (modalMode.value === "edit") {
+          axios
+            .put(
+              `/ztna/update_services_edge_routers_policies/${idServRouter.value}`,
+              payload,
+              {
+                headers: {
+                  "zt-session": token,
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.servicerouterpolUpdated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        } else {
+          axios
+            .post("/ztna/add_services_edge_routers_policies", payload, {
               headers: {
                 "zt-session": token,
                 "Content-Type": "application/json",
               },
-            }
-          )
-          .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = t("ztna.servicerouterpolUpdated");
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-      state.isLoadingDialogue = false;
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
-            }
-          });
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.openModal = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.servicerouterpolCreated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        }
       } else {
-        axios
-          .post("/ztna/add_services_edge_routers_policies", payload, {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            if (response.status == "200") {
-              state.openModal = false;
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = t("ztna.servicerouterpolCreated");
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
-            }
-          });
-      }} else {
-      state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = t("ztna.missingFields");
       }
     };
     const resetForm = () => {

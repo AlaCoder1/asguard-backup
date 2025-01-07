@@ -1,5 +1,5 @@
-from backend.nat.utils import get_rule_handle_in_system
-from backend.nat.utils_system import delete_nat_rule_in_system, save_ruleset_nft
+from backend.nat.utils_system import get_rule_content_in_system
+from backend.nat.utils_system import delete_nat_rule_in_system, get_rule_handle_in_system, save_ruleset_nft
 from utils.commands_utils import execute_command_without_arguments
 
 
@@ -48,22 +48,26 @@ def create_snat_rule_in_system(oifname, source, destination, protocol, masking, 
 
     # Get the rule handle
     handle_number = get_rule_handle_in_system("postrouting", rule_position)
-    return handle_number
+    rule_content = get_rule_content_in_system("postrouting", rule_position)
+    return handle_number, rule_content
 
 
 def delete_snat_rule_in_system(handle_number):
     """Update an SNAT rule in system"""
-    execute_command_without_arguments(["sudo", "nft", "delete", "rule", "nat", "postrouting", "handle", f"{handle_number}"])
+    execute_command_without_arguments(
+        ["sudo", "nft", "delete", "rule", "nat", "postrouting", "handle", f"{handle_number}"])
 
     # Save ruleset in ruleset file
     save_ruleset_nft()
 
 
-def update_snat_rule_in_system(oifname, source, destination, protocol, masking, handle_number, next_rule_handle, rule_position):
+def update_snat_rule_in_system(oifname, source, destination, protocol, masking, handle_number, 
+                               next_rule_handle, rule_position):
     """Update an SNAT rule in system"""
     delete_nat_rule_in_system("postrouting", handle_number)
-    new_handle_number = create_snat_rule_in_system(oifname, source, destination, protocol, masking, next_rule_handle, rule_position)
+    new_handle_number, new_content_number = create_snat_rule_in_system(
+        oifname, source, destination, protocol, masking, next_rule_handle, rule_position)
 
     # Save ruleset in ruleset file
     save_ruleset_nft()
-    return new_handle_number
+    return new_handle_number, new_content_number

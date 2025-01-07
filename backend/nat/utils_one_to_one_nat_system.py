@@ -1,4 +1,4 @@
-from backend.nat.utils import get_rule_handle_in_system
+from backend.nat.utils_system import get_rule_content_in_system, get_rule_handle_in_system
 from backend.nat.utils_system import delete_nat_rule_in_system, save_ruleset_nft
 from utils.commands_utils import execute_command_without_arguments
 
@@ -33,7 +33,8 @@ def create_one_to_one_nat_rule_in_system(oifname, source, destination, translati
 
     # Get the rule handle
     handle_number = get_rule_handle_in_system("postrouting", rule_position)
-    return handle_number
+    rule_content = get_rule_content_in_system("postrouting", rule_position)
+    return handle_number, rule_content
 
 
 def delete_one_to_one_nat_rule_in_system(handle_number):
@@ -44,13 +45,13 @@ def delete_one_to_one_nat_rule_in_system(handle_number):
     save_ruleset_nft()
 
 
-def update_one_to_one_nat_rule_in_system(oifname, source, destination, outgoing_ip_address, handle_number, next_rule_handle, 
-                                         rule_position):
+def update_one_to_one_nat_rule_in_system(oifname, source, destination, outgoing_ip_address, handle_number, 
+                                         next_rule_handle, rule_position):
     """Update an SNAT rule in system"""
     delete_nat_rule_in_system("postrouting", handle_number)
-    new_handle_number = create_one_to_one_nat_rule_in_system(oifname, source, destination, outgoing_ip_address, next_rule_handle, 
-                                                             rule_position)
+    new_handle_number, new_content_number = create_one_to_one_nat_rule_in_system(
+        oifname, source, destination, outgoing_ip_address, next_rule_handle, rule_position)
 
     # Save ruleset in ruleset file
     save_ruleset_nft()
-    return new_handle_number
+    return new_handle_number, new_content_number

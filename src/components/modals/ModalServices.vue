@@ -1,19 +1,10 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog
-      v-model="state.isLoadingDialogue"
-      :scrim="false"
-      persistent
-      width="auto"
-    >
+    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear
-            indeterminate
-            color="white"
-            class="mb-0"
-          ></v-progress-linear>
+          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -38,52 +29,34 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field id="ServiceAttribute" v-model="serviceAtt" :placeholder="$t('ztna.serviceAttribute')"
-                    :rules="rulesName" persistent-placeholder />
+                    :rules="rulesatt" persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n3">
                   <label for="Tunneler" class="mr-3">{{
                     $t("ztna.encryption")
-                    }}</label>
+                  }}</label>
                   <input type="checkbox" id="encryptionRequired" value="encryptionRequired"
                     v-model="encryptionRequired" />
                 </v-col>
 
                 <v-col cols="6">
-                    <v-select
-                    v-model="intercept"
-                    label="INTERCEPT"
-                    density="compact"
-                    item-title="name"
-                    item-value="id"
-                    return-object
-                     :rules="rules"
-                    :items="interceptList"
-                    background-color="#fffffff"
-                    :no-data-text="$t('certificat.certificatlist')"
-                  >
+                  <v-select v-model="intercept" label="INTERCEPT" density="compact" item-title="name" item-value="id"
+                    return-object :rules="rules" :items="interceptList" background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
 
                 </v-col>
                 <v-col cols="6" class="mb-n6">
 
-                    <v-select
-                    v-model="host"
-                    :label="$t('ztna.host')"
-                    density="compact"
-                    item-title="name"
-                    item-value="id"
-                    return-object
-                     :rules="rules"
-                    :items="hostList"
-                    background-color="#fffffff"
-                    :no-data-text="$t('certificat.certificatlist')"
-                  >
+                  <v-select v-model="host" :label="$t('ztna.host')" density="compact" item-title="name" item-value="id"
+                    return-object :rules="rules" :items="hostList" background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description" 
+                  <v-text-field id="Description" v-model="Description" placeholder="Description"
                     persistent-placeholder />
                 </v-col>
               </v-row>
@@ -93,8 +66,7 @@
             <v-spacer></v-spacer>
             <v-btn color="indigo-darken-3" :rounded="true" large outlined label-color="#213E9F" variant="flat"
               class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span
-              ></v-btn>
+                {{ $t("buttons.close") }}</span></v-btn>
             <!-- <VBtn
               color="red"
               :rounded="true"
@@ -127,7 +99,7 @@
 
 <script>
 import axios from "axios";
-import { toRefs, ref, watch, reactive, inject,onMounted } from "vue";
+import { toRefs, ref, watch, reactive, inject, onMounted } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { useI18n } from "vue-i18n";
 
@@ -150,6 +122,7 @@ export default {
   setup(props) {
     const { t } = useI18n();
     const name = ref("");
+    const lastname = ref("");
     const servId = ref("");
     const serviceAtt = ref("");
     const Services = ref([]);
@@ -164,13 +137,20 @@ export default {
       },
     ];
     const rulesName = [
-  (value) => {
-    if (!value) return true;
-    if (existingName(value)) return t("ztna.nameExist");
-    return ValidName(value) ? true : t("ztna.validName");
-  },
-];
-function existingName(value) {
+      (value) => {
+        if (!value) return t("ztna.enterValue");
+        if (modalMode.value === "edit" && value === lastname.value) return true;
+        if (existingName(value)) return t("ztna.nameExist");
+        return ValidName(value) ? true : t("ztna.validName");
+      },
+    ];
+    const rulesatt = [
+      (value) => {
+        if (!value) return t("ztna.enterValue");
+        return ValidName(value) ? true : t("ztna.validName");
+      },
+    ];
+    function existingName(value) {
       const existingservice = Services.value.find(service => service.name === value);
 
       if (existingservice) {
@@ -179,7 +159,7 @@ function existingName(value) {
 
       return false;
     }
-const fetchServices = async () => {
+    const fetchServices = async () => {
       try {
         const ServicesString = await document.getElementById("app").getAttribute("Services");
         const ServicesObject = JSON.parse(ServicesString);
@@ -210,7 +190,7 @@ const fetchServices = async () => {
       textAlert: "",
     });
 
-    onMounted(()=>{
+    onMounted(() => {
       fetchHostConfigs()
       fetchInterceptConfigs()
       fetchServices()
@@ -247,6 +227,7 @@ const fetchServices = async () => {
       if (modalMode.value === "edit") {
         servId.value = data.id
         name.value = data.name;
+        lastname.value = data.name;
         serviceAtt.value = data.attribute_service;
         encryptionRequired.value = data.encryption;
         Description.value = data.description;
@@ -255,7 +236,7 @@ const fetchServices = async () => {
         for (let i = 0; i < hostList.value.length; i++) {
           if (hostList.value[i].id === data.host) {
             hostobj = hostList.value[i];
-            break;  
+            break;
           }
         }
 
@@ -265,9 +246,9 @@ const fetchServices = async () => {
             break;
           }
         }
-        host.value=hostobj;
-        intercept.value=interceptobj
-  }
+        host.value = hostobj;
+        intercept.value = interceptobj
+      }
     };
     const fetchInterceptConfigs = () => {
       let configsString = document
@@ -280,9 +261,9 @@ const fetchServices = async () => {
       } catch (error) {
         console.error("Failed to parse configs string:", error);
       }
-      
+
       interceptList.value = configsObject;
-      console.log('intercept',interceptList.value)
+      console.log('intercept', interceptList.value)
     };
 
     const fetchHostConfigs = () => {
@@ -296,101 +277,107 @@ const fetchServices = async () => {
       } catch (error) {
         console.error("Failed to parse configs string:", error);
       }
-        
+
       hostList.value = configsObject;
-      console.log('host,',hostList.value)
+      console.log('host,', hostList.value)
     };
-    function ValidName(value){
+    function ValidName(value) {
       const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
-  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
-    return true;
-  }
-  
-  return false;
-}
+      if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+        return true;
+      }
+
+      return false;
+    }
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(name.value) === true  && rule(serviceAtt.value) === true);
-      if (isFieldValid) {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const isFieldValid = rulesName.every(rule => rule(name.value) === true);
+      const isattValid = rulesatt.every(rule => rule(serviceAtt.value) === true);
+      if (isFieldValid && isattValid || modalMode.value === "edit") {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let payload = {
-        name: name.value,
-        roleAttributes: [serviceAtt.value],
-        encryptionRequired: encryptionRequired.value,
-        configs: [intercept.value.ref_intercept, host.value.ref_host],
-        Description:Description.value
-      };
+        let payload = {
+          name: name.value,
+          roleAttributes: [serviceAtt.value],
+          encryptionRequired: encryptionRequired.value,
+          configs: [intercept.value.ref_intercept, host.value.ref_host],
+          Description: Description.value
+        };
 
-      let token = document.getElementById("app").getAttribute("token");
+        let token = document.getElementById("app").getAttribute("token");
 
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      if (modalMode.value === "edit") {
-        axios
-          .put(`/ztna/update_services/${servId.value}`, payload, {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = t("ztna.serviceUpdated");
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        if (modalMode.value === "edit") {
+          axios
+            .put(`/ztna/update_services/${servId.value}`, payload, {
+              headers: {
+                "zt-session": token,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.serviceUpdated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
 
-            }
-          })
-          .catch((i) => {
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
-            }
-          });
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        } else {
+          axios
+            .post("/ztna/add_services", payload, {
+              headers: {
+                "zt-session": token,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.serviceCreated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        }
       } else {
-        axios
-          .post("/ztna/add_services", payload, {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = t("ztna.serviceCreated");
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
-            }
-          });
-      }} else {
-      state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("ztna.missingFields");
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = t("ztna.missingFields");
       }
     };
     const resetForm = () => {
@@ -404,13 +391,13 @@ const fetchServices = async () => {
     };
 
     const cancel = () => {
-      
+
       name.value = "";
       serviceAtt.value = "";
       encryptionRequired.value = false;
       Description.value = "";
-      intercept.value="";
-      host.value="";
+      intercept.value = "";
+      host.value = "";
       emitter.emit("closeServicesModal");
     };
 
@@ -431,6 +418,7 @@ const fetchServices = async () => {
       resetForm,
       cancel,
       rulesName,
+      rulesatt
     };
   },
 };

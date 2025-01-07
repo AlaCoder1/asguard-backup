@@ -132,6 +132,7 @@ export default {
     const { t } = useI18n();
     const ConfigName = ref("");
     const ConfigId = ref("");
+    const lastname = ref("");
     const intercept = ref([])
     const Host = ref([])
     const adress = ref("");
@@ -157,6 +158,7 @@ export default {
     const rulesName = [
       (value) => {
         if (!value) return t("ztna.enterValue");
+        if (modalMode.value === "edit" && value ===lastname.value) return true;
         if (existingName(value)) return t("ztna.nameExist");
         return ValidName(value) ? true : t("ztna.validName");
       },
@@ -169,10 +171,10 @@ export default {
     ];
 
     function existingName(value) {
-      const existingIdentity = intercept.value.find(identity => identity.name === value);
-      const existinghost = Host.value.find(identity => identity.name === value);
+      const existingintercept = intercept.value.find(config => config.name === value);
+      const existinghost = Host.value.find(config => config.name === value);
 
-      if (existingIdentity && existinghost) {
+      if (existingintercept || existinghost) {
         return true;
       }
 
@@ -225,7 +227,7 @@ export default {
       const ipv6Pattern = /([a-fA-F0-9]{1,4}:){7,7}[a-fA-F0-9]{1,4}|([a-fA-F0-9]{1,4}:){1,7}:|([a-fA-F0-9]{1,4}:){1,6}:[a-fA-F0-9]{1,4}|([a-fA-F0-9]{1,4}:){1,5}(:[a-fA-F0-9]{1,4}){1,2}|([a-fA-F0-9]{1,4}:){1,4}(:[a-fA-F0-9]{1,4}){1,3}|([a-fA-F0-9]{1,4}:){1,3}(:[a-fA-F0-9]{1,4}){1,4}|([a-fA-F0-9]{1,4}:){1,2}(:[a-fA-F0-9]{1,4}){1,5}|[a-fA-F0-9]{1,4}:((:[a-fA-F0-9]{1,4}){1,6})$/;
 
       // Regular expression for valid hostnames (no pure numeric strings)
-      const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+      const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
 
       // Check if value is a valid IPv4, IPv6, or a hostname (and not a pure number)
       if (ipv4Pattern.test(value) || ipv6Pattern.test(value) || (hostnamePattern.test(value) && !/^\d+$/.test(value))) {
@@ -320,6 +322,7 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
+        lastname.value=data.name;
 
         ConfigId.value = data.id;
         ConfigName.value = data.name;
@@ -335,7 +338,7 @@ export default {
       const isFieldValid = rulesName.every(rule => rule(ConfigName.value) === true );
       const isnumberValid = rulesNumber.every(rule => rule(portLow.value) === true && rule(portHigh.value) === true);
       const isaddressValid = rulesaddress.every(rule => rule(adress.value) === true );
-      if (isFieldValid && isnumberValid && isaddressValid) {
+      if (isFieldValid && isnumberValid && isaddressValid || modalMode.value === "edit") {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 

@@ -61,6 +61,8 @@
   },
 
   "errors": {
+    "endAddress":"Format must match IP address: X.X.X.X (last byte must not be 0 or 255)",
+    "port":"Port must end with 443",
     "oblig":"Fields required",
     "format_address": "Format must be like : example.com",
     "errorServer": "Internal Server Error. Please try again later",
@@ -682,7 +684,8 @@
     "servicerouterpolCreated":"Service relay policy created successfully",
     "servicerouterpolUpdated":"Service relay policy updated successfully",
     "ztnadate":"Date",
-    "ztnatime":"Time"
+    "ztnatime":"Time",
+    "namerelay":"Relay name must follow the format: {service-name}.relay"
   },
 
   "titleAgGrid": {

@@ -16,8 +16,8 @@ from backend.gateway.functions import *
 from django.db.models import Q
 from django.core import serializers
 from django.utils.translation import gettext_lazy as _
-
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 # Constants
 CONSTANT_INTERFACE_NETWORK = _('Interface')
 CONSTANT_INTERFACE_CONNECTION = _('Connection')
@@ -38,23 +38,169 @@ ERROR_MESSAGES_FAILED_DELETE = _("Failed to delete")
 ###########################
 @swagger_auto_schema(
     method='PUT',
-    request_body=GatewaySerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO CONFIG NETWORK INTERFACES",
-    operation_description="This API help to configure advanced parametres in network and configure interfaces networrk to get addresses IPV4 and IPV6 in system then in database",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'device': openapi.Schema(type=openapi.TYPE_STRING, description='Device name associated with the interface'),
+            'description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the network interface'),
+            'bogon_aux': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enable or disable bogon filtering'),
+            'private_aux': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enable or disable private network filtering'),
+            'addmac': openapi.Schema(type=openapi.TYPE_STRING, description='MAC address to add (if applicable)'),
+            'mtuv': openapi.Schema(type=openapi.TYPE_STRING, description='MTU value for the interface (optional)'),
+            'mssv': openapi.Schema(type=openapi.TYPE_INTEGER, description='MSS value for the interface'),
+            'speed_duplex': openapi.Schema(type=openapi.TYPE_STRING, description='Speed and duplex setting'),
+            'setuptypeIP4': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='IPv4 setup type (STATIC, DHCP Base, DHCP Advanced)',
+                enum=['STATIC', 'DHCP']
+            ),
+            'value_setup_Ipv4': openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                description='Configuration details for IPv4 based on the setup type',
+                properties={
+                    # Static configuration
+                    'ip_address4': openapi.Schema(
+                        type=openapi.FORMAT_IPV4,
+                        description='IPv4 address (STATIC only)',
+                        example='10.1.12.70'
+                    ),
+                    'netmask4': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description='Netmask for IPv4 (STATIC only)',
+                        example=24
+                    ),
+                    'gateway4': openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'value': openapi.Schema(
+                                type=openapi.FORMAT_IPV4,
+                                description='IPv4 gateway address (STATIC only)',
+                                example='10.1.12.1'
+                            )
+                        }
+                    ),
+                    # DHCP Base configuration
+                    'typeDHCP4': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='DHCP type (Base or Advanced)',
+                        enum=['Base', 'Advanced'],
+                        example='Base'
+                    ),
+                    'alias_add': openapi.Schema(
+                        type=openapi.FORMAT_IPV4,
+                        description='Alias IPv4 address (DHCP only)',
+                        example='192.5.5.215'
+                    ),
+                    'alias_mask': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description='Alias mask (DHCP only)',
+                        example=32
+                    ),
+                    'reject': openapi.Schema(
+                        type=openapi.FORMAT_IPV4,
+                        description='Rejected IPv4 address (DHCP only)',
+                        example='192.33.137.209'
+                    ),
+                    'hostname': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Hostname for DHCP client (DHCP only)',
+                        example='andare.fugue.com'
+                    ),
+                    # DHCP Advanced configuration
+                    'timeout': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description='DHCP timeout (Advanced only)',
+                        example=10
+                    ),
+                    'retry': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description='DHCP retry interval (Advanced only)',
+                        example=60
+                    ),
+                    'select_timeout': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description='DHCP select timeout (Advanced only)',
+                        example=5
+                    ),
+                    'reboot': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description='Reboot interval for DHCP (Advanced only)',
+                        example=10
+                    ),
+                    'backoff': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description='Backoff interval (Advanced only)',
+                        example=10
+                    ),
+                    'initial_interval': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description='Initial interval for DHCP (Advanced only)',
+                        example=2
+                    ),
+                    'dhcp_client': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='DHCP client identifier (Advanced only)',
+                        example='1:0:a0:24:ab:fb:9c'
+                    ),
+                    'lease_time': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description='Lease time in seconds (Advanced only)',
+                        example=3600
+                    ),
+                    'request': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Requested options (Advanced only)',
+                        example='subnet-mask, broadcast-address, time-offset, routers, domain-name, domain-name-servers, host-name, routers'
+                    ),
+                    'require': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Required options (Advanced only)',
+                        example='subnet-mask, domain-name-servers'
+                    ),
+                    'domaine_name': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Domain names (Advanced only)',
+                        example='fugue.comrc.vix.comhome.vix.com'
+                    ),
+                    'prepend_domain_server': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Prepend domain servers (Advanced only)',
+                        example='127.0.0.1'
+                    ),
+                },
+            ),
+            # Other fields...
+        },
+        required=['nameInterface', 'device', 'setuptypeIP4', 'value_setup_Ipv4'],
+    ),
+    responses={
+        200: "Successfully configured the network interface",
+        400: "Invalid request payload",
+        500: "Internal server error",
+    },
 )
+
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def conf(request,name_interface): 
+    """ API to configure interface : 
+            -IPV4 configuration
+            -IPV6 configuration
+            - generic configuration
+            - bogon range
+        Parameters:
+            request (HttpRequest): An instance of HttpRequest containing the incoming request data.
+            name_interface (str): The name of the interface to be configured.
+        Returns:
+            JsonResponse: A JSON response containing the configuration status for the interface.
+            The response includes a status code.
+
+    """
     msg=f"{ERROR_MESSAGES_FAILED} {CONSTANT_INTERFACE_NETWORK}"
     status=400
     if (request.method == 'PUT'):
-        device_info = device_name_interface(name_interface)
-        ifname=device_info.ifname
-        id_interface = device_info.id
-        aux_main=device_info.is_main
-        generic_config_object=GenericConfig.objects.get(interface_id=id_interface)if GenericConfig.objects.filter(interface_id=id_interface).exists() else None 
-        uuid=get_uuid_con(ifname)   
+        device_info,ifname,id_interface,aux_main,generic_config_object,uuid = device_name_interface(name_interface)
         if uuid is not None:
             data = request.data
             commandes=[]
@@ -98,9 +244,6 @@ def conf(request,name_interface):
                                 if aux_server is True:
                                         msg=f"{CONSTANT_INTERFACE_NETWORK} {SUCCESS_MESSAGES_CONFIGURED}"
                                         status=200
-
-        
-        
         else:
             msg=f"{CONSTANT_INTERFACE_CONNECTION } {ERROR_MESSAGES_NOACTIVE}"
             status=400

@@ -16,7 +16,7 @@
               <v-row class="mb-5">
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.goupname')"
+                    :label="`${$t('form.goupname')} *`"
                     v-model="state.formData.groupname"
                   ></v-text-field>
                   <span
@@ -28,7 +28,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.description')"
+                    :label="`${$t('form.description')} *`"
                     v-model="state.formData.description"
                   ></v-text-field>
                   <span
@@ -37,24 +37,16 @@
                     >{{ v$.formData.description.$errors[0].$message }}</span
                   >
                 </v-col>
-
-                <!-- <v-col cols="12">
-                  <label for="Deactivate User">add group in sudoers</label>
-                  <input type="checkbox" id="Deactivate User" v-model="formData.sudoers" />
-                </v-col> -->
-                <!-- Group Modal -->
               </v-row>
             </v-container>
-
-            <small class="mt-10 ml-5"
-              >*{{ $t("requiredfield.indicatesrequiredfield") }}</small
-            >
           </v-card-text>
           <v-card-actions>
-            <!-- <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
-            <span style="color: rgb(245, 8, 8); margin-top: 10px">{{
-              textAlertDanger
-            }}</span> -->
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
             <v-spacer></v-spacer>
 
             <v-btn

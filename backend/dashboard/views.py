@@ -3,8 +3,42 @@ from django.shortcuts import render
 from backend.dashboard.functions import get_system_infomations, service_action, update_sevice_DB
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.authentication import SessionAuthentication
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
-
+@swagger_auto_schema(
+    method='put',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'service': openapi.Schema(type=openapi.TYPE_STRING),
+            'action': openapi.Schema(type=openapi.TYPE_STRING),
+        },
+        required=['service', 'action'],
+    ),
+    responses={
+        200: openapi.Response(
+            description='Service action performed successfully',
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'msg': openapi.Schema(type=openapi.TYPE_STRING),
+                },
+                required=['msg'],
+            ),
+        ),
+        400: openapi.Response(
+            description='Bad request',
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'msg': openapi.Schema(type=openapi.TYPE_STRING),
+                },
+                required=['msg'],
+            ),
+        ),
+    },
+)
 # API to set actions service
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -50,6 +84,3 @@ def set_actions_service(request):
         return JsonResponse({"msg": msg}, status=status)    
 
 
-def monitoring(request):
-    get_system_infomations()
-    return render(request, 'basedashboard.html')

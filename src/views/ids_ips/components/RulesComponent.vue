@@ -155,7 +155,7 @@
                 outlined
                 color="#213E9F"
                 label-color="#ffffff"
-                :label="$t('buttons.update')"
+                :label="$t('buttons.save')"
                 :isLarge="true"
                 class="ml-2"
                 @click="save"

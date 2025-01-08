@@ -978,7 +978,7 @@ export default {
       /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
     );
     const isValidDomaineName = helpers.regex(
-      /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/
+      /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/
     );
     const format = computed(() => {
       return t("errors.format_address");

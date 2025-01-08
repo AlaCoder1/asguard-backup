@@ -10,6 +10,7 @@
           : $t('sdwan.updateRule')
       "
       width="600"
+      style="margin-top: 50px"
     >
       <form ref="myForm" @submit.prevent="submitForm">
         <template v-if="modalModeRule === 'create'">
@@ -219,7 +220,10 @@
       </form>
       <template #footer>
         <div class="d-flex justify-content-between">
-          <div class="text-start align-end mt-5">
+          <div
+            class="text-start align-end mt-5"
+            v-if="modalModeRule === 'create'"
+          >
             <span class="text-sm">
               <span class="text-red text-lg">*</span>
               {{ $t("errors.oblig") }}</span
@@ -441,7 +445,7 @@ export default {
               format,
 
               helpers.regex(
-               /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/
+                /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/
               )
             ),
             // isNotZero: helpers.withMessage(zeroNumber, (value) => {
@@ -479,7 +483,7 @@ export default {
               format,
 
               helpers.regex(
-               /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/
+                /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/
               )
             ),
           },

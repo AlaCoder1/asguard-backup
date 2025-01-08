@@ -9,69 +9,128 @@ from backend.rules.functions import ERROR_MESSAGES_DELETING, SUCCESS_MESSAGES_DE
 from backend.rules.models import Rule
 from backend.rules.serializers import RuleSerializer
 from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_UPDATING
-
-
-# # Constants
-# CONSTANT_RULE = _('Rule')
-# # Success messages
-# SUCCESS_MESSAGES_CREATING = _("is created")
-# SUCCESS_MESSAGES_DELETING = _("is deleted")
-# SUCCESS_MESSAGES_UPDATING = _("is updated")
-# # Error messages
-# ERROR_MESSAGES_CREATING = _("Error in creating")
-# ERROR_MESSAGES_DELETING = _("Error in deleting")
-# ERROR_MESSAGES_UPDATING = _("Error in updating")
-# ERROR_MESSAGES_EXISTANT = _("already exist")
-# ERROR_MESSAGES_INEXISTANT = _("does not exist")
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+@swagger_auto_schema(
+    method='delete',
+    operation_description="Delete a rule from the system.",
+    responses={
+        200: openapi.Response(
+            description="Rule successfully deleted.",
+            examples={
+                "application/json": {
+                    "msg": "Rule successfully deleted."
+                }
+            }
+        ),
+        400: openapi.Response(
+            description="Rule does not exist.",
+            examples={
+                "application/json": {
+                    "msg": "Rule does not exist."
+                }
+            }
+        ),
+    }
+)
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_rule(request,id):
-    """function to delete rule"""
+    """
+    Function to delete a rule from the system.
+
+    Parameters:
+    request (HttpRequest): The incoming request object.
+    id (int): The unique identifier of the rule to be deleted.
+
+    Returns:
+    JsonResponse: A JSON response containing a message indicating the success 
+      or failure of the deletion operation.
+    """
     if (request.method == 'DELETE'):
-        #tester si rule exist ou non
         if (Rule.objects.filter(id=id).exists()):
             rules = Rule.objects.get(id=id)
             rule=rules.rule
             type_rules=rules.type_rule
-             #get object of interface type
             interface_object= Interface.objects.get(id=rules.interface_id)
-            #get interface name to execute command systeme
             ifname=interface_object.ifname
-             #appel la fonction pour retrouver handle rule à supprimer
             handle=get_handle_rule(ifname,type_rules,rule)
-             #appel la fonction pour supprimer  rule avec handle déjà retrouvé(système)
             if handle is not None:
-              #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
               return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
               
             rules.delete()
             msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
             status=200
-              # else:
-              #   msg=f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}"
-              #   status=400 
-            # else:
-            #   msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
-            #   status=400 
+        
         else:
           msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
           status=400
         return JsonResponse({"msg": msg},status=status)
       
 ####
+@swagger_auto_schema(
+    method='post',
+    operation_description="Save multiple rules for a specific interface.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_ARRAY,
+        items=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Rule ID (optional for new rules)'),
+                'policy': openapi.Schema(type=openapi.TYPE_STRING, description='Policy of the rule'),
+                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address'),
+                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address'),
+                'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port'),
+                'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port'),
+                'protocol': openapi.Schema(type=openapi.TYPE_STRING, description='Protocol'),
+                'type_rule': openapi.Schema(type=openapi.TYPE_STRING, description='Type of the rule'),
+                'rule_description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the rule'),
+            },
+            required=['policy', 'type_rule']
+        )
+    ),
+    responses={
+        200: openapi.Response(
+            description="Rules successfully saved.",
+            examples={
+                "application/json": {
+                    "response": [
+                        {"id": 1, "msg": "Rule saved successfully", "status": 200},
+                        {"id": 2, "msg": "Rule updated successfully", "status": 200}
+                    ]
+                }
+            }
+        ),
+        400: openapi.Response(
+            description="Error in saving rules.",
+            examples={
+                "application/json": {
+                    "response": "Error message"
+                }
+            }
+        ),
+    }
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def save_rules(request,name_interface):
+  """
+    Function to save multiple rules for a specific interface.
+    Parameters:
+      request (HttpRequest): The incoming request object containing the rules data.
+      name_interface (str): The name of the interface to which the rules will be applied.
+    Returns:
+      JsonResponse: A JSON response containing a list of responses for each rule, 
+        each response includes the rule's ID, a message indicating the success or failure 
+        of the operation, and the HTTP status code.
+    
+  """
   msg=''
   responses=[]
   if (request.method == 'POST'):
-    # parse the incoming information
     data_list=request.data
-    #get object of interface type
     interface_object= Interface.objects.get(name_interface=name_interface)
-    #get interface name to execute command systeme
     ifname=interface_object.ifname
     for data in data_list:
         id_rule= None if data.get('id', None) == None else data.get('id', None)
@@ -89,17 +148,50 @@ def save_rules(request,name_interface):
             msg,status=update_rule_db(id_rule,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description)
         responses.append({"id":id_rule,"msg":msg,"status":status})
     return JsonResponse({"response": responses},status=status)  
-        
-            
+     
+     
+add_rule_schema = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'policy': openapi.Schema(type=openapi.TYPE_STRING, description='Policy of the rule'),
+        'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address'),
+        'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address'),
+        'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port'),
+        'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port'),
+        'protocol': openapi.Schema(type=openapi.TYPE_STRING, description='Protocol'),
+        'type_rule': openapi.Schema(type=openapi.TYPE_STRING, description='Type of the rule'),
+        'rule_description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the rule'),
+    },
+    required=['policy', 'type_rule']
+)   
+@swagger_auto_schema(
+    method='post',
+    operation_description="Add rule for a specific interface.",
+    request_body=add_rule_schema,
+ responses={
+        200: openapi.Response(description='Rule added successfully'),
+        400: openapi.Response(description='Error adding rule'),
+    },
+    
+)
+
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_rule(request,name_interface):
-    # parse the incoming information
+    """
+    Function to add rule for a specific interface.
+    Parameters:
+      request (HttpRequest): The incoming request object containing the rules data.
+      name_interface (str): The name of the interface to which the rules will be applied.
+    Returns:
+      JsonResponse: A JSON response containing a response for each rule, 
+         a message indicating the success or failure 
+        of the operation, and the HTTP status code.
+    
+    """
     data =request.data
-    #get object of interface type
     interface_object= Interface.objects.get(name_interface=name_interface)
-    #get interface name to execute command systeme
     ifname=interface_object.ifname
     policy = data.get('policy', None)
     saddr = None if data.get('saddr', None) == "" else data.get('saddr', None)
@@ -109,20 +201,15 @@ def add_rule(request,name_interface):
     protocol = None if data.get('protocol', None) == "" else data.get('protocol', None)
     type_rule = data.get('type_rule', None)
     rule_description=data.get('rule_description', None)
-    # config=get_config_file(ifname)
-    #appel la fonction pour initialiser les fichies nftables.conf
     return_init_file_nftables = init_file_nftables(ifname)
     if return_init_file_nftables:
-      #appel la fonction pour retourner rule à ajouter 
       rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
-      # if not Rule.objects.filter(Q(rule=rule) & ((Q(interface_id=interface_object.pk)& Q(type_rule!=type_rule ) )|(Q(interface_id!=interface_object.pk) & Q(type_rule=type_rule )))).exists():
       if not Rule.objects.filter(
             Q(rule=rule) & (
                 (Q(interface_id=interface_object.pk) ) &
                 (Q(type_rule=type_rule))
             )
         ).exists():
-      #appel la fonction pour ajouter rule dans le système
         return_add_rule=add_rule_remote(rule,ifname,type_rule)
         if return_add_rule:
           data = {
@@ -136,7 +223,6 @@ def add_rule(request,name_interface):
               'rule_description': rule_description
               }
           data['interface']=interface_object.id
-          #appel la fonction pour ajouter rule dans la base de données 
           data={key: value for key, value in data.items() if value is not None}
           saddr_db=calculate_subnet_address(saddr)
           daddr_db=calculate_subnet_address(daddr)
@@ -145,7 +231,6 @@ def add_rule(request,name_interface):
           data["rule_status"]=True
           data["type_rule"]=type_rule
           rule_serializer = RuleSerializer(data=data)
-          # rule_serializer.is_valid(raise_exception=True)
           if rule_serializer.is_valid():
             rule_serializer.save()
             return JsonResponse({"response": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
@@ -155,9 +240,30 @@ def add_rule(request,name_interface):
     return JsonResponse({"response": f"{ERROR_MESSAGES_CREATING} {CONSTANT_RULE}"}, status=400)
 
 
+   
+@swagger_auto_schema(
+  method='put',
+  operation_description="Update rule for a specific interface.",
+  request_body=add_rule_schema,
+responses={
+      200: openapi.Response(description='Rule update successfully'),
+      400: openapi.Response(description='Error in updating rule'),
+  },
+)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_rule(request,name_interface):
+    """
+    Function to update rule for a specific interface.
+    Parameters:
+      request (HttpRequest): The incoming request object containing the rules data.
+      name_interface (str): The name of the interface to which the rules will be applied.
+    Returns:
+      JsonResponse: A JSON response containing a response for each rule, 
+       , a message indicating the success or failure 
+        of the operation, and the HTTP status code.
+    
+    """
     # parse the incoming information
     data =request.data
     #get object of interface type

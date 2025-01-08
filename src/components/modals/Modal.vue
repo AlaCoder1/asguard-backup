@@ -240,7 +240,11 @@ export default {
     watch(
       () => state.activateStatus,
       (val) => {
-        if (val) state.port = "636";
+        if (val) {
+          state.port = "636";
+        } else {
+          state.port = "389";
+        }
       }
     );
     watch(
@@ -297,7 +301,7 @@ export default {
         let payload = {
           server_name: state.name,
           server_url: state.hostIp,
-          port: state.port,
+          port: state.port ? state.port : "389",
           search_base: state.searchBase,
           bind_user_dn: state.userDn,
           bind_user_password: state.password,

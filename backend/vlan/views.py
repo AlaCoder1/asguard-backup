@@ -30,10 +30,19 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vlan(request):
-    """API to get all vlan from database """
+    """
+    API to get all VLANs from the database.
+
+    Parameters:
+    request (HttpRequest): The incoming request object containing the GET data.
+
+    Returns:
+    JsonResponse: A JSON response containing a list of VLANs. Each VLAN is represented as a dictionary with the following keys:
+    - "id": The ID of the VLAN.
+    - "name_interface": The name of the interface associated with the VLAN.
+    """
     if (request.method == 'GET'):
         list_vlan=[]
-        # parse the incoming information
         vlan_object=Vlan.objects.all()
         vlan = serializers.serialize("json", vlan_object)
         res = json.loads(vlan)
@@ -41,7 +50,7 @@ def get_vlan(request):
             res[i]['fields']['id']=res[i]["pk"]
             res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['parent_interface']).name_interface
             list_vlan.append(res[i]['fields'])
-    return JsonResponse({"msg": list_vlan})  
+    return JsonResponse({"msg": list_vlan})
 
 @swagger_auto_schema(
     method='POST',
@@ -53,9 +62,14 @@ def get_vlan(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_vlan(request):
-    """API to add vlan in database only"""
+    """
+    API to add a VLAN to the database.
+    Parameters:
+        request (HttpRequest): The incoming request object containing the POST data.
+    Returns:
+        JsonResponse: A JSON response containing a message indicating the success or failure of the operation.
+    """
     if (request.method == 'POST'):
-        # parse the incoming information
         data_input=request.data
         vlan_serializer=VlanSerializer(data=data_input)
         if vlan_serializer.is_valid():
@@ -65,21 +79,28 @@ def add_vlan(request):
         else:
             msg=str(next(iter(vlan_serializer.errors.values()))[0]).strip('.')+"!"
             status=400
-    return JsonResponse({"msg": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)
    
 @swagger_auto_schema(
     method='PUT',
     request_body=VlanSerializer,
     responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO ADD VLAN",
-    operation_description="This API add VLAN with their caracteristique in database",
+    operation_summary="API TO UPDATE VLAN",
+    operation_description="This API update VLAN with their caracteristique in database",
 ) 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vlan(request,id):
-    """API to update vlan in system and database"""
+    """
+    API to update VLAN in the system and database.
+    Parameters:
+        request (HttpRequest): An instance of HttpRequest containing the incoming request data.
+        id (int): The ID of the VLAN to be updated.
+    Returns:
+        JsonResponse: A JSON response with a message indicating the success or failure of the operation.
+        The response includes a status code.
+    """#+
     if (request.method == 'PUT'):
-        # parse the incoming information
         data_input =request.data
         if Vlan.objects.filter(id=id).exists():
             vlan_object=Vlan.objects.get(id=id)
@@ -97,7 +118,6 @@ def update_vlan(request,id):
                         "ifname":f"vlan{new_vlan_tag}",
                         "private_aux":False,
                         "bogon_aux":False,
-                        # "description":f"update default config vlan{new_vlan_tag}",
                         }
                     if aux_save:
                         interface_serializer=InterfaceSerializer(interface_object,data=data_save)
@@ -130,9 +150,16 @@ def update_vlan(request,id):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vlan(request,id):
-    """API to delete vlan from database only"""
+    """
+    Delete a VLAN from the database.
+    Parameters:
+        request (HttpRequest): The incoming request object containing the DELETE data.#+
+        id (int): The ID of the VLAN to be deleted.
+    Returns:
+        JsonResponse: A JSON response containing a message indicating the success or failure of the operation.
+        The response includes a status code.
+    """#+
     if (request.method == 'DELETE'):
-        # parse the incoming information
         if Vlan.objects.filter(id=id):
             vlan_object=Vlan.objects.get(id=id)
             name_interface=Interface.objects.get(id=vlan_object.parent_interface_id).ifname
@@ -147,7 +174,7 @@ def delete_vlan(request,id):
         else:
             msg=f"{CONSTANT_VLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
             status=400
-    return JsonResponse({"msg": msg},status=status) 
+    return JsonResponse({"msg": msg},status=status)
 
 vlan_request_schema = openapi.Schema(
     type=openapi.TYPE_OBJECT,
@@ -171,9 +198,16 @@ vlan_request_schema = openapi.Schema(
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def assign_vlan_interface(request):
-    """API to assign vlan to interface  and create new interface of vlan to configure it """
+    """
+    API to assign VLAN to an interface and create a new interface of VLAN to configure it.
+    Parameters:
+        request (HttpRequest): An instance of HttpRequest containing the incoming request data.
+    Returns:
+        JsonResponse: A JSON response with a message indicating the success or failure of the operation.
+        The response includes a status code.#+
+    """
     if (request.method == 'POST'):
-        # parse the incoming information
+
         data_input =request.data
         id_vlan = None if data_input.get('id', None) == "" else data_input.get('id', None)
         if Vlan.objects.filter(id=id_vlan).exists():
@@ -188,7 +222,6 @@ def assign_vlan_interface(request):
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":f"VLAN{vlan_object.vlan_tag}",
-                        # "description":f"test default config vlan {vlan_tag}"
                     }
             if not Interface.objects.filter(ifname=f"vlan{vlan_object.vlan_tag}@{parent_interface}").exists():
                 aux_save=add_vlan_sys(parent_interface,vlan_tag,vlan_priority)
@@ -229,8 +262,16 @@ vlan_request_schema = openapi.Schema(
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vlan_interface(request,id_interface):
+    """
+    Update a VLAN interface in the system and database.
+    Parameters:
+        request (HttpRequest): An instance of HttpRequest containing the incoming request data.
+        id_interface (int): The ID of the VLAN interface to be updated.
+    Returns:
+        JsonResponse: A JSON response with a message indicating the success or failure of the operation.
+        The response includes a status code.
+    """
     if (request.method == 'PUT'):
-        # parse the incoming information
         data_input =request.data
         id_vlan = None if data_input.get('id', None) == "" else data_input.get('id', None)
         if Vlan.objects.filter(id=id_vlan).exists():
@@ -245,9 +286,8 @@ def update_vlan_interface(request,id_interface):
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":f"VLAN{vlan_object.vlan_tag}",
-                        # "description":f"default config vlan{vlan_object.vlan_tag}",
                     }
-            
+
             vlan_object=Interface.objects.get(id=id_interface)
             aux_save=update_vlan_sys(vlan_object.ifname,parent_interface,vlan_tag,vlan_priority)
             if aux_save:
@@ -259,7 +299,7 @@ def update_vlan_interface(request,id_interface):
         else:
             msg=f"{CONSTANT_VLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=400
-    return JsonResponse({"msg": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)
  
 @swagger_auto_schema(
     method='DELETE',
@@ -267,12 +307,20 @@ def update_vlan_interface(request,id_interface):
     operation_summary="API DELETE VLAN interface",
     operation_description="This API delete VLAN interface by id ",
 )
-   
+
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vlan_interface(request,id_interface):
+    """
+    Delete a VLAN interface from the system and database.
+    Parameters:
+        request (HttpRequest): An instance of HttpRequest containing the incoming request data.
+        id_interface (int): The ID of the VLAN interface to be deleted.
+    Returns:
+        JsonResponse: A JSON response with a message indicating the success or failure of the operation.
+        The response includes a status code.
+    """#+
     if (request.method == 'DELETE'):
-        # parse the incoming information
         if Interface.objects.filter(id=id_interface).exists():
             vlan_object=Interface.objects.get(id=id_interface)
             vlan_name=vlan_object.ifname
@@ -287,16 +335,26 @@ def delete_vlan_interface(request,id_interface):
         else:
             msg=f"{CONSTANT_VLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=400
-      
-    return JsonResponse({"msg": msg},status=status) 
+
+    return JsonResponse({"msg": msg},status=status)
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vlan_interface(request):
-    """API to get all vlan assigned from database """
+    """
+    API to get all VLAN interfaces assigned from the database.
+    Parameters:
+        request (HttpRequest): The incoming request object containing the GET data.
+    Returns:
+        JsonResponse: A JSON response containing a list of VLAN interfaces. 
+        Each interface is represented as a dictionary with the following keys:
+            - "id": The ID of the VLAN interface.
+            - "name_interface": The name of the VLAN interface.
+            - "network_port": A string describing the network port to which the VLAN interface is assigned.
+
+    """
     if (request.method == 'GET'):
         list_vlan_interface=[]
-        # parse the incoming information
         vlan_object = Interface.objects.filter(ifname__startswith='vlan')
         vlans = serializers.serialize("json", vlan_object)
         res = json.loads(vlans)
@@ -310,4 +368,4 @@ def get_vlan_interface(request):
                 "network_port":f"VLAN {vlan_tag} on {ifname_parent}"
             }
             list_vlan_interface.append(data)
-    return JsonResponse({"msg": list_vlan_interface})  
+    return JsonResponse({"msg": list_vlan_interface})

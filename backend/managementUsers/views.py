@@ -193,10 +193,10 @@ def create_user(request):
                     if is_password_matched:
                         ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
                         ldap_conn = ldap.initialize(ldap_uri)
+                        ldap_conn.set_option(ldap.OPT_REFERRALS, 0)
                         ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
-                        
                         result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
-                         # get the list of users email from AD server 
+                        # get the list of users email from AD server 
                         user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
                          # get the list of users email from openldap server 
                         user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]

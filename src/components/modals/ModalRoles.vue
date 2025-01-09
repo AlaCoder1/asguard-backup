@@ -17,7 +17,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     v-model="state.roles"
-                    :label="$t('agGrid.name')"
+                    :label="`${$t('agGrid.name')} *`"
                   ></v-text-field>
 
                   <p class="error-feedback mb-5" v-if="v$.roles.$error">
@@ -27,7 +27,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.privileges"
-                    :label="$t('priveleges')"
+                    :label="`${$t('priveleges')} *`"
                     :items="state.listPrivileges"
                     multiple
                     clearable
@@ -42,6 +42,14 @@
           </v-card-text>
 
           <v-card-actions class="mt-3 actionBtnServer">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
+
             <v-btn
               color="indigo-darken-3"
               :rounded="true"

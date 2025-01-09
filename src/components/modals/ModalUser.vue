@@ -162,12 +162,13 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
+                    v-model="state.formData.groups"
                     :items="groups"
                     :label="$t('form.assignToGroup')"
                     multiple
                     item-title="groupname"
                     item-value="id"
-                    v-model="state.formData.groups"
+                    clearable
                     @change="handleGroupChange"
                     return-object
                   ></v-autocomplete>
@@ -195,7 +196,6 @@
                 {{ $t("errors.oblig") }}</span
               >
             </div>
-            <span></span>
             <v-spacer></v-spacer>
 
             <v-btn

@@ -36,7 +36,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('PageGeneral.ServerName')"
+                    :label="`${$t('PageGeneral.ServerName')} *`"
                     v-model="state.name"
                   ></v-text-field>
 
@@ -56,7 +56,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('PageGeneral.SearchBase')"
+                    :label="`${$t('PageGeneral.SearchBase')} *`"
                     v-model="state.searchBase"
                   ></v-text-field>
 
@@ -77,7 +77,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.serverType"
-                    :label="$t('PageGeneral.ServerType')"
+                    :label="`${$t('PageGeneral.ServerType')} *`"
                     item-title="name"
                     item-value="slug"
                     return-object
@@ -126,6 +126,14 @@
           </v-card-text>
 
           <v-card-actions class="mt-3 actionBtnServer">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"
@@ -240,7 +248,11 @@ export default {
     watch(
       () => state.activateStatus,
       (val) => {
-        if (val) state.port = "636";
+        if (val) {
+          state.port = "636";
+        } else {
+          state.port = "389";
+        }
       }
     );
     watch(
@@ -297,7 +309,7 @@ export default {
         let payload = {
           server_name: state.name,
           server_url: state.hostIp,
-          port: state.port,
+          port: state.port ? state.port : "389",
           search_base: state.searchBase,
           bind_user_dn: state.userDn,
           bind_user_password: state.password,

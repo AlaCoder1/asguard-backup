@@ -17,7 +17,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    :label="$t('typeInterface.parentInterface')"
+                    :label="`${$t('typeInterface.parentInterface')} *`"
                     item-title="name"
                     item-value="slug"
                     :items="state.listInterfaces"
@@ -40,7 +40,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.vlanPriority"
-                    :label="$t('typeInterface.VlanPriority')"
+                    :label="`${$t('typeInterface.VlanPriority')} *`"
                     item-title="name"
                     item-value="slug"
                     :items="state.listPriority"
@@ -53,7 +53,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Description"
+                    label="Description *"
                     v-model="state.description"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.description.$error">
@@ -64,6 +64,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               large
@@ -323,6 +330,7 @@ export default {
     };
 
     const closeModal = () => {
+      v$.value.$reset();
       emitter.emit("closeVlanModal");
       if (modalMode.value === "create") {
         state.interface = "";

@@ -679,6 +679,12 @@
           </div>
         </v-col>
       </v-row>
+      <div class="text-start ml-8 mt-10">
+            <span class="text-sm">
+              <span class="text-red text-lg">*</span>
+              {{ $t("errors.oblig") }}</span
+            >
+          </div>
       <v-spacer></v-spacer><v-spacer></v-spacer>
       <div class="text-center">
         <VButton
@@ -744,7 +750,7 @@
               <v-container>
                 <v-row>
                   <v-text-field
-                    :label="$t('interface.gatewayName')"
+                    :label="`${$t('interface.gatewayName')} *`"
                     v-model="gateway.gwname"
                   ></v-text-field>
                 </v-row>
@@ -753,7 +759,7 @@
                 </p>
                 <v-row>
                   <v-text-field
-                    label="Gateway IPV4"
+                    label="Gateway IPV4 *"
                     clsas="w-100"
                     v-model="gateway.gwaddress"
                   ></v-text-field>
@@ -800,6 +806,13 @@
               </v-container>
             </v-form>
           </v-card-text>
+          <div class="text-start ml-6 mt-3 mb-8">
+            <span class="text-sm">
+              <span class="text-red text-lg">*</span>
+              {{ $t("errors.oblig") }}</span
+            >
+          </div>
+
           <div class="text-center">
             <VButton
               large

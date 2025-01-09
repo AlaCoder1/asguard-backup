@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('typeInterface.VXLANInterfaceName')"
+                    :label="`${$t('typeInterface.VXLANInterfaceName')} *`"
                     v-model="state.interfaceName"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.interfaceName.$error">
@@ -25,7 +25,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('typeInterface.VXLANNetworkIdentifier')"
+                    :label="`${$t('typeInterface.VXLANNetworkIdentifier')} *`"
                     v-model="state.vni"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.vni.$error">
@@ -35,7 +35,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('typeInterface.sourceAddress')"
+                    :label="`${$t('typeInterface.sourceAddress')} *`"
                     v-model="state.sourceAddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
@@ -44,7 +44,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('firewall.daddr')"
+                    :label="`${$t('firewall.daddr')} *`"
                     v-model="state.daddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.daddress.$error">
@@ -53,7 +53,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('firewall.dport')"
+                    :label="`${$t('firewall.dport')} *`"
                     v-model.number="state.dport"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.dport.$error">
@@ -63,7 +63,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.device"
-                    :label="$t('typeInterface.parentDevice')"
+                    :label="`${$t('typeInterface.parentDevice')} *`"
                     item-title="name"
                     item-value="id"
                     :items="state.listDevice"
@@ -76,7 +76,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('typeInterface.connectionName')"
+                    :label="`${$t('typeInterface.connectionName')} *`"
                     v-model="state.connectionName"
                     :readonly="modalMode === 'edit' ? true : false"
                   ></v-text-field>
@@ -91,6 +91,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               large
@@ -348,6 +355,7 @@ export default {
     };
 
     const closeModal = () => {
+      v$.value.$reset();
       emitter.emit("closeVxlanModal");
       if (modalMode.value === "create") {
         state.device = "";

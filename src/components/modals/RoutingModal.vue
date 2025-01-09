@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('routing.network')"
+                    :label="`${$t('routing.network')} *`"
                     v-model="state.network"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.network.$error">
@@ -27,7 +27,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.gateway"
-                    label="Gateway"
+                    label="Gateway *"
                     item-title="name"
                     item-value="id"
                     :items="state.listGateway"
@@ -41,7 +41,7 @@
                 <template v-if="state.gateway?.name === 'Other'">
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                      label="Gateway Address"
+                      :label="`${$t('routing.gatewayAddress')} *`"
                       v-model="state.gatewayAddress"
                     ></v-text-field>
                     <p
@@ -54,7 +54,7 @@
                   <v-col cols="12" class="mb-n6">
                     <v-select
                       v-model="state.interface"
-                      label="Parent Interface"
+                      :label="`${$t('routing.parentInterface')} *`"
                       item-title="name"
                       item-value="slug"
                       :items="state.listInterfaces"
@@ -68,7 +68,7 @@
 
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                      label="Metric"
+                      label="Metric *"
                       v-model="state.metric"
                     ></v-text-field>
                     <p class="error-feedback mb-5" v-if="v$.metric.$error">
@@ -87,6 +87,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               large
@@ -383,6 +390,7 @@ export default {
     };
 
     const closeModal = () => {
+      v$.value.$reset();
       emitter.emit("closeRoutingModal");
 
       if (modalMode.value === "create") {

@@ -1038,11 +1038,11 @@ export default {
       }
     };
 
-    const restartNginx = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
-    };
+    // const restartNginx = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    //   axios.post("/waf/restartNginx");
+    // };
 
     const submitForm = async () => {
       const result = await v$.value.$validate();
@@ -1114,16 +1114,10 @@ export default {
           axios
             .put(`/waf/updateRuleWaf/${state.id}`, payload)
             .then((response) => {
-              if (response.status == "201") {
-                // state.snackbar = true;
-                // state.color = "success";
-                // state.textAlert = response.data.msg;
-                // setTimeout(() => {
-                //   location.reload();
-                // }, 1000);
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
+              state.loading = true;
+              state.isLoadingDialogue = true;
+
+              axios.post("/waf/restartNginx").then(() => {
                 setTimeout(() => {
                   state.loading = false;
                   state.isLoadingDialogue = false;
@@ -1131,11 +1125,34 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 10000);
+                }, 2000);
                 setTimeout(() => {
                   location.reload();
-                }, 10000);
-              }
+                }, 3000);
+              });
+
+              // if (response.status == "201") {
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+              // setTimeout(() => {
+              //   location.reload();
+              // }, 1000);
+              //   restartNginx();
+              //   state.loading = true;
+              //   state.isLoadingDialogue = true;
+              //   setTimeout(() => {
+              //     state.loading = false;
+              //     state.isLoadingDialogue = false;
+              //     state.snackbar = true;
+              //     state.color = "success";
+              //     state.textAlert = response.data.msg;
+              //     closeModal();
+              //   }, 10000);
+              //   setTimeout(() => {
+              //     location.reload();
+              //   }, 10000);
+              // }
             })
             .catch((i) => {
               if (i.response.status === 500) {
@@ -1152,10 +1169,10 @@ export default {
           axios
             .post("/waf/createRuleWaf", payload)
             .then((response) => {
-              if (response.status == "201") {
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
+              state.loading = true;
+              state.isLoadingDialogue = true;
+
+              axios.post("/waf/restartNginx").then(() => {
                 setTimeout(() => {
                   state.loading = false;
                   state.isLoadingDialogue = false;
@@ -1163,19 +1180,36 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 10000);
+                }, 2000);
                 setTimeout(() => {
                   location.reload();
-                }, 10000);
-                // state.openModal = false;
-                // state.snackbar = true;
-                // state.color = "success";
-                // state.textAlert = response.data.msg;
+                }, 3000);
+              });
 
-                // setTimeout(() => {
-                //   location.reload();
-                // }, 1000);
-              }
+              // if (response.status == "201") {
+              // restartNginx();
+              // state.loading = true;
+              // state.isLoadingDialogue = true;
+              // setTimeout(() => {
+              //   state.loading = false;
+              //   state.isLoadingDialogue = false;
+              //   state.snackbar = true;
+              //   state.color = "success";
+              //   state.textAlert = response.data.msg;
+              //   closeModal();
+              // }, 10000);
+              // setTimeout(() => {
+              //   location.reload();
+              // }, 10000);
+              // state.openModal = false;
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+
+              // setTimeout(() => {
+              //   location.reload();
+              // }, 1000);
+              // }
             })
             .catch((i) => {
               if (i.response.status === 500) {

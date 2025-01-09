@@ -782,11 +782,11 @@ export default {
       }
     };
 
-    const restartNginx = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
-    };
+    // const restartNginx = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    //   axios.post("/waf/restartNginx");
+    // };
 
     const submitForm = async () => {
       const result = await v$.value.$validate();
@@ -838,10 +838,10 @@ export default {
           axios
             .put(`/waf/updateApplicationWaf/${state.id}`, payload)
             .then((response) => {
-              if (response.status == "201") {
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
+              state.loading = true;
+              state.isLoadingDialogue = true;
+
+              axios.post("/waf/restartNginx").then(() => {
                 setTimeout(() => {
                   state.loading = false;
                   state.isLoadingDialogue = false;
@@ -849,11 +849,11 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 10000);
+                }, 2000);
                 setTimeout(() => {
                   location.reload();
-                }, 10000);
-              }
+                }, 3000);
+              });
             })
             .catch((i) => {
               if (i.response.status === 500) {
@@ -870,10 +870,10 @@ export default {
           axios
             .post("/waf/createApplicationWaf", payload)
             .then((response) => {
-              if (response.status == "201") {
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
+              state.loading = true;
+              state.isLoadingDialogue = true;
+
+              axios.post("/waf/restartNginx").then(() => {
                 setTimeout(() => {
                   state.loading = false;
                   state.isLoadingDialogue = false;
@@ -881,11 +881,11 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 10000);
+                }, 2000);
                 setTimeout(() => {
                   location.reload();
-                }, 10000);
-              }
+                }, 3000);
+              });
             })
             .catch((i) => {
               if (i.response.status === 500) {

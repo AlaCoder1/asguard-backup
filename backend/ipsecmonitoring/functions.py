@@ -17,7 +17,10 @@ def get_uptime():
     if output!='' and error=='':
         list_uptime=output.split(':')[1].strip().split(' ')
         if len(list_uptime)>1:
-            if list_uptime[1].lower()=='minutes':
+            print({"list_uptime":list_uptime[1].lower()})
+            if list_uptime[1].lower()=='days':
+                uptime=int(list_uptime[0])*86400
+            elif list_uptime[1].lower()=='minutes':
                 uptime=int(list_uptime[0])*60
             elif list_uptime[1].lower()=='hours':
                 uptime=int(list_uptime[0])*3600
@@ -40,7 +43,9 @@ def get_time_established():
     if output!='' and error=='':
         list_estab=output.split(':')[1].strip().split(' ')[1:-1] 
         if len(list_estab)>1:
-            if list_estab[1].lower()=='minutes':
+            if list_estab[1].lower()=='days':
+                time_established=int(list_estab[0])*86400
+            elif list_estab[1].lower()=='minutes':
                 time_established=int(list_estab[0])*60
             elif list_estab[1].lower()=='hours':
                 time_established=int(list_estab[0])*3600
@@ -84,7 +89,7 @@ def get_bytes_out():
     output, error=run_command(command)
     if output!='' and error=='':
         bytes_out=output.strip().split(' ')[0]
-        bytes_out=int(bytes_out) if bytes_out!='' else 0
+        bytes_out=int(bytes_out.strip('s')) if bytes_out!=''and bytes_out.isdigit() else 0
     return bytes_out  
 
 def get_tunnel_ip(tunnel_name):

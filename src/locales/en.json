@@ -366,7 +366,9 @@
   "routing": {
     "staticRouting": "Static Routing",
     "network": "Network",
-    "createRoute": "Create new"
+    "createRoute": "Create new",
+    "gatewayAddress":"Gateway Address",
+    "parentInterface":"Parent Interface"
   },
   "subscription": {
     "chooseYourPlan": "Choose your plan!",

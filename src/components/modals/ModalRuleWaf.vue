@@ -1122,10 +1122,10 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 4000);
+                }, 10000);
                 setTimeout(() => {
                   location.reload();
-                }, 4000);
+                }, 10000);
               }
             })
             .catch((i) => {
@@ -1154,10 +1154,10 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 4000);
+                }, 10000);
                 setTimeout(() => {
                   location.reload();
-                }, 4000);
+                }, 10000);
                 // state.openModal = false;
                 // state.snackbar = true;
                 // state.color = "success";

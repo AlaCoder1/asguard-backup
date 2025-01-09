@@ -11,7 +11,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('KeyPair.EnterKeyName')"
+                    :label="`${$t('KeyPair.EnterKeyName')} *`"
                     v-model="state.keyName"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.keyName.$error">
@@ -22,7 +22,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.type"
-                    :label="$t('KeyPair.SelectType')"
+                    :label="`${$t('KeyPair.SelectType')} *`"
                     item-title="name"
                     item-value="slug"
                     :items="listType"
@@ -42,7 +42,7 @@
                   <v-col cols="6" class="mb-n6">
                     <v-select
                       v-model="state.key"
-                      :label="$t('KeyPair.KeyLength')"
+                      :label="`${$t('KeyPair.KeyLength')} *`"
                       item-title="name"
                       item-value="slug"
                       :items="listKey"
@@ -57,7 +57,7 @@
                 <v-col cols="12" class="mb-n6" v-if="isPublic">
                   <v-select
                     v-model="state.privateKey"
-                    :label="$t('KeyPair.SelectPrivateKey')"
+                    :label="`${$t('KeyPair.SelectPrivateKey')} *`"
                     item-title="name"
                     item-value="id"
                     :items="state.mapedListKeyPrivate"
@@ -70,7 +70,7 @@
                 <v-col cols="12" class="mb-n6" v-if="isImport">
                   <v-textarea
                     v-model="state.externKey"
-                    :label="$t('KeyPair.EnterExternKey')"
+                    :label="`${$t('KeyPair.EnterExternKey')} *`"
                     variant="outlined"
                   ></v-textarea>
                   <p class="error-feedback mb-5" v-if="v$.externKey.$error">
@@ -81,6 +81,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"

@@ -13,7 +13,7 @@
         <v-card-text>
           <v-select
             :items="policyList"
-            :label="$t('firewall.policy')"
+            :label="`${$t('firewall.policy')} *`"
             :no-data-text="$t('nat.msg_no_data')"
             v-model="state.formData.policy"
           ></v-select>
@@ -26,7 +26,7 @@
             row-height="15"
             class="mt-3"
             v-model="state.formData.rule_description"
-            :label="$t('firewall.description')"
+            :label="`${$t('firewall.description')} *`"
             variant="outlined"
           ></v-textarea>
 
@@ -40,7 +40,7 @@
             :items="protocolList"
             v-model="state.formData.protocol"
             :no-data-text="$t('nat.msg_no_data')"
-            :label="$t('firewall.protocol')"
+            :label="`${$t('firewall.protocol')} *`"
             outlined
           ></v-select>
           <p class="error-feedback mb-5" v-if="v$.formData.protocol.$error">
@@ -98,6 +98,14 @@
             </v-col>
           </v-row>
         </v-card-text>
+        <div class="text-start ml-6 mb-5 mt-3">
+          <span class="text-sm">
+            <span class="text-red text-lg">*</span>
+            {{ $t("errors.oblig") }}</span
+          >
+        </div>
+        <v-spacer></v-spacer>
+
         <div class="container">
           <div class="row justify-content-center">
             <br />

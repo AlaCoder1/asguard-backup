@@ -56,7 +56,6 @@ class IPSECConsumer(AsyncWebsocketConsumer):
         res = json.loads(data)
         for i in range(len(res)):
             res[i]['fields']['id']=res[i]["pk"]
-            print({"difference":time.time()-time_value-res[i]['fields']["time_added"]})
             diffrence_time=(time.time()-time_value) 
             if res[i]['fields']["time_added"]>diffrence_time and res[i]['fields']["time_added"] <= time.time():
                 all_data.append(res[i]['fields'])
@@ -68,7 +67,7 @@ class IPSECConsumer(AsyncWebsocketConsumer):
         tunnel_name=ServerIPsec.objects.get(id=id).conn_name
         uptime=get_uptime()
         estab_time=get_time_established()
-        availability =get_availability(estab_time,uptime)
+        availability=get_availability(estab_time,uptime)
         bytes_in=get_bytes_in()
         bytes_out=get_bytes_out()
         availability_bytes=get_availabile_bytes(bytes_in,bytes_out)
@@ -92,6 +91,5 @@ class IPSECConsumer(AsyncWebsocketConsumer):
             "time_added":time.time(),
             "tunnel":id,
             }
-        # print(data)
         return data
         

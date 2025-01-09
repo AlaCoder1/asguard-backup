@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('sdwan.ruleName')"
+                    :label="`${$t('sdwan.ruleName')} *`"
                     v-model="state.ruleName"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.ruleName.$error">
@@ -26,7 +26,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Source"
+                    label="Source *"
                     v-model="state.source"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.source.$error">
@@ -49,7 +49,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.algo"
-                    label="Algo"
+                    label="Algo *"
                     item-title="name"
                     item-value="slug"
                     :items="listAlgo"
@@ -63,7 +63,7 @@
                   <v-col cols="12" class="mb-n6">
                     <v-select
                       v-model="state.area"
-                      :label="$t('sdwan.area')"
+                      :label="`${$t('sdwan.area')} *`"
                       item-title="name"
                       item-value="slug"
                       :items="state.mapeArea"
@@ -78,7 +78,7 @@
                   <v-col cols="12" class="mb-n6">
                     <v-select
                       v-model="state.area"
-                      :label="$t('sdwan.area')"
+                      :label="`${$t('sdwan.area')} *`"
                       item-title="name"
                       item-value="slug"
                       :items="state.KlonaArea"
@@ -112,7 +112,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     v-model="state.checkMilliseconds"
-                    :label="$t('sdwan.healthCheckMilliseconds')"
+                    :label="`${$t('sdwan.healthCheckMilliseconds')} *`"
                   ></v-text-field>
 
                   <p
@@ -125,7 +125,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     v-model="state.checkTargetMilliseconds"
-                    :label="$t('sdwan.healthCheckTargetMilliseconds')"
+                    :label="`${$t('sdwan.healthCheckTargetMilliseconds')} *`"
                   ></v-text-field>
 
                   <p
@@ -161,6 +161,14 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="actionBtn pt-0">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"

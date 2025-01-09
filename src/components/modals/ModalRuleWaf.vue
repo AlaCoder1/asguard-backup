@@ -36,7 +36,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('sdwan.ruleName')"
+                    :label="`${$t('sdwan.ruleName')} *`"
                     v-model="state.ruleName"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.ruleName.$error">
@@ -56,7 +56,7 @@
                   <v-select
                     multiple
                     v-model="state.variable"
-                    label="Variable"
+                    label="Variable *"
                     item-title="name"
                     item-value="slug"
                     :items="state.listVariable"
@@ -71,6 +71,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     multiple
+                    clearable
                     v-model="state.operator"
                     :label="$t('Waf.operator')"
                     item-title="type"
@@ -242,7 +243,7 @@
                   <v-select
                     multiple
                     v-model="state.actions"
-                    label="Actions"
+                    label="Actions *"
                     item-title="type"
                     item-value="slug"
                     return-object
@@ -317,6 +318,14 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               large
@@ -1130,14 +1139,14 @@ export default {
             })
             .catch((i) => {
               if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            }
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           axios
@@ -1170,14 +1179,14 @@ export default {
             })
             .catch((i) => {
               if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            }
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         }
       } else {

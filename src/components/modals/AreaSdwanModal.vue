@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('sdwan.enterAreaName')"
+                    :label="`${$t('sdwan.enterAreaName')} *`"
                     v-model="state.areaName"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.areaName.$error">
@@ -29,7 +29,7 @@
                 <v-col>
                   <v-select
                     v-model="state.interfaces"
-                    :label="$t('sdwan.listWAN')"
+                    :label="`${$t('sdwan.listWAN')} *`"
                     item-title="name"
                     item-value="id"
                     multiple
@@ -53,6 +53,14 @@
           </v-card-text>
 
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"

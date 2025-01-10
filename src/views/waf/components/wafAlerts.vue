@@ -8,7 +8,7 @@
 
     <v-row>
       <v-col cols="8">
-        <div id="map" class="mt-6" style="height: 70vh"></div>
+        <div id="map" style="width: 100%;height: 100%"></div>
       </v-col>
       <v-col cols="4">
         <h4>{{ $t("Waf.attacks") }}</h4>

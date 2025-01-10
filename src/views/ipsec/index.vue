@@ -17,6 +17,8 @@
           <v-window-item v-for="(tab, index) in tabs" :key="index" :value="tab.label">
             <v-card>
               <v-card-text>
+                <helpModal />
+
                 <component :is="tab.component" :dataServer="dataServer" />
               </v-card-text>
             </v-card>
@@ -28,6 +30,8 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import BaseLayout from "@/layouts/layout.vue";
 import ipsecAdvancedParams from "./ipsecAdvancedParams.vue";
 import ConfigurationList from "./component/configurationList.vue";
@@ -42,6 +46,7 @@ export default {
     ipsecAdvancedParams,
     ConfigurationList,
     Monotoring,
+    helpModal
   },
   inject: ["emitter"],
   data() {

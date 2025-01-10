@@ -18,6 +18,7 @@
           <v-window-item v-for="tab in tabs" :key="tab.name" :value="tab.name">
             <v-card>
               <v-card-text>
+                <helpModal />
                 <log :id="tab.name" :uuid="tab.uuid" :activeTab="activeTab" />
               </v-card-text>
             </v-card>
@@ -32,11 +33,13 @@
 import { v4 as uuidv4 } from "uuid";
 import BaseLayout from "../../layouts/layout.vue";
 import log from "./log.vue";
+import helpModal from "@/components/modals/help.vue";
 
 export default {
   components: {
     BaseLayout,
     log,
+    helpModal,
   },
   inject: ["emitter"],
   data() {

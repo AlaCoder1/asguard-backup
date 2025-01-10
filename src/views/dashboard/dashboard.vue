@@ -2,6 +2,7 @@
   <v-app id="inspire">
     <base-layout :title="t('sideBar.dashboard')" active-menu="home">
       <template #content>
+        <helpModal />
         <div class="mr-3">
           <v-overlay v-model="state.loading">
             <v-dialog
@@ -178,6 +179,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { user_privilege } from "@/mixins/user_privilege.js";
 import VButton from "@/components/VButton.vue";
+import helpModal from "@/components/modals/help.vue";
 
 export default {
   name: "HomeComponent",
@@ -186,6 +188,7 @@ export default {
     AgGridVue,
     apexchart: VueApexCharts,
     VButton,
+    helpModal,
   },
 
   setup() {
@@ -655,7 +658,7 @@ export default {
     onMounted(async () => {
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
-        localStorage.setItem("lastSubscription", lastSubscription);
+      localStorage.setItem("lastSubscription", lastSubscription);
 
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path

@@ -23,6 +23,8 @@
             :key="tab.name_interface"
             :value="tab.name_interface"
           >
+            <helpModal />
+
             <IfNameComponent :id="tab.name_interface" :activeTab="activeTab" />
           </v-window-item>
         </v-window>
@@ -52,7 +54,7 @@
               />
             </svg>
           </span>
-          <h5 class="ml-2">{{$t('noInterfaces')}}</h5>
+          <h5 class="ml-2">{{ $t("noInterfaces") }}</h5>
         </div>
       </template>
     </base-layout>
@@ -62,11 +64,13 @@
 <script>
 import BaseLayout from "../../layouts/layout.vue";
 import IfNameComponent from "../../views/network/components/IfNameComponent.vue";
+import helpModal from "@/components/modals/help.vue";
 
 export default {
   components: {
     BaseLayout,
     IfNameComponent,
+    helpModal,
   },
   data() {
     return {
@@ -83,7 +87,7 @@ export default {
   },
   computed: {
     tabs() {
-      return  this.interfaces.map((element) => {
+      return this.interfaces.map((element) => {
         return {
           name_interface: element.name_interface,
         };

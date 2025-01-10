@@ -5,6 +5,7 @@
       active-menu="interface"
     >
       <template #content>
+        <helpModal />
         <div class="mr-3">
           <vlan />
           <vxlan />
@@ -20,6 +21,7 @@ import BaseLayout from "@/layouts/layout.vue";
 import vlan from "./components/Vlan.vue";
 import vxlan from "./components/Vxlan.vue";
 import assign from "./components/Assign.vue";
+import helpModal from "@/components/modals/help.vue";
 
 export default {
   name: "Interface",
@@ -28,6 +30,7 @@ export default {
     vxlan,
     assign,
     BaseLayout,
+    helpModal,
   },
 };
 </script>

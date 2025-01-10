@@ -20,6 +20,7 @@
   <v-app id="inspire">
     <base-layout title="Key Pair" active-menu="Key_Pair">
       <template #content>
+        <helpModal />
         <div class="mr-3">
           <div
             class="certificats-management mt-6 ml-5"
@@ -103,6 +104,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalKeys from "@/components/modals/ModalKeys.vue";
 import { user_privilege } from "@/mixins/user_privilege.js";
+import helpModal from "@/components/modals/help.vue";
 
 export default {
   name: "KeyPair",
@@ -111,6 +113,7 @@ export default {
     BaseLayout,
     AgGridVue,
     VButton,
+    helpModal
   },
   setup() {
     const { t } = useI18n();

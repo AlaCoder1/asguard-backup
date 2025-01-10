@@ -2,6 +2,7 @@
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.systemLog')" active-menu="Key_Pair">
       <template #content>
+        <helpModal />
         <div class="mr-3">
           <div
             class="certificats-management mt-6 ml-5"
@@ -93,11 +94,14 @@ import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import helpModal from "@/components/modals/help.vue";
+
 export default {
   name: "KeyPair",
   components: {
     BaseLayout,
     AgGridVue,
+    helpModal
   },
   setup() {
     const { t } = useI18n();

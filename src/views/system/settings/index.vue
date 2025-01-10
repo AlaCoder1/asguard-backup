@@ -12,6 +12,8 @@
           <v-window-item v-for="tab in tabs" :key="tab.id" value="General">
             <v-card>
               <v-card-text>
+                <helpModal />
+
                 <generalParams />
               </v-card-text>
             </v-card>
@@ -25,12 +27,14 @@
 <script>
 import BaseLayout from "@/layouts/layout.vue";
 import generalParams from "./components/generalParams.vue";
+import helpModal from "@/components/modals/help.vue";
 
 export default {
   name: "Settings",
   components: {
     BaseLayout,
     generalParams,
+    helpModal,
   },
   data() {
     return {

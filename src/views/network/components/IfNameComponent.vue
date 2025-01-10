@@ -48,7 +48,7 @@
       </v-card>
     </v-dialog>
   </v-overlay>
-  <v-card>
+  <v-card class="mt-5">
     <v-overlay v-model="loading">
       <v-dialog
         v-model="isLoadingDialogue"
@@ -680,11 +680,11 @@
         </v-col>
       </v-row>
       <div class="text-start ml-8 mt-10">
-            <span class="text-sm">
-              <span class="text-red text-lg">*</span>
-              {{ $t("errors.oblig") }}</span
-            >
-          </div>
+        <span class="text-sm">
+          <span class="text-red text-lg">*</span>
+          {{ $t("errors.oblig") }}</span
+        >
+      </div>
       <v-spacer></v-spacer><v-spacer></v-spacer>
       <div class="text-center">
         <VButton

@@ -462,8 +462,9 @@ def update_server_openvpn(request, id):
         
         if client_management.get('client_management_select'):
             server.client_management_port = client_management.get('port')
-            if check_password(client_management.get('password'), server.client_management_password):
-                server.client_management_password = make_password(client_management.get('new_password'))
+            if server.client_management_password and not check_password(client_management.get('password'), server.client_management_password):
+                return JsonResponse({"error": "error previous password"}, status=400)
+            server.client_management_password = make_password(client_management.get('new_password'))
             data["client_management"]["password"] = server.client_management_password
         else:
             server.client_management_port = None

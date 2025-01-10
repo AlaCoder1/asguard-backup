@@ -185,8 +185,9 @@ log-append {PATH_LOG_OPENVPN_LOG}
             config_input = config_input.replace("#push \"dhcp-option NTP server2\"", f"push \"dhcp-option NTP {json_object['ntp_servers']['ntp_server2']}\"")
 
     if json_object["client_management"]["client_management_select"]:
+        client_management_password = json_object["client_management"]["password"].replace("$", "\$")
         write_file_from_system(PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD.format(json_object["name"]),
-                               json_object["client_management"]["password"])
+                               client_management_password)
         config_input = config_input.replace("#management localhost port path_password", f"management localhost {json_object['client_management']['port']} {PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD.format(json_object['name'])}")
 
     if json_object["verbosity_level"] != '':

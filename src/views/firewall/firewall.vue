@@ -37,6 +37,8 @@
           >
             <v-card>
               <v-card-text>
+                <helpModal />
+
                 <FirewallComponent
                   :id="tab.name_interface"
                   :uuid="tab.uuid"
@@ -85,6 +87,8 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import { v4 as uuidv4 } from "uuid";
 import BaseLayout from "../../layouts/layout.vue";
 import FirewallComponent from "../../views/firewall/rules/FirewallComponent.vue";
@@ -95,6 +99,7 @@ export default {
     BaseLayout,
     FirewallComponent,
     FirewallComponentOutbound,
+    helpModal,
   },
   inject: ["emitter"],
   data() {

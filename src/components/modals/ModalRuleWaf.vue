@@ -36,7 +36,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('sdwan.ruleName')"
+                    :label="`${$t('sdwan.ruleName')} *`"
                     v-model="state.ruleName"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.ruleName.$error">
@@ -56,7 +56,7 @@
                   <v-select
                     multiple
                     v-model="state.variable"
-                    label="Variable"
+                    label="Variable *"
                     item-title="name"
                     item-value="slug"
                     :items="state.listVariable"
@@ -71,6 +71,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     multiple
+                    clearable
                     v-model="state.operator"
                     :label="$t('Waf.operator')"
                     item-title="type"
@@ -242,7 +243,7 @@
                   <v-select
                     multiple
                     v-model="state.actions"
-                    label="Actions"
+                    label="Actions *"
                     item-title="type"
                     item-value="slug"
                     return-object
@@ -317,6 +318,14 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               large
@@ -1029,11 +1038,11 @@ export default {
       }
     };
 
-    const restartNginx = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
-    };
+    // const restartNginx = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    //   axios.post("/waf/restartNginx");
+    // };
 
     const submitForm = async () => {
       const result = await v$.value.$validate();
@@ -1105,16 +1114,10 @@ export default {
           axios
             .put(`/waf/updateRuleWaf/${state.id}`, payload)
             .then((response) => {
-              if (response.status == "201") {
-                // state.snackbar = true;
-                // state.color = "success";
-                // state.textAlert = response.data.msg;
-                // setTimeout(() => {
-                //   location.reload();
-                // }, 1000);
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
+              state.loading = true;
+              state.isLoadingDialogue = true;
+
+              axios.post("/waf/restartNginx").then(() => {
                 setTimeout(() => {
                   state.loading = false;
                   state.isLoadingDialogue = false;
@@ -1122,31 +1125,54 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 4000);
+                }, 2000);
                 setTimeout(() => {
                   location.reload();
-                }, 4000);
-              }
+                }, 3000);
+              });
+
+              // if (response.status == "201") {
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+              // setTimeout(() => {
+              //   location.reload();
+              // }, 1000);
+              //   restartNginx();
+              //   state.loading = true;
+              //   state.isLoadingDialogue = true;
+              //   setTimeout(() => {
+              //     state.loading = false;
+              //     state.isLoadingDialogue = false;
+              //     state.snackbar = true;
+              //     state.color = "success";
+              //     state.textAlert = response.data.msg;
+              //     closeModal();
+              //   }, 10000);
+              //   setTimeout(() => {
+              //     location.reload();
+              //   }, 10000);
+              // }
             })
             .catch((i) => {
               if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            }
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           axios
             .post("/waf/createRuleWaf", payload)
             .then((response) => {
-              if (response.status == "201") {
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
+              state.loading = true;
+              state.isLoadingDialogue = true;
+
+              axios.post("/waf/restartNginx").then(() => {
                 setTimeout(() => {
                   state.loading = false;
                   state.isLoadingDialogue = false;
@@ -1154,30 +1180,47 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 4000);
+                }, 2000);
                 setTimeout(() => {
                   location.reload();
-                }, 4000);
-                // state.openModal = false;
-                // state.snackbar = true;
-                // state.color = "success";
-                // state.textAlert = response.data.msg;
+                }, 3000);
+              });
 
-                // setTimeout(() => {
-                //   location.reload();
-                // }, 1000);
-              }
+              // if (response.status == "201") {
+              // restartNginx();
+              // state.loading = true;
+              // state.isLoadingDialogue = true;
+              // setTimeout(() => {
+              //   state.loading = false;
+              //   state.isLoadingDialogue = false;
+              //   state.snackbar = true;
+              //   state.color = "success";
+              //   state.textAlert = response.data.msg;
+              //   closeModal();
+              // }, 10000);
+              // setTimeout(() => {
+              //   location.reload();
+              // }, 10000);
+              // state.openModal = false;
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+
+              // setTimeout(() => {
+              //   location.reload();
+              // }, 1000);
+              // }
             })
             .catch((i) => {
               if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            }
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         }
       } else {

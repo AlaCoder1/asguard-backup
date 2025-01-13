@@ -42,7 +42,7 @@
                       <v-expansion-panel-text>
                         <v-col cols="12" class="mb-n6">
                           <v-text-field
-                            :label="$t('Waf.applicationName')"
+                            :label="`${$t('Waf.applicationName')} *`"
                             v-model="state.applicationName"
                           ></v-text-field>
                           <p
@@ -55,7 +55,7 @@
                         <v-col cols="12" class="mb-n6">
                           <v-select
                             v-model="state.type"
-                            label="Type"
+                            label="Type *"
                             item-title="name"
                             item-value="slug"
                             :items="state.listType"
@@ -69,7 +69,7 @@
                         <v-col cols="12" class="mb-n6">
                           <v-select
                             v-model="state.protocol"
-                            :label="$t('firewall.protocol')"
+                            :label="`${$t('firewall.protocol')} *`"
                             item-title="name"
                             item-value="slug"
                             :items="state.listProtocol"
@@ -89,7 +89,7 @@
                           v-if="state.protocol.slug === 'https'"
                         >
                           <v-select
-                            :label="$t('openvpn.ServeurCertificate')"
+                            :label="`${$t('openvpn.ServeurCertificate')} *`"
                             v-model="state.serverCertif"
                             item-title="name"
                             item-value="id"
@@ -107,7 +107,7 @@
 
                         <v-col cols="12" class="mb-n6">
                           <v-text-field
-                            :label="$t('squid.value')"
+                            :label="`${$t('squid.value')} *`"
                             v-model="state.value"
                           ></v-text-field>
                           <p class="error-feedback mb-5" v-if="v$.value.$error">
@@ -116,7 +116,7 @@
                         </v-col>
                         <v-col cols="12" class="mb-n6">
                           <v-text-field
-                            label="Port"
+                            label="Port *"
                             v-model.number="state.port"
                           ></v-text-field>
                           <p class="error-feedback mb-5" v-if="v$.port.$error">
@@ -176,7 +176,7 @@
                           <v-col cols="12" class="mb-n6">
                             <v-select
                               v-model="state.rule_engine"
-                              :label="$t('Waf.Ruleengine')"
+                              :label="`${$t('Waf.Ruleengine')} *`"
                               item-title="name"
                               item-value="slug"
                               clearable
@@ -226,7 +226,7 @@
 
                           <v-col cols="12" class="mb-n6">
                             <v-text-field
-                              :label="$t('Waf.Maximumrequestbodysize')"
+                              :label="`${$t('Waf.Maximumrequestbodysize')} *`"
                               v-model="state.maximum_request"
                             ></v-text-field>
                             <p
@@ -239,7 +239,7 @@
 
                           <v-col cols="12" class="mb-n6">
                             <v-text-field
-                              :label="$t('Waf.Requestbodysizefiles')"
+                              :label="`${$t('Waf.Requestbodysizefiles')} *`"
                               v-model="state.size_file"
                             ></v-text-field>
                             <p
@@ -253,7 +253,7 @@
                           <v-col cols="12" class="mb-n6">
                             <v-select
                               v-model="state.limit_action"
-                              :label="$t('Waf.RequestBodyLimitAction')"
+                              :label="`${$t('Waf.RequestBodyLimitAction')} *`"
                               item-title="name"
                               item-value="slug"
                               clearable
@@ -270,7 +270,7 @@
 
                           <v-col cols="12" class="mb-n6">
                             <v-text-field
-                              :label="$t('Waf.Maximumparsingdepth')"
+                              :label="`${$t('Waf.Maximumparsingdepth')} *`"
                               v-model="state.max_parsing"
                             ></v-text-field>
                             <p
@@ -283,7 +283,9 @@
 
                           <v-col cols="12" class="mb-n6">
                             <v-text-field
-                              :label="$t('Waf.Maximumnumberofargs/request')"
+                              :label="`${$t(
+                                'Waf.Maximumnumberofargs/request'
+                              )} *`"
                               v-model="state.max_number"
                             ></v-text-field>
                             <p
@@ -296,7 +298,7 @@
 
                           <v-col cols="12" class="mb-n6">
                             <v-text-field
-                              :label="$t('Waf.PcreMatchLimit')"
+                              :label="`${$t('Waf.PcreMatchLimit')} *`"
                               v-model="state.pcre_match_limit"
                             ></v-text-field>
                             <p
@@ -309,7 +311,7 @@
 
                           <v-col cols="12" class="mb-n6">
                             <v-text-field
-                              :label="$t('Waf.PcreMatchLimitRecursion')"
+                              :label="`${$t('Waf.PcreMatchLimitRecursion')} *`"
                               v-model="state.pcre_limit_recursion"
                             ></v-text-field>
                             <p
@@ -334,7 +336,7 @@
                           <v-col cols="12" class="mb-n6">
                             <v-select
                               v-model="state.body_mimetype"
-                              :label="$t('Waf.ResponseBodyMimeType')"
+                              :label="`${$t('Waf.ResponseBodyMimeType')} *`"
                               item-title="name"
                               item-value="slug"
                               clearable
@@ -351,7 +353,7 @@
 
                           <v-col cols="12" class="mb-n6">
                             <v-text-field
-                              :label="$t('Waf.ResponseBodyLimit')"
+                              :label="`${$t('Waf.ResponseBodyLimit')} *`"
                               v-model="state.response_body_limit"
                             ></v-text-field>
                             <p
@@ -365,7 +367,7 @@
                           <v-col cols="12" class="mb-n6">
                             <v-select
                               v-model="state.response_limit_action"
-                              :label="$t('Waf.ResponseBodyLimitAction')"
+                              :label="`${$t('Waf.ResponseBodyLimitAction')} *`"
                               item-title="name"
                               item-value="slug"
                               clearable
@@ -388,6 +390,14 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               large
@@ -772,11 +782,11 @@ export default {
       }
     };
 
-    const restartNginx = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
-    };
+    // const restartNginx = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    //   axios.post("/waf/restartNginx");
+    // };
 
     const submitForm = async () => {
       const result = await v$.value.$validate();
@@ -828,10 +838,10 @@ export default {
           axios
             .put(`/waf/updateApplicationWaf/${state.id}`, payload)
             .then((response) => {
-              if (response.status == "201") {
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
+              state.loading = true;
+              state.isLoadingDialogue = true;
+
+              axios.post("/waf/restartNginx").then(() => {
                 setTimeout(() => {
                   state.loading = false;
                   state.isLoadingDialogue = false;
@@ -839,11 +849,11 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 5000);
+                }, 2000);
                 setTimeout(() => {
                   location.reload();
-                }, 5000);
-              }
+                }, 3000);
+              });
             })
             .catch((i) => {
               if (i.response.status === 500) {
@@ -860,10 +870,10 @@ export default {
           axios
             .post("/waf/createApplicationWaf", payload)
             .then((response) => {
-              if (response.status == "201") {
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
+              state.loading = true;
+              state.isLoadingDialogue = true;
+
+              axios.post("/waf/restartNginx").then(() => {
                 setTimeout(() => {
                   state.loading = false;
                   state.isLoadingDialogue = false;
@@ -871,11 +881,11 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 5000);
+                }, 2000);
                 setTimeout(() => {
                   location.reload();
-                }, 5000);
-              }
+                }, 3000);
+              });
             })
             .catch((i) => {
               if (i.response.status === 500) {
@@ -978,7 +988,7 @@ export default {
       /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
     );
     const isValidDomaineName = helpers.regex(
-      /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/
+      /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/
     );
     const format = computed(() => {
       return t("errors.format_address");
@@ -1047,15 +1057,12 @@ export default {
             onlynumbers,
             helpers.regex(/^[0-9]+$/)
           ),
-          endsWith443: helpers.withMessage(
-            port,
-            (value) => {
-              if (state.protocol.slug === "https") {
-                return value.toString().endsWith("443");
-              }
-              return true;
+          endsWith443: helpers.withMessage(port, (value) => {
+            if (state.protocol.slug === "https") {
+              return value.toString().endsWith("443");
             }
-          ),
+            return true;
+          }),
         },
         //config
         limit_action: { required },

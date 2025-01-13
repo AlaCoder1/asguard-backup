@@ -14,6 +14,7 @@
             :value="tab.label"
           >
             <v-card>
+              <v-card-header> <helpModal /></v-card-header>
               <v-card-text>
                 <component :is="tab.component" />
               </v-card-text>
@@ -26,6 +27,8 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import wafConfiguration from "./components/wafConfiguration.vue";
 import wafRules from "./components/wafRules.vue";
 import wafAPP from "./components/wafApp.vue";
@@ -40,6 +43,7 @@ export default {
     wafRules,
     wafAPP,
     wafAlerts,
+    helpModal,
   },
   inject: ["emitter"],
   data() {

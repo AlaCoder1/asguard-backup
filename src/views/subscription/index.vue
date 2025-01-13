@@ -2,6 +2,7 @@
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.subscription')">
       <template #content>
+        <helpModal />
         <v-row class="justify-center mt-5 mb-4 ml-15" v-if="subInfo">
           <v-col cols="1"> </v-col>
           <v-col cols="3">
@@ -99,6 +100,8 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import { useI18n } from "vue-i18n";
 import BaseLayout from "@/layouts/layout.vue";
 import SubscriptionTypeCard from "./components/subscriptionTypeCard.vue";
@@ -110,6 +113,7 @@ export default {
   components: {
     BaseLayout,
     SubscriptionTypeCard,
+    helpModal
   },
   setup() {
     const { t } = useI18n();

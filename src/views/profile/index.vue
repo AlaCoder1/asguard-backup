@@ -2,6 +2,8 @@
   <v-app id="inspire">
     <base-layout :title="$t('profil.Personalinformations')">
       <template #content>
+        <helpModal />
+
         <div>
           <div>
             <div class="d-flex justify-center mt-5">
@@ -278,11 +280,14 @@ import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
+import helpModal from "@/components/modals/help.vue";
+
 export default {
   name: "Profile",
   components: {
     BaseLayout,
     VButton,
+    helpModal
   },
 
   mounted() {

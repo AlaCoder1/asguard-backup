@@ -31,6 +31,27 @@
       </v-card>
     </v-dialog>
   </v-overlay>
+
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
+
   <div class="mt-3">
     <v-row class="ml-1 mb-0 d-flex justify-start">
       <v-col cols="3">
@@ -219,6 +240,8 @@ export default {
       return t("monitoringVPN.PacketSent");
     });
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       current_user: "",
       last_Subscription: [],
       isviewModal: false,
@@ -356,6 +379,9 @@ export default {
         const result = await v$.value.$validate();
 
         if (result) {
+          state.loading = true;
+          state.isLoadingDialogue = true;
+
           setTimeout(() => {
             initializeWebSocket();
           }, 1000);
@@ -392,6 +418,10 @@ export default {
       };
       state.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        if (data) {
+          state.loading = false;
+          state.isLoadingDialogue = false;
+        }
         const lastIndex = data.length - 1;
         const lastObject = data[lastIndex];
         state.lasObj = lastObject;

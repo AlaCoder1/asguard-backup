@@ -16,6 +16,8 @@
           >
             <v-card>
               <v-card-text>
+                <helpModal />
+
                 <ConfigurationComponent />
               </v-card-text>
             </v-card>
@@ -38,12 +40,14 @@
 <script>
 import BaseLayout from "@/layouts/layout.vue";
 import ConfigurationComponent from "./components/ConfigurationComponent.vue";
+import helpModal from "@/components/modals/help.vue";
 
 export default {
   name: "Sdwan",
   components: {
     BaseLayout,
     ConfigurationComponent,
+    helpModal
   },
   data() {
     return {

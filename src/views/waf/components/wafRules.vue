@@ -1,32 +1,36 @@
 <template>
   <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="@/assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text v-html="overlayMessage">
-                </v-card-text>
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    :label="$t('buttons.close')"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3 ml-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -173,16 +177,24 @@ export default {
       return t("Waf.RequestAction");
     });
     const overlayMessage = computed(() => {
-current_user.value= user_privilege('Waf') 
-console.log('current_user',current_user.value)
-  if (current_user.value === "viewer" || current_user.value === "default") {
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!last_Subscription.value.includes("WAF")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
-});
+      current_user.value = user_privilege("Waf");
+      console.log("current_user", current_user.value);
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("WAF")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
+    });
     const Rule = computed(() => {
       return t("Waf.Rule");
     });
@@ -346,31 +358,46 @@ console.log('current_user',current_user.value)
       const user = user_privilege("Waf");
       switch (action) {
         case "delete":
-        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
-          state.deleteDialog = true;
-          state.deletedRow = rowData;
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("WAF")
+          ) {
+            state.deleteDialog = true;
+            state.deletedRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
         case "edit":
-        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("WAF")
+          ) {
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
 
         case "show":
-        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
-          state.isModalShowAppOpen = true;
-          state.editRow = rowData;
-          state.modalMode = "show";
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("WAF")
+          ) {
+            state.isModalShowAppOpen = true;
+            state.editRow = rowData;
+            state.modalMode = "show";
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
@@ -385,12 +412,17 @@ console.log('current_user',current_user.value)
       const user = user_privilege("Waf");
       switch (action) {
         case "description":
-        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
-          console.log('description')
-          state.isModalShowDescOpen = true;
-          state.editRow = rowData;
-          state.modalMode = "show";
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("WAF")
+          ) {
+            console.log("description");
+            state.isModalShowDescOpen = true;
+            state.editRow = rowData;
+            state.modalMode = "show";
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
@@ -430,10 +462,10 @@ console.log('current_user',current_user.value)
     });
 
     const lastSubscription =
-        document.getElementById("app").attributes["last_subscription"].value;
-      let parsedArraySubscription = JSON.parse(lastSubscription);
-      last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      document.getElementById("app").attributes["last_subscription"].value;
+    let parsedArraySubscription = JSON.parse(lastSubscription);
+    last_Subscription.value = parsedArraySubscription;
+    console.log("last_Subscription", last_Subscription.value);
 
     emitter.on("closeWafRuleModal", () => {
       state.isModalOpen = false;
@@ -454,21 +486,26 @@ console.log('current_user',current_user.value)
       state.editRow = {};
     });
 
-    const restartNginx = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
-    };
+    // const restartNginx = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    //   axios.post("/waf/restartNginx");
+    // };
     const openModalAdd = () => {
-      const user = user_privilege('Waf');
-      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-    } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+      const user = user_privilege("Waf");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("WAF")
+      ) {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const cancelDelete = () => {
@@ -481,20 +518,36 @@ console.log('current_user',current_user.value)
       axios
         .delete(`/waf/deleteRuleWaf/${state.deletedRow.id}`)
         .then((response) => {
-          restartNginx();
           state.loading = true;
           state.isLoadingDialogue = true;
-          setTimeout(() => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
-            state.deleteDialog = false;
-          }, 4000);
-          setTimeout(() => {
-            location.reload();
-          }, 4000);
+
+          axios.post("/waf/restartNginx").then(() => {
+            setTimeout(() => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              state.deleteDialog = false;
+            }, 2000);
+            setTimeout(() => {
+              location.reload();
+            }, 3000);
+          });
+
+          // restartNginx();
+
+          // setTimeout(() => {
+          //   state.loading = false;
+          //   state.isLoadingDialogue = false;
+          //   state.snackbar = true;
+          //   state.color = "success";
+          //   state.textAlert = response.data.msg;
+          //   state.deleteDialog = false;
+          // }, 4000);
+          // setTimeout(() => {
+          //   location.reload();
+          // }, 4000);
         })
         .catch((i) => {
           if (i.response.status === 500) {

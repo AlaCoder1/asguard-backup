@@ -10,10 +10,20 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="state.interface" label="Interface" item-title="name" item-value="id" return-object
-                    :items="state.mapedInterface" background-color="#fffffff">
+                  <v-select
+                    v-model="state.interface"
+                    label="Interface *"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="state.mapedInterface"
+                    background-color="#fffffff"
+                  >
                   </v-select>
-                  <p class="error-feedback mb-5" v-if="v_interface$.interface.$errors.length">
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v_interface$.interface.$errors.length"
+                  >
                     {{ v_interface$.interface.$errors?.[0].$message }}
                   </p>
 
@@ -29,63 +39,126 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field :label="$t('suricata.thread')" v-model="state.thread" readonly></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v_interface$.thread.$errors.length">
+                  <v-text-field
+                    :label="$t('suricata.thread')"
+                    v-model="state.thread"
+                    readonly
+                  ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v_interface$.thread.$errors.length"
+                  >
                     {{ v_interface$.thread.$errors?.[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="state.defrag" label="Defrag" item-title="name" item-value="slug" return-object
-                    :items="state.defragList" background-color="#fffffff">
+                  <v-select
+                    v-model="state.defrag"
+                    label="Defrag *"
+                    item-title="name"
+                    item-value="slug"
+                    return-object
+                    :items="state.defragList"
+                    background-color="#fffffff"
+                  >
                   </v-select>
-                  <p class="error-feedback mb-5" v-if="v_interface$.defrag.$errors.length">
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v_interface$.defrag.$errors.length"
+                  >
                     {{ v_interface$.defrag.$errors?.[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field :label="$t('suricata.clusterId')" v-model="state.clusterId"></v-text-field>
+                  <v-text-field
+                    :label="`${$t('suricata.clusterId')} *`"
+                    v-model="state.clusterId"
+                  ></v-text-field>
                   <p class="error-feedback mb-5" v-if="isExistClusterId">
                     {{ $t("suricata.ClusterIdExist") }}
                   </p>
-                  <p class="error-feedback mb-5" v-if="v_interface$.clusterId.$errors.length">
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v_interface$.clusterId.$errors.length"
+                  >
                     {{ v_interface$.clusterId.$errors?.[0].$message }}
                   </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="state.clusterType" :label="$t('suricata.clusterType')" item-title="name"
-                    item-value="slug" return-object :items="state.clusterTypeList" background-color="#fffffff">
+                  <v-select
+                    v-model="state.clusterType"
+                    :label="$t('suricata.clusterType')"
+                    item-title="name"
+                    item-value="slug"
+                    return-object
+                    :items="state.clusterTypeList"
+                    background-color="#fffffff"
+                  >
                   </v-select>
-                  <p class="error-feedback mb-5" v-if="v_interface$.clusterType.$errors.length">
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v_interface$.clusterType.$errors.length"
+                  >
                     {{ v_interface$.clusterType.$errors?.[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="state.copyMode" :label="$t('suricata.copyMode')" item-title="name"
-                    item-value="slug" return-object :items="state.copyModeList" background-color="#fffffff">
+                  <v-select
+                    v-model="state.copyMode"
+                    :label="$t('suricata.copyMode')"
+                    item-title="name"
+                    item-value="slug"
+                    return-object
+                    :items="state.copyModeList"
+                    background-color="#fffffff"
+                  >
                   </v-select>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="state.copyIface" :label="$t('suricata.copyIface')" item-title="name"
-                    item-value="id" return-object :items="state.copyIfaceList" background-color="#fffffff">
+                  <v-select
+                    v-model="state.copyIface"
+                    :label="$t('suricata.copyIface')"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="state.copyIfaceList"
+                    background-color="#fffffff"
+                  >
                   </v-select>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field :label="$t('suricata.bufferSize')" v-model="state.bufferSize"></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v_interface$.bufferSize.$errors.length">
+                  <v-text-field
+                    :label="`${$t('suricata.bufferSize')} *`"
+                    v-model="state.bufferSize"
+                  ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v_interface$.bufferSize.$errors.length"
+                  >
                     {{ v_interface$.bufferSize.$errors?.[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="state.useNmp" :label="$t('suricata.useMmap')" item-title="name" item-value="slug"
-                    return-object :items="state.useNmpList" background-color="#fffffff">
+                  <v-select
+                    v-model="state.useNmp"
+                    :label="`${$t('suricata.useMmap')} *`"
+                    item-title="name"
+                    item-value="slug"
+                    return-object
+                    :items="state.useNmpList"
+                    background-color="#fffffff"
+                  >
                   </v-select>
-                  <p class="error-feedback mb-5" v-if="v_interface$.useNmp.$errors.length">
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v_interface$.useNmp.$errors.length"
+                  >
                     {{ v_interface$.useNmp.$errors?.[0].$message }}
                   </p>
                 </v-col>
@@ -93,23 +166,55 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
-            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F"
-              variant="outlined" @click="closeModal" class="mt-3 btn-add">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              variant="outlined"
+              @click="closeModal"
+              class="mt-3 btn-add"
+            >
               <span class="pr-3 pl-3">{{ $t("buttons.close") }}</span>
             </v-btn>
 
-            <v-btn large rounded outlined label-color="#213E9F" type="submit" color="indigo-darken-3" :rounded="true"
-              variant="flat" class="mt-3 btn-add" :disabled="isExist || isExistClusterId">
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              type="submit"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 btn-add"
+              :disabled="isExist || isExistClusterId"
+            >
               <span class="text-white pr-3 pl-3">{{
                 $t("buttons.create")
-                }}</span>
+              }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
 
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -119,16 +224,7 @@
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import {
-  toRefs,
-  ref,
-  watch,
-  onMounted,
-  reactive,
-  computed,
-  inject,
-  watchEffect,
-} from "vue";
+import { toRefs, watch, onMounted, reactive, computed, inject } from "vue";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
 import { v4 as uuidv4 } from "uuid";
 
@@ -179,7 +275,7 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
-      mode: '',
+      mode: "",
       rowList: [],
       editValue: null,
       copyIfaceList: [],
@@ -326,7 +422,7 @@ export default {
       () => modalMode.value,
       (val) => {
         if (val === "create") {
-          state.mode = 'create'
+          state.mode = "create";
           state.interface = "";
           state.bufferSize = "";
           state.copyIface = null;
@@ -411,7 +507,7 @@ export default {
       state.thread = "";
       state.useNmp = "";
       state.copyModeList = [];
-      state.mode = ''
+      state.mode = "";
     };
     const error = computed(() => {
       return t("errors.valueRequired");
@@ -427,8 +523,7 @@ export default {
             error,
             requiredIf(() => state.mode === "create")
           ),
-
-        }, 
+        },
         bufferSize: {
           requiredIfFuction: helpers.withMessage(
             error,

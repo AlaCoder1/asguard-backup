@@ -15,7 +15,7 @@
                   <v-select
                     :readonly="modalMode === 'edit' ? true : false"
                     v-model="state.typeV"
-                    :label="$t('typeInterface.selectType')"
+                    :label="`${$t('typeInterface.selectType')} *`"
                     :items="state.listType"
                     :no-data-text="$t('certificat.certificatlist')"
                   ></v-select>
@@ -27,7 +27,7 @@
                   <v-select
                     v-model="state.interface"
                     :readonly="modalMode === 'edit' ? true : false"
-                    :label="$t('typeInterface.newInterface')"
+                    :label="`${$t('typeInterface.newInterface')} *`"
                     item-title="vlan"
                     item-value="id"
                     :items="state.listVlanAssing"
@@ -54,6 +54,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               large
@@ -426,6 +433,7 @@ export default {
     };
 
     const closeModal = () => {
+      v$.value.$reset();
       emitter.emit("closeAssignModal");
       if (modalMode.value === "create") {
         state.interface = "";

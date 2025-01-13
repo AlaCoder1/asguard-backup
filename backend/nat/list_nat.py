@@ -2,14 +2,15 @@ from django.core import serializers
 import json
 
 from backend.nat.models import DNat, OneToOneNat, SNat
-from backend.nat.utils import deactivate_all_rules, synchronize_rules_handle
+from backend.nat.utils import deactivate_all_rules, synchronize_nat_rules
 
 
 # SNAT list
 def get_list_all_snat():
     """Getting all snat from database"""
+    # Synchronize all NAT rules between system and database
     try:
-        synchronize_rules_handle()
+        synchronize_nat_rules()
     except Exception:
         deactivate_all_rules()
 

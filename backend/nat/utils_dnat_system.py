@@ -4,7 +4,7 @@ from utils.commands_utils import execute_command_without_arguments
 
 
 def create_dnat_rule_in_system(iifname, source, destination, protocol, next_rule_handle=0, rule_position=0):
-    """Create an DNAT rule in system"""
+    """Create an DNAT rule in system and return the rule handle and content"""
     # Set the basics of rule command
     command_dnat = ["sudo", "nft", "insert", "rule", "nat", "prerouting", "iifname", iifname]
     # Update the command to insert the rule in a specific position
@@ -53,7 +53,7 @@ def create_dnat_rule_in_system(iifname, source, destination, protocol, next_rule
 
 
 def delete_dnat_rule_in_system(handle_number):
-    """Update an DNAT rule in system"""
+    """Delete an DNAT rule in system"""
     delete_nat_rule_in_system("prerouting", handle_number)
 
     # Save ruleset in ruleset file
@@ -62,7 +62,7 @@ def delete_dnat_rule_in_system(handle_number):
 
 def update_dnat_rule_in_system(iifname, source, destination, protocol, handle_number, next_rule_handle, 
                                rule_position):
-    """Update an DNAT rule in system"""
+    """Update an DNAT rule in system and return the new rule handle and content"""
     delete_nat_rule_in_system("prerouting", handle_number)
     new_handle_number, new_rule_content = create_dnat_rule_in_system(
         iifname, source, destination, protocol, next_rule_handle, rule_position)

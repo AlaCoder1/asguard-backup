@@ -16,12 +16,17 @@ from backend.managementCertificates.constant_variables import PATH_CA_CRT, PATH_
 from backend.managementCertificates.list_certificates import get_list_all_cert_auth, get_list_all_certificates, get_one_cert_auth, get_one_certificate
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
+from backend.waf.models import ApplicationWaf
 from utils.errors_utils import CommandExecutionError
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 
 
 # Constants
 CONSTANT_CA = _("Certificate Authority")
+CONSTANT_OPENVPN_SERVER = _("openvpn server")
+CONSTANT_OPENVPN_CLIENT = _("openvpn client")
+CONSTANT_IPSEC = _("IPsec")
+CONSTANT_WAF = _("WAF")
 CONSTANT_REVOCATION_LIST = _("revocation list")
 CONSTANT_CERT = _("Certificate")
 CONSTANT_USED_ITEM = _("it's used in")
@@ -434,23 +439,27 @@ def delete_certificate(request, id):
     try:
         cert = Certificate.objects.get(id=id)
 
-        # Test if this certificate is used in OpenVPN or IPsec
-        list_server_vpn = ServerOpenvpn.objects.filter(cert_name=cert.name)
-        list_client_vpn = ClientOpenvpn.objects.filter(cert_name=cert.name)
-        list_server_ipsec = ServerIPsec.objects.filter(cert=cert.name)
+        # Test if this certificate is used in OpenVPN, IPsec or WAF
+        list_server_vpn = len(ServerOpenvpn.objects.filter(cert_name=cert.name))
+        list_client_vpn = len(ClientOpenvpn.objects.filter(cert_name=cert.name))
+        list_server_ipsec = len(ServerIPsec.objects.filter(cert=cert.name))
+        list_waf = len(ApplicationWaf.objects.filter(certificate_name=cert.name))
 
-        if len(list_server_vpn) == 0 and len(list_client_vpn) == 0 and len(list_server_ipsec) == 0: # Not used certififcate
+        if (list_server_vpn == 0 and list_client_vpn == 0 
+            and list_server_ipsec == 0 and list_waf == 0): # Not used certififcate
             # delete from system
             delete_certificate_in_system(cert.name, cert.certificate_type)
             # delete from database
             cert.delete()
             return JsonResponse({"msg": f"{cert.name} {(SUCCESS_MESSAGES_DELETING)}"}, status=201)
-        elif len(list_server_vpn) > 0:
-            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} OpenVPN Server"}, status=400)
-        elif len(list_client_vpn) > 0:
-            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} Openvpn Client"}, status=400)
-        elif len(list_server_ipsec) > 0:
-            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} IPsec"}, status=400)
+        elif list_server_vpn > 0:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} {CONSTANT_OPENVPN_SERVER}"}, status=400)
+        elif list_client_vpn > 0:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} {CONSTANT_OPENVPN_CLIENT}"}, status=400)
+        elif list_server_ipsec > 0:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} {CONSTANT_IPSEC}"}, status=400)
+        elif list_waf > 0:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} {CONSTANT_WAF}"}, status=400)
     
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_CERT}"}, status=400)

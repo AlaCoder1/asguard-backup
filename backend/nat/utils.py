@@ -1,6 +1,5 @@
 from backend.nat.models import DNat, OneToOneNat, SNat
 from backend.nat import utils_system
-from utils.commands_utils import execute_command_without_arguments
 
 
 def get_rule_handle_with_position(list_nat_rules:list[str], position):
@@ -19,8 +18,30 @@ def get_rule_content_with_position(list_nat_rules:list[str], position):
     return handle_number
 
 
+def get_rule_handle_position_with_content(rule_content: str, list_nat_rules: list[str]):
+    """Get a rule content and extract its handle and position from list of nat rules.
+    If the rule doesn't exist in table nat in system then the function return False"""
+    for rule_index, rule in enumerate(list_nat_rules):
+        if f"{rule_content} # handle ".find(rule) > -1:
+            rule_handle = rule.replace(f"{rule_content} # handle ", "")
+            return rule_handle, rule_index
+    return False
+
+
+def synchronize_rule_database(nat_rule=None, rule_handle=None, rule_position=None, 
+                              rule_type="postrouting", is_activated=True):
+    """Synchronize nat rule in database with system by updating the rule parameters"""
+    nat_rule.rule_status = is_activated
+    nat_rule.rule_number = rule_handle
+    if rule_type == "postrouting":
+        nat_rule.postrouting_position = rule_position
+    else:
+        nat_rule.pretrouting_position = rule_position
+
+
 def save_handle_from_system_to_database(list_routing_from_db, list_routing_from_system):
-    """Take the list of routing from system (postrouting or prerouting) and save each rule handle in database"""
+    """Take the list of routing from system (postrouting or prerouting) 
+    and save each rule handle in database"""
     # Loop through the list of NAT (SNAT, OneToOne or DNAT) rules reversibly, 
     # get the last rule handle and 
     # remove it from the list 
@@ -31,23 +52,47 @@ def save_handle_from_system_to_database(list_routing_from_db, list_routing_from_
         list_routing_from_db[rule_index].save()
 
 
-def synchronize_rules_handle():
-    """Synchronize nat rules handle by extracting them from system and save them in database"""
-    # Get list of nat rules from system: postrouting and prerouting
+def synchronize_nat_rules():
+    """Synchronize nat rules between system and database
+    1. Synchronize rules from database to system:
+        1.1 Get all activated rules from database
+        1.2 Find them in system
+        1.3 Extract handle and position for each rules
+        1.4 Save this parameters in database
+    2. Synchronize rules from system to database"""
+    # Get all activated rules from database
+    list_snat = SNat.objects.filter(rule_status=True)
+    list_one_to_one_nat = OneToOneNat.objects.filter(rule_status=True)
+    list_dnat = DNat.objects.filter(rule_status=True)
+    # Get all nat rules in system
     list_postrouting_from_system, list_prerouting_from_system = utils_system.get_list_nat_rules_from_system()
-
-    # Get all active rules from database
-    # Get active rules for chain prerouting (DNAT)
-    list_prerouting_from_db = [dnat for dnat in DNat.objects.filter(rule_status=True).order_by("prerouting_position")]
-    # Get active rules for chain postrouting (SNAT and OneToOneNat)
-    list_postrouting_from_db = [snat for snat in SNat.objects.filter(rule_status=True).order_by("postrouting_position")]
-    list_postrouting_from_db.extend([one_to_one_nat for one_to_one_nat in OneToOneNat.objects.filter(rule_status=True).order_by("postrouting_position")])
-    # Order by rule number
-    list_postrouting_from_db = sorted(list_postrouting_from_db, key=lambda postrouting: postrouting.postrouting_position)
+    # Extract handle and position for each rule and synchronize in database
+    # SNAT
+    for snat in list_snat:
+        rule_params = get_rule_handle_position_with_content(snat.rule_content, 
+                                                            list_postrouting_from_system)
+        if rule_params:
+            synchronize_rule_database(snat, rule_params[0], rule_params[1])
+        else:
+            synchronize_rule_database(snat, is_activated=False)
     
-    # Save rule handle in database
-    save_handle_from_system_to_database(list_postrouting_from_db, list_postrouting_from_system)
-    save_handle_from_system_to_database(list_prerouting_from_db, list_prerouting_from_system)
+    # One To One NAT
+    for one_to_one_nat in list_one_to_one_nat:
+        rule_params = get_rule_handle_position_with_content(one_to_one_nat.rule_content, 
+                                                            list_postrouting_from_system)
+        if rule_params:
+            synchronize_rule_database(one_to_one_nat, rule_params[0], rule_params[1])
+        else:
+            synchronize_rule_database(one_to_one_nat, is_activated=False)
+    
+    # DNAT
+    for dnat in list_dnat:
+        rule_params = get_rule_handle_position_with_content(dnat.rule_content, 
+                                                            list_prerouting_from_system)
+        if rule_params:
+            synchronize_rule_database(dnat, rule_params[0], rule_params[1], "prerouting")
+        else:
+            synchronize_rule_database(dnat, is_activated=False)
 
 
 def deactivate_all_rules():
@@ -67,32 +112,18 @@ def deactivate_all_rules():
                                                  rule_number=None)
 
 
-def update_position_nat(chain="postrouting"):
-    """Update the activated rules position after the changes like adding or deleting a rule"""
-                
-    # Get list of nat rules from system: postrouting (SNAT and One To One) or prerouting (DNAT)
-    ruleset = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
-    list_routing_from_system = utils_system.find_nat_in_ruleset(ruleset.stdout, chain)
-    if chain == "postrouting":
-        SNat.objects.filter(rule_status=True).update(postrouting_position=None)
-        OneToOneNat.objects.filter(rule_status=True).update(postrouting_position=None)
-    else:
-        DNat.objects.filter(rule_status=True).update(prerouting_position=None)
-
-    for rule_index in range(len(list_routing_from_system)):
-        rule_handle = get_rule_handle_with_position(list_routing_from_system, rule_index)
-        if chain == "postrouting":
-            snat_rules = SNat.objects.filter(rule_number=rule_handle)
-            one_to_one_nat_rules = OneToOneNat.objects.filter(rule_number=rule_handle)
-            if len(snat_rules) > 0:
-                nat_rule = snat_rules[0]
-            else:
-                nat_rule = one_to_one_nat_rules[0]
-            nat_rule.postrouting_position = rule_index + 1
-        else:
-            nat_rule = DNat.objects.get(rule_number=rule_handle)
-            nat_rule.prerouting_position = rule_index + 1
-        nat_rule.save()
+def find_nat_in_ruleset(rule_set:str, chain="postrouting"):
+    """Return list of NAT rules with it's type: SNAT, OneToOne or DNAT"""
+    list_rules = [line.strip() for line in rule_set.splitlines()]
+    for line_index in range(len(list_rules)):
+        if list_rules[line_index].startswith(f"chain {chain}"):
+            start_snat_line = line_index + 2
+            break
+    for line_snat in range(start_snat_line, len(list_rules)):
+        if list_rules[line_snat].startswith("}"):
+            end_snat_line = line_snat
+            break
+    return list_rules[start_snat_line:end_snat_line]
 
 
 def get_next_nat_handle(rule_nat, chain="postrouting"):

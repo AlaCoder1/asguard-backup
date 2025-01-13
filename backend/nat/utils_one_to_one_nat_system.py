@@ -4,7 +4,7 @@ from utils.commands_utils import execute_command_without_arguments
 
 
 def create_one_to_one_nat_rule_in_system(oifname, source, destination, translation, next_rule_handle=0, rule_position=0):
-    """Create an SNAT rule in system"""
+    """Create an SNAT rule in system and return the rule handle and content"""
     # Set the basics of rule command
     command_one_to_one_nat = ["sudo", "nft", "insert", "rule", "nat", "postrouting", "oifname", oifname, "ip", "saddr", source]
     # Update the command to insert the rule in a specific position
@@ -38,7 +38,7 @@ def create_one_to_one_nat_rule_in_system(oifname, source, destination, translati
 
 
 def delete_one_to_one_nat_rule_in_system(handle_number):
-    """Update an SNAT rule in system"""
+    """Delete an SNAT rule in system"""
     delete_nat_rule_in_system("postrouting", handle_number)
 
     # Save ruleset in ruleset file
@@ -47,7 +47,7 @@ def delete_one_to_one_nat_rule_in_system(handle_number):
 
 def update_one_to_one_nat_rule_in_system(oifname, source, destination, outgoing_ip_address, handle_number, 
                                          next_rule_handle, rule_position):
-    """Update an SNAT rule in system"""
+    """Update an SNAT rule in system and return the new rule handle and content"""
     delete_nat_rule_in_system("postrouting", handle_number)
     new_handle_number, new_content_number = create_one_to_one_nat_rule_in_system(
         oifname, source, destination, outgoing_ip_address, next_rule_handle, rule_position)

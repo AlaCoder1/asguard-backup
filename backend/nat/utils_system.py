@@ -8,23 +8,9 @@ def get_list_nat_rules_from_system():
     1. postrouting (SNAT and One To One)
     2. prerouting (DNAT)"""
     ruleset = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
-    list_postrouting_from_system = find_nat_in_ruleset(ruleset.stdout, "postrouting")
-    list_prerouting_from_system = find_nat_in_ruleset(ruleset.stdout, "prerouting")
+    list_postrouting_from_system = utils.find_nat_in_ruleset(ruleset.stdout, "postrouting")
+    list_prerouting_from_system = utils.find_nat_in_ruleset(ruleset.stdout, "prerouting")
     return list_postrouting_from_system, list_prerouting_from_system
-
-
-def find_nat_in_ruleset(rule_set:str, chain="postrouting"):
-    """Return list of NAT rules with it's type: SNAT, OneToOne or DNAT"""
-    list_rules = [line.strip() for line in rule_set.splitlines()]
-    for line_index in range(len(list_rules)):
-        if list_rules[line_index].startswith(f"chain {chain}"):
-            start_snat_line = line_index + 2
-            break
-    for line_snat in range(start_snat_line, len(list_rules)):
-        if list_rules[line_snat].startswith("}"):
-            end_snat_line = line_snat
-            break
-    return list_rules[start_snat_line:end_snat_line]
 
 
 def save_ruleset_nft():
@@ -53,7 +39,7 @@ def get_rule_handle_in_system(nat_type="postrouting", rule_position=0):
     """Return the last rule handle from ruleset"""
     rule_set = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
 
-    list_nat_rules = find_nat_in_ruleset(rule_set.stdout, nat_type)
+    list_nat_rules = utils.find_nat_in_ruleset(rule_set.stdout, nat_type)
     handle_number = utils.get_rule_handle_with_position(list_nat_rules, rule_position)
     return handle_number
 
@@ -62,6 +48,6 @@ def get_rule_content_in_system(nat_type="postrouting", rule_position=0):
     """Return the last rule handle from ruleset"""
     rule_set = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
 
-    list_nat_rules = find_nat_in_ruleset(rule_set.stdout, nat_type)
+    list_nat_rules = utils.find_nat_in_ruleset(rule_set.stdout, nat_type)
     handle_number = utils.get_rule_content_with_position(list_nat_rules, rule_position)
     return handle_number

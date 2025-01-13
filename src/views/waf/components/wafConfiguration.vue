@@ -645,10 +645,10 @@ export default {
                   state.snackbar = true;
                   state.color = "success";
                   state.textAlert = response.data.msg;
-                }, 4000);
+                }, 5000);
                 setTimeout(() => {
                   location.reload();
-                }, 4000);
+                }, 5000);
               }
             })
             .catch((i) => {

@@ -1,15 +1,32 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-          <v-card-text v-html="overlayMessage">
-          </v-card-text>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -219,16 +236,24 @@ export default {
       return t("squid.status");
     });
     const overlayMessage = computed(() => {
-current_user.value= user_privilege('Suricata') 
-console.log('current_user',current_user.value)
-  if (current_user.value === "viewer" || current_user.value === "default") {
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!last_Subscription.value.includes("IDS/IPS")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
-});
+      current_user.value = user_privilege("Suricata");
+      console.log("current_user", current_user.value);
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("IDS/IPS")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
+    });
 
     const columnRules = ref([
       // {
@@ -264,26 +289,26 @@ console.log('current_user',current_user.value)
       {
         headerName: "Action",
         field: "action",
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: {
-          values: [
-            "alert",
-            "pass",
-            "drop",
-            "reject",
-            "rejectsrc",
-            "rejectdst",
-            "rejectnoth",
-          ],
-        },
-        editable: true,
+        // cellEditor: "agSelectCellEditor",
+        // cellEditorParams: {
+        //   values: [
+        //     "alert",
+        //     "pass",
+        //     "drop",
+        //     "reject",
+        //     "rejectsrc",
+        //     "rejectdst",
+        //     "rejectnoth",
+        //   ],
+        // },
+        // editable: true,
         minWidth: 120,
         sortable: false,
       },
       {
         headerName: "Message",
         field: "msg",
-        editable: true,
+        // editable: true,
         minWidth: 400,
         autoHeight: true,
         cellStyle: { whiteSpace: "pre-wrap", lineHeight: "2" },
@@ -292,40 +317,40 @@ console.log('current_user',current_user.value)
       {
         headerName: protocol,
         field: "protocol",
-        editable: true,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: {
-          values: [
-            "tcp",
-            "udp",
-            "icmp",
-            "ip",
-            "http",
-            "smtp",
-            "krb5",
-            "sip",
-            "ftp",
-            "imap",
-            "ntp",
-            "http2",
-            "tls(ssl)",
-            "modbus(*)",
-            "dhcp",
-            "smb",
-            "dnp3(*)",
-            "rfb",
-            "dns",
-            "enip(*)",
-            "rdp",
-            "dcerpc",
-            "nfs",
-            "snmp",
-            "ssh",
-            "ikev2",
-            "tftp",
-            "pkthdr",
-          ],
-        },
+        // editable: true,
+        // cellEditor: "agSelectCellEditor",
+        // cellEditorParams: {
+        //   values: [
+        //     "tcp",
+        //     "udp",
+        //     "icmp",
+        //     "ip",
+        //     "http",
+        //     "smtp",
+        //     "krb5",
+        //     "sip",
+        //     "ftp",
+        //     "imap",
+        //     "ntp",
+        //     "http2",
+        //     "tls(ssl)",
+        //     "modbus(*)",
+        //     "dhcp",
+        //     "smb",
+        //     "dnp3(*)",
+        //     "rfb",
+        //     "dns",
+        //     "enip(*)",
+        //     "rdp",
+        //     "dcerpc",
+        //     "nfs",
+        //     "snmp",
+        //     "ssh",
+        //     "ikev2",
+        //     "tftp",
+        //     "pkthdr",
+        //   ],
+        // },
         // editable: true,
         minWidth: 120,
         sortable: false,
@@ -424,8 +449,13 @@ console.log('current_user',current_user.value)
       );
     };
     const handleAction = (action, rowData) => {
-      const user = user_privilege('Suricata');
-      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("IDS/IPS")) {
+      const user = user_privilege("Suricata");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("IDS/IPS")
+      ) {
         rowDataToDelete.value = rowData;
         deleteDialog.value = true;
       } else {
@@ -558,23 +588,28 @@ console.log('current_user',current_user.value)
     };
 
     const save = async () => {
-      const user = user_privilege('Suricata');
-      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("IDS/IPS")) {
-      let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
-      const dataToSend = modifiedRows.map((row) => {
-        return {
-          action: row.action,
-          protocol: row.protocol,
-          source_ip: row.source_ip,
-          direction: row.direction,
-          destination_ip: row.destination_ip,
-          msg: row.msg,
-          rev: row.rev,
-          sid: row.sid,
-          activate_rule: row.activate_rule,
-          id: row.id,
-        };
-      });
+      const user = user_privilege("Suricata");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("IDS/IPS")
+      ) {
+        let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
+        const dataToSend = modifiedRows.map((row) => {
+          return {
+            action: row.action,
+            protocol: row.protocol,
+            source_ip: row.source_ip,
+            direction: row.direction,
+            destination_ip: row.destination_ip,
+            msg: row.msg,
+            rev: row.rev,
+            sid: row.sid,
+            activate_rule: row.activate_rule,
+            id: row.id,
+          };
+        });
 
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -596,6 +631,9 @@ console.log('current_user',current_user.value)
                   color: "success",
                   text: t("suricata.rulesavedSuccessfully"),
                 });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
               } else {
                 showMessage({
                   color: "error",
@@ -781,7 +819,7 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      console.log("last_Subscription", last_Subscription.value);
       getData();
 
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >

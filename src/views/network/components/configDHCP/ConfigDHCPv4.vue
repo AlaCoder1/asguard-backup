@@ -49,7 +49,7 @@
                 v-model="hostname"
               ></v-text-field>
             </v-col>
-            <v-col align-self="center" cols="4">
+            <!-- <v-col align-self="center" cols="4">
               <label class="ml-2">{{ $t("interface.overrideMTU") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
@@ -57,7 +57,7 @@
                 v-model="overrideMTU"
                 :label="$t('interface.overrideMTU')"
               ></v-checkbox>
-            </v-col>
+            </v-col> -->
           </v-row>
         </div>
       </v-col>

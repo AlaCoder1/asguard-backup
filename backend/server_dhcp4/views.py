@@ -81,7 +81,7 @@ def get_all_server_dhcp4(request):
 
 @swagger_auto_schema(
     method='post',
-    operation_description="API to add a new DHCPv4 server to the database.",
+    operation_summary="API to add a new DHCPv4 server to the database.",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
@@ -158,7 +158,7 @@ def add_server_dhcp4(request):
 
 @swagger_auto_schema(
     method='put',
-    operation_description="API to update the configuration of a DHCPv4 server.",
+    operation_summary="API to update the configuration of a DHCPv4 server.",
     manual_parameters=[
         openapi.Parameter(
             'id_server',
@@ -171,11 +171,15 @@ def add_server_dhcp4(request):
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'subnet_addr': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet address'),
+            'subnet_addr': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet address',example="192.168.20.0"),
             'subnet_mask': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet mask',example="255.255.255.0"),
             'available_range': openapi.Schema(type=openapi.TYPE_STRING, description='Subnet address',example="192.168.20.1 - 192.168.20.254"),
-            'dns_server': openapi.Schema(type=openapi.TYPE_ARRAY, description='DNS server(s)',example=["8.8.8.8"]),
-            'gateway': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Gateway address'),
+            'dns_server': openapi.Schema(type=openapi.TYPE_ARRAY,
+                                         items=openapi.Schema(
+                                           type=openapi.TYPE_STRING
+                                         )
+                                         , description='DNS server(s)',example=["8.8.8.8"]),
+            'gateway': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Gateway address',example="192.168.20.1"),
             'domain_name': openapi.Schema(type=openapi.TYPE_STRING, description='Domain name',example="test.com"),
             'enable_dhcpv4': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enable/disable DHCPv4'),
             'ranges_address': openapi.Schema(
@@ -183,8 +187,8 @@ def add_server_dhcp4(request):
                 items=openapi.Items(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'range_from': openapi.Schema(type=openapi.TYPE_STRING, description='Start of the IP range'),
-                        'range_to': openapi.Schema(type=openapi.TYPE_STRING, description='End of the IP range'),
+                        'range_from': openapi.Schema(type=openapi.TYPE_STRING, description='Start of the IP range',example="192.168.20.6"),
+                        'range_to': openapi.Schema(type=openapi.TYPE_STRING, description='End of the IP range',example="192.168.20.58"),
                     }
             )
             , description='Enable/disable DHCPv4')
@@ -259,7 +263,7 @@ def update_config_dhcp4_server(request,id_server):
     return JsonResponse({"msg": msg},status=status)  
 @swagger_auto_schema(
     method='delete',
-    operation_description="API to delete a DHCPv4 server from the database.",
+    operation_summary="API to delete a DHCPv4 server from the database and system.",
     manual_parameters=[
         openapi.Parameter(
             'server_id',
@@ -296,7 +300,7 @@ def delete_server_dhcp4(request,server_id):
     This function removes a dhcp server configuration from both the system and the database.
     Parameters:
         request (HttpRequest): The incoming request object containing the DELETE data.#+
-        id (int): The ID of the VLAN to be deleted.
+        server_id (int): The ID of the server to be deleted.
     Returns:
         JsonResponse: A JSON response indicating the success or failure of the operation. 
         The response includes a message and a status code. The status can be "success" or "error".

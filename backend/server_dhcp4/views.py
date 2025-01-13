@@ -25,7 +25,27 @@ ERROR_MESSAGES_NOTFOUND = _("does not found")
 ERROR_MESSAGES_NOACTIVE = _("does not active")
 ERROR_MESSAGES_EXISTANT = _("Already exist")
 
-# # Create your views here.
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_summary="API to get all dhcp server from the database.",
+    responses={
+        200: openapi.Response(
+            description="Server configuration details retrieved successfully. The response includes the following attributes:\n"
+                        "- \t   `interface`: The ID of the network interface.\n"
+                        "- \t   `enable_dhcpv4`: Indicates whether DHCPv4 is enabled or not.\n"
+                        "- \t   `subnet_addr`: The IP address of the subnet.\n"
+                        "- \t   `subnet_mask`: The subnet mask for the network.\n"
+                        "- \t   `available_range`: The available IP address range for DHCP.\n"
+                        "- \t   `range_from`: The starting IP address of the range (if defined).\n"
+                        "- \t   `range_to`: The ending IP address of the range (if defined).\n"
+                        "- \t   `dns_server`: The DNS server address for the network (if configured).\n"
+                        "- \t   `gateway`: The gateway address for the network (if configured).\n"
+                        "- \t   `domain_name`: The domain name associated with the network (if configured).\n"
+                        "- \t   `id`: The unique ID of the network configuration.\n"
+                        "- \t   `name_interface`: The name of the interface (e.g., 'LAN').",
+            )
+    }
+)
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -67,7 +87,7 @@ def get_all_server_dhcp4(request):
         properties={
             'id_interface': openapi.Schema(type=openapi.TYPE_INTEGER, description='The ID of the interface associated with the server.'),
             'ip_address4': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='The IPv4 address of the server.'),
-            'netmask4': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='The netmask of the server.'),
+            'netmask4': openapi.Schema(type=openapi.TYPE_STRING, description='The netmask of the server.',example=24),
         },
         required=['id_interface', 'ip_address4', 'netmask4']
     ),
@@ -152,13 +172,22 @@ def add_server_dhcp4(request):
         type=openapi.TYPE_OBJECT,
         properties={
             'subnet_addr': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet address'),
-            'subnet_mask': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet mask'),
-            'range_from': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Start of IP range'),
-            'range_to': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='End of IP range'),
-            'dns_server': openapi.Schema(type=openapi.TYPE_STRING, description='DNS server(s)'),
+            'subnet_mask': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet mask',example="255.255.255.0"),
+            'available_range': openapi.Schema(type=openapi.TYPE_STRING, description='Subnet address',example="192.168.20.1 - 192.168.20.254"),
+            'dns_server': openapi.Schema(type=openapi.TYPE_ARRAY, description='DNS server(s)',example=["8.8.8.8"]),
             'gateway': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Gateway address'),
-            'domain_name': openapi.Schema(type=openapi.TYPE_STRING, description='Domain name'),
+            'domain_name': openapi.Schema(type=openapi.TYPE_STRING, description='Domain name',example="test.com"),
             'enable_dhcpv4': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enable/disable DHCPv4'),
+            'ranges_address': openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'range_from': openapi.Schema(type=openapi.TYPE_STRING, description='Start of the IP range'),
+                        'range_to': openapi.Schema(type=openapi.TYPE_STRING, description='End of the IP range'),
+                    }
+            )
+            , description='Enable/disable DHCPv4')
         },
         required=['subnet_addr', 'subnet_mask', 'range_from', 'range_to', 'enable_dhcpv4']
     ),
@@ -184,7 +213,21 @@ def add_server_dhcp4(request):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_config_dhcp4_server(request,id_server):
-    """API to assign vlan to interface  and create new interface of vlan to configure it """
+    """
+    API to update DHCPv4 server to the database.
+
+    This function handles the POST request to update DHCPv4 server. 
+
+    Parameters:
+    request (HttpRequest): The incoming request object containing the POST data.
+    id_server (int): The id of server to configure
+        
+    Returns:
+    JsonResponse: A JSON response containing a message indicating the success or failure of the operation. The response includes
+    the following fields:
+        - msg: A message indicating the success or failure of the operation.
+        - status: The HTTP status code (201 for success, 400 for failure).
+    """
     if (request.method == 'PUT'):
         # parse the incoming information
         data_input=request.data
@@ -248,9 +291,19 @@ def update_config_dhcp4_server(request,id_server):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_server_dhcp4(request,server_id):
-    """API to delete server dhcp4 created """
+    """
+    Delete a dhcp server from the database and system.
+    This function removes a dhcp server configuration from both the system and the database.
+    Parameters:
+        request (HttpRequest): The incoming request object containing the DELETE data.#+
+        id (int): The ID of the VLAN to be deleted.
+    Returns:
+        JsonResponse: A JSON response indicating the success or failure of the operation. 
+        The response includes a message and a status code. The status can be "success" or "error".
+        If the dhcp server is found and deleted, the response message will indicate successful deletion.
+        If the dhcp server is not found, the response will indicate an error.
+    """
     if (request.method == 'DELETE'):
-        # parse the incoming information
         if ServerDhcp4.objects.filter(id=server_id).exists():
             id_interface=ServerDhcp4.objects.get(id=server_id).interface_id
             ifname=Interface.objects.get(id=id_interface).ifname

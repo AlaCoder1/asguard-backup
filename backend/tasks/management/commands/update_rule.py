@@ -34,6 +34,7 @@ class Command(BaseCommand):
             description = options.get('description')
             description = description.replace("-"," ")
             rule = rule.replace("-"," ")
+            rule = rule.replace(interface,'"'+interface+'"')
             if source_address.lower() == 'all':
                 source_address = None
             if destination_address.lower() == 'all':
@@ -83,8 +84,8 @@ class Command(BaseCommand):
                     else:
                         return return_add_rule
                 else:
-                    return "exist"
+                    return "This rule is already exist"
             else:
-                return "Error"
+                return "Something Wrong"
         except IntegrityError as e:
             return "Error: " + str(e)

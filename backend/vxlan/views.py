@@ -28,7 +28,28 @@ SUCCESS_MESSAGES_DELETING = _("is deleted")
 ERROR_MESSAGES_EXISTANT = _("Already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
-
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="API TO GET VXLAN",
+    responses={
+        200: openapi.Response(
+            description="List of VXLANs retrieved successfully. Each VXLAN configuration is represented as a dictionary with the following fields:\n"
+                        "-\t  id: The unique identifier of the VxLAN configuration.\n"
+                        "-\t  parent_interface: The identifier of the parent interface for the VxLAN.\n"
+                        "-\t  vxlan_id: The VxLAN ID.\n"
+                        "-\t  vxlan_interface_name: The name of the VxLAN interface.\n"
+                        "-\t  vxlan_source_address: The source address for the VxLAN.\n"
+                        "-\t  vxlan_destination_address: The destination address for the VxLAN.\n"
+                        "-\t  vxlan_destination_port: The destination port for the VxLAN.\n"
+                        "-\t  vxlan_connection_uuid: The UUID of the VxLAN connection.\n"
+                        "-\t  name_interface: The name of the parent interface.\n"
+                       
+                       
+                       
+        
+        )
+    }
+)
 
 
 @api_view(['GET'])
@@ -38,6 +59,13 @@ def get_vxlan(request):
     API to get all vxlan from database.
 
     This function retrieves all VxLAN configurations from the database and returns them as a JSON response.
+    
+
+    Parameters:
+    - request: The HTTP request object.
+
+    Returns:
+    - JsonResponse: A JSON response containing a list of VxLAN configurations.
     Each VxLAN configuration is represented as a dictionary with the following fields:
     - id: The unique identifier of the VxLAN configuration.
     - parent_interface: The identifier of the parent interface for the VxLAN.
@@ -48,12 +76,6 @@ def get_vxlan(request):
     - vxlan_destination_port: The destination port for the VxLAN.
     - vxlan_connection_uuid: The UUID of the VxLAN connection.
     - name_interface: The name of the parent interface.
-
-    Parameters:
-    - request: The HTTP request object.
-
-    Returns:
-    - JsonResponse: A JSON response containing a list of VxLAN configurations.
     """
     if (request.method == 'GET'):
         list_vxlan=[]
@@ -67,13 +89,70 @@ def get_vxlan(request):
             list_vxlan.append(res[i]['fields'])
     return JsonResponse({"msg": list_vxlan})
 
+
 @swagger_auto_schema(
     method='POST',
-    request_body=VxlanSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO ADD VXLAN",
-    operation_description="This API add VXLAN with their caracteristique in database",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'parent_interface': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='ID of the parent interface',
+                example=2
+            ),
+            'vxlan_interface_name': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Name of the VXLAN interface',
+                example='test_vxlan'
+            ),
+            'vxlan_id': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VXLAN identifier',
+                example='80'
+            ),
+            'vxlan_source_address': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VXLAN source IP address (can be null)',
+                nullable=True,
+                example=None
+            ),
+            'vxlan_destination_address': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VXLAN destination IP address',
+                example='10.1.12.98'
+            ),
+            'vxlan_destination_port': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VXLAN destination port',
+                example='4789'
+            ),
+            'vxlan_connection_uuid': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='UUID of the VXLAN connection',
+                example='vxlan_10'
+            ),
+        },
+        required=['parent_interface', 'vxlan_interface_name', 'vxlan_id', 'vxlan_destination_address', 'vxlan_destination_port', 'vxlan_connection_uuid']
+    ),
+    responses={
+        200: openapi.Response(
+            description=f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_CREATING}",
+           
+        ),
+        400: openapi.Response(
+            description="Bad Request - Invalid data",
+            examples={
+                'application/json': {
+                    "message": "Invalid VXLAN data provided.",
+                    "status": "error"
+                }
+            }
+        )
+    },
+    operation_summary="API to Add VXLAN Configuration",
 )
+
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_vxlan(request):
@@ -107,18 +186,78 @@ def add_vxlan(request):
     return JsonResponse({"msg": msg},status=status)
  
  
+
+
 @swagger_auto_schema(
     method='PUT',
-    request_body=VxlanSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO ADD VXLAN",
-    operation_description="This API add VXLAN with their caracteristique in database",
-)     
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'parent_interface': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='ID of the parent interface',
+                example=2
+            ),
+            'vxlan_interface_name': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Name of the VXLAN interface',
+                example='test_vxlan'
+            ),
+            'vxlan_id': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VXLAN identifier',
+                example='80'
+            ),
+            'vxlan_source_address': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VXLAN source IP address (can be null)',
+                nullable=True,
+                example=None
+            ),
+            'vxlan_destination_address': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VXLAN destination IP address',
+                example='10.1.12.98'
+            ),
+            'vxlan_destination_port': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VXLAN destination port',
+                example='4789'
+            ),
+            'vxlan_connection_uuid': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='UUID of the VXLAN connection',
+                example='vxlan_10'
+            ),
+        },
+        required=['parent_interface', 'vxlan_interface_name', 'vxlan_id', 'vxlan_destination_address', 'vxlan_destination_port', 'vxlan_connection_uuid']
+    ),
+    responses={
+        200: openapi.Response(
+            description=f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}",
+           
+        ),
+        400: openapi.Response(
+            description="Bad Request - Invalid data",
+            examples={
+                'application/json': {
+                    "message": "Invalid VXLAN data provided.",
+                    "status": "error"
+                }
+            }
+        )
+    },
+    operation_summary="API to Add VXLAN Configuration",
+)
+  
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vxlan(request,id):
     """
     API to update vlan in system and database.
+    This function receives a PUT request with VXLAN data in the request body.
+    It validates the data and saves it in the database if the data is valid.
+    If the data is not valid, it returns an error message.
     Parameters:
     - request (HttpRequest): The incoming HTTP request.
     - id (int): The ID of the VXLAN to be updated.
@@ -173,9 +312,9 @@ def update_vxlan(request,id):
 
 @swagger_auto_schema(
     method='DELETE',
-    responses={200: 'Deleted', 400: 'Bad Request'},
+    responses={200: f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_DELETING}", 
+               400: f"{CONSTANT_VXLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"},
     operation_summary="API DELETE VXLAN",
-    operation_description="This API delete VXLAN by id ",
 )
 
 
@@ -216,8 +355,8 @@ def delete_vxlan(request,id):
 vxlan_request_schema = openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'ifname': openapi.Schema(type=openapi.TYPE_STRING, description='ifname of the VxLAN'),
-        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VxLAN interface')
+        'ifname': openapi.Schema(type=openapi.TYPE_STRING, description='ifname of the VxLAN',example='2'),
+        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VxLAN interface',example='vxlan20')
     },
     required=['ifname', 'name_interface']
 )
@@ -227,9 +366,8 @@ vxlan_request_schema = openapi.Schema(
 @swagger_auto_schema(
     method='POST',
     request_body=vxlan_request_schema,
-    responses={200: "Created", 400: 'Bad Request'},
+    responses={200: f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}", 400: 'Bad Request'},
     operation_summary="API TO ASSIGN VXLAN Interface",
-    operation_description="This API assign a VXLAN with its characteristics to the database and system",
 )
 
 @api_view(['POST'])
@@ -284,7 +422,7 @@ def assign_vxlan_interface(request):
 vxlan_request_schema_update = openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VxLAN interface')
+        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VxLAN interface',example="vxlan30")
     },
     required=['name_interface']
 )
@@ -294,9 +432,9 @@ vxlan_request_schema_update = openapi.Schema(
 @swagger_auto_schema(
     method='PUT',
     request_body=vxlan_request_schema_update,
-    responses={200: "Created", 400: 'Bad Request'},
+    responses={200:f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}",
+               400: 'Bad Request'},
     operation_summary="API TO update ASSIGN VXLAN Interface",
-    operation_description="This API update assign a VXLAN with its characteristics to the database and system",
 )
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -333,9 +471,9 @@ def update_vxlan_interface(request,id_interface):
    
 @swagger_auto_schema(
     method='DELETE',
-    responses={200: 'Deleted', 400: 'Bad Request'},
+    responses={200: f"{CONSTANT_VXLAN_INTERFACE} {SUCCESS_MESSAGES_DELETING}",
+               404: f"{CONSTANT_VXLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"},
     operation_summary="API DELETE VxLAN interface",
-    operation_description="This API delete VxLAN interface by id ",
 )    
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
@@ -371,13 +509,27 @@ def delete_vxlan_interface(request,id_interface):
 
     return JsonResponse({"msg": msg},status=status)
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="API TO GET VXLAN interface",
+    responses={
+        200: openapi.Response(
+            description="List of VxLAN interfaces retrieved successfully. Each interface is represented as a dictionary with the following keys:\n"
+                         "-\t  id: The ID of the VxLAN interface.\n"
+                        "-\t  name_interface: The name of the VLAN interface. \n"
+                        "-\t  network_port: A string describing the network port to which the VLAN interface is assigned. \n"
 
+                        
+                   
+        )
+    }
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vxlan_interface(request):
     """
     API to get all VXLAN interfaces assigned from the database.
-
+    This function retrieves all vxlan interfaces with their caracteristiques 
     Parameters:
     - request (HttpRequest): The incoming HTTP request.
 

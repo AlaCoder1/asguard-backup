@@ -17,6 +17,7 @@ class Command(BaseCommand):
             rule = rule.replace('-',' ')
             type_rule = options.get('type_rule')
             interface = options.get('interface')
+            rule = rule.replace(interface,'"'+interface+'"')
             try:
                 handle=get_handle_rule(interface,type_rule,rule)
                 if handle is not None:

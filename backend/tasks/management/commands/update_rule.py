@@ -34,6 +34,7 @@ class Command(BaseCommand):
             description = options.get('description')
             description = description.replace("-"," ")
             rule = rule.replace("-"," ")
+            rule = rule.replace(interface,'"'+interface+'"')
             if source_address.lower() == 'all':
                 source_address = None
             if destination_address.lower() == 'all':

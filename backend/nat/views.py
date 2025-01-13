@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from .list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat, get_one_dnat, get_one_one_to_one_nat, get_one_snat
 from .models import DNat, OneToOneNat, SNat
 from .serializers import DNatSerializer, OneToOneNatSerializer, SNatSerializer
-from .utils import get_next_nat_handle, input_create_dnat, input_create_snat, update_position_nat
+from .utils import get_next_nat_handle, input_create_dnat, input_create_snat
 from .utils_dnat_system import create_dnat_rule_in_system, delete_dnat_rule_in_system, update_dnat_rule_in_system
 from .utils_one_to_one_nat_system import create_one_to_one_nat_rule_in_system, delete_one_to_one_nat_rule_in_system, update_one_to_one_nat_rule_in_system
 from .utils_snat_system import create_snat_rule_in_system, delete_snat_rule_in_system, update_snat_rule_in_system
@@ -119,7 +119,7 @@ def create_snat(request):
                     masking += f""":{data["translation_port"]}"""
                 masking = ["snat", "ip", "to",  masking]
 
-            # Add the rule in system
+            # Add the rule in system and get the rule handle and content
             rule_number, rule_content = create_snat_rule_in_system(interface_ifname, source, destination, data["protocol"], masking)
             data["rule_number"] = int(rule_number)
             data["rule_content"] = rule_content
@@ -134,7 +134,6 @@ def create_snat(request):
 
                 # Add the rule to the database
                 serializer_snat.save()
-                update_position_nat()
                 return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_snat.errors.values())[0][0]}, status=400)
@@ -166,7 +165,6 @@ def delete_snat(request, id):
 
         # delete rule from database
         snat.delete()
-        update_position_nat()
         return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
         
     except CommandExecutionError:
@@ -285,7 +283,6 @@ def start_snat(request, id):
 
         snat.rule_status = True
         snat.save()
-        update_position_nat()
         
         return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_STARTING}"}, status=201)
         
@@ -313,7 +310,6 @@ def stop_snat(request, id):
         snat.rule_number = None
         snat.postrouting_position = None
         snat.save()
-        update_position_nat()
         
         return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_STOPING}"}, status=201)
         
@@ -400,7 +396,6 @@ def change_snat_position(request, id):
             snat_rule.save()
         snat.snat_position = new_position
         snat.save()
-        update_position_nat()
         
         return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
         
@@ -483,7 +478,6 @@ def create_one_to_one_nat(request):
 
                 # Add the rule to the database
                 serializer_one_to_one_nat.save()
-                update_position_nat()
                 return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_one_to_one_nat.errors.values())[0][0]}, status=400)
@@ -514,7 +508,6 @@ def delete_one_to_one_nat(request, id):
 
         # delete rule from database
         one_to_one_nat.delete()
-        update_position_nat()
         return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
         
     except CommandExecutionError:
@@ -613,7 +606,6 @@ def start_one_to_one_nat(request, id):
 
         one_to_one_nat.rule_status = True
         one_to_one_nat.save()
-        update_position_nat()
         
         return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_STARTING}"}, status=201)
         
@@ -640,7 +632,6 @@ def stop_one_to_one_nat(request, id):
         one_to_one_nat.rule_number = None
         one_to_one_nat.postrouting_position = None
         one_to_one_nat.save()
-        update_position_nat()
         
         return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_STOPING}"}, status=201)
         
@@ -733,7 +724,6 @@ def change_one_to_one_nat_position(request, id):
             one_to_one_nat_rule.save()
         one_to_one_nat.one_to_one_nat_position = new_position
         one_to_one_nat.save()
-        update_position_nat()
         
         return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
         
@@ -832,7 +822,6 @@ def create_dnat(request):
 
                 # Add the rule to the database
                 serializer_dnat.save()
-                update_position_nat("prerouting")
                 return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_dnat.errors.values())[0][0]}, status=400)
@@ -864,7 +853,6 @@ def delete_dnat(request, id):
 
         # delete rule from database
         dnat.delete()
-        update_position_nat("prerouting")
         return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
         
     except CommandExecutionError:
@@ -982,7 +970,6 @@ def start_dnat(request, id):
 
         dnat.rule_status = True
         dnat.save()
-        update_position_nat("prerouting")
         
         return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_STARTING}"}, status=201)
         
@@ -1009,7 +996,6 @@ def stop_dnat(request, id):
         dnat.rule_number = None
         dnat.prerouting_position = None
         dnat.save()
-        update_position_nat("prerouting")
         
         return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_STOPING}"}, status=201)
         
@@ -1092,7 +1078,6 @@ def change_dnat_position(request, id):
             dnat_rule.save()
         dnat.dnat_position = new_position
         dnat.save()
-        update_position_nat("prerouting")
         
         return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
         

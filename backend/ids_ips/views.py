@@ -16,7 +16,8 @@ from django.core import serializers
 from django.core.paginator import Paginator, EmptyPage
 from django.core.serializers import serialize
 import ruamel.yaml
-
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 # Constants
 CONSTANT_CONFIGURATION = _("Configuration")
@@ -39,15 +40,155 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 #################################### SURICATA.YAML FGENERAL CONFIGURATION ####################################
 @swagger_auto_schema(
     method='PUT',
-    request_body=SuricataFileSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO update_suricata_configuration  ",
-    operation_description="API TO update_suricata_configuration  ",
-)  
+    operation_description="Save system configuration with interface details.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'status_enabled': openapi.Schema(
+                type=openapi.TYPE_BOOLEAN, 
+                description='Indicates if the status is enabled', 
+                example=True
+            ),
+            'promisc': openapi.Schema(
+                type=openapi.TYPE_BOOLEAN, 
+                description='Indicates if promiscuous mode is enabled', 
+                example=False
+            ),
+            'eve_log': openapi.Schema(
+                type=openapi.TYPE_BOOLEAN, 
+                description='Indicates if event logging is enabled', 
+                example=True
+            ),
+            'syslog': openapi.Schema(
+                type=openapi.TYPE_BOOLEAN, 
+                description='Indicates if syslog is enabled', 
+                example=True
+            ),
+            'mpm_algo': openapi.Schema(
+                type=openapi.TYPE_STRING, 
+                description='The algorithm used for memory management', 
+                enum=["auto", "ac", "ac-bs", "ac-ks", "hyperscan"],
+                example="ac"
+            ),
+            'profile': openapi.Schema(
+                type=openapi.TYPE_STRING, 
+                description='The profile type', 
+                enum=["low", "medium", "high"],
+                example="high"
+            ),
+            'copy_mode': openapi.Schema(
+                type=openapi.TYPE_BOOLEAN, 
+                description='Indicates if copy mode is enabled', 
+                example=True
+            ),
+            'list_interfaces': openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(
+                            type=openapi.TYPE_INTEGER, 
+                            description='Interface ID', 
+                            example=2
+                        ),
+                        'interface': openapi.Schema(
+                            type=openapi.TYPE_STRING, 
+                            description='The name of the network interface', 
+                            example="enp0s8"
+                        ),
+                        'threads': openapi.Schema(
+                            type=openapi.TYPE_STRING, 
+                            description='Thread management', 
+                            example=None
+                        ),
+                        'cluster_id': openapi.Schema(
+                            type=openapi.TYPE_INTEGER, 
+                            description='Cluster ID associated with the interface', 
+                            example=128
+                        ),
+                        'cluster_type': openapi.Schema(
+                            type=openapi.TYPE_STRING, 
+                            description='Cluster type for the interface', 
+                            enum=["cluster_cpu","cluster_flow","cluster_qm","cluster_ebpf"]
+                            
+                        ),
+                        'defrag': openapi.Schema(
+                            type=openapi.TYPE_STRING, 
+                            description='Defrag status for the interface', 
+                            example="no"
+                        ),
+                        'use_mmap': openapi.Schema(
+                            type=openapi.TYPE_STRING, 
+                            description='Indicates if mmap is used for the interface', 
+                            enum=['yes','no'],
+                            default="no"
+                        ),
+                        'ring_size': openapi.Schema(
+                            type=openapi.TYPE_INTEGER, 
+                            description='Ring buffer size for the interface', 
+                            example=8555
+                        ),
+                        'copy_mode': openapi.Schema(
+                            type=openapi.TYPE_STRING, 
+                            description='Copy mode type for the interface', 
+                           enum=["tap","ips"]
+                        ),
+                        'copy_iface': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(
+                                    type=openapi.TYPE_INTEGER, 
+                                    description='ID of the copy interface', 
+                                    example=1
+                                ),
+                                'name': openapi.Schema(
+                                    type=openapi.TYPE_STRING, 
+                                    description='Name of the copy interface', 
+                                    example="enp0s17"
+                                ),
+                            }
+                        )
+                    }
+                )
+            )
+        },
+        required=['status_enabled', 'mpm_algo', 'profile', 'copy_mode', 'list_interfaces',
+                  'cluster_id','defrag','ring_size','use_mmap'],
+    ),
+    responses={
+        200: openapi.Response(
+            description="System configuration saved successfully",
+            examples={
+                "application/json": {
+                    "response": "Configuration saved successfully"
+                }
+            }
+        ),
+        400: openapi.Response(
+            description="Bad request",
+            examples={
+                "application/json": {
+                    "response": "Error in saving configuration"
+                }
+            }
+        ),
+    },
+    operation_summary="API to Save System Configuration"
+)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_suricata_configuration(request, id):
-    """API to update config suricata"""
+    """
+    API to update suricata configuration with general information in file suricata.yaml.
+    Parameters:
+        request (HttpRequest): The incoming request object containing the PUT data.
+        id (int): The ID of the system configuration to be updated.
+    Returns:
+        JsonResponse: A JSON response with a message indicating the success or failure of the operation.
+        The response includes a status code.
+    """
+    
+    
     if request.method=="PUT":
         # try: 
         suricata_yaml_path_in = "/etc/suricata/suricata.yaml"
@@ -75,21 +216,16 @@ def update_suricata_configuration(request, id):
         ##interfaces
         interface_ids_input = data.get("list_interfaces", [])
         interface_ids = [x["id"] for x in interface_ids_input]
-        # interface_names=Interface.objects.filter(id__in=interface_ids).values('ifname')
-        # Utilisez la fonction get_ip_addresses pour obtenir les adresses IP
         ip_addresses =get_ip_addresses(interface_ids)
         home_net_value_sys = f'[{",".join(list(set(ip_addresses)))}]'
         home_net_value = f'[{",".join(ip_addresses)}]'
-        ##traitement système
         yaml_class = ruamel.yaml.YAML()
         data_input=read_from_yaml(suricata_yaml_path_in,yaml_class)
-        # print(data_input)
         data_af_packet=transform_data_af(interface_ids_input)
         data_output=update_suricata_config(data_input,home_net_value_sys,new_promisc, new_eve_log,new_syslog, new_mpm_algo,new_profile,data_af_packet,new_mode_inline)
         save_in_yaml(suricata_yaml_path,data_output,yaml_class) 
         aux_update_system=update_config(status_enabled)
         if aux_update_system:
-        # Ensuite, mettez à jour les enregistrements dans la base de données
             suricata_instance = suricatafile.objects.get(id=id)
             data_updated={
             "status_enabled":status_enabled,
@@ -99,7 +235,6 @@ def update_suricata_configuration(request, id):
             "mpm_algo" : new_mpm_algo,
             "profile": new_profile,
             "mode_inline" : new_mode_inline,
-            # "interface_ids" : str(interface_ids),
             "home_net" : home_net_value
             }
             suricata_serializer=SuricataFileSerializer(suricata_instance,data=data_updated)
@@ -122,10 +257,27 @@ def update_suricata_configuration(request, id):
         
 
 #################################### RULES ############################################################
+
+@swagger_auto_schema(
+    method='POST',
+    operation_summary="API TO activate suricata update.",
+    responses={
+        200: f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}",
+        400:f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
+    }
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def activer_suricata_update(request, id):
-    """Add default suricata rules in database"""
+    """
+    API to update rules in suricata.rules with synchronise system and database .
+    Parameters:
+        request (HttpRequest): The incoming request object containing the POST data.
+        id (int): The ID of the system configuration to be updated.
+    Returns:
+        JsonResponse: A JSON response with a message indicating the success or failure of the operation.
+        The response includes a status code.
+    """
     if request.method=="POST":
         cmd="sudo suricata-update -q"
         _,error=execute_cmd(cmd)
@@ -144,11 +296,44 @@ def activer_suricata_update(request, id):
             
         return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
 
-
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="API to get all rules from the database.",
+    responses={
+        404:f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}",
+        200: openapi.Response(
+            description="List of rule retrieved successfully. Each rule is represented as a dictionary with the following fields:\n"
+                        "- \t  `sid`: The signature ID of the alert.\n"
+                        "- \t   action`: The action associated with the alert (e.g., 'alert').\n"
+                        "- \t   `protocol`: The protocol used (e.g., 'ip').\n"
+                        "- \t   `source_ip`: The source IP and port (e.g., 'any any').\n"
+                        "- \t   `direction`: The direction of the rule (e.g., '->').\n"
+                        "- \t   `destination_ip`: The destination IP and port (e.g., 'any any').\n"
+                        "- \t   `msg`: A message describing the alert.\n"
+                        "- \t   `rev`: The revision number of the rule.\n"
+                        "- \t   `rule`: The full rule string associated with the alert.\n"
+                        "- \t   `activate_rule`: A boolean indicating if the rule is active.\n"
+                        "- \t   `default_rule`: A boolean indicating if the rule is default.\n"
+                        "- \t   `suricatafile`: The ID of the Suricata file associated with the alert.\n"
+                        "- \t   `id`: The unique ID of the alert.",
+        )
+    }
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_rules_from_database(request, num):
-    """Get rules from database"""
+    """
+    API to get all RULES per page from the database.
+    This function retrieves all RULES per page from the database and returns them as a JSON response.
+   
+    Parameters:
+    request (HttpRequest): The incoming request object containing the GET data.
+    num (int): The number of page 
+
+    Returns:
+    JsonResponse: A JSON response containing a list of RULES contains informations,
+   
+    """
     if request.method == "GET":
         rules_from_db = ids_ips_rule.objects.all().order_by('id')
 
@@ -159,7 +344,6 @@ def get_rules_from_database(request, num):
         except EmptyPage:
             return JsonResponse({"error": f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
-        # Serialize the rules of the current page
         rule_suricata = serialize("json", rules_page, use_natural_primary_keys=True)
         res = json.loads(rule_suricata)
 
@@ -169,23 +353,44 @@ def get_rules_from_database(request, num):
             fields['id'] = res[i]['pk']
             rules_list.append(fields)
         nbpage=len(rules_from_db)/10
-        # Return the list of rules in JSON format
         return JsonResponse({"rules": rules_list, "nombrePageRules": math.ceil(nbpage)}, status=200)
 
 
-## fonction pour sauvegarder une règle (ajout ou mise à jour )
+
+
 @swagger_auto_schema(
     method='POST',
-    request_body=RuleSerializerForSwagger(many=True),
-    responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO save rule suricata (add/update)",
     operation_description="API TO save rule suricata (add/update) ",
+    responses={200:f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}", 
+               400: 'Bad Request'},
+    request_body=openapi.Schema(
+        type=openapi.TYPE_ARRAY,
+        items=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Rule ID',example=1),
+            'activate_rule': openapi.Schema(
+                type=openapi.TYPE_BOOLEAN, 
+                description='Indicates if the status of rule', 
+                example=True
+            ),
+        }
+    )
+    )
 )
-#//Ajouter une régle //   
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def save_rules_suricata(request, id):
-    # Initialisation d'une chaîne vide pour stocker les messages de réponse
+    """
+    API to update rules status in suricata.rules with synchronise system and database .
+    Parameters:
+        request (HttpRequest): The incoming request object containing the POST data.
+        id (int): The ID of the system configuration to be updated.
+    Returns:
+        JsonResponse: A JSON response with a message indicating the success or failure of the operation.
+        The response includes a status code.
+    """
     message = ""
     file_path = '/var/lib/suricata/rules/suricata.rules'
     list_msg=[]
@@ -220,133 +425,48 @@ def save_rules_suricata(request, id):
                 message = f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
                 status=400
             list_msg.append({"message":message,"status":status,"sid":sid})
-        # Retourne une réponse JSON avec le message de statut
     return Response({"message": list_msg})
-# @api_view(['POST'])
-# @authentication_classes([SessionAuthentication])
-# def save_rules_suricata(request, id):
-#     # Initialisation d'une chaîne vide pour stocker les messages de réponse
-#     message = ""
-#     file_path = '/var/lib/suricata/rules/suricata.rules'
-#     list_msg=[]
-#     if request.method == 'POST':
-#         # Analyse des données JSON de la requête POST
-#         data_list = request.data
-#         for data in data_list:
-#             # Récupération des données de la règle
-#             action=None if data.get('action', None) == "" else data.get('action', None)
-#             protocol=None if data.get('protocol', None) == "" else data.get('protocol', None)
-#             source_ip=None if data.get('source_ip', None) == "" else data.get('source_ip', None)
-#             direction=None if data.get('direction', None) == "" else data.get('direction', None)
-#             destination_ip=None if data.get('destination_ip', None) == "" else data.get('destination_ip', None)
-#             msg=None if data.get('msg', None) == "" else data.get('msg', None)
-#             rev=None if data.get('rev', None) == "" else data.get('rev', None)
-#             sid=None if data.get('sid', None) == "" else data.get('sid', None)
-#             activate_rule=None if data.get('activate_rule', None) == "" else data.get('activate_rule', None)
-#             # Recherche du fichier SuricataFile par ID
-#             try:
-#                 suricatafile_obj = suricatafile.objects.get(id=id)
-#             except suricatafile.DoesNotExist:
-#                 return Response({"message": f"{CONSTANT_SURICATA_FILE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-#             contenu = {
-#                     "action": action,
-#                     "protocol": protocol,
-#                     "source_ip": source_ip,
-#                     "direction": direction,
-#                     "destination_ip": destination_ip,
-#                     "msg": msg,
-#                     "rev": rev,
-#                     "sid": sid,
-#                     "activate_rule": activate_rule,
-                    
-#                  }
-#             # Ajout de "#" selon la valeur de activate_rule
-#             if activate_rule:
-#                 must_be_comment = False
-#             else:
-#                 must_be_comment = True  # Ajouter "#" à la règle si activate_rule est False
-#             # Mise à jour de l'ID du fichier SuricataFile dans les données de la règle
-#             id_rule=None if data.get('id', None) == "" else data.get('id', None)
-#             # Appel de la fonction pour ajouter la règle dans le système Suricata
-#             if id_rule is None:
-#                 data["default_rule"]=False
-#                 if ids_ips_rule.objects.filter(sid=sid).exists():
-#                     message = f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
-#                     status=400
-#                 else:
-#                     output, rule,error = add_rule_remote(must_be_comment, contenu,file_path)
-#                     data['suricatafile'] = suricatafile_obj.id
-#                     data['rule']=rule
-#                     if error=="":
-#                         rules_serializer = RuleIdsIpsSerializer(data=data)
-#                         if rules_serializer.is_valid():
-#                             rules_serializer.save()
-#                             message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_CREATING}"
-#                             status=200
-#                         else:
-#                             message = rules_serializer.errors
-#                             status=400
-                        
-#             else:
-#                 line_to_update = get_line_by_sid( sid)
-#                 if line_to_update is not None:
-#                     must_be_comment = not activate_rule  
-                    
-#                     # Ajouter la nouvelle règle dans le système distant en spécifiant si elle doit être activée ou désactivée
-#                     output, rule,error = update_rule_remote(must_be_comment,contenu,line_to_update,file_path)
-#                     # Vérification des erreurs lors de l'ajout de la nouvelle règle
-#                     if error == '':
-#                         # Mettre à jour la règle dans la base de données locale
-#                         ids_ips_rule_from_db = ids_ips_rule.objects.get(sid=sid)
-#                         ids_ips_rule_from_db.action = action
-#                         ids_ips_rule_from_db.protocol = protocol
-#                         ids_ips_rule_from_db.source_ip = source_ip
-#                         ids_ips_rule_from_db.direction = direction
-#                         ids_ips_rule_from_db.destination_ip = destination_ip
-#                         ids_ips_rule_from_db.msg = msg
-#                         ids_ips_rule_from_db.rev = rev
-#                         ids_ips_rule_from_db.activate_rule = activate_rule
-#                         ids_ips_rule_from_db.rule=rule
-#                         ids_ips_rule_from_db.save()
-#                         message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"
-#                         status=200
-#                     else:
-#                         message = error
-#                         status=400
-#                 else:
-#                     message = f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
-#                     status=400
-#             list_msg.append({"message":message,"status":status,"sid":sid})
-#         # Retourne une réponse JSON avec le message de statut
-#     return Response({"message": list_msg})
+
 
 
 @swagger_auto_schema(
-    method='DELETE',
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO DELETE rule suricata with sid",
-    operation_description="API TO DELETE rule suricata with sid",
+    method='delete',
+    operation_summary="API to delete a rule",
+    responses={
+        200: openapi.Response(
+            description= f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}",
+        ),
+        400: openapi.Response(
+            description=f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}",
+          
+        ),
+    }
 )
-#//supprimer une régle//
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_rule(request, sid):
+    """
+    API to delete rule from system and database 
+    This function to delete a rule from the system and database using id of rule in parameter.
+
+    Parameters:
+    request (HttpRequest): The incoming request object.
+    id (int): The unique identifier of the rule to be deleted.
+
+    Returns:
+    JsonResponse: A JSON response containing a message indicating the success 
+      or failure of the deletion operation.
+    """
     if request.method == 'DELETE':
         try:
-     # Vérification de l'existence de la règle avec le SID donné
             if ids_ips_rule.objects.filter(sid=sid).exists():
-     # Récupération de la règle depuis la base de données
                 rule = ids_ips_rule.objects.get(sid=sid)
                 if rule.default_rule==False:
-                    # Chemin du fichier à rechercher
-                    file_path_to_search = "/var/lib/suricata/rules/suricata.rules"  # Replace with the actual path
-                    sid_to_search = str(sid)  # Convert the rule's sid to string
-                    # Obtention de la ligne à supprimer en utilisant la fonction get_line_by_sid
+                    file_path_to_search = "/var/lib/suricata/rules/suricata.rules"  
+                    sid_to_search = str(sid)  
                     l = get_line_by_sid(sid_to_search)
                     if l is not None:
-            # Suppression de la ligne dans le fichier distant en utilisant la fonction delete_line_in_remote_file
                         if delete_line_in_remote_file(file_path_to_search, l.rstrip()):
-            # Suppression de la règle de la base de données
                             rule.delete()
                             message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
                             status=200
@@ -363,18 +483,35 @@ def delete_rule(request, sid):
                 message = f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
                 status=400
                 
-       # Retourne une réponse JSON avec le message de statut
             return JsonResponse({"message": message},status=status)
         except Exception as e:
             return JsonResponse({"error": str(e)},status=400)
         
 
 ####################################  ALERTS  ####################################
-
-#Ajouter les alertes dans la BD//
+@swagger_auto_schema(
+    method='POST',
+    operation_summary="API TO add suricata alerts to database.",
+    responses={
+        200: f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}",
+        400: f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ALERT}"
+    }
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_alerts_to_database(request,id):
+    """
+    API to add alerts in database
+    This function read from file alert from system and prepare it to be added to database in specific format .
+    Parameters:
+      request (HttpRequest): The incoming request object containing the rules data.
+      id (int): id of suricata config 
+    Returns:
+      JsonResponse: A JSON response containing a response for each rule, 
+         a message indicating the success or failure 
+        of the operation, and the HTTP status code.
+    
+    """
     if request.method=="POST":
         logs = read_suricata_log()
         if logs is not None:
@@ -393,61 +530,53 @@ def add_alerts_to_database(request,id):
         else:
             return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ALERT}"},status=400)
              
-                    
-# def add_alerts_to_database(request,id):
-#     if request.method=="POST":
-#         logs = read_suricata_log()
-#         alerts = Alert.objects.all()  # Get alerts from database
-#         logs_add=[]
-#         logs_delete=[]
-#         if len(alerts)==0:
-#             logs_add=prepare_alert_attribut(logs)
-#         else:
-#             alert_list=[]
-#             serializer = AlertSerializer(alerts, many=True)
-#             alert_list=serializer.data
-#             alert_list=[l['alert'] for l in alert_list]
-#             logs_add = [log for log in logs if log not in alert_list]
-#             logs_add=prepare_alert_attribut(logs_add)
-#             logs_delete = [log for log in alert_list if log not in logs]   
-            
-#         if len(logs_add) != 0:
-#             # Looping throw the retrieved logs and add them to the database
-#             for log in logs_add:
-#                 log['suricatafile']=int(id)
-#                 if not Alert.objects.filter(alert=log['alert']).exists():
-#                     serializer_alert = AlertSerializer(data=log)
-#                     if serializer_alert.is_valid():
-#                         serializer_alert.save()
-#                     else:
-#                         return JsonResponse({"message": str(serializer_alert.errors)},status=400)
-               
-#         if len(logs_delete)!=0:
-#             for l in logs_delete:
-#                 if Alert.objects.filter(alert=l).exists():
-#                     alert = Alert.objects.get(alert=l)
-#                     alert.delete()
-#                 else:
-#                     return JsonResponse({"message": f"{CONSTANT_ALERT} {ERROR_MESSAGES_INEXISTANT}"},status=400)
-#         return JsonResponse({"message": f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}"},status=200) 
-
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="API to get all alerts from the database.",
+    responses={
+        404:f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}",
+        200: openapi.Response(
+            description="List of alerts retrieved successfully. Each alert is represented as a dictionary with the following fields:\n"
+                        "-\t    timestamp: The timestamp of the alert.\n"
+                        "- \t   sid: The signature ID of the alert.\n"
+                        "- \t   priority: The priority level of the alert.\n"
+                        "- \t   protocol: The protocol associated with the alert.\n"
+                        "- \t   src_addr: The source IP address.\n"
+                        "- \t   src_port: The source port.\n"
+                        "- \t   dst_addr: The destination IP address.\n"
+                        "- \t   dst_port: The destination port.\n"
+                        "- \t   message: A message describing the alert.\n"
+                        "- \t   alert: A detailed alert message.\n"
+                        "- \t   suricatafile: The ID of the Suricata file associated with the alert.\n"
+                        "- \t   id: The unique ID of the alert.",
+                        )
+    }
+)
     
-#Afficher les alertes de la BD avec la pagination//
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_alerts_from_database(request,num):
+    """
+    API to get all ALERTS per page from the database.
+    This function retrieves all ALERTS per page from the database and returns them as a JSON response.
+   
+    Parameters:
+    request (HttpRequest): The incoming request object containing the GET data.
+    num (int): The number of page 
+
+    Returns:
+    JsonResponse: A JSON response containing a list of ALERTS contains informations,
+   
+    """
     if request.method == "GET":
-        # Récupérer toutes les règles de la base de données
         alerts_from_db = Alert.objects.all().order_by('-id')
 
-        # Paginer les règles
         paginator = Paginator(alerts_from_db, 10)
         try:
            alerts_page = paginator.page(num)
         except EmptyPage:
             return JsonResponse({"error": f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
-        # Sérialiser les règles de la page actuelle
         rule_suricata = serialize("json", alerts_page, use_natural_primary_keys=True)
         res = json.loads(rule_suricata)
 
@@ -457,5 +586,4 @@ def get_alerts_from_database(request,num):
             fields['id'] = res[i]['pk']
             alerts_list.append(fields)
         nbpage=math.ceil(len(alerts_from_db)/10)
-        # Renvoyer la liste des règles au format JSON
         return JsonResponse({"alerts": alerts_list, "nombrePageAlerts": nbpage}, status=200)

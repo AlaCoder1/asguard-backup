@@ -92,8 +92,18 @@ def get_vlan(request):
             ),
             'vlan_priority': openapi.Schema(
                 type=openapi.TYPE_STRING,
-                description='VLAN priority level, e.g., Voice (5), Data (0)',
-                example='Voice (5)'
+                description='VLAN priority level, e.g., Voice (5)',
+                enum=["Best Effort ( 0 , default )",
+                      'Background ( 1, lowest)',
+                      'Excellent Effort (2)',
+                      'Critical Applications (3)',
+                      'Video (4)',
+                      'Voice (5)',
+                      'Internetwork Control (6)',
+                      'Network Control (7)'
+                      
+                      ],
+                default="Best Effort ( 0 , default )"
             ),
             'description': openapi.Schema(
                 type=openapi.TYPE_STRING,
@@ -150,7 +160,17 @@ def add_vlan(request):
             'vlan_priority': openapi.Schema(
                 type=openapi.TYPE_STRING,
                 description='VLAN priority level, e.g., Voice (5), Data (0)',
-                example='Voice (5)'
+                enum=["Best Effort ( 0 , default )",
+                      'Background ( 1, lowest)',
+                      'Excellent Effort (2)',
+                      'Critical Applications (3)',
+                      'Video (4)',
+                      'Voice (5)',
+                      'Internetwork Control (6)',
+                      'Network Control (7)'
+                      
+                      ],
+                default="Best Effort ( 0 , default )"
             ),
             'description': openapi.Schema(
                 type=openapi.TYPE_STRING,

@@ -253,7 +253,14 @@
       </v-col>
     </v-row>
     <v-row class="flex py-8 mb-5">
-      <v-col cols="4"> </v-col>
+      <v-col cols="4">
+        <div class="text-start ml-2 mt-4">
+          <span class="text-sm">
+            <span class="text-red text-lg">*</span>
+            {{ $t("errors.oblig") }}</span
+          >
+        </div>
+      </v-col>
       <v-col>
         <div class="mr-3 flex center">
           <VButton
@@ -416,9 +423,11 @@ export default {
         )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
           "firewall.sub_page"
         )}</a>`;
-      }else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
     });
     const error = computed(() => {
       return t("errors.valueRequired");
@@ -431,6 +440,9 @@ export default {
     });
     const formatMustBeLikeAdresse = computed(() => {
       return t("errors.formatMustBeLikeAdresse");
+    });
+    const subnetNotAccepted = computed(() => {
+      return t("errors.subnetNotAccepted");
     });
     const onlynumbers = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
@@ -499,9 +511,11 @@ export default {
           ),
 
           isValidIp4Tunnel: helpers.withMessage(
-            formatMustBeLikeAdresse,
+            subnetNotAccepted,
 
-            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            helpers.regex(
+              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[01]))$/
+            )
           ),
         },
         iPv4Local: {
@@ -518,14 +532,18 @@ export default {
           isValidIPv4Local: helpers.withMessage(
             formatMustBeLikeAdresse,
 
-            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            helpers.regex(
+              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[0-2]))$/
+            )
           ),
         },
         iPv4Remote: {
           isValidIPv4Remote: helpers.withMessage(
             formatMustBeLikeAdresse,
 
-            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            helpers.regex(
+              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[0-2]))$/
+            )
           ),
         },
         interfaceBridge: {

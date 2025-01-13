@@ -116,6 +116,9 @@ def connect_to_ad(request):
             ldap_uri = f"{'ldaps' if ssl_tls_activation else 'ldap'}://{server_url}:{port}"
             ldap_conn = ldap.initialize(ldap_uri)
             ldap_conn.set_option(ldap.OPT_NETWORK_TIMEOUT, 5)
+            if ssl_tls_activation:
+                ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_DEMAND)  # Enforce certificate verification
+                ldap.set_option(ldap.OPT_X_TLS_CACERTDIR, '/etc/ssl/certs/')  # Path to trusted CA certificates directory
             try:
                 ldap_conn.simple_bind_s(bind_user_dn,password_ldap)
 

@@ -259,6 +259,9 @@
               v-model="state.domain_name"
               required
             ></v-text-field>
+            <p class="error-feedback mb-5" v-if="v$.domain_name.$error">
+              {{ v$.domain_name.$errors[0].$message }}
+            </p>
           </v-col>
         </v-row>
       </v-col>
@@ -571,6 +574,10 @@ export default {
       return t("errors.valueRequired");
     });
 
+    const format = computed(() => {
+      return t("errors.format_address");
+    });
+
     const rules = computed(() => {
       return {
         available_range: { required: helpers.withMessage(error, required) },
@@ -582,6 +589,15 @@ export default {
 
             helpers.regex(
               /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
+          ),
+        },
+        domain_name: {
+          isValiddomainName: helpers.withMessage(
+            format,
+
+            helpers.regex(
+              /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z0-9]{2,}$/
             )
           ),
         },
@@ -600,7 +616,11 @@ export default {
         state.modalData = {};
         state.modalMode = "create";
         state.isModalOpen = true;
-        emitter.emit("id-range", props.configInfo.id);
+
+        emitter.emit("id-range", {
+          id: props.configInfo.id,
+          range: rowDataRanges.value,
+        });
       }
     };
 
@@ -647,6 +667,10 @@ export default {
               state.modalMode = "edit";
               state.isModalOpen = true;
               state.editRow = rowData;
+              emitter.emit("id-range", {
+                id: props.configInfo.id,
+                range: rowDataRanges.value,
+              });
             }
 
             break;
@@ -788,12 +812,19 @@ export default {
 
               if (i.response.status === 500) {
                 state.snackbar = true;
-                state.color = "red";
+                state.color = "error";
                 state.textAlert = t("errors.errorServer");
+                setTimeout(() => {
+                  state.snackbar = false;
+                }, 2000);
               } else {
                 state.snackbar = true;
-                state.color = "red";
+                state.color = "error";
+                console.log("i.response.data.msg", i.response.data.msg);
                 state.textAlert = i.response.data.msg;
+                setTimeout(() => {
+                  state.snackbar = false;
+                }, 2000);
               }
             });
         } else {

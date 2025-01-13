@@ -11,7 +11,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('settings.DNSServer')"
+                    :label="`${$t('settings.DNSServer')} *`"
                     density="compact"
                     v-model="state.dns_server"
                   ></v-text-field>
@@ -26,7 +26,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.gateway"
-                    :label="$t('openvpn.Gateway')"
+                    :label="`${$t('openvpn.Gateway')} *`"
                     density="compact"
                     item-title="address"
                     item-value="id"
@@ -59,14 +59,13 @@
                           :label="inter.name_interface"
                           :value="inter"
                         ></v-radio>
-
-                        <p
-                          class="error-feedback mb-5 ml-5"
-                          v-if="v$.checkInterface.$error"
-                        >
-                          {{ v$.checkInterface.$errors[0].$message }}
-                        </p>
                       </v-col>
+                      <p
+                        class="error-feedback mb-5 ml-5"
+                        v-if="v$.checkInterface.$error"
+                      >
+                        {{ v$.checkInterface.$errors[0].$message }}
+                      </p>
                     </v-row>
                   </v-radio-group>
                 </v-container>
@@ -74,6 +73,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"

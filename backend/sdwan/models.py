@@ -1,10 +1,11 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from backend.network.models import Interface
 
 
 class Area(models.Model):
-    name = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200, unique=True, verbose_name=_("name"))
     members = models.ManyToManyField(Interface, through="AreaInterface")
 
 
@@ -13,7 +14,7 @@ class Area(models.Model):
 
 
 class SdwanRules(models.Model):
-    name = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200, unique=True, verbose_name=_("name"))
     source_address = models.CharField(max_length=250, default=None, blank=True, unique=True)
     area = models.ForeignKey(Area, on_delete=models.CASCADE, default=None)
     algorythme_type = models.CharField(max_length=100, default=None, blank=True)

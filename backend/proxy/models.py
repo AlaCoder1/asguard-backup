@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
-# Create your models here.
+from django.utils.translation import gettext_lazy as _
+
 
 class ServerSatus(models.Model):
     status_server = models.BooleanField(default=False)
@@ -31,7 +32,7 @@ class ProxyRules(models.Model):
 
 
 class ProxyUser(models.Model):
-    username = models.CharField(max_length=200, null=True, unique=True)
+    username = models.CharField(max_length=200, null=True, unique=True, verbose_name=_("username"))
     email = models.CharField(max_length=200, null=True, unique=True)
     squid_conf = models.ForeignKey(
         ServerSatus, on_delete=models.CASCADE, null=True,default = 1)

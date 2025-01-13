@@ -1,4 +1,24 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
+
   <v-row justify="center">
     <v-dialog v-model="openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
@@ -18,7 +38,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('certificat.certificatName')"
+                    :label="`${$t('certificat.certificatName')} *`"
                     v-model="state.formData.certifName"
                   ></v-text-field>
 
@@ -33,7 +53,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.formData.method"
-                    :label="$t('certificat.method')"
+                    :label="`${$t('certificat.method')} *`"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -56,7 +76,7 @@
                   <v-textarea
                     class="mt-3"
                     v-model="state.formData.certificatData"
-                    :label="$t('certificat.certificatdata')"
+                    :label="`${$t('certificat.certificatdata')} *`"
                     variant="outlined"
                   ></v-textarea>
 
@@ -86,7 +106,7 @@
                   <!--  -->
                   <v-select
                     v-model="state.formData.keyType"
-                    :label="$t('certificat.keytype')"
+                    :label="`${$t('certificat.keytype')} *`"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -101,7 +121,7 @@
 
                   <v-select
                     v-model="state.formData.keyLength"
-                    :label="$t('certificat.keylength')"
+                    :label="`${$t('certificat.keylength')} *`"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -136,7 +156,7 @@
                   </p>
                   <v-select
                     v-model="state.formData.hashAlgo"
-                    :label="$t('certificat.Hashalgo')"
+                    :label="`${$t('certificat.Hashalgo')} *`"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -166,7 +186,7 @@
                   </p>
 
                   <v-text-field
-                    :label="$t('certificat.lifetime')"
+                    :label="`${$t('certificat.lifetime')} *`"
                     v-model="state.formData.lifeTime"
                   ></v-text-field>
                   <p
@@ -179,7 +199,7 @@
                     <v-col cols="6" class="mb-n6">
                       <v-autocomplete
                         v-model="state.formData.country"
-                        :label="$t('certificat.country')"
+                        :label="`${$t('certificat.country')} *`"
                         item-title="countryName"
                         item-value="countryCode"
                         return-object
@@ -194,7 +214,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        :label="$t('certificat.state')"
+                        :label="`${$t('certificat.state')} *`"
                         v-model="state.formData.state"
                       ></v-text-field>
                       <p
@@ -206,7 +226,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        :label="$t('certificat.place')"
+                        :label="`${$t('certificat.place')} *`"
                         v-model="state.formData.place"
                       ></v-text-field>
                       <p
@@ -218,7 +238,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        :label="$t('certificat.organisation')"
+                        :label="`${$t('certificat.organisation')} *`"
                         v-model="state.formData.organisation"
                       ></v-text-field>
                       <p
@@ -230,7 +250,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        label="E-Mail"
+                        label="E-Mail *"
                         v-model="state.formData.mail"
                       ></v-text-field>
                       <p
@@ -242,7 +262,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        :label="$t('certificat.communName')"
+                        :label="`${$t('certificat.communName')} *`"
                         v-model="state.formData.communName"
                       ></v-text-field>
                       <p
@@ -260,6 +280,13 @@
           </v-card-text>
 
           <v-card-actions class="mt-10 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="asguard_primary_light"
               :rounded="true"
@@ -276,7 +303,7 @@
               :rounded="true"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
+              <span class="text-white pr-3 pl-3">{{ $t("buttons.create") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -319,6 +346,8 @@ export default {
   setup() {
     const { t } = useI18n();
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       formData: {
         certifName: "",
         method: null,
@@ -373,6 +402,9 @@ export default {
     const champplaceletter = computed(() => {
       return t("champs.champplaceletter");
     });
+    const champNumberAndMax = computed(() => {
+      return t("champs.champNumberAndMax");
+    });
     const rules = computed(() => {
       return {
         formData: {
@@ -415,9 +447,9 @@ export default {
               requiredIf(() => state.formData.method?.slug === "create")
             ),
             isValidlifeTime: helpers.withMessage(
-              champNumber,
+              champNumberAndMax,
 
-              helpers.regex(/^[0-9]+$/)
+              (value) => /^[0-9]+$/.test(value) && parseInt(value, 10) <= 825
             ),
           },
           country: {
@@ -609,6 +641,9 @@ export default {
           };
         }
 
+        this.state.loading = true;
+        this.state.isLoadingDialogue = true;
+
         axios
           .post("/certificates/createCertAuth", payload)
           .then((response) => {
@@ -619,21 +654,29 @@ export default {
               this.color = "success";
               this.textAlert = response.data.msg;
 
+              this.state.loading = false;
+              this.state.isLoadingDialogue = false;
+
               setTimeout(() => {
                 location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
+            this.state.loading = false;
+            this.state.isLoadingDialogue = false;
             if (i.response.status === 500) {
-                 this.snackbar = true;
-                 this.color = "red";
-                 this.textAlert = this.$t("errors.errorServer");
-              } else {
-                 this.snackbar = true;
-                 this.color = "red";
-                 this.textAlert = i.response.data.error;
-              }
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+              setTimeout(() => {
+                this.textAlert = "";
+              }, 2000);
+            }
           });
       }
     },

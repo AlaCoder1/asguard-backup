@@ -940,13 +940,13 @@ export default defineComponent({
         axios
           .post(`/rules/saveRules/${props.activeTab}`, payload)
           .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
-              state.textAlert = response.data.response;
-              setTimeout(() => {
-                location.reload();
-              }, 2000);
-            }
+            state.snackbar = true;
+            state.textAlert = response.data.response;
+            state.Saverulesstate = false;
+            setTimeout(() => {
+              location.reload();
+              state.textAlert = [];
+            }, 3000);
           })
           .catch((i) => {
             if (i.response.status === 500) {
@@ -957,6 +957,12 @@ export default defineComponent({
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.response;
+
+              state.Saverulesstate = false;
+              setTimeout(() => {
+                state.textAlert = [];
+                location.reload();
+              }, 3000);
             }
           });
       }

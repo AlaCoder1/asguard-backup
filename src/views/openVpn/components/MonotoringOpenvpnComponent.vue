@@ -1,15 +1,32 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-          <v-card-text v-html="overlayMessage">
-          </v-card-text>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -111,7 +128,7 @@
       </v-col>
     </v-row>
 
-    <v-row class="mt-n10 ">
+    <v-row class="mt-n10">
       <v-col cols="12">
         <div class="ml-3 mr-3">
           <v-row class="mt-0 mb-5">
@@ -133,7 +150,7 @@
               </v-card>
             </v-col>
             <v-col cols="6">
-              <div class="ml-3 mr-3" >
+              <div class="ml-3 mr-3">
                 <ag-grid-vue
                   id="grid-wrapper"
                   domLayout="autoHeight"
@@ -209,7 +226,7 @@ import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
 import { user_privilege } from "@/mixins/user_privilege.js";
 import VButton from "@/components/VButton.vue";
-
+import { get_lang } from "@/mixins/storage_language.js";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
@@ -230,6 +247,7 @@ export default {
       of: "/",
     });
     const state = reactive({
+      lang: null,
       show1: false,
       isviewModal: false,
       viewModal: false,
@@ -333,16 +351,24 @@ export default {
       return t("errors.formsepcificpassword");
     });
     const overlayMessage = computed(() => {
-current_user.value= user_privilege('Openvpn') 
-console.log('current_user',current_user.value)
-  if (current_user.value === "viewer" || current_user.value === "default") {
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!last_Subscription.value.includes("VPN SSL")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
-});
+      current_user.value = user_privilege("Openvpn");
+      console.log("current_user", current_user.value);
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("VPN SSL")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
+    });
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -497,11 +523,15 @@ console.log('current_user',current_user.value)
     };
 
     onMounted(async () => {
+      (async () => {
+        state.lang = await get_lang();
+      })();
+
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      console.log("last_Subscription", last_Subscription.value);
       getAllListServer();
     });
     overlayTemplate.value = `
@@ -524,21 +554,25 @@ console.log('current_user',current_user.value)
 
     const serve = async () => {
       const result = await v$.value.$validate();
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-      if (result) {
-        if (state.server) {
-          state.modal = false;
-          setTimeout(() => {
-            initializeWebSocket();
-          }, 1000);
+      const user = user_privilege("Openvpn");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
+        if (result) {
+          if (state.server) {
+            state.modal = false;
+            setTimeout(() => {
+              initializeWebSocket();
+            }, 1000);
+          }
         }
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
       }
-    } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          };
     };
 
     const cancel = () => {
@@ -558,6 +592,7 @@ console.log('current_user',current_user.value)
         console.log("WebSocket connection opened.");
         state.socket.send(
           JSON.stringify({
+            lang: state.lang,
             id: state.server.id,
             password: state.password,
           })

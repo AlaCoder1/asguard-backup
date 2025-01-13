@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-06 19:01+0000\n"
+"POT-Creation-Date: 2025-01-06 11:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,82 +18,86 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/nat/views.py:25
+#: backend/nat/models.py:24 backend/nat/models.py:40 backend/nat/models.py:63
+msgid "Content"
+msgstr "Contenu"
+
+#: backend/nat/views.py:24
 msgid "SNAT rule"
 msgstr "régle SNAT"
 
-#: backend/nat/views.py:26
+#: backend/nat/views.py:25
 msgid "OneToOneNat rule"
 msgstr "régle OneToOneNat"
 
-#: backend/nat/views.py:27
+#: backend/nat/views.py:26
 msgid "DNAT rule"
 msgstr "régle DNAT"
 
-#: backend/nat/views.py:28
+#: backend/nat/views.py:27
 msgid "SNAT rule position"
 msgstr "position du régle SNAT"
 
-#: backend/nat/views.py:29
+#: backend/nat/views.py:28
 msgid "OneToOneNat rule position"
 msgstr "position du régle OneToOneNat"
 
-#: backend/nat/views.py:30
+#: backend/nat/views.py:29
 msgid "DNAT rule position"
 msgstr "position du régle DNAT"
 
-#: backend/nat/views.py:32
+#: backend/nat/views.py:31
 msgid "is created"
 msgstr "est créé"
 
-#: backend/nat/views.py:33
+#: backend/nat/views.py:32
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/nat/views.py:34
+#: backend/nat/views.py:33
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/nat/views.py:35
+#: backend/nat/views.py:34
 msgid "is started"
 msgstr "est démarré"
 
-#: backend/nat/views.py:36
+#: backend/nat/views.py:35
 msgid "is stoped"
 msgstr "est arrêté"
 
-#: backend/nat/views.py:37
+#: backend/nat/views.py:36
 msgid "is changed"
 msgstr "est changé"
 
-#: backend/nat/views.py:39
+#: backend/nat/views.py:38
 msgid "System error in creating"
 msgstr "Erreur système lors de la création de"
 
-#: backend/nat/views.py:40
+#: backend/nat/views.py:39
 msgid "System error in deleting"
 msgstr "Erreur système lors de la suppression de"
 
-#: backend/nat/views.py:41
+#: backend/nat/views.py:40
 msgid "System error in updating"
 msgstr "Erreur système lors de la modification de"
 
-#: backend/nat/views.py:42
+#: backend/nat/views.py:41
 msgid "System error in starting"
 msgstr "Erreur système lors de la démarrage de"
 
-#: backend/nat/views.py:43
+#: backend/nat/views.py:42
 msgid "System error in stoping"
 msgstr "Erreur système lors de l'arrêt de"
 
-#: backend/nat/views.py:44
+#: backend/nat/views.py:43
 msgid "System error in changing"
 msgstr "Erreur système lors du changement de"
 
-#: backend/nat/views.py:45
+#: backend/nat/views.py:44
 msgid "Unable to delete"
 msgstr "Impossible de supprimer"
 
-#: backend/nat/views.py:46
+#: backend/nat/views.py:45
 msgid "does not exist"
 msgstr "n'existe pas"

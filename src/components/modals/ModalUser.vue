@@ -2,6 +2,25 @@
   <v-row justify="center">
     <!-- <v-dialog v-model="isOpen" persistent width="600">
        -->
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <v-dialog v-model="openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
@@ -20,7 +39,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.username')"
+                    :label="`${$t('form.username')} *`"
                     v-model="state.formData.username"
                   ></v-text-field>
                   <span
@@ -32,7 +51,7 @@
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.password')"
+                    :label="`${$t('form.password')} *`"
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
@@ -45,7 +64,7 @@
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.confirmPassword')"
+                    :label="`${$t('form.confirmPassword')} *`"
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
@@ -60,7 +79,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.fullname')"
+                    :label="`${$t('form.fullname')} *`"
                     v-model="state.formData.fullname"
                   ></v-text-field>
                   <span
@@ -72,7 +91,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.emailForLdapAuth')"
+                    :label="`${$t('form.emailForLdapAuth')} *`"
                     v-model="state.formData.email"
                   ></v-text-field>
                   <span
@@ -96,7 +115,7 @@
                   <v-col cols="12" class="mb-n5">
                     <v-select
                       v-model="state.formData.dnValue"
-                      :label="$t('form.server')"
+                      :label="`${$t('form.server')} *`"
                       item-title="name"
                       item-value="id"
                       return-object
@@ -110,7 +129,7 @@
                   </v-col>
                   <v-col cols="12" class="mb-n5">
                     <v-text-field
-                      :label="$t('form.password')"
+                      :label="`${$t('form.password')} *`"
                       v-model="state.formData.passwordDN"
                       :append-inner-icon="
                         state.show1 ? 'mdi-eye' : 'mdi-eye-off'
@@ -129,7 +148,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
-                    :label="$t('form.roleUser')"
+                    :label="`${$t('form.roleUser')} *`"
                     v-model="state.formData.role"
                     item-title="name"
                     item-value="id"
@@ -143,12 +162,13 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
+                    v-model="state.formData.groups"
                     :items="groups"
                     :label="$t('form.assignToGroup')"
                     multiple
                     item-title="groupname"
                     item-value="id"
-                    v-model="state.formData.groups"
+                    clearable
                     @change="handleGroupChange"
                     return-object
                   ></v-autocomplete>
@@ -170,7 +190,12 @@
             <!-- <small>*indicates required field</small> -->
           </v-card-text>
           <v-card-actions>
-            <span></span>
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
             <v-spacer></v-spacer>
 
             <v-btn
@@ -247,6 +272,8 @@ export default {
   },
   setup() {
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       formData: {
         mapedServer: [],
         activateStatus: false,
@@ -525,6 +552,10 @@ export default {
 
         const csrfToken = this.getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+        this.state.loading = true;
+        this.state.isLoadingDialogue = true;
+
         if (this.mode == "create") {
           axios
             .post("/users/createUser", payload)
@@ -535,6 +566,9 @@ export default {
                 this.snackbar = true;
                 this.color = "success";
                 this.textAlert = response.data.msg;
+
+                this.state.loading = false;
+                this.state.isLoadingDialogue = false;
 
                 setTimeout(() => {
                   location.reload();
@@ -548,6 +582,8 @@ export default {
               }
             })
             .catch((i) => {
+              this.state.loading = false;
+              this.state.isLoadingDialogue = false;
               if (i.response.status === 500) {
                 this.snackbar = true;
                 this.color = "red";
@@ -585,6 +621,9 @@ export default {
                 this.color = "success";
                 this.textAlert = response.data.msg;
 
+                this.state.loading = false;
+                this.state.isLoadingDialogue = false;
+
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -596,6 +635,9 @@ export default {
               }
             })
             .catch((i) => {
+              this.state.loading = false;
+              this.state.isLoadingDialogue = false;
+
               if (i.response.status === 500) {
                 this.snackbar = true;
                 this.color = "red";

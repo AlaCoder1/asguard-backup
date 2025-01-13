@@ -445,8 +445,8 @@ def createSystem(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET SYSTEM LANGUAGE",)
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+# @authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
 def get_language(request):
     """Getting System language"""
     system = System.objects.get()

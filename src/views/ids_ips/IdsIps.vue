@@ -16,6 +16,8 @@
           >
             <v-card>
               <v-card-text>
+                <helpModal />
+
                 <component
                   :is="tab.component"
                   :configInfo="configurationInfo"
@@ -30,6 +32,8 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import BaseLayout from "@/layouts/layout.vue";
 import AlertsComponent from "./components/AlertsComponent.vue";
 import RulesComponent from "./components/RulesComponent.vue";
@@ -42,6 +46,7 @@ export default {
     ConfigurationComponent,
     RulesComponent,
     AlertsComponent,
+    helpModal
   },
   inject: ["emitter"],
   data() {

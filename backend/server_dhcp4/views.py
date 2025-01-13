@@ -9,8 +9,8 @@ from backend.server_dhcp4.functions import  customize_error_msg, delete_dhcp4_se
 from django.db.models import Q
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.server_dhcp4.serializers import DHCP4ServerSerializer
-
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 # Constants
 CONSTANT_DHCP_SERVER = _('DHCP server')
@@ -30,7 +30,20 @@ ERROR_MESSAGES_EXISTANT = _("Already exist")
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_all_server_dhcp4(request):
-    """API to get all dhcp4 server from database """
+    """
+    API to get all dhcp4 server from the database.
+
+    Parameters:
+    request (HttpRequest): The incoming request object.
+
+    Returns:
+    JsonResponse: A JSON response containing a list of all dhcp4 servers. Each server is represented as a dictionary with the following keys:
+    - id: The primary key of the server.
+    - range_from: A list of starting IP addresses for the server's range.
+    - range_to: A list of ending IP addresses for the server's range.
+    - dns_server: A list of DNS server IP addresses for the server.
+    - name_interface: The name of the interface associated with the server.
+    """
     if (request.method == 'GET'):
         list_dhcp4_server=[]
         # parse the incoming information
@@ -44,12 +57,59 @@ def get_all_server_dhcp4(request):
             res[i]['fields']['dns_server']=res[i]['fields']['dns_server'].split(',') if res[i]['fields']['dns_server'] is not None else None
             res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['interface']).name_interface
             list_dhcp4_server.append(res[i]['fields'])
-    return JsonResponse({"list_dhcp4_server": list_dhcp4_server})  
+    return JsonResponse({"list_dhcp4_server": list_dhcp4_server})
 
+@swagger_auto_schema(
+    method='post',
+    operation_description="API to add a new DHCPv4 server to the database.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'id_interface': openapi.Schema(type=openapi.TYPE_INTEGER, description='The ID of the interface associated with the server.'),
+            'ip_address4': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='The IPv4 address of the server.'),
+            'netmask4': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='The netmask of the server.'),
+        },
+        required=['id_interface', 'ip_address4', 'netmask4']
+    ),
+    responses={
+        201: openapi.Response(
+            description="Successfully created the DHCPv4 server.",
+            examples={
+                "application/json": {
+                    "msg": "DHCP server is created"
+                }
+            }
+        ),
+        400: openapi.Response(
+            description="Bad request due to invalid input or server already exists.",
+            examples={
+                "application/json": {
+                    "msg": "DHCP server Already exist"
+                }
+            }
+        ),
+    }
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_server_dhcp4(request):
-    """API to get all dhcp4 server from database """
+    """
+    API to add a new DHCPv4 server to the database.
+
+    This function handles the POST request to add a new DHCPv4 server. 
+
+    Parameters:
+    request (HttpRequest): The incoming request object containing the POST data. The data should include the following fields:
+        - id_interface: The ID of the interface associated with the server.
+        - ip_address4: The IPv4 address of the server.
+        - netmask4: The netmask of the server.
+
+    Returns:
+    JsonResponse: A JSON response containing a message indicating the success or failure of the operation. The response includes
+    the following fields:
+        - msg: A message indicating the success or failure of the operation.
+        - status: The HTTP status code (201 for success, 400 for failure).
+    """
     if (request.method == 'POST'):
         data=request.data
         id_interface=None if data.get('id_interface', None) == "" else data.get('id_interface', None)
@@ -72,8 +132,55 @@ def add_server_dhcp4(request):
         else:
             msg=f"{CONSTANT_DHCP_SERVER} {ERROR_MESSAGES_EXISTANT}"
             status=400
-    return JsonResponse({"msg": msg},status=status) 
+    return JsonResponse({"msg": msg},status=status)
 
+
+
+@swagger_auto_schema(
+    method='put',
+    operation_description="API to update the configuration of a DHCPv4 server.",
+    manual_parameters=[
+        openapi.Parameter(
+            'id_server',
+            openapi.IN_PATH,
+            description="ID of the DHCP server to update",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'subnet_addr': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet address'),
+            'subnet_mask': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet mask'),
+            'range_from': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Start of IP range'),
+            'range_to': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='End of IP range'),
+            'dns_server': openapi.Schema(type=openapi.TYPE_STRING, description='DNS server(s)'),
+            'gateway': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Gateway address'),
+            'domain_name': openapi.Schema(type=openapi.TYPE_STRING, description='Domain name'),
+            'enable_dhcpv4': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enable/disable DHCPv4'),
+        },
+        required=['subnet_addr', 'subnet_mask', 'range_from', 'range_to', 'enable_dhcpv4']
+    ),
+    responses={
+        200: openapi.Response(
+            description="Successfully updated the DHCPv4 server configuration.",
+            examples={
+                "application/json": {
+                    "msg": "DHCP server configuration updated successfully"
+                }
+            }
+        ),
+        400: openapi.Response(
+            description="Bad request due to invalid input or server not active.",
+            examples={
+                "application/json": {
+                    "msg": "DHCP server does not active"
+                }
+            }
+        ),
+    }
+)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_config_dhcp4_server(request,id_server):
@@ -107,7 +214,37 @@ def update_config_dhcp4_server(request,id_server):
             msg=f"{CONSTANT_RANGE}"
             status=400      
     return JsonResponse({"msg": msg},status=status)  
-
+@swagger_auto_schema(
+    method='delete',
+    operation_description="API to delete a DHCPv4 server from the database.",
+    manual_parameters=[
+        openapi.Parameter(
+            'server_id',
+            openapi.IN_PATH,
+            description="ID of the DHCP server to delete",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
+    responses={
+        200: openapi.Response(
+            description="Successfully deleted the DHCPv4 server.",
+            examples={
+                "application/json": {
+                    "msg": "DHCP server is deleted"
+                }
+            }
+        ),
+        400: openapi.Response(
+            description="Bad request due to server not found.",
+            examples={
+                "application/json": {
+                    "msg": "DHCP server does not found"
+                }
+            }
+        ),
+    }
+)
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_server_dhcp4(request,server_id):
@@ -127,4 +264,4 @@ def delete_server_dhcp4(request,server_id):
         else:
             msg=f"{CONSTANT_DHCP_SERVER} {ERROR_MESSAGES_NOTFOUND}"
             status=400
-    return JsonResponse({"msg": msg},status=status) 
+    return JsonResponse({"msg": msg},status=status)

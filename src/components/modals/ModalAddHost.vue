@@ -1,34 +1,37 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addHostConfig") }}</span
-            >
+              {{ $t("ztna.addHostConfig") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateHostConfig") }}</span
-            >
+              {{ $t("ztna.updateHostConfig") }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="ConfigName"
-                    v-model="ConfigName"
-                    :placeholder="$t('ztna.configName')"
-                    :rules="rulesName"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="ConfigName" v-model="ConfigName" :placeholder="$t('ztna.configName')"
+                    :rules="rulesName" persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12">
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.protocol")
-                    }}</label>
+                      }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -38,14 +41,10 @@
                         </template>
 
                         <v-list>
-                          <v-list-item
-                            v-for="(item, index) in items"
-                            :key="index"
-                            @click="selectItem(item)"
-                          >
+                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item.title
-                            }}</v-list-item-title>
+                              }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -54,81 +53,39 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="adress"
-                    v-model="adress"
-                    :placeholder="$t('ztna.address')"
-                    :rules="rulesaddress"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="adress" v-model="adress" :placeholder="$t('ztna.address')" :rules="rulesaddress"
+                    persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="PORT"
-                    v-model.number="portHigh"
-                    placeholder="PORT"
-                    :rules="rulesNumber"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="PORT" v-model="portHigh" placeholder="PORT" :rules="rulesNumber"
+                    persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="Description"
-                    v-model="Description"
-                    placeholder="Description"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="Description" v-model="Description" placeholder="Description"
+                    persistent-placeholder />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              text
-              @click="cancel"
-              ><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span
-              ></v-btn
-            >
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 ml-2 btn-add"
-              type="submit"
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
+              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span></v-btn>
+            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
+              class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
+                {{ $t("buttons.create") }}</span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+                {{ $t("buttons.update") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -160,11 +117,13 @@ export default {
   setup(props) {
     const { t } = useI18n();
     const ConfigName = ref("");
+    const lastname = ref("");
     const ConfigId = ref("");
     const adress = ref("");
     const portLow = ref("");
     const portHigh = ref("");
     const Host = ref([]);
+    const intercept = ref([]);
     const Description = ref("");
     const selectedTitle = ref("tcp");
     const items = [{ title: "tcp" }, { title: "udp" }];
@@ -172,14 +131,17 @@ export default {
       (value) => {
         if (value) return true;
 
-        return "You must enter a value.";
+        return t("ztna.enterValue");
       },
     ];
     const rulesNumber = [
       (value) => {
-        if (!value) return true;
-        return isNumber(value) ? true : "Please enter a valid number.";
-      },
+        if (!value) return t("ztna.enterValue");
+
+        const integerPattern = /^-?[1-9]\d*$/;
+
+        return integerPattern.test(value) || t("ztna.holeNumber");
+      }
     ];
 
     const rulesaddress = [
@@ -187,29 +149,43 @@ export default {
         if (!value) return true;
         return isValidIpOrHostname(value)
           ? true
-          : "Please enter a valid adress.";
+          : t("ztna.validName");
       },
     ];
     const rulesName = [
       (value) => {
-        if (!value) return true;
-        if (existingName(value)) return "The name already exists";
-        return ValidName(value) ? true : "Please enter a valid name.";
+        if (!value) return t("ztna.enterValue");
+        if (modalMode.value === "edit" && value === lastname.value) return true;
+        if (existingName(value)) return t("ztna.nameExist");
+        return ValidName(value) ? true : t("ztna.validName");
       },
     ];
 
     function existingName(value) {
-      const existingIdentity = Host.value.find(
-        (identity) => identity.name === value
-      );
+      const existingintercept = intercept.value.find(config => config.name === value);
+      const existinghost = Host.value.find(config => config.name === value);
 
-      if (existingIdentity) {
+      if (existingintercept || existinghost) {
         return true;
       }
 
       return false;
     }
+    const fetchintercept = async () => {
+      try {
+        const interceptString = await document.getElementById("app").getAttribute("interceptconfigs");
+        const interceptObject = JSON.parse(interceptString);
 
+        const interceptArray = Array.isArray(interceptObject) ? interceptObject : [];
+
+        intercept.value = interceptArray.map(identity => ({ name: identity.name }));
+
+        console.log('intercept.value', intercept.value);
+      } catch (error) {
+        console.error("Failed to fetch intercept:", error);
+        intercept.value = [];
+      }
+    };
     const fetchHost = async () => {
       try {
         const HostString = await document
@@ -229,6 +205,7 @@ export default {
     };
 
     onMounted(() => {
+      fetchintercept();
       fetchHost();
     });
 
@@ -245,26 +222,18 @@ export default {
       // Check if empty after trimming
       if (!stringValue.length) return false;
 
-      // Try to parse the string as a float
-      let parsedFloat;
-      try {
-        parsedFloat = parseFloat(stringValue);
-      } catch (error) {
-        return false;
-      }
+      // Regular expression to validate integer strings
+      const integerPattern = /^-?\d+$/;
 
-      if (isNaN(parsedFloat)) {
-        return false;
-      }
+      // Test the string against the pattern
+      if (!integerPattern.test(stringValue)) return false;
 
-      // Check if parsedFloat is finite (not Infinity or -Infinity)
-      if (!isFinite(parsedFloat)) {
-        return false;
-      }
-
-      // If all checks pass, it's a valid number
-      return true;
+      // Parse the string as an integer and verify it's finite
+      const parsedInt = parseInt(stringValue, 10);
+      return Number.isFinite(parsedInt);
     }
+
+
 
     function isValidIpOrHostname(value) {
       // Regular expression for IPv4
@@ -276,7 +245,7 @@ export default {
         /([a-fA-F0-9]{1,4}:){7,7}[a-fA-F0-9]{1,4}|([a-fA-F0-9]{1,4}:){1,7}:|([a-fA-F0-9]{1,4}:){1,6}:[a-fA-F0-9]{1,4}|([a-fA-F0-9]{1,4}:){1,5}(:[a-fA-F0-9]{1,4}){1,2}|([a-fA-F0-9]{1,4}:){1,4}(:[a-fA-F0-9]{1,4}){1,3}|([a-fA-F0-9]{1,4}:){1,3}(:[a-fA-F0-9]{1,4}){1,4}|([a-fA-F0-9]{1,4}:){1,2}(:[a-fA-F0-9]{1,4}){1,5}|[a-fA-F0-9]{1,4}:((:[a-fA-F0-9]{1,4}){1,6})$/;
 
       // Regular expression for valid hostnames (no pure numeric strings)
-      const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+      const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
 
       // Check if value is a valid IPv4, IPv6, or a hostname (and not a pure number)
       if (
@@ -305,6 +274,8 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       openModal: false,
       snackbar: false,
       color: null,
@@ -340,7 +311,7 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("dataHost", data);
+        lastname.value = data.name;
         ConfigId.value = data.id;
         ConfigName.value = data.name;
         adress.value = data.address;
@@ -351,80 +322,98 @@ export default {
     };
 
     const submitForm = async () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const isFieldValid = rulesName.every(rule => rule(ConfigName.value) === true);
+      const isnumberValid = rulesNumber.every(rule => rule(portHigh.value) === true);
+      const isaddressValid = rulesaddress.every(rule => rule(adress.value) === true);
+      if (isFieldValid && isnumberValid && isaddressValid || modalMode.value === "edit") {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let payload = {
-        name: ConfigName.value,
-        configTypeId: "NH5p4FpGR",
-        data: {
-          address: adress.value,
-          port: Number(portHigh.value),
-          protocol: selectedTitle.value,
-        },
-        Description: Description.value,
-      };
+        let payload = {
+          name: ConfigName.value,
+          configTypeId: "NH5p4FpGR",
+          data: {
+            address: adress.value,
+            port: Number(portHigh.value),
+            protocol: selectedTitle.value,
+          },
+          Description: Description.value,
+        };
 
-      let token = document.getElementById("app").getAttribute("token");
-
-      if (modalMode.value === "edit") {
-        axios
-          .put(`/ztna/update_host_config/${ConfigId.value}`, payload, {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.message;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            }
-          });
+        let token = document.getElementById("app").getAttribute("token");
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        if (modalMode.value === "edit") {
+          axios
+            .put(`/ztna/update_host_config/${ConfigId.value}`, payload, {
+              headers: {
+                "zt-session": token,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.configUpdated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              if (i.response.status === 500) {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        } else {
+          axios
+            .post("/ztna/add_config", payload, {
+              headers: {
+                "zt-session": token,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("ztna.configCreated");
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              if (i.response.status === 500) {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("ztna.missingFields");
+              }
+            });
+        }
       } else {
-        axios
-          .post("/ztna/add_config", payload, {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.message;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
-            } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            }
-          });
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = t("ztna.missingFields");
       }
     };
     const selectItem = (item) => {

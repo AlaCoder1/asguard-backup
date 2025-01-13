@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class ConfigWaf(models.Model):
@@ -23,10 +24,10 @@ class ConfigWaf(models.Model):
 
 
 class RulesWaf(models.Model):
-    name = models.CharField(max_length=300, default=None, null=True, blank=True, unique=True)
+    name = models.CharField(max_length=300, default=None, null=True, blank=True, unique=True, verbose_name=_("name"))
     rule_status = models.BooleanField(default=True)
     created = models.BooleanField(default=True)
-    rule_id = models.IntegerField(default=None, null=True, unique=True)
+    rule_id = models.IntegerField(default=None, null=True, unique=True, verbose_name=_("rule id"))
     description = models.TextField(default=None, null=True, blank=True)
     description_french = models.TextField(default=None, null=True, blank=True)
     description_english = models.TextField(default=None, null=True, blank=True)
@@ -41,7 +42,7 @@ class RulesWaf(models.Model):
 
 
 class ApplicationWaf(models.Model):
-    name = models.CharField(max_length=300, default=None, null=True, blank=True, unique=True)
+    name = models.CharField(max_length=300, default=None, null=True, blank=True, unique=True, verbose_name=_("name"))
     application_type = models.CharField(max_length=100, default="ip", null=True, blank=True)
     application_protocol = models.CharField(max_length=300, default="http", null=True, blank=True)
     certificate_name = models.CharField(max_length=300, default=None, null=True, blank=True)

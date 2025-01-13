@@ -1,7 +1,72 @@
+from backend.gateway.functions import get_gateway_dhcp, save_gateway_static_ip, save_gateways_database
 from .functions import *
 #############################################ipv4#############################################
 ################### None 
 # convert  to None
+
+def parse_static_ip4(data):
+    ip_address4 =  None if data['value_setup_Ipv4'].get('ip_address4', None) == "" else  data['value_setup_Ipv4'].get('ip_address4', None)
+    netmask4 =  None if data['value_setup_Ipv4'].get('netmask4', None) == "" else  data['value_setup_Ipv4'].get('netmask4', None)
+    gateway4 =  None if data['value_setup_Ipv4']['gateway4'].get('value', None) == "" else  data['value_setup_Ipv4']['gateway4'].get('value', None)
+    return ip_address4,netmask4,gateway4
+###
+def parse_dhcp_base_ip4(data):
+    type_dhcp4 = data.get('value_setup_Ipv4')['typeDHCP4']
+    alias_add =  None if data['value_setup_Ipv4'].get('alias_add', None) == "" else  data['value_setup_Ipv4'].get('alias_add', None)
+    alias_mask =  None if data['value_setup_Ipv4'].get('alias_mask', None) == "" else  data['value_setup_Ipv4'].get('alias_mask', None)
+    reject =  None if data['value_setup_Ipv4'].get('reject', None) == "" else  data['value_setup_Ipv4'].get('reject', None)
+    hostname =  None if data['value_setup_Ipv4'].get('hostname', None) == "" else  data['value_setup_Ipv4'].get('hostname', None)
+    data["alias_add"]=alias_add
+    data["alias_mask"]=alias_mask
+    data["reject"]=reject
+    data["hostname"]=hostname
+    return data,type_dhcp4,alias_add,alias_mask,reject,hostname
+
+def parse_dhcp_advanced_ip4(data):
+    timeout =  None if data['value_setup_Ipv4'].get('timeout', None) == "" else  data['value_setup_Ipv4'].get('timeout', None)
+    retry =  None if data['value_setup_Ipv4'].get('retry', None) == "" else  data['value_setup_Ipv4'].get('retry', None)
+    select_timeout =  None if data['value_setup_Ipv4'].get('select_timeout', None) == "" else  data['value_setup_Ipv4'].get('select_timeout', None)
+    reboot =  None if data['value_setup_Ipv4'].get('reboot', None) == "" else  data['value_setup_Ipv4'].get('reboot', None)
+    backoff =  None if data['value_setup_Ipv4'].get('backoff', None) == "" else  data['value_setup_Ipv4'].get('backoff', None)
+    initial_interval =  None if data['value_setup_Ipv4'].get('initial_interval', None) == "" else  data['value_setup_Ipv4'].get('initial_interval', None)
+    dhcp_client =  None if data['value_setup_Ipv4'].get('dhcp_client', None) == "" else  data['value_setup_Ipv4'].get('dhcp_client', None)
+    lease_time  =  None if data['value_setup_Ipv4'].get('lease_time ', None) == "" else  data['value_setup_Ipv4'].get('lease_time', None)
+    request =  None if data['value_setup_Ipv4'].get('request', None) == "" else  data['value_setup_Ipv4'].get('request', None)
+    require =  None if data['value_setup_Ipv4'].get('require', None) == "" else  data['value_setup_Ipv4'].get('require', None)
+    domain_name =  None if data['value_setup_Ipv4'].get('domain_name', None) == "" else  data['value_setup_Ipv4'].get('domain_name', None)
+    domain_server =  None if data['value_setup_Ipv4'].get('domain_server', None) == "" else  data['value_setup_Ipv4'].get('domain_server', None)
+    data["timeout"]=timeout
+    data["retry"]=retry
+    data["select_timeout"]=select_timeout
+    data["reboot"]=reboot
+    data["backoff"]=backoff
+    data["initial_interval"]=initial_interval
+    data["dhcp_client"]=dhcp_client
+    data["lease_time"]=lease_time
+    data["request"]=request
+    data["require"]=require
+    data["domain_name"]=domain_name
+    data["domain_server"]=domain_server
+    return data,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domain_name,domain_server,lease_time,request,require
+
+
+
+def save_address_dhcp_ip4(setuptype_ip4,aux_main,ifname,name_interface,json_ipv4):
+    ## for dhcp 4
+    if setuptype_ip4 is None or setuptype_ip4.lower()=="static" or aux_main  :
+        aux_gw_dhcp=True
+    if setuptype_ip4.lower()=="dhcp" and not aux_main:
+        #function to get dhcp address and mask
+        ip_address4,netmask4=get_address_dhcp(ifname,"4")
+        json_ipv4["ip_address"]=ip_address4
+        json_ipv4["netmask"]=netmask4
+        ###
+        ##function to get gateway if typeIPV4 est DHCP Base or Advanced
+        gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,"4")
+        aux_gw_dhcp=save_gateways_database(gwaddr4,name_interface,default_aux,far_aux,multiwan_aux,metric,True,True)
+    return aux_gw_dhcp,json_ipv4
+
+
 def update_conn_None_IPV4(config,ifname):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
@@ -151,3 +216,56 @@ def get_address_dhcp(ifname,aux_ip):
         address=output[0].strip().split('/')[0]
         mask=output[0].strip().split('/')[1]
         return address,int(mask)
+
+def configuration_ipv4(data,setuptype_ip4,uuid,ifname,name_interface,id_interface,aux_main,commandes_final,output_service):
+    list_metric=[]
+    json_ipv4={}
+    commandes=[]
+    cmd_final_ipv4=[]
+    match setuptype_ip4.lower():
+        case "none":
+            #call function to convert address to None
+            commandes,output_service,cmd_final_ipv4=update_conn_None_IPV4(output_service,ifname)
+        case "static":
+            type_dhcp4=''
+            ip_address4,netmask4,gateway4=parse_static_ip4(data)
+            cmdgw4=None
+            cmdgw4,list_metric=save_gateway_static_ip(gateway4,uuid,name_interface,id_interface)
+            commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,uuid,ip_address4,netmask4,cmdgw4,aux_main)
+            json_ipv4={
+            "name_interface":name_interface,"ifname":ifname,
+            "ip_address":ip_address4,"netmask":netmask4,
+            "typeip4":setuptype_ip4}
+            
+        case "dhcp" if not aux_main:
+            data,type_dhcp4,alias_add,alias_mask,reject,hostname=parse_dhcp_base_ip4(data)
+            alias_mask_converted=convert_to_subnet_mask(alias_mask)if alias_mask is not None else None
+            ipv4_gw_interface=True
+            if type_dhcp4.lower()=="base" :
+                config_contenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask_converted)
+                json_ipv4={
+                "name_interface":name_interface,"ifname":ifname,
+                "typeip4":setuptype_ip4,"typedhcp":type_dhcp4,
+                "alias_add":alias_add,"alias_mask":alias_mask,
+                "reject":reject,"hostname":hostname}
+            if type_dhcp4.lower()=="advanced":
+                data,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domain_name,domain_server,lease_time,request,require=parse_dhcp_advanced_ip4(data)
+                config_contenu=return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domain_name,domain_server,lease_time,request,require)
+                json_ipv4={
+                "name_interface":name_interface,"ifname":ifname,
+                "typeip4":setuptype_ip4,"typedhcp":type_dhcp4,
+                "alias_add":alias_add,"alias_mask":alias_mask,
+                "reject":reject,"hostname":hostname,
+                "timeout":timeout,"retry":retry,
+                "select_timeout":select_timeout,"reboot":reboot,
+                "backoff":backoff,"initial_interval":initial_interval,
+                "dhcp_client":dhcp_client,
+                "lease_time":lease_time,
+                "request":request,"require":require,
+                "domain_name":domain_name,
+                "domain_server":domain_server
+        }
+            commandes_final+=create_file_IPV4(ifname,config_contenu,aux_main)
+            commandes,output_service,cmd_final_ipv4=update_conn_dhcp_IPV4(output_service,ifname,uuid,aux_main)
+            
+    return json_ipv4,commandes_final,commandes,cmd_final_ipv4,list_metric

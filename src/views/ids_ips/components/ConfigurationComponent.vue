@@ -158,7 +158,7 @@
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
-              :label="$t('suricata.patternMatcher')"
+              :label="`${$t('suricata.patternMatcher')} *`"
               v-model="state.mpm_algo"
               item-title="name"
               item-value="slug"
@@ -174,7 +174,7 @@
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
-              :label="$t('suricata.detectProfile')"
+              :label="`${$t('suricata.detectProfile')} *`"
               v-model="state.profile"
               item-title="name"
               item-value="slug"
@@ -221,7 +221,14 @@
       </v-col>
     </v-row>
     <v-row class="flex py-8 mb-5">
-      <v-col cols="4"> </v-col>
+      <v-col cols="4">
+        <div class="text-start ml-5 mt-4">
+          <span class="text-sm">
+            <span class="text-red text-lg">*</span>
+            {{ $t("errors.oblig") }}</span
+          >
+        </div>
+      </v-col>
       <v-col>
         <div class="mr-3 flex center">
           <VButton
@@ -412,9 +419,11 @@ export default {
         )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
           "firewall.sub_page"
         )}</a>`;
-      }else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
     });
     const thread = computed(() => {
       return t("suricata.thread");

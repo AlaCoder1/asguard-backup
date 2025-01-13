@@ -8,6 +8,8 @@
           type="warning"
           :title="$t('squid.restart')"
         ></v-alert>
+        <helpModal />
+
         <div class="mr-6 ml-3">
           <general_info />
           <list />
@@ -19,6 +21,8 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import { onMounted, reactive } from "vue";
 import BaseLayout from "@/layouts/layout.vue";
 import general_info from "./component/general_info.vue";
@@ -32,6 +36,7 @@ export default {
     general_info,
     acl_list,
     list,
+    helpModal
   },
 
   setup() {

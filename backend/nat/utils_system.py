@@ -47,3 +47,21 @@ def delete_all_nat_rule_from_system():
     for rule_index in range(len(list_prerouting_from_system)):
         handle_number = utils.get_rule_handle_with_position(list_prerouting_from_system, rule_index)
         delete_nat_rule_in_system("prerouting", handle_number)
+
+
+def get_rule_handle_in_system(nat_type="postrouting", rule_position=0):
+    """Return the last rule handle from ruleset"""
+    rule_set = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
+
+    list_nat_rules = find_nat_in_ruleset(rule_set.stdout, nat_type)
+    handle_number = utils.get_rule_handle_with_position(list_nat_rules, rule_position)
+    return handle_number
+
+
+def get_rule_content_in_system(nat_type="postrouting", rule_position=0):
+    """Return the last rule handle from ruleset"""
+    rule_set = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
+
+    list_nat_rules = find_nat_in_ruleset(rule_set.stdout, nat_type)
+    handle_number = utils.get_rule_content_with_position(list_nat_rules, rule_position)
+    return handle_number

@@ -21,6 +21,7 @@
           >
             <v-card>
               <v-card-text>
+                <helpModal />
                 <component :is="tab.component" :dataServer="dataServer" />
               </v-card-text>
             </v-card>
@@ -32,6 +33,8 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import BaseLayout from "@/layouts/layout.vue";
 import identities from "./identities.vue";
 import routers from "./routers.vue";
@@ -48,6 +51,7 @@ export default {
     configs,
     Services,
     Policies,
+    helpModal
   },
   inject: ["emitter"],
   data() {
@@ -55,8 +59,8 @@ export default {
       activeTab: "",
       isZTNArunning: false,
       tabs: [
-        { id: 1, label: "ztna.identite", component: identities },
-        { id: 2, label: "ztna.configuration", component: configs },
+        { id: 1, label: "ztna.identities", component: identities },
+        { id: 2, label: "ztna.configurations", component: configs },
         { id: 3, label: "ztna.services", component: Services },
         { id: 4, label: "ztna.relays", component: routers },
         { id: 5, label: "ztna.policies", component: Policies },

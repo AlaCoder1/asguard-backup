@@ -16,6 +16,8 @@
           >
             <v-card>
               <v-card-text>
+                <helpModal />
+
                 <component
                   :is="tab.component"
                   :serverInfo="serverInfo"
@@ -32,6 +34,8 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import BaseLayout from "@/layouts/layout.vue";
 import ServersOpenvpnComponent from "./components/ServersOpenvpnComponent.vue";
 import MonotoringOpenvpnComponent from "./components/MonotoringOpenvpnComponent.vue";
@@ -46,6 +50,7 @@ export default {
     MonotoringOpenvpnComponent,
     ListingOpenvpnComponent,
     ClientsOpenvpnComponent,
+    helpModal
   },
   inject: ["emitter"],
   data() {

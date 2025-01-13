@@ -18,7 +18,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     :label="$t('dhcpV4.rangeFrom')"
-                    v-model="state.rangeFrom"
+                    v-model.trim="state.rangeFrom"
                   ></v-text-field>
                   <p
                     class="error-feedback mb-5"
@@ -36,7 +36,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     :label="$t('dhcpV4.rangeTo')"
-                    v-model="state.rangeTo"
+                    v-model.trim="state.rangeTo"
                   ></v-text-field>
                   <p
                     class="error-feedback mb-5"
@@ -49,6 +49,21 @@
                     v-if="state.messageRangeTo && state.rangeTo"
                   >
                     {{ state.messageRangeTo }}
+                  </p>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="state.rangeFrom && state.rangeTo && egoRange"
+                  >
+                    {{ $t("plageAddresse") }}
+                  </p>
+                  <p class="error-feedback mb-5" v-if="state.error">
+                    {{ state.error }}
+                  </p>
+                  <p class="error-feedback mb-5" v-if="state.exist_plage_from">
+                    {{ state.exist_plage_from }}
+                  </p>
+                  <p class="error-feedback mb-5" v-if="state.exist_plage_to">
+                    {{ state.exist_plage_to }}
                   </p>
                 </v-col>
               </v-row>
@@ -68,12 +83,13 @@
             >
               <span class="pr-3 pl-3">{{ $t("buttons.close") }}</span>
             </v-btn>
+            <!-- :disabled="!computedTestRange || egoRange || same_edit" -->
 
             <v-btn
               large
               rounded
               outlined
-              :disabled="!computedTestRange"
+              :disabled="!computedTestRange || egoRange || same_edit"
               label-color="#213E9F"
               type="submit"
               color="indigo-darken-3"
@@ -106,10 +122,9 @@
 
 <script>
 import { useI18n } from "vue-i18n";
-import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
-import { required, helpers, requiredIf } from "@vuelidate/validators";
+import { toRefs, watch, onMounted, reactive, computed, inject } from "vue";
+import { helpers, requiredIf } from "@vuelidate/validators";
 import { v4 as uuidv4 } from "uuid";
 
 export default {
@@ -137,9 +152,9 @@ export default {
     const emitter = inject("emitter");
     const { t } = useI18n();
     onMounted(() => {
-      emitter.on("id-range", (id) => {
-        console.log("id", id);
-        state.confId = id;
+      emitter.on("id-range", (data) => {
+        state.confId = data.id;
+        state.ranges = data.range;
       });
 
       let ranges = initialRanges.value.split("-").map((part) => part.trim());
@@ -159,6 +174,12 @@ export default {
       initialTo: null,
       messageRangeFrom: null,
       messageRangeTo: null,
+      error: null,
+      ranges: [],
+      is_same: false,
+      exist_plage_from: "",
+      exist_plage_to: "",
+      currentRow: null,
     });
 
     watch(
@@ -176,10 +197,12 @@ export default {
     );
 
     const populate = (data) => {
+      console.log("edit*", data);
       if (modalMode.value === "edit") {
         state.editValue = data.uuid;
-        state.rangeFrom = data.range_from;
-        state.rangeTo = data.range_to;
+        state.rangeFrom = data.range_from.trim();
+        state.rangeTo = data.range_to.trim();
+        state.currentRow = data;
       }
     };
 
@@ -238,18 +261,143 @@ export default {
     const computedTestRange = computed(() => {
       let isValidRange = false;
       if (validateRange(state.rangeFrom, state.rangeTo)) {
-        console.log("Both ranges are valid.");
+        // console.log("Both ranges are valid.");
         isValidRange = true;
       } else {
-        console.log("Invalid range input.");
+        // console.log("Invalid range input.");
         isValidRange = false;
       }
       return isValidRange;
     });
 
+    const egoRange = computed(() => {
+      let is_egoRange = false;
+      if (state.rangeFrom === state.rangeTo) is_egoRange = true;
+      else is_egoRange = false;
+
+      return is_egoRange;
+    });
+
+    const same_edit = computed(() => {
+      if (modalMode.value === "edit") {
+        console.log("tt");
+        // const matching = state.ranges.find((a) => a.uuid === state.editValue);
+        console.log("state.currentRow", state.currentRow);
+
+        if (
+          state.currentRow.range_from.trim() === state.rangeFrom &&
+          state.currentRow.range_to.trim() === state.rangeTo
+        ) {
+          return true;
+        } else return false;
+      }
+    });
+
+    const verifierPlageExistante = (new_plage, ranges) => {
+      const { rangeFrom, rangeTo } = new_plage;
+
+      const matchingRange = ranges.find(
+        (plage) =>
+          plage.range_from.trim() === rangeFrom ||
+          plage.range_to.trim() === rangeTo
+      );
+      console.log("**ranges*", ranges);
+      console.log("***", matchingRange);
+
+      if (matchingRange) {
+        if (matchingRange.range_from.trim() === rangeFrom) {
+          state.exist_plage_from = `${t("dhcpV4.range")} '${rangeFrom}' ${t(
+            "dhcpV4.exist"
+          )}`;
+          setTimeout(() => {
+            state.exist_plage_from = "";
+          }, 2000);
+          return true;
+        } else if (matchingRange.range_to.trim() === rangeTo) {
+          state.exist_plage_to = `${t("dhcpV4.range")} '${rangeTo}' ${t(
+            "dhcpV4.exist"
+          )}`;
+          setTimeout(() => {
+            state.exist_plage_to = "";
+          }, 2000);
+          return true;
+        } else {
+          return false;
+        }
+      }
+
+      // const existe = ranges.some(
+      //   (plage) => plage.range_from === rangeFrom || plage.range_to === rangeTo
+      // );
+      // if (existe) {
+      //   return true;
+      // } else {
+      //   return false;
+      // }
+    };
+
+    // const verifierPlageExistante = computed(() => {
+    //   // const { rangeFrom, rangeTo } = new_plage;
+    //   console.log("**999");
+    //   console.log("state.ranges", state.ranges);
+
+    //   let matchingRange = null;
+
+    //   if (state.ranges && state.rangeTo) {
+    //     matchingRange = state.ranges.find(
+    //       (plage) =>
+    //         plage.rangeFrom === state.rangeFrom ||
+    //         plage.range_to === state.rangeTo
+    //     );
+    //     console.log("***", matchingRange);
+    //   }
+
+    //   if (matchingRange) {
+    //     if (matchingRange.range_from === state.rangeFrom) {
+    //       state.exist_plage_from = `${t("dhcpV4.range")} '${
+    //         state.rangeFrom
+    //       }' ${t("dhcpV4.exist")}`;
+    //       // setTimeout(() => {
+    //       //   state.exist_plage_from = "";
+    //       // }, 2000);
+    //       // return true;
+    //     } else if (matchingRange.range_to === state.rangeTo) {
+    //       state.exist_plage_to = `${t("dhcpV4.range")} '${state.rangeTo}' ${t(
+    //         "dhcpV4.exist"
+    //       )}`;
+    //       // setTimeout(() => {
+    //       //   state.exist_plage_to = "";
+    //       // }, 2000);
+    //       return true;
+    //     } else {
+    //       return false;
+    //     }
+    //   }
+    // });
     const submitForm = async () => {
       const result = await v$.value.$validate();
       if (result) {
+        const numeroOne = ipToNumber(state.rangeFrom);
+        const numeroTwo = ipToNumber(state.rangeTo);
+
+        if (numeroOne > numeroTwo) {
+          state.error = t("mustBe");
+
+          setTimeout(() => {
+            state.error = "";
+          }, 2000);
+          return;
+        }
+
+        //
+
+        const nouvellePlage = {
+          rangeFrom: state.rangeFrom,
+          rangeTo: state.rangeTo,
+        };
+
+        console.log("verification", state.ranges);
+
         let payload = {
           idConf: state.confId,
           uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
@@ -258,10 +406,28 @@ export default {
         };
 
         if (modalMode.value === "create") {
+          const verification = verifierPlageExistante(
+            nouvellePlage,
+            state.ranges
+          );
+          if (verification) return;
+
           emitter.emit("add-range", payload);
         }
 
         if (modalMode.value === "edit") {
+          let filtredList = state.ranges.filter(
+            (e) => e.uuid !== state.editValue
+          );
+          console.log("filtredList", filtredList);
+          console.log("nouvellePlage", nouvellePlage);
+
+          const verification = verifierPlageExistante(
+            nouvellePlage,
+            filtredList
+          );
+          if (verification) return;
+
           emitter.emit("edit-range", payload);
         }
 
@@ -288,7 +454,9 @@ export default {
         rangeFrom: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => modalMode.value === "create")
+            requiredIf(
+              () => modalMode.value === "create" || modalMode.value === "edit"
+            )
           ),
           isValidlRangeFrom: helpers.withMessage(
             formatMustBeLikeAdresseIP,
@@ -301,7 +469,9 @@ export default {
         rangeTo: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => modalMode.value === "create")
+            requiredIf(
+              () => modalMode.value === "create" || modalMode.value === "edit"
+            )
           ),
           isValidlRangeTo: helpers.withMessage(
             formatMustBeLikeAdresseIP,
@@ -323,6 +493,8 @@ export default {
       closeModal,
       submitForm,
       computedTestRange,
+      egoRange,
+      same_edit,
     };
   },
 };

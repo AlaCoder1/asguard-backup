@@ -12,7 +12,7 @@
     "description": "Description",
     "server": "Serveur d'annuaire",
     "LoginTime": "Temps de connexion",
-    "resetPassword":"Réinitialisation du mot de passe"
+    "resetPassword": "Réinitialisation du mot de passe"
   },
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",
@@ -43,6 +43,11 @@
     "Load": "charger"
   },
 
+  "noDesc": "Pas de description",
+  "noApp": "Aucune application pour cette règle",
+  "zeroNumber": "Valeur ne peut pas être 0.",
+  "plageAddresse": "Il faut des plages d'adresses différentes.",
+
   "requiredfield": {
     "indicatesrequiredfield": "Indique champ obligatoire",
     "attente": "S'il vous plaît, attendez...",
@@ -56,22 +61,27 @@
   },
 
   "errors": {
-    "errorServer":"Erreur de serveur interne. Veuillez réessayer plus tard",
+    "endAddress": "Format doit correspondre à l'adresse IP : X.X.X.X (dernier octet ne doit pas être 0 ou 255)",
+    "port": "Port doit se terminer par 443",
+    "oblig": "Champs obligatoires",
+    "format_address": "Format doit correspondre à : exemple.com",
+    "errorServer": "Erreur de serveur interne. Veuillez réessayer plus tard",
     "valueRequired": "Champs est obligatoire",
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers": "Champ ne peut inclure que des numéros",
-    "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces",
+    "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces ou le mot 'test'",
     "formatMustBeLikeAdresseIP": "Format doit correspondre à l'adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format doit correspondre à l'adresse : X.X.X.X/XX",
+    "subnetNotAccepted": "Le masque de sous-réseau 32 n'est pas accepté. Le format doit être le suivant : X.X.X.X/XX",
     "minimumOneRange": "Minimum Une Plage",
     "Formatdomain": "Le format doit être comme exemple.com",
-    "specificform": "champ doit y avoir au moins 32 caractères, dont au moins une majuscule, une minuscule, un chiffre et un caractère spécial.",
+    "specificform": "Champ doit y avoir au moins 32 caractères, dont au moins une majuscule, une minuscule, un chiffre et un caractère spécial.",
     "portform": "Le champ local Port ne peut inclure que des chiffres, avec un minimum de 4 et un maximum de 5",
-    "formsepcificpassword": "champ doit y avoir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial",
+    "formsepcificpassword": "Champ doit y avoir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial",
     "startwithletter": "Le nom peut contenir des lettres, des chiffres, des traits de soulignement et des tirets, doit commencer par une lettre et peut comporter jusqu'à 32 caractères",
-    "addressdAll": "champ peut inclure une adresse 'X.X.X.X/X' ou mot 'ALL'",
-    "numberALL": "champ ne peut inclure que des nombres ou le mot 'ALL'",
+    "addressdAll": "Champ peut inclure une adresse 'X.X.X.X/X' ou mot 'ALL'",
+    "numberALL": "Champ ne peut inclure que des nombres ou le mot 'ALL'",
     "emptyArray": "Le tableau est vide. Veuillez ajouter au moins un élément.",
     "emptyValue": "a une valeur vide",
     "atLeastemptyValue": "Au moins un élément a une valeur vide",
@@ -146,6 +156,7 @@
     "questionuser": "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
     "questiongroup": "Êtes-vous sûr de vouloir supprimer ce groupe ?",
     "questionserver": "Êtes-vous sûr de vouloir supprimer ce server ?",
+    "questionrole": "Êtes-vous sûr de vouloir supprimer ce rôle ?",
     "questioncertif": "Êtes-vous sûr de vouloir supprimer cette autorité ?",
     "questioncertificat": "Êtes-vous sûr de vouloir supprimer ce certificat ?",
     "questionkey": "Êtes-vous sûr de vouloir supprimer cette clé ?",
@@ -177,7 +188,7 @@
     "agGridOf": "de"
   },
   "firewall": {
-    "DropRejectRule":"Êtes-vous sûr de vouloir créer cette règle avec 'rejeter' ou 'abandonner' ?",
+    "DropRejectRule": "Êtes-vous sûr de vouloir créer cette règle avec 'rejeter' ou 'abandonner' ?",
     "rules": "Règles",
     "msg_subscription": "Vous êtes actuellement en mode gratuit, le déverrouillage de cette fonctionnalité nécessite un paiement. Aller à",
     "sub_page": "page d'abonnement",
@@ -325,7 +336,7 @@
     "requiredOptions": "Options obligatoires",
     "supersedeDomaineName": "Remplacer nom du domaine",
     "prependDomainServer": "Serveur de domaine en amont",
-    "numberValidity":"Format non valide. Veuillez saisir uniquement des nombres entiers."
+    "numberValidity": "Format non valide. Veuillez saisir uniquement des nombres entiers."
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Autres types d'interfaces",
@@ -353,7 +364,9 @@
   "routing": {
     "staticRouting": "Routage statique",
     "network": "Réseau",
-    "createRoute": "Créer une nouvelle"
+    "createRoute": "Créer une nouvelle",
+    "gatewayAddress": "Adresse de passerelle",
+    "parentInterface":"Interface parentale"
   },
   "subscription": {
     "chooseYourPlan": "Choisissez votre plan !",
@@ -385,7 +398,7 @@
   },
   "sdwan": {
     "listOfAreas": "Liste des zones",
-    "addKey": "Ajouter une clé",
+    "addArea": "Ajouter une zone",
     "areaName": "Nom de la zone",
     "members": "Membres",
     "createNewArea": "Créer une nouvelle zone",
@@ -406,7 +419,7 @@
     "updateRule": "Modifier la règle",
     "prefix": "Préfixe",
     "healthCheckMilliseconds": "Contrôle de santé en millisecondes",
-    "healthCheckTargetMilliseconds": "Objectif du contrôle de santé millisecondes"
+    "healthCheckTargetMilliseconds": "Objectif du contrôle de santé"
   },
   "dhcpV4": {
     "generalInformation": "Informations générales",
@@ -420,6 +433,8 @@
     "domainName": "Nom de domaine",
     "rangeFrom": "Plage de",
     "rangeTo": "Plage à",
+    "range": "Plage",
+    "exist": "existe déjà.",
     "addRange": "Ajouter une plage",
     "editRange": "Modifier la plage"
   },
@@ -444,7 +459,7 @@
   },
 
   "squid": {
-    "errorTime":"L'heure de début et l'heure de fin sont identiques",
+    "errorTime": "L'heure de début et l'heure de fin sont identiques",
     "restart": "Veuillez redémarrer le service pour que les modifications soient prises en compte.",
     "proxyPort": "Port du proxy",
     "etesVouSur": "Êtes-vous sûr de vouloir",
@@ -537,12 +552,15 @@
   "Sunday": "Dimanche",
 
   "champs": {
-    "existGateway":"Adresse de la passerelle existe deja",
-    "indication": "champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
-    "champNumber": "champs lifeTime ne peuvent inclure que des nombres.",
-    "champletter": "champs d'etat ne peut inclure que des lettres.",
-    "champplaceletter": "champs Lieu peut inclure que des lettres.",
-    "validAddress": "Veuillez saisir une adresse e-mail valide."
+    "existGateway": "Adresse de la passerelle existe deja",
+    "indication": "Champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
+    "champNumber": "Champs lifeTime ne peuvent inclure que des nombres.",
+    "champNumberAndMax": "Champ lifeTime doit contenir uniquement des nombres et être ≤ 825.",
+    "champNumberMax": "Champ doit contenir des nombres entre 1 et 2147483647.",
+    "champletter": "Champs ne peut inclure que des lettres.",
+    "champplaceletter": "Champs Lieu peut inclure que des lettres.",
+    "validAddress": "Veuillez saisir une adresse e-mail valide.",
+    "max": "Au maximum 63 caractères ou moins."
   },
 
   "tabs": {
@@ -565,8 +583,8 @@
   },
 
   "ztna": {
-    "identite": "IDENTITE",
-    "configuration": "CONFIGURATIONS",
+    "identities": "IDENTITES",
+    "configurations": "CONFIGURATIONS",
     "services": "Services",
     "relays": "Relais",
     "terminators": "TERMINATEURS",
@@ -580,6 +598,7 @@
     "expirationDate": "Date d'expiration",
     "creationDate": "Date de Création",
     "createNewIdentity": "Créer une Nouvelle Identité",
+    "createNewEnrollment": "Créer une inscription",
     "identityName": "Nom d'identité",
     "identityAttribute": "Attribut d'identité",
     "isAdmin": "Est administrateur",
@@ -635,7 +654,38 @@
     "addService": "Ajouter une Politique de Service de Relai de Périphérie",
     "edgeRelaysPolicies": "Politiques des relais",
     "servicesPolicies": "Politiques des services",
-    "ZTNAStatus": "ZTNA ne fonctionne pas, veuillez démarrer le service"
+    "ZTNAStatus": "ZTNA ne fonctionne pas, veuillez démarrer le service",
+    "osType": "Type OS",
+    "enterValue": "Vous devez entrer une valeur.",
+    "nameExist": "Le nom existe déjà",
+    "validName": "Veuillez entrer un nom valide",
+    "enterTime": "Veuillez saisir l'heure",
+    "timeformat": "Format d'heure invalide",
+    "timeCheck": "L'heure doit être postérieure à l'heure actuelle",
+    "enterDate": "Veuillez saisir une date",
+    "dateformat": "Format de date non valide",
+    "dateCheck": "La date devrait être postérieure à aujourd'hui",
+    "holeNumber": "Seuls les nombres entiers sont autorisés",
+    "validAddress": "Veuillez entrer une adresse valide",
+    "missingFields": "Vérifiez les champs manquants ou invalides",
+    "identityCreated": "Identité créée avec succès",
+    "identityUpdated": "Identité mise à jour avec succès",
+    "configUpdated": "Configuration mise à jour avec succès",
+    "configCreated": "Configuration créée avec succès",
+    "EnrollCreated": "Inscription créée avec succès",
+    "serviceUpdated": "Service mis à jour avec succès",
+    "serviceCreated": "Service créé avec succès",
+    "routerUpdated": "Relais mis à jour avec succès",
+    "routerCreated": "Relais créé avec succès",
+    "routerpolCreated": "Politique de relais créée avec succès",
+    "routerpolUpdated": "Politique de relais mise à jour avec succès",
+    "servicepolCreated": "Politique de service créée avec succès",
+    "servicepolUpdated": "Politique de service mise à jour avec succès",
+    "servicerouterpolCreated": "Politique de relais de service créée avec succès",
+    "servicerouterpolUpdated": "Politique de relais de service mise à jour avec succès",
+    "ztnadate": "Date",
+    "ztnatime": "Temps",
+    "namerelay": "Nom du relais doit suivre le format: {nom-service}.relay"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",
@@ -665,7 +715,7 @@
     "ServerName": "Nom du serveur",
     "Type": "Type",
     "HostName": "Nom d'hôte",
-    "IPAddress": "adresse IP",
+    "IPAddress": "adresse IP ou nom de l'hote",
     "SearchBase": "Base de recherche",
     "ServerType": "Type de serveur",
     "UserDN": "Nom distinctif de l'utilisateur",
@@ -842,7 +892,8 @@
     "Remotesubnet": "Sous-réseau distant",
     "Phase2Proposal": "Proposition de phase 2",
     "Enable": "Activer",
-    "addnewpeer": "Ajouter un nouveau pair"
+    "addnewpeer": "Ajouter un nouveau pair",
+    "IpsecStatus": "Le VPN de site à site ne fonctionne pas, veuillez démarrer le service"
   },
   "monitoringVPN": {
     "currentstate": "État actuel de tous les moniteurs",
@@ -1023,6 +1074,7 @@
     "nombreMustBe": "Nombre doit etre compris entre",
     "and": "et"
   },
+  "mustBe": "L'adresse Deux doit être supérieure à l'adresse Un.",
   "rangeFrom": "La plage",
   "outBounds": "est hors limites.",
   "settings": {
@@ -1076,8 +1128,8 @@
     "pleaseChoose": "Veuillez choisir un fichier image",
     "fileBig": "Votre fichier est trop volumineux ! Veuillez sélectionner une image de moins de 1MB",
     "GotIt": "Je l'ai!",
-    "NoPermission":"Vous ne disposez pas des autorisations requises pour effectuer des actions",
-    "ContactAdmin":"Veuillez contacter l'administrateur si vous pensez qu'il s'agit d'une erreur."
+    "NoPermission": "Vous ne disposez pas des autorisations requises pour effectuer des actions",
+    "ContactAdmin": "Veuillez contacter l'administrateur si vous pensez qu'il s'agit d'une erreur."
   },
   "logrotate": {
     "id": "ID",

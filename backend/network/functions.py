@@ -1,11 +1,18 @@
 import subprocess
+
+
+
+
 from .models import *
 from django.conf import settings
 import time
-from .models import *
 ####################################################  BD functions  ############################################################### 
 
 ####update in Database functions
+
+
+
+
 #function to update config tables
 def update_DB(id,data,model,IP4serializer):
     data={key: value for key, value in data.items() if value is not None}
@@ -43,7 +50,12 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
 ### function to get data from interface name
 def device_name_interface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)
-    return data
+    ifname=data.ifname
+    id_interface = data.id
+    aux_main=data.is_main
+    generic_config_object=GenericConfig.objects.get(interface_id=id_interface)if GenericConfig.objects.filter(interface_id=id_interface).exists() else None 
+    uuid=get_uuid_con(ifname)   
+    return data,ifname,id_interface,aux_main,generic_config_object,uuid
 
 #################################################### end BD functions  ############################################################### 
 
@@ -51,10 +63,10 @@ def device_name_interface(name_interface):
 def restart_network_manager():
     restart_cmd = "sudo systemctl restart NetworkManager"
     run_command(restart_cmd)
-    time.sleep(5)
+    time.sleep(2)
 ## function to get uuid connection
 def get_uuid_con(ifname):
-    ifname=ifname.split("@")[0]if ifname.startswith("vlan")else ifname
+    ifname=ifname.split("@")[0]if ifname.find("@")!=-1 else ifname
     cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
     output,_=run_command(cmd)
     # print({"cmd":cmd,"output":output})
@@ -81,6 +93,7 @@ def get_old_config():
     cmd = "cat /etc/systemd/system/Asguard-Networking.service"
     output,error=run_command(cmd)
     output=output.split("\n")
+    output=[x for x in output if x]
     return output,error
    
 def add_requirement(ifname,output):
@@ -154,9 +167,14 @@ def run_command_with_timeout(type, command, timeout):
         print(f"Command too long ({elapsed_time:.2f} seconds). {command}")
         return None, "Command timed out and was terminated."
  
-def run_all_commands(commandes,setuptypeIP4,timeout):
+def run_all_commands(commandes,setuptypeIP4,timeout,output_service):
+    cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
+{}
+EOF""".format('\n'.join(output_service))
+    commandes.append(cmd_asguard)
     for cmd in commandes:
         output,error=run_command_with_timeout(setuptypeIP4, cmd, timeout)
+        # print({"cmd to execute==>":cmd})
         if output is None and error!="" :
             print(error)
             return error

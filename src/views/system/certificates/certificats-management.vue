@@ -2,7 +2,8 @@
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.cert')">
       <template #content>
-        <div class="ml-5 mr-5 mt-5 mb-5">
+        <helpModal />
+        <div class="ml-5 mr-5 mb-5">
           <authorites :authoritesData="authoritesData" />
           <certificats
             :certifData="certifData"
@@ -24,6 +25,7 @@ import certificats from "./components/certificats.vue";
 import revocation from "./components/revocation.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import helpModal from "@/components/modals/help.vue";
 
 export default {
   name: "CertificatsManagement",
@@ -33,6 +35,7 @@ export default {
     authorites,
     certificats,
     revocation,
+    helpModal,
   },
   props: {},
   data() {

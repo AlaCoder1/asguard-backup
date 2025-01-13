@@ -116,10 +116,10 @@ def add_rule_database(rules_add,id):
         rule['suricatafile'] = int(id)
         serializer_rules = RuleIdsIpsSerializer(data=rule)
         if serializer_rules.is_valid():
-            rule_objects.append(ids_ips_rule(**serializer_rules.validated_data))
+            serializer_rules.save()
+    
         else:
             continue
-    ids_ips_rule.objects.bulk_create(rule_objects)
 def delete_rule_database(rules_delete):
     """ function to delete rule from database to refresh table rule suricata"""
     for l in rules_delete:
@@ -415,12 +415,16 @@ def init_logrotate_conf(contenu,file_path):
     True if the configuration file is created successfully, otherwise an error message.
     """
     if contenu is not None:
-        cmd = """sudo sh -c 'cat <<EOF > {}
+        commandes =[
+         """sudo sh -c 'cat <<EOF > {}
 {}
-EOF'""".format(file_path,contenu)
-    _, error = execute_cmd(cmd)
-    if error !='':
-        return error
+EOF'""".format(file_path,contenu),
+        f"sudo chmod g-w {file_path}"
+        ]
+    for cmd in commandes: 
+        _, error = execute_cmd(cmd)
+        if error !='':
+            return error
     return True
 
 

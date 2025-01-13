@@ -24,6 +24,7 @@
             :key="tab.name_interface"
             :value="tab.name_interface"
           >
+          <helpModal />
             <ConfigServerDhcp4Component
               :id="tab.name_interface"
               :activeTab="activeTab"
@@ -66,6 +67,7 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
 import BaseLayout from "../../layouts/layout.vue";
 import ConfigServerDhcp4Component from "./components/ConfigServerDhcp4Component.vue";
 export default {
@@ -73,6 +75,7 @@ export default {
   components: {
     BaseLayout,
     ConfigServerDhcp4Component,
+    helpModal
   },
   data() {
     return {

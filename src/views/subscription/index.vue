@@ -2,6 +2,7 @@
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.subscription')">
       <template #content>
+        <helpModal />
         <v-row class="justify-center mt-5 mb-4 ml-15" v-if="subInfo">
           <v-col cols="1"> </v-col>
           <v-col cols="3">
@@ -28,16 +29,26 @@
               elevation="2"
             >
               <span class="title"
-                >{{ $t("subscription.currentSubscription") }} </span
+                >{{ $t("subscription.currentSubscription") }}</span
               ><br />
               <span class="soutitle">{{
-                statusPackage
+                getLang === "fr"
+                  ? statusPackage
+                    ? $t("subscription.expired") +
+                      " " +
+                      $t("subscription.ago") +
+                      " " +
+                      ExpiredDays +
+                      " " +
+                      dayString
+                    : formatedDate
+                  : statusPackage
                   ? $t("subscription.expired") +
-                    "" +
+                    " " +
                     ExpiredDays +
                     " " +
                     dayString +
-                    +"" +
+                    " " +
                     $t("subscription.ago")
                   : formatedDate
               }}</span>
@@ -89,16 +100,20 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import { useI18n } from "vue-i18n";
 import BaseLayout from "@/layouts/layout.vue";
 import SubscriptionTypeCard from "./components/subscriptionTypeCard.vue";
 import { onMounted, inject, ref, computed } from "vue";
+import { get_lang } from "@/mixins/storage_language.js";
 import dayjs from "dayjs";
 export default {
   name: "Subscription",
   components: {
     BaseLayout,
     SubscriptionTypeCard,
+    helpModal
   },
   setup() {
     const { t } = useI18n();
@@ -219,6 +234,7 @@ export default {
     const subscriptionInfo = ref({});
     const statusPackage = ref(false);
     const ExpiredDays = ref("");
+    const getLang = ref("");
     const dayString = ref("");
     const subInfo = ref(false);
 
@@ -242,6 +258,9 @@ export default {
     });
 
     onMounted(() => {
+      (async () => {
+        getLang.value = await get_lang();
+      })();
       const subscription_information =
         document.getElementById("app").attributes["subscription_information"]
           .value;
@@ -303,6 +322,7 @@ export default {
       formatedNextPayment,
       subInfo,
       statusPackage,
+      getLang,
       ExpiredDays,
       dayString,
     };
@@ -327,6 +347,7 @@ export default {
   font-weight: 400;
   word-wrap: break-word;
 }
+
 .soutitle {
   color: #000202;
   font-size: 18px;

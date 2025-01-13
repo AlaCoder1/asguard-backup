@@ -1,15 +1,32 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-          <v-card-text v-html="overlayMessage">
-          </v-card-text>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -48,7 +65,7 @@
           <v-col cols="8" class="mb-n6">
             <v-select
               v-model="state.rule_engine"
-              :label="$t('Waf.Ruleengine')"
+              :label="`${$t('Waf.Ruleengine')} *`"
               item-title="name"
               item-value="slug"
               clearable
@@ -99,7 +116,7 @@
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('Waf.Maximumrequestbodysize')"
+              :label="`${$t('Waf.Maximumrequestbodysize')} *`"
               v-model="state.maximum_request"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.maximum_request.$error">
@@ -112,7 +129,7 @@
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('Waf.Requestbodysizefiles')"
+              :label="`${$t('Waf.Requestbodysizefiles')} *`"
               v-model="state.size_file"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.size_file.$error">
@@ -126,7 +143,7 @@
           <v-col cols="8" class="mb-n6">
             <v-select
               v-model="state.limit_action"
-              :label="$t('Waf.RequestBodyLimitAction')"
+              :label="`${$t('Waf.RequestBodyLimitAction')} *`"
               item-title="name"
               item-value="slug"
               clearable
@@ -143,7 +160,7 @@
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('Waf.Maximumparsingdepth')"
+              :label="`${$t('Waf.Maximumparsingdepth')} *`"
               v-model="state.max_parsing"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.max_parsing.$error">
@@ -156,7 +173,7 @@
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('Waf.Maximumnumberofargs/request')"
+              :label="`${$t('Waf.Maximumnumberofargs/request')} *`"
               v-model="state.max_number"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.max_number.$error">
@@ -169,7 +186,7 @@
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('Waf.PcreMatchLimit')"
+              :label="`${$t('Waf.PcreMatchLimit')} *`"
               v-model="state.pcre_match_limit"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.pcre_match_limit.$error">
@@ -182,7 +199,7 @@
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('Waf.PcreMatchLimitRecursion')"
+              :label="`${$t('Waf.PcreMatchLimitRecursion')} *`"
               v-model="state.pcre_limit_recursion"
             ></v-text-field>
             <p
@@ -209,7 +226,7 @@
           <v-col cols="8" class="mb-n6">
             <v-select
               v-model="state.body_mimetype"
-              :label="$t('Waf.ResponseBodyMimeType')"
+              :label="`${$t('Waf.ResponseBodyMimeType')} *`"
               item-title="name"
               item-value="slug"
               clearable
@@ -226,7 +243,7 @@
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('Waf.ResponseBodyLimit')"
+              :label="`${$t('Waf.ResponseBodyLimit')} *`"
               v-model="state.response_body_limit"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.response_body_limit.$error">
@@ -240,7 +257,7 @@
           <v-col cols="8" class="mb-n6">
             <v-select
               v-model="state.response_limit_action"
-              :label="$t('Waf.ResponseBodyLimitAction')"
+              :label="`${$t('Waf.ResponseBodyLimitAction')} *`"
               item-title="name"
               item-value="slug"
               clearable
@@ -259,7 +276,14 @@
     </v-row>
 
     <v-row class="flex py-8 mb-5">
-      <v-col cols="4" class="mt-5"> </v-col>
+      <v-col cols="4">
+        <div class="text-start ml-2 mt-4">
+          <span class="text-sm">
+            <span class="text-red text-lg">*</span>
+            {{ $t("errors.oblig") }}</span
+          >
+        </div>
+      </v-col>
       <v-col>
         <div class="mr-3 flex center">
           <VButton
@@ -323,7 +347,7 @@ export default {
       isLoadingDialogue: false,
       id: null,
       //
-      engineList: ["On", "Off", "Detection only"],
+      engineList: ["On", "Off", "DetectionOnly"],
       requestBodyList: ["ProcessPartial", "Reject"],
       responseBodyList: ["ProcessPartial", "Reject"],
       bodyMimeTypeList: ["text/*", "text/html", "text/xml", "text/plain"],
@@ -394,13 +418,18 @@ export default {
     };
 
     const lastSubscription =
-        document.getElementById("app").attributes["last_subscription"].value;
-      let parsedArraySubscription = JSON.parse(lastSubscription);
-      last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      document.getElementById("app").attributes["last_subscription"].value;
+    let parsedArraySubscription = JSON.parse(lastSubscription);
+    last_Subscription.value = parsedArraySubscription;
+    console.log("last_Subscription", last_Subscription.value);
     const cancel = () => {
-      const user = user_privilege('Waf');
-      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Nat") ) {
+      const user = user_privilege("Waf");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("Nat")
+      ) {
         state.id = null;
         state.rule_engine = null;
         state.access_request = false;
@@ -426,14 +455,20 @@ export default {
       return t("errors.ChampIncludeOnlyNumbers");
     });
     const overlayMessage = computed(() => {
-  if (current_user.value === "viewer" || current_user.value === "default") {
-    return `${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!last_Subscription.value.includes("WAF")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
-});
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return `${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+      } else if (!last_Subscription.value.includes("WAF")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
+    });
     const champ = computed(() => {
       return t("errors.valueRequired");
     });
@@ -566,12 +601,17 @@ export default {
       axios.post("/waf/restartNginx");
     };
     const submitForm = async () => {
-      const user = user_privilege('Waf');
-      current_user.value=user
+      const user = user_privilege("Waf");
+      current_user.value = user;
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("WAF") ) {
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("WAF")
+      ) {
         if (result) {
           let payload = {
             rule_engine_initialization: state.rule_engine,

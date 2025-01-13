@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-06 22:51+0000\n"
+"POT-Creation-Date: 2024-12-25 20:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,13 +18,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
+#: backend/managementUsers/models.py:20
+msgid "name"
+msgstr "nom"
+
+#: backend/managementUsers/models.py:62 backend/managementUsers/views.py:29
+msgid "username"
+msgstr "nom d'utilisateur"
+
 #: backend/managementUsers/views.py:28
 msgid "User"
 msgstr "Utilisateur"
-
-#: backend/managementUsers/views.py:29
-msgid "username"
-msgstr "nom d'utilisateur"
 
 #: backend/managementUsers/views.py:30
 msgid "password"
@@ -86,34 +90,30 @@ msgstr "est supprimé"
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/managementUsers/views.py:46
-msgid "password is updated"
-msgstr "est modifié"
-
-#: backend/managementUsers/views.py:48
+#: backend/managementUsers/views.py:47
 msgid "System error in creating"
 msgstr "Erreur système lors de la création de"
 
-#: backend/managementUsers/views.py:49
+#: backend/managementUsers/views.py:48
 msgid "System error in deleting"
 msgstr "Erreur système lors de la suppression de"
 
-#: backend/managementUsers/views.py:50
+#: backend/managementUsers/views.py:49
 msgid "System error in updating"
 msgstr "Erreur système lors de la modification de"
 
-#: backend/managementUsers/views.py:51
+#: backend/managementUsers/views.py:50
 msgid "already exist"
 msgstr "existe déjà"
 
-#: backend/managementUsers/views.py:52
+#: backend/managementUsers/views.py:51
 msgid "does not exist"
 msgstr "n'existe pas"
 
-#: backend/managementUsers/views.py:53
+#: backend/managementUsers/views.py:52
 msgid "Invalid password"
 msgstr "Mot de passe invalide"
 
-#: backend/managementUsers/views.py:54
+#: backend/managementUsers/views.py:53
 msgid "System error in connecting to directory server"
 msgstr "Erreur système lors de la connection au ser d'annuaire"

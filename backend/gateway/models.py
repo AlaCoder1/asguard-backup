@@ -2,23 +2,22 @@
 from django.db import models
 from django.utils import timezone
 from backend.network.models import Interface
-# Create your models here.
-###model Gateway
+from django.utils.translation import gettext_lazy as _
+
+
 class Gateway(models.Model):
-    # interfaces = models.ManyToManyField(Interface, related_name='Interfaces', through='GatewayInterface')
-    gwname=models.CharField(max_length=200, null=True,unique=True)
-    gwaddress=models.CharField(max_length=200, null=True)
+    gwname=models.CharField(max_length=200, null=True, unique=True, verbose_name=_("gateway name"))
+    gwaddress=models.CharField(max_length=200, null=True, unique=True, verbose_name=_("gateway address"))
     staticgw=models.BooleanField(default=False)
-    description=models.CharField(max_length=200, null=True,blank=True)
+    description=models.CharField(max_length=200, null=True, blank=True)
     default_aux= models.BooleanField(default=True)
     far_aux= models.BooleanField(default=False)
     multiwan_aux= models.BooleanField(default=False)
     ipv4_gw=models.BooleanField(default=True)
     # Created and updated timestamps
-    created_at = models.DateTimeField(default=timezone.now, editable=False,null=True)
-    updated_at = models.DateTimeField(default=timezone.now,editable=False,null=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False, null=True)
+    updated_at = models.DateTimeField(default=timezone.now, editable=False, null=True)
 
-    
     def save(self, *args, **kwargs):
         if not self.id:
             self.created_at = timezone.now()
@@ -31,7 +30,7 @@ class Gateway(models.Model):
 class GatewayInterface(models.Model):
     interface = models.ForeignKey(Interface, on_delete=models.CASCADE)
     gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
-    metric=models.IntegerField(null=True,default=0)
+    metric=models.IntegerField(null=True, default=0)
     ipv4_gw_interface=models.BooleanField(default=True)
     class Meta:
         db_table = 'gateway_interface'    

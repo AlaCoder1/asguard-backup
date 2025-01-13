@@ -10,6 +10,32 @@ from django.utils.translation import gettext_lazy as _
 CONSTANT_INTERFACE_GATEWAY = _('Gateway DHCP')
 ERROR_MESSAGES_NOTFOUND = _("does not found")
 
+def save_gateway_static_ip(gateway4,uuid,name_interface,id_interface):
+    list_metric = []
+    cmdgw4=None
+    if gateway4!="Auto Detect":
+        list_metric = []
+        gateway_object=Gateway.objects.get(Q(gwaddress=gateway4) & Q(staticgw=True) )
+        #################
+        # default_aux=GatewayObject.default_aux
+        far_aux=gateway_object.far_aux
+        multiwan_aux=gateway_object.multiwan_aux
+        addrgw4=gateway_object.gwaddress
+        ############# generete metric statiquement
+        metric=0
+        all_gateway_interface = GatewayInterface.objects.all()
+        if multiwan_aux:
+            for i in all_gateway_interface:
+                list_metric.append(i.metric)
+            metric=different_metric(list_metric)
+        cmdgw4=return_gateway_system(uuid,addrgw4,far_aux,multiwan_aux,metric)
+        ipv4_gw_interface=True
+        add_gateway_interface_db(gateway_object,name_interface,metric,ipv4_gw_interface)
+    elif GatewayInterface.objects.filter(interface_id=id_interface).exists():
+        interface = GatewayInterface.objects.get(interface_id=id_interface)
+        interface.delete()
+    return cmdgw4,list_metric
+
 # this import to run this on macine distant
 def add_gateway_db(data):
     gateway_serializer = GatewaySerializer(data=data)
@@ -135,6 +161,6 @@ def save_gateways_database(gwaddr,name_interface,default_aux,far_aux,multiwan_au
             msg=aux_gw
            
     else:
-            msg=f"{CONSTANT_INTERFACE_GATEWAY} {ERROR_MESSAGES_NOTFOUND}"
+            msg=True
              
     return msg

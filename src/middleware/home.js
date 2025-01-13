@@ -11,9 +11,9 @@ import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
 import mitt from "mitt";
+import { get_lang } from "../mixins/storage_language.js";
 
 const emitter = mitt();
-
 
 const app = createApp(home);
 const vuetify = createVuetify({
@@ -21,19 +21,6 @@ const vuetify = createVuetify({
   directives,
 });
 app.provide("emitter", emitter);
-let lang = localStorage.getItem("lang");
-if (lang) {
-  var langLocle = JSON.parse(lang);
-}
-const i18n = new createI18n({
-  legacy: false,
-  locale: langLocle ? langLocle[0].lang.toLowerCase() : "en",
-  // locale: "en",
-  messages: {
-    en: enJson,
-    fr: frJson,
-  },
-});
 
 const currentPath = window.location.pathname;
 function hrefPath() {
@@ -42,4 +29,18 @@ function hrefPath() {
 
 hrefPath();
 startTimer();
-app.use(VueApexCharts).use(store).use(vuetify).use(i18n).mount("#app");
+
+(async () => {
+  const locale = await get_lang();
+
+  const i18n = new createI18n({
+    legacy: false,
+    locale,
+    messages: {
+      en: enJson,
+      fr: frJson,
+    },
+  });
+
+  app.use(store).use(VueApexCharts).use(i18n).use(vuetify).mount("#app");
+})();

@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('routing.network')"
+                    :label="`${$t('routing.network')} *`"
                     v-model="state.network"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.network.$error">
@@ -27,7 +27,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.gateway"
-                    label="Gateway"
+                    label="Gateway *"
                     item-title="name"
                     item-value="id"
                     :items="state.listGateway"
@@ -38,10 +38,10 @@
                     {{ v$.gateway.$errors[0].$message }}
                   </p>
                 </v-col>
-                <template v-if="state.gateway.name === 'Other'">
+                <template v-if="state.gateway?.name === 'Other'">
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                      label="Gateway Address"
+                      :label="`${$t('routing.gatewayAddress')} *`"
                       v-model="state.gatewayAddress"
                     ></v-text-field>
                     <p
@@ -54,7 +54,7 @@
                   <v-col cols="12" class="mb-n6">
                     <v-select
                       v-model="state.interface"
-                      label="Parent Interface"
+                      :label="`${$t('routing.parentInterface')} *`"
                       item-title="name"
                       item-value="slug"
                       :items="state.listInterfaces"
@@ -68,7 +68,7 @@
 
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                      label="Metric"
+                      label="Metric *"
                       v-model="state.metric"
                     ></v-text-field>
                     <p class="error-feedback mb-5" v-if="v$.metric.$error">
@@ -87,6 +87,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               large
@@ -195,7 +202,8 @@ export default {
             (i) =>
               !i.ifname.startsWith("tun_") &&
               !i.ifname.startsWith("tap_") &&
-              !i.ifname.startsWith("vlan")
+              !i.name_interface.startsWith("VLAN") &&
+              !i.name_interface.startsWith("VXLAN")
           );
 
           let interfaces = filtredInterface.map((i) => {
@@ -230,6 +238,7 @@ export default {
       gatewayAddress: "",
       metric: "",
       interface: "",
+      test: "create",
     });
 
     watch(
@@ -241,10 +250,11 @@ export default {
     watch(
       () => state.gateway,
       (val) => {
-        if (val.slug != "Other") {
+        if (val.name != "Other") {
           state.gatewayAddress = "";
-          state.metric = " ";
+          state.metric = "";
           state.interface = "";
+          v$.value.$reset();
         }
       }
     );
@@ -278,11 +288,6 @@ export default {
           (i) => i.id === data?.gateway
         );
         state.gateway = filtredGateway[0];
-        // if (filtredGateway.length == 0) {
-        //   state.gateway = { id: 0, name: "Other" };
-        // } else {
-
-        // }
         state.network = data.destination_address;
         state.description = data.description;
       }
@@ -311,7 +316,7 @@ export default {
       if (result) {
         let gateway = null;
 
-        if (state.gateway.name === "Other") {
+        if (state.gateway?.name === "Other") {
           gateway = {
             gateway_address: state.gatewayAddress,
             interface: state.interface.id,
@@ -323,7 +328,7 @@ export default {
 
         let payload = {
           destination_address: state.network,
-          gateway_create: state.gateway.name === "Other" ? true : false,
+          gateway_create: state.gateway?.name === "Other" ? true : false,
           gateway: gateway,
           description: state.description,
         };
@@ -385,6 +390,7 @@ export default {
     };
 
     const closeModal = () => {
+      v$.value.$reset();
       emitter.emit("closeRoutingModal");
 
       if (modalMode.value === "create") {
@@ -403,6 +409,12 @@ export default {
     const addressForma = computed(() => {
       return t("errors.formatMustBeLikeAdresseIP");
     });
+    const end_address = computed(() => {
+      return t("errors.endAddress");
+    });
+    const champNumberMax = computed(() => {
+      return t("champs.champNumberMax");
+    });
 
     const rules = computed(() => {
       return {
@@ -420,29 +432,42 @@ export default {
           required: helpers.withMessage(error, required),
         },
 
+        metric: {
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.gateway.name === "Other")
+          ),
+          isValid: helpers.withMessage(
+            champNumberMax,
+            helpers.regex(
+              /^(?:[1-9][0-9]{0,8}|1[0-9]{9}|2(?:[0-9]{9}|1(?:[0-9]{8}|4(?:[0-9]{7}|7(?:[0-9]{6}|4(?:[0-9]{5}|8(?:[0-9]{4}|3(?:[0-9]{3}|6(?:[0-7])))))))))$/
+            )
+
+            // (value) =>
+            //   !!value &&
+            //   /^[0-9]+$/.test(value) &&
+            //   parseInt(value, 10) <= 2147483647
+          ),
+        },
+
         //
 
         gatewayAddress: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.gateway.name === "Other")
+            requiredIf(() => state.gateway?.name === "Other")
+          ),
+          isValidGateway: helpers.withMessage(
+            end_address,
+            helpers.regex(
+              /^(25[0-4]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-4]|2[0-4][0-9]|[1-9][0-9]?)$/
+            )
           ),
         },
         interface: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.gateway.name === "Other")
-          ),
-        },
-        metric: {
-          // isValidMetric: helpers.withMessage(
-          //   `Champs can include only Numbers.`,
-
-          //   helpers.regex(/^[0-9]+$/)
-          // ),
-          requiredIfFuction: helpers.withMessage(
-            error,
-            requiredIf(() => state.gateway.name === "Other")
+            requiredIf(() => state.gateway?.name === "Other")
           ),
         },
       };

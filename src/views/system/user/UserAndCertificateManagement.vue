@@ -2,6 +2,7 @@
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.user')">
       <template #content>
+        <helpModal />
         <!-- <v-tabs
           v-model="selectedTab"
           background-color="#fff"
@@ -34,6 +35,7 @@
 import BaseLayout from "../../../layouts/layout.vue";
 import DataManagment from "../user/user_certificate_managment.vue";
 import CertificatsManagement from "../certificates/certificats-management.vue";
+import helpModal from "@/components/modals/help.vue";
 
 export default {
   name: "UserAndCertificateManagement",
@@ -42,11 +44,11 @@ export default {
     BaseLayout,
     CertificatsManagement,
     DataManagment,
+    helpModal
   },
 
   data() {
     return {
-      localStorageValue: localStorage.getItem("lang-slug"),
       tabs: [
         { id: 1, value: "tabs.userManagement", component: DataManagment },
         {

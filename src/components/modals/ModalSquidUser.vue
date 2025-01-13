@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Email"
+                    label="Email *"
                     v-model="state.formData.email"
                   ></v-text-field>
                   <p
@@ -30,7 +30,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('form.username')"
+                    :label="`${$t('form.username')} *`"
                     v-model="state.formData.userName"
                   ></v-text-field>
                   <p
@@ -44,7 +44,7 @@
               <v-row>
                 <v-col cols="6">
                   <v-text-field
-                    :label="$t('form.password')"
+                    :label="`${$t('form.password')} *`"
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
@@ -58,7 +58,7 @@
 
                 <v-col cols="6">
                   <v-text-field
-                    :label="$t('form.confirmPassword')"
+                    :label="`${$t('form.confirmPassword')} *`"
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
@@ -73,6 +73,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"

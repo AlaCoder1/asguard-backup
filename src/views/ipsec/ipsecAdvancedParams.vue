@@ -164,8 +164,16 @@
         />
       </v-col>
     </v-row>
+
     <v-row class="flex py-8 mb-5">
-      <v-col cols="4"> </v-col>
+      <v-col cols="4">
+        <div class="text-start ml-2 mt-4">
+          <span class="text-sm">
+            <span class="text-red text-lg">*</span>
+            {{ $t("errors.oblig") }}</span
+          >
+        </div>
+      </v-col>
       <v-col>
         <div class="mr-3 flex center">
           <VButton
@@ -655,7 +663,7 @@ export default {
       }
     };
 
-    const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
+    const numberList = ref(Array.from({ length: 33 }, (_, i) => i));
     const CertificateList = ref([]);
     const CertificateListRemote = ref([]);
     const mapedInterfaceType = ref([]);
@@ -676,9 +684,11 @@ export default {
         )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
           "firewall.sub_page"
         )}</a>`;
-      }else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
     });
     const error = computed(() => {
       return t("errors.valueRequired");

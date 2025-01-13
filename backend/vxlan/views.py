@@ -8,11 +8,10 @@ from backend.network.serializers import InterfaceSerializer
 from backend.vxlan.functions import add_vxlan_sys, delete_vxlan_sys, get_all_nmcli_uuids,save_in_db, update_vxlan_sys
 from backend.vxlan.models import Vxlan
 from django.core import serializers
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _,get_language
 from backend.vxlan.serializers import VxlanSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
 
 
 # Constants
@@ -35,7 +34,27 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vxlan(request):
-    """API to get all vxlan from database """
+    """
+    API to get all vxlan from database.
+
+    This function retrieves all VxLAN configurations from the database and returns them as a JSON response.
+    Each VxLAN configuration is represented as a dictionary with the following fields:
+    - id: The unique identifier of the VxLAN configuration.
+    - parent_interface: The identifier of the parent interface for the VxLAN.
+    - vxlan_id: The VxLAN ID.
+    - vxlan_interface_name: The name of the VxLAN interface.
+    - vxlan_source_address: The source address for the VxLAN.
+    - vxlan_destination_address: The destination address for the VxLAN.
+    - vxlan_destination_port: The destination port for the VxLAN.
+    - vxlan_connection_uuid: The UUID of the VxLAN connection.
+    - name_interface: The name of the parent interface.
+
+    Parameters:
+    - request: The HTTP request object.
+
+    Returns:
+    - JsonResponse: A JSON response containing a list of VxLAN configurations.
+    """
     if (request.method == 'GET'):
         list_vxlan=[]
         # parse the incoming information
@@ -46,7 +65,7 @@ def get_vxlan(request):
             res[i]['fields']['id']=res[i]["pk"]
             res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['parent_interface']).name_interface
             list_vxlan.append(res[i]['fields'])
-    return JsonResponse({"msg": list_vxlan})  
+    return JsonResponse({"msg": list_vxlan})
 
 @swagger_auto_schema(
     method='POST',
@@ -58,19 +77,34 @@ def get_vxlan(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_vxlan(request):
-    """API to add vlan in database only"""
+    """
+    API to add VXLAN in the database.
+
+    This function receives a POST request with VXLAN data in the request body.
+    It validates the data and saves it in the database if the data is valid.
+    If the data is not valid, it returns an error message.
+
+    Parameters:
+    - request: The HTTP request object containing the POST request.
+
+    Returns:
+    - JsonResponse: A JSON response containing a success or error message.
+      - If the data is valid, it returns a success message with status code 200.
+      - If the data is not valid, it returns an error message with status code 400.
+    """
     if (request.method == 'POST'):
-        # parse the incoming information
         data_input=request.data
         vxlan_serializer=VxlanSerializer(data=data_input)
+
         if vxlan_serializer.is_valid():
             vxlan_serializer.save()
             msg= f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_CREATING}"
             status=200
         else:
             msg=str(next(iter(vxlan_serializer.errors.values()))[0]).strip('.')+"!"
+            print(msg)
             status=400
-    return JsonResponse({"msg": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)
  
  
 @swagger_auto_schema(
@@ -83,9 +117,17 @@ def add_vxlan(request):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vxlan(request,id):
-    """API to update vlan in system and database"""
+    """
+    API to update vlan in system and database.
+    Parameters:
+    - request (HttpRequest): The incoming HTTP request.
+    - id (int): The ID of the VXLAN to be updated.
+    Returns:
+    - JsonResponse: A JSON response containing a success or error message.
+      - If the data is valid, it returns a success message with status code 200.
+      - If the data is not valid, it returns an error message with status code 400.
+    """
     if (request.method == 'PUT'):
-        # parse the incoming information
         data_input =request.data
         if Vxlan.objects.filter(id=id).exists():
             vlan_object=Vxlan.objects.get(id=id)
@@ -93,7 +135,6 @@ def update_vxlan(request,id):
             if vlan_serializer.is_valid():
                 old_vxlan=vlan_object.vxlan_interface_name
                 old_vxlan_id=vlan_object.vxlan_connection_uuid
-                ##new attributs
                 parent_interface=Interface.objects.get(id=data_input['parent_interface']).ifname
                 vxlan_id=data_input['vxlan_id']
                 vxlan_interface_name=data_input['vxlan_interface_name']
@@ -141,7 +182,18 @@ def update_vxlan(request,id):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vxlan(request,id):
-    """API to delete vlan from database only"""
+    """
+    API to delete VXLAN from the database only.
+
+    Parameters:
+    - request (HttpRequest): The incoming HTTP request.
+    - id (int): The ID of the VXLAN to be deleted.
+
+    Returns:
+    - JsonResponse: A JSON response containing a success or error message.
+      - If the VXLAN is successfully deleted, it returns a success message with status code 200.
+      - If the VXLAN does not exist in the database, it returns an error message with status code 404.
+    """
     if (request.method == 'DELETE'):
         # parse the incoming information
         if Vxlan.objects.filter(id=id):
@@ -159,7 +211,7 @@ def delete_vxlan(request,id):
         else:
             msg=f"{CONSTANT_VXLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
             status=404
-    return JsonResponse({"msg": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)
 
 vxlan_request_schema = openapi.Schema(
     type=openapi.TYPE_OBJECT,
@@ -183,7 +235,15 @@ vxlan_request_schema = openapi.Schema(
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def assign_vxlan_interface(request):
-    """API to assign vxlan to interface  and create new interface of vxlan to configure it """
+    """API to assign vxlan to interface  and create new interface of vxlan to configure it
+    Parameters:
+    - request (HttpRequest): The incoming HTTP request.
+
+    Returns:
+    - JsonResponse: A JSON response containing a success or error message.
+      - If the VXLAN is successfully assigned, it returns a success message with status code 200.
+      - If the VXLAN does not exist in the database, it returns an error message with status code 404.
+    """
     if (request.method == 'POST'):
         data_input =request.data
         interface_name=data_input["ifname"]
@@ -204,7 +264,6 @@ def assign_vxlan_interface(request):
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":f"VXLAN{vxlan_id}",
-                        # "description":f"test default config {vxlan_interface_name}"
                     }
             if not Interface.objects.filter(ifname=vxlan_interface_name).exists():
                 aux_save=add_vxlan_sys(parent_interface,vxlan_id,vxlan_interface_name,vxlan_source_address,vxlan_destination_address,vxlan_destination_port,vxlan_connection_uuid)
@@ -242,9 +301,19 @@ vxlan_request_schema_update = openapi.Schema(
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vxlan_interface(request,id_interface):
+    """
+    API to update assign VXLAN with its characteristics to the database and system.
+
+    Parameters:
+    - request (HttpRequest): The incoming HTTP request.
+    - id_interface (int): The ID of the VXLAN interface to be updated.
+
+    Returns:
+    - JsonResponse: A JSON response containing a success or error message.
+      - If the VXLAN interface is successfully updated, it returns a success message with status code 200.
+      - If the VXLAN interface does not exist in the database, it returns an error message with status code 404.
+    """
     if (request.method == 'PUT'):
-        # parse the incoming information
-        data_input=request.data
         if Interface.objects.filter(id=id_interface).exists():
             vlan_object=Interface.objects.get(id=id_interface)
             data_save={
@@ -254,12 +323,13 @@ def update_vxlan_interface(request,id_interface):
                         "name_interface":f"VXLAN{vlan_object.vxlan_id}",
                     }
             interface_serializer=InterfaceSerializer(vlan_object,data=data_save)
+
             aux_save=True
             msg,status=save_in_db(aux_save,interface_serializer)
         else:
             msg=f"{CONSTANT_VXLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=400
-    return JsonResponse({"msg": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)
    
 @swagger_auto_schema(
     method='DELETE',
@@ -270,8 +340,19 @@ def update_vxlan_interface(request,id_interface):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vxlan_interface(request,id_interface):
+    """
+    Deletes a VxLAN interface from the database and system.
+
+    Parameters:
+    - request (HttpRequest): The incoming HTTP request.
+    - id_interface (int): The ID of the VXLAN interface to be deleted.
+
+    Returns:
+    - JsonResponse: A JSON response containing a success or error message.
+      - If the VXLAN interface is successfully deleted, it returns a success message with status code 200.
+      - If the VXLAN interface does not exist in the database, it returns an error message with status code 404.
+    """
     if (request.method == 'DELETE'):
-        # parse the incoming information
         if Interface.objects.filter(id=id_interface).exists():
             vlan_object=Interface.objects.get(id=id_interface)
             ifname_vxlan=vlan_object.ifname
@@ -287,14 +368,26 @@ def delete_vxlan_interface(request,id_interface):
         else:
             msg=f"{CONSTANT_VXLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=404
-      
-    return JsonResponse({"msg": msg},status=status) 
+
+    return JsonResponse({"msg": msg},status=status)
 
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vxlan_interface(request):
-    """API to get all vlan assigned from database """
+    """
+    API to get all VXLAN interfaces assigned from the database.
+
+    Parameters:
+    - request (HttpRequest): The incoming HTTP request.
+
+    Returns:
+    - JsonResponse: A JSON response containing a list of VXLAN interfaces.
+      Each interface is represented as a dictionary with the following keys:
+      - "id": The ID of the VXLAN interface.
+      - "name_interface": The name of the VXLAN interface.
+      - "network_port": A string describing the network port of the VXLAN interface.
+    """
     if (request.method == 'GET'):
         list_vlan_interface=[]
         # parse the incoming information
@@ -311,4 +404,4 @@ def get_vxlan_interface(request):
                 "network_port":f"VXLAN {vlan_ifname} on {ifname_parent}"
             }
             list_vlan_interface.append(data)
-    return JsonResponse({"msg": list_vlan_interface})  
+    return JsonResponse({"msg": list_vlan_interface})

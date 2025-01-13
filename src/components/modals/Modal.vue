@@ -1,5 +1,25 @@
 <template>
   <v-row justify="center">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
+
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
@@ -16,7 +36,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('PageGeneral.ServerName')"
+                    :label="`${$t('PageGeneral.ServerName')} *`"
                     v-model="state.name"
                   ></v-text-field>
 
@@ -30,13 +50,13 @@
                     v-model="state.hostIp"
                   ></v-text-field>
 
-                  <p class="error-feedback mb-5" v-if="v$.hostIp.$error">
+                  <!-- <p class="error-feedback mb-5" v-if="v$.hostIp.$error">
                     {{ v$.hostIp.$errors[0].$message }}
-                  </p>
+                  </p> -->
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('PageGeneral.SearchBase')"
+                    :label="`${$t('PageGeneral.SearchBase')} *`"
                     v-model="state.searchBase"
                   ></v-text-field>
 
@@ -47,7 +67,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     label="Port"
-                    v-model.number="state.port"
+                    v-model="state.port"
                   ></v-text-field>
 
                   <p class="error-feedback mb-5" v-if="v$.port.$error">
@@ -57,7 +77,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.serverType"
-                    :label="$t('PageGeneral.ServerType')"
+                    :label="`${$t('PageGeneral.ServerType')} *`"
                     item-title="name"
                     item-value="slug"
                     return-object
@@ -106,6 +126,14 @@
           </v-card-text>
 
           <v-card-actions class="mt-3 actionBtnServer">
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
+            <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"
@@ -184,6 +212,8 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       listServers: [
         {
           slug: "ad",
@@ -213,6 +243,16 @@ export default {
       () => editRow.value,
       (val) => {
         populate(val);
+      }
+    );
+    watch(
+      () => state.activateStatus,
+      (val) => {
+        if (val) {
+          state.port = "636";
+        } else {
+          state.port = "389";
+        }
       }
     );
     watch(
@@ -269,13 +309,17 @@ export default {
         let payload = {
           server_name: state.name,
           server_url: state.hostIp,
-          port: state.port,
+          port: state.port ? state.port : "389",
           search_base: state.searchBase,
           bind_user_dn: state.userDn,
           bind_user_password: state.password,
           ssl_tls_activation: state.activateStatus,
           server_type: state.serverType?.slug,
         };
+
+        state.loading = true;
+        state.isLoadingDialogue = true;
+
         if (modalMode.value === "edit") {
           axios
             .put(`/ldap/updateldap_Server/${state.id}`, payload)
@@ -284,12 +328,19 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
+
+                state.loading = false;
+                state.isLoadingDialogue = false;
+
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
               }
             })
             .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
               if (i.response.status === 500) {
                 state.snackbar = true;
                 state.color = "red";
@@ -309,12 +360,19 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
+
+                state.loading = false;
+                state.isLoadingDialogue = false;
+
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
               }
             })
             .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
               if (i.response.status === 500) {
                 state.snackbar = true;
                 state.color = "red";
@@ -356,15 +414,15 @@ export default {
           ),
         },
         serverType: { required: helpers.withMessage(error, required) },
-        hostIp: {
-          isValidHostIp: helpers.withMessage(
-            formaaddress,
+        // hostIp: {
+        //   isValidHostIp: helpers.withMessage(
+        //     formaaddress,
 
-            helpers.regex(
-              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
-            )
-          ),
-        },
+        //     helpers.regex(
+        //       /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+        //     )
+        //   ),
+        // },
         searchBase: { required: helpers.withMessage(error, required) },
 
         port: {

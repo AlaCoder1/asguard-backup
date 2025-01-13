@@ -84,8 +84,8 @@ class Command(BaseCommand):
                     else:
                         return return_add_rule
                 else:
-                    return "exist"
+                    return "This rule is already exist"
             else:
-                return "Error"
+                return "Something Wrong"
         except IntegrityError as e:
             return "Error: " + str(e)

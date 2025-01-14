@@ -13,23 +13,14 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 @swagger_auto_schema(
     method='delete',
-    operation_description="Delete a rule from the system.",
+    operation_summary="API to delete a rule",
     responses={
         200: openapi.Response(
-            description="Rule successfully deleted.",
-            examples={
-                "application/json": {
-                    "msg": "Rule successfully deleted."
-                }
-            }
+            description=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}",
         ),
         400: openapi.Response(
-            description="Rule does not exist.",
-            examples={
-                "application/json": {
-                    "msg": "Rule does not exist."
-                }
-            }
+            description=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}",
+          
         ),
     }
 )
@@ -38,7 +29,8 @@ from drf_yasg import openapi
 @authentication_classes([SessionAuthentication])
 def delete_rule(request,id):
     """
-    Function to delete a rule from the system.
+    API to delete rule from system and database 
+    This function to delete a rule from the system and database using id of rule in parameter verify if exist in database and system then delete it .
 
     Parameters:
     request (HttpRequest): The incoming request object.
@@ -68,29 +60,44 @@ def delete_rule(request,id):
           status=400
         return JsonResponse({"msg": msg},status=status)
       
-####
+
+
 @swagger_auto_schema(
-    method='post',
+    method='POST',
     operation_description="Save multiple rules for a specific interface.",
     request_body=openapi.Schema(
         type=openapi.TYPE_ARRAY,
         items=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Rule ID (optional for new rules)'),
-                'policy': openapi.Schema(type=openapi.TYPE_STRING, description='Policy of the rule'),
-                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address'),
-                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address'),
-                'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port'),
-                'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port'),
-                'protocol': openapi.Schema(type=openapi.TYPE_STRING, description='Protocol'),
-                'type_rule': openapi.Schema(type=openapi.TYPE_STRING, description='Type of the rule'),
-                'rule_description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the rule'),
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Rule ID (optional for new rules)',example=1),
+                'policy': openapi.Schema(
+                    type=openapi.TYPE_STRING, 
+                    description='Policy of the rule',
+                    enum=["drop", "accept", "reject"],  
+                    default="drop"
+                    ),
+                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example="10.1.12.69/32"),
+                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example="10.1.12.25/32"),
+                'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port',example=22),
+                'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port',example=22,),
+                'protocol': openapi.Schema(
+                    type=openapi.TYPE_STRING, 
+                    description='Protocol',
+                    enum=["all", "tcp", "udp", "icmp", "icmp type echo-request", "icmp type echo-reply"],
+                    default="tcp"),
+                'type_rule': openapi.Schema(
+                    type=openapi.TYPE_STRING, description='Type of the rule',
+                    enum=["inbound", "outbound"], 
+                    default="inbound"
+                    ),
+                'rule_description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the rule',example="test rule inbound"),
             },
-            required=['policy', 'type_rule']
+            required=['policy', 'type_rule'], 
+           
         )
     ),
-    responses={
+      responses={
         200: openapi.Response(
             description="Rules successfully saved.",
             examples={
@@ -110,8 +117,12 @@ def delete_rule(request,id):
                 }
             }
         ),
-    }
+    },
+    operation_summary="API to Add Firewall Rules"
 )
+
+
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def save_rules(request,name_interface):
@@ -153,19 +164,34 @@ def save_rules(request,name_interface):
 add_rule_schema = openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'policy': openapi.Schema(type=openapi.TYPE_STRING, description='Policy of the rule'),
-        'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address'),
-        'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address'),
-        'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port'),
-        'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port'),
-        'protocol': openapi.Schema(type=openapi.TYPE_STRING, description='Protocol'),
-        'type_rule': openapi.Schema(type=openapi.TYPE_STRING, description='Type of the rule'),
-        'rule_description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the rule'),
+        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Rule ID (optional for new rules)',example=1),
+                'policy': openapi.Schema(
+                    type=openapi.TYPE_STRING, 
+                    description='Policy of the rule',
+                    enum=["drop", "accept", "reject"],  
+                    default="drop"
+                    ),
+                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example="10.1.12.69/32"),
+                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example="10.1.12.25/32"),
+                'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port',example=22),
+                'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port',example=22,),
+                'protocol': openapi.Schema(
+                    type=openapi.TYPE_STRING, 
+                    description='Protocol',
+                    enum=["all", "tcp", "udp", "icmp", "icmp type echo-request", "icmp type echo-reply"],
+                    default="tcp"),
+                'type_rule': openapi.Schema(
+                    type=openapi.TYPE_STRING, description='Type of the rule',
+                    enum=["inbound", "outbound"], 
+                    default="inbound"
+                    ),
+                'rule_description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the rule',example="test rule inbound"),
     },
     required=['policy', 'type_rule']
 )   
 @swagger_auto_schema(
     method='post',
+    operation_summary="API to add rule for a specific interface",
     operation_description="Add rule for a specific interface.",
     request_body=add_rule_schema,
  responses={
@@ -243,6 +269,7 @@ def add_rule(request,name_interface):
    
 @swagger_auto_schema(
   method='put',
+    operation_summary="API to update rule for a specific interface.",
   operation_description="Update rule for a specific interface.",
   request_body=add_rule_schema,
 responses={

@@ -22,7 +22,7 @@ def get_rule_handle_position_with_content(rule_content: str, list_nat_rules: lis
     """Get a rule content and extract its handle and position from list of nat rules.
     If the rule doesn't exist in table nat in system then the function return False"""
     for rule_index, rule in enumerate(list_nat_rules):
-        if f"{rule_content} # handle ".find(rule) > -1:
+        if f"{rule} # handle ".find(rule_content) > -1:
             rule_handle = rule.replace(f"{rule_content} # handle ", "")
             return rule_handle, rule_index
     return False
@@ -37,6 +37,7 @@ def synchronize_rule_database(nat_rule=None, rule_handle=None, rule_position=Non
         nat_rule.postrouting_position = rule_position
     else:
         nat_rule.pretrouting_position = rule_position
+    nat_rule.save()
 
 
 def save_handle_from_system_to_database(list_routing_from_db, list_routing_from_system):
@@ -60,6 +61,10 @@ def synchronize_nat_rules():
         1.3 Extract handle and position for each rules
         1.4 Save this parameters in database
     2. Synchronize rules from system to database"""
+    # Delete postrouting and prerouting position saved in database before updating it
+    SNat.objects.filter(rule_status=True).update(postrouting_position=None)
+    OneToOneNat.objects.filter(rule_status=True).update(postrouting_position=None)
+    DNat.objects.filter(rule_status=True).update(prerouting_position=None)
     # Get all activated rules from database
     list_snat = SNat.objects.filter(rule_status=True)
     list_one_to_one_nat = OneToOneNat.objects.filter(rule_status=True)

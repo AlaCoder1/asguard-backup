@@ -49,7 +49,7 @@ class IPSECConsumer(AsyncWebsocketConsumer):
     
     @database_sync_to_async 
     def get_data_time(self,time_value):
-        """function to last time _value from database that  """
+        """function to last time _value from database   """
         all_data=[]
         all_data_object=IpsecMonitoring.objects.all()
         data = serializers.serialize("json", all_data_object)

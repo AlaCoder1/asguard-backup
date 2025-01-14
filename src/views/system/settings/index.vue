@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Settings" :active-menu="activeTab">
+    <base-layout :title="$t('subtitle.settings')" :active-menu="activeTab">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">

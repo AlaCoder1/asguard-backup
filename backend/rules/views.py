@@ -14,6 +14,15 @@ from drf_yasg import openapi
 @swagger_auto_schema(
     method='delete',
     operation_summary="API to delete a rule",
+      manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of rule to delete",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         200: openapi.Response(
             description=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}",
@@ -65,6 +74,15 @@ def delete_rule(request,id):
 @swagger_auto_schema(
     method='POST',
     operation_description="Save multiple rules for a specific interface.",
+    manual_parameters=[
+        openapi.Parameter(
+            'name_interface',
+            openapi.IN_PATH,
+            description="Name the interface to which you want to add or update a rule.",
+            type=openapi.TYPE_STRING,
+            required=True
+        ),
+    ],
     request_body=openapi.Schema(
         type=openapi.TYPE_ARRAY,
         items=openapi.Schema(
@@ -193,6 +211,15 @@ add_rule_schema = openapi.Schema(
     method='post',
     operation_summary="API to add rule for a specific interface",
     operation_description="Add rule for a specific interface.",
+    manual_parameters=[
+        openapi.Parameter(
+            'name_interface',
+            openapi.IN_PATH,
+            description="Name the interface to which you want to add a rule.",
+            type=openapi.TYPE_STRING,
+            required=True
+        ),
+    ],
     request_body=add_rule_schema,
  responses={
         200: openapi.Response(description='Rule added successfully'),
@@ -272,6 +299,15 @@ def add_rule(request,name_interface):
     operation_summary="API to update rule for a specific interface.",
   operation_description="Update rule for a specific interface.",
   request_body=add_rule_schema,
+    manual_parameters=[
+            openapi.Parameter(
+                'name_interface',
+                openapi.IN_PATH,
+                description="Name the interface to which you want to update a rule.",
+                type=openapi.TYPE_STRING,
+                required=True
+            ),
+        ],
 responses={
       200: openapi.Response(description='Rule update successfully'),
       400: openapi.Response(description='Error in updating rule'),

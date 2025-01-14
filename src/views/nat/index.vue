@@ -16,6 +16,7 @@
           >
             <v-card>
               <v-card-text>
+                <helpModal />
                 <component :is="tab.component" />
               </v-card-text>
             </v-card>
@@ -31,6 +32,8 @@ import BaseLayout from "@/layouts/layout.vue";
 import Snat from "./components/Snat.vue";
 import OneToOne from "./components/OneToOne.vue";
 import Dnat from "./components/Dnat.vue";
+import helpModal from "@/components/modals/help.vue";
+
 
 export default {
   name: "Nat",
@@ -39,6 +42,7 @@ export default {
     Snat,
     OneToOne,
     Dnat,
+    helpModal
   },
   inject: ["emitter"],
   data() {

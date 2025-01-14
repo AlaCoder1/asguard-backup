@@ -25,21 +25,44 @@ SUCCESS_MESSAGES_DELETING = _("is deleted")
 ERROR_MESSAGES_EXISTANT = _("Already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
-
+# Apply the swagger_auto_schema with methods argument
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_summary="API to get all VLANs from the database.",
+    responses={
+        200: openapi.Response(
+            description="List of VLANs retrieved successfully. Each VLAN configuration is represented as a dictionary with the following fields:\n"
+                        "-\t  parent_interface: The ID of the parent interface.\n"
+                        "-\t  vlan_tag: The VLAN tag.\n"
+                        "-\t  vlan_priority: The priority level of the VLAN.\n"
+                        "-\t  description: A description of the VLAN.\n"
+                        "-\t  id: The ID of the VLAN.\n"
+                        "-\t  name_interface: The name of the associated interface.\n"
+        )
+    }
+)
 # Create your views here.
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vlan(request):
     """
     API to get all VLANs from the database.
-
+    This function retrieves all VLAN configurations from the database and returns them as a JSON response.
+   
     Parameters:
     request (HttpRequest): The incoming request object containing the GET data.
 
     Returns:
-    JsonResponse: A JSON response containing a list of VLANs. Each VLAN is represented as a dictionary with the following keys:
-    - "id": The ID of the VLAN.
-    - "name_interface": The name of the interface associated with the VLAN.
+    JsonResponse: A JSON response containing a list of VLANs contains informations,
+    Each VLAN configuration is represented as a dictionary with the following fields:
+        - parent_interface: The ID of the parent interface.
+        - vlan_tag: The VLAN tag.
+        - "vlan_priority: The priority level of the VLAN.
+        - description: A description of the VLAN.
+        - id: The ID of the VLAN.
+        - name_interface: The name of the associated interface.
+
+   
     """
     if (request.method == 'GET'):
         list_vlan=[]
@@ -54,10 +77,37 @@ def get_vlan(request):
 
 @swagger_auto_schema(
     method='POST',
-    request_body=VlanSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO ADD VLAN",
-    operation_description="This API add VLAN with their caracteristique in database",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'parent_interface': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='ID of the parent interface',
+                example=1
+            ),
+            'vlan_tag': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='VLAN tag identifier',
+                example=15
+            ),
+            'vlan_priority': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VLAN priority level, e.g., Voice (5), Data (0)',
+                example='Voice (5)'
+            ),
+            'description': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Description of the VLAN configuration',
+                example='test config vlan 15'
+            ),
+        },
+        required=['parent_interface', 'vlan_tag', 'vlan_priority', 'description']
+    ),
+    responses={
+        200: f'{CONSTANT_VLAN_CONFIG} {SUCCESS_MESSAGES_CREATING}',
+        400: 'Bad Request'
+    },
+    operation_summary="API to Add VLAN Configuration",
 )
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -81,13 +131,41 @@ def add_vlan(request):
             status=400
     return JsonResponse({"msg": msg},status=status)
    
+
 @swagger_auto_schema(
     method='PUT',
-    request_body=VlanSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO UPDATE VLAN",
-    operation_description="This API update VLAN with their caracteristique in database",
-) 
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'parent_interface': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='ID of the parent interface',
+                example=1
+            ),
+            'vlan_tag': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='VLAN tag identifier',
+                example=15
+            ),
+            'vlan_priority': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VLAN priority level, e.g., Voice (5), Data (0)',
+                example='Voice (5)'
+            ),
+            'description': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Description of the VLAN configuration',
+                example='test config vlan 15'
+            ),
+        },
+        required=['parent_interface', 'vlan_tag', 'vlan_priority', 'description']
+    ),
+    responses={
+        200: f"{CONSTANT_VLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}",
+        400: 'Bad Request'
+    },
+    operation_summary="API to Add VLAN Configuration",
+)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vlan(request,id):
@@ -142,9 +220,9 @@ def update_vlan(request,id):
 
 @swagger_auto_schema(
     method='DELETE',
-    responses={200: 'Deleted', 400: 'Bad Request'},
+    responses={200:f"{CONSTANT_VLAN_CONFIG} {SUCCESS_MESSAGES_DELETING}",
+               400: f"{CONSTANT_VLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"},
     operation_summary="API DELETE VLAN",
-    operation_description="This API delete VLAN by id ",
 )
 
 @api_view(['DELETE'])
@@ -152,13 +230,16 @@ def update_vlan(request,id):
 def delete_vlan(request,id):
     """
     Delete a VLAN from the database.
+    This function removes a VLAN configuration from both the system and the database.
     Parameters:
         request (HttpRequest): The incoming request object containing the DELETE data.#+
         id (int): The ID of the VLAN to be deleted.
     Returns:
-        JsonResponse: A JSON response containing a message indicating the success or failure of the operation.
-        The response includes a status code.
-    """#+
+        JsonResponse: A JSON response indicating the success or failure of the operation. 
+        The response includes a message and a status code. The status can be "success" or "error".
+        If the VLAN is found and deleted, the response message will indicate successful deletion.
+        If the VLAN is not found, the response will indicate an error.
+    """
     if (request.method == 'DELETE'):
         if Vlan.objects.filter(id=id):
             vlan_object=Vlan.objects.get(id=id)
@@ -176,23 +257,33 @@ def delete_vlan(request,id):
             status=400
     return JsonResponse({"msg": msg},status=status)
 
-vlan_request_schema = openapi.Schema(
-    type=openapi.TYPE_OBJECT,
-    properties={
-        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the VLAN'),
-        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VLAN interface')
-    },
-    required=['id', 'name_interface']
-)
+
 
 
 
 @swagger_auto_schema(
     method='POST',
-    request_body=vlan_request_schema,
-    responses={200: "Created", 400: 'Bad Request'},
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'id': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='Unique identifier for the interface',
+                example=18
+            ),
+            'name_interface': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Name of the interface',
+                example='vlan20'
+            ),
+        },
+        required=['id', 'name_interface']
+    ),
+    responses={
+        200: f"{CONSTANT_VLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}",
+        400:"Bad request"
+    },
     operation_summary="API TO ASSIGN VLAN Interface",
-    operation_description="This API assign a VLAN with its characteristics to the database and system",
 )
 
 @api_view(['POST'])
@@ -240,24 +331,32 @@ def assign_vlan_interface(request):
     return JsonResponse({"msg": msg},status=status)  
 
 
-vlan_request_schema = openapi.Schema(
-    type=openapi.TYPE_OBJECT,
-    properties={
-        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the VLAN'),
-        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VLAN interface')
-    },
-    required=['id', 'name_interface']
-)
-
-
 
 @swagger_auto_schema(
     method='PUT',
-    request_body=vlan_request_schema,
-    responses={200: "Created", 400: 'Bad Request'},
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'id': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='Unique identifier for the interface',
+                example=18
+            ),
+            'name_interface': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Name of the interface',
+                example='vlan20'
+            ),
+        },
+        required=['id', 'name_interface']
+    ),
+    responses={
+        200: 'Created',
+        400: 'Bad Request'
+    },
     operation_summary="API TO update VLAN interface",
-    operation_description="This API adds a VLAN with its characteristics to the database",
 )
+
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -303,9 +402,9 @@ def update_vlan_interface(request,id_interface):
  
 @swagger_auto_schema(
     method='DELETE',
-    responses={200: 'Deleted', 400: 'Bad Request'},
+    responses={200: f"{CONSTANT_VLAN_INTERFACE} {SUCCESS_MESSAGES_DELETING}", 
+               400: f"{CONSTANT_VLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"},
     operation_summary="API DELETE VLAN interface",
-    operation_description="This API delete VLAN interface by id ",
 )
 
 @api_view(['DELETE'])
@@ -338,6 +437,21 @@ def delete_vlan_interface(request,id_interface):
 
     return JsonResponse({"msg": msg},status=status)
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="API TO GET VLAN interface",
+    responses={
+        200: openapi.Response(
+            description="List of VLAN interfaces retrieved successfully. Each interface is represented as a dictionary with the following keys:\n"
+                         "-\t  id: The ID of the VLAN interface.\n"
+                        "-\t  name_interface: The name of the VLAN interface. \n"
+                        "-\t  network_port: A string describing the network port to which the VLAN interface is assigned. \n"
+
+                        
+                   
+        )
+    }
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vlan_interface(request):

@@ -26,7 +26,8 @@ def save_gateway_static_ip(gateway4,uuid,name_interface,id_interface):
         all_gateway_interface = GatewayInterface.objects.all()
         if multiwan_aux:
             for i in all_gateway_interface:
-                list_metric.append(i.metric)
+                if i.metric is not None:
+                    list_metric.append(i.metric)
             metric=different_metric(list_metric)
         cmdgw4=return_gateway_system(uuid,addrgw4,far_aux,multiwan_aux,metric)
         ipv4_gw_interface=True
@@ -73,9 +74,9 @@ def add_gateway_interface_db(gateway_object, name_interface, metric, ipv4_gw_int
 
 def different_metric(exclude_list):
     """get different metric"""
+    exclude_list=[x for x in exclude_list if x is not None]
     if exclude_list ==[]:
         exclude_list = [0]
-        
     num_start = min(exclude_list)+1
     while num_start < max(exclude_list):
         if num_start in exclude_list:

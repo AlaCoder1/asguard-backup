@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div cols="12" md="6" class="d-flex justify-end mt-n4">
+    <div cols="12" md="6" class="d-flex justify-start mb-5">
       <v-btn @click="reloadData" icon>
         <v-icon class="small-refresh-icon">mdi-refresh</v-icon>
       </v-btn>
@@ -8,7 +8,7 @@
 
     <v-row>
       <v-col cols="8">
-        <div id="map" style="width: 100%;height: 100%"></div>
+        <div id="map" style="width: 100%; height: 100%"></div>
       </v-col>
       <v-col cols="4">
         <h4>{{ $t("Waf.attacks") }}</h4>
@@ -252,10 +252,11 @@ export default {
       }
     };
     const reloadData = () => {
-      let wafAlert =
-        document.getElementById("app").attributes["waf_alert"].value;
-      let waf_alert = JSON.parse(wafAlert);
-      rowDataRules.value = waf_alert?.blocked_requests;
+      location.reload();
+      // let wafAlert =
+      //   document.getElementById("app").attributes["waf_alert"].value;
+      // let waf_alert = JSON.parse(wafAlert);
+      // rowDataRules.value = waf_alert?.blocked_requests;
     };
     const onGridReadyAttacks = (params) => {
       gridApi.value = params.api;

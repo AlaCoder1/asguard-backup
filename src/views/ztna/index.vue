@@ -21,6 +21,7 @@
           >
             <v-card>
               <v-card-text>
+                <helpModal />
                 <component :is="tab.component" :dataServer="dataServer" />
               </v-card-text>
             </v-card>
@@ -32,6 +33,8 @@
 </template>
 
 <script>
+import helpModal from "@/components/modals/help.vue";
+
 import BaseLayout from "@/layouts/layout.vue";
 import identities from "./identities.vue";
 import routers from "./routers.vue";
@@ -48,6 +51,7 @@ export default {
     configs,
     Services,
     Policies,
+    helpModal
   },
   inject: ["emitter"],
   data() {

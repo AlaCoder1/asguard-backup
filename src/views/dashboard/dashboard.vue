@@ -2,7 +2,7 @@
   <v-app id="inspire">
     <base-layout :title="t('sideBar.dashboard')" active-menu="home">
       <template #content>
-        <helpModal />
+        <helpModal help="Dashboard" />
         <div class="mr-3">
           <v-overlay v-model="state.loading">
             <v-dialog

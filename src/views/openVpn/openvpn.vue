@@ -16,7 +16,7 @@
           >
             <v-card>
               <v-card-text>
-                <helpModal />
+                <helpModal help="OpenVpn" />
 
                 <component
                   :is="tab.component"

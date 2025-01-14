@@ -486,11 +486,12 @@ export default {
       state.editRow = {};
     });
 
-    // const restartNginx = () => {
-    //   const csrfToken = getCookie("csrftoken");
-    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-    //   axios.post("/waf/restartNginx");
-    // };
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
+    };
+
     const openModalAdd = () => {
       const user = user_privilege("Waf");
       if (
@@ -511,43 +512,27 @@ export default {
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
-    const confirmDelete = () => {
+   const confirmDelete = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios
         .delete(`/waf/deleteRuleWaf/${state.deletedRow.id}`)
         .then((response) => {
+          restartNginx();
           state.loading = true;
           state.isLoadingDialogue = true;
-
-          axios.post("/waf/restartNginx").then(() => {
-            setTimeout(() => {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              state.deleteDialog = false;
-            }, 2000);
-            setTimeout(() => {
-              location.reload();
-            }, 3000);
-          });
-
-          // restartNginx();
-
-          // setTimeout(() => {
-          //   state.loading = false;
-          //   state.isLoadingDialogue = false;
-          //   state.snackbar = true;
-          //   state.color = "success";
-          //   state.textAlert = response.data.msg;
-          //   state.deleteDialog = false;
-          // }, 4000);
-          // setTimeout(() => {
-          //   location.reload();
-          // }, 4000);
+          setTimeout(() => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+            state.deleteDialog = false;
+          }, 5000);
+          setTimeout(() => {
+            location.reload();
+          }, 5000);
         })
         .catch((i) => {
           if (i.response.status === 500) {
@@ -561,6 +546,7 @@ export default {
           }
         });
     };
+
 
     return {
       state,

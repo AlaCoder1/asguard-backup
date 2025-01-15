@@ -272,9 +272,7 @@ def delete_server(request, id):
 @swagger_auto_schema(
         method='PUT',
         operation_summary="API to update server.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            manual_parameters=[
+        manual_parameters=[
             openapi.Parameter(
                 'id',
                 openapi.IN_PATH,
@@ -283,6 +281,8 @@ def delete_server(request, id):
                 required=True
             ),
         ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
             properties={
                 "name_server": openapi.Schema(
                     type=openapi.TYPE_STRING,
@@ -335,7 +335,7 @@ def delete_server(request, id):
         responses={
             200: f"{CONSTANT_SERVER} {SUCCESS_MESSAGES_UPDATING}",
             404:f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}",
-            400: ERROR_MESSAGES_INVALID_PASSWORD,
+            400: f"{ERROR_MESSAGES_INVALID_PASSWORD}"
         }
 )
 @api_view(['PUT'])

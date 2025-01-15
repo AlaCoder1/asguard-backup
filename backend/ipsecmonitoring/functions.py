@@ -17,15 +17,9 @@ def get_uptime():
     if output!='' and error=='':
         list_uptime=output.split(':')[1].strip().split(' ')
         if len(list_uptime)>1:
+            uptime=convert_to_seconds(int(list_uptime[0]), list_uptime[1].lower())
             print({"list_uptime":list_uptime[1].lower()})
-            if list_uptime[1].lower()=='days':
-                uptime=int(list_uptime[0])*86400
-            elif list_uptime[1].lower()=='minutes':
-                uptime=int(list_uptime[0])*60
-            elif list_uptime[1].lower()=='hours':
-                uptime=int(list_uptime[0])*3600
-            else:
-                uptime=int(list_uptime[0])
+           
     return uptime 
 def get_establishetd_date():
     """function to get tunnel establishetd date from logs"""
@@ -43,14 +37,8 @@ def get_time_established():
     if output!='' and error=='':
         list_estab=output.split(':')[1].strip().split(' ')[1:-1] 
         if len(list_estab)>1:
-            if list_estab[1].lower()=='days':
-                time_established=int(list_estab[0])*86400
-            elif list_estab[1].lower()=='minutes':
-                time_established=int(list_estab[0])*60
-            elif list_estab[1].lower()=='hours':
-                time_established=int(list_estab[0])*3600
-            else:
-                time_established=int(list_estab[0])
+            time_established=convert_to_seconds(int(list_estab[0]), list_estab[1].lower())
+            
     return time_established
         
     
@@ -124,6 +112,7 @@ def convert_to_seconds(time_value, time_unit):
     """
     # Define conversion factors for each time unit to seconds
     conversion_factors = {
+        'secondes':1,
         'minutes': 60,
         'hours': 3600,
         'days': 86400,

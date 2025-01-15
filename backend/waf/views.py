@@ -46,32 +46,35 @@ def get_waf_config(request):
     return JsonResponse(waf_config, safe=False)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO UPDATE THE WAF CONFIG", 
-                     request_body=Schema(
-                         type=TYPE_OBJECT,
-                         required=["rule_engine_initialization", "access_request_bodies", "xml_request_body_parser", 
-                                   "json_request_body_parser", "maximum_request_body_size", "request_body_size_files_excluded",
-                                   "request_body_limit_action", "maximum_parsing_depth_json", "maximum_number_args_request", 
-                                   "pcre_match_limit", "pcre_match_limit_recursion", "response_body_access", 
-                                   "response_body_mimetype", "response_body_limit", "response_body_limit_action"],
-                         properties={'rule_engine_initialization': Schema(type=TYPE_STRING, enum=["On", "Off", "DetectionOnly"]),
-                                     'access_request_bodies':Schema(type=TYPE_BOOLEAN),
-                                     'xml_request_body_parser':Schema(type=TYPE_BOOLEAN),
-                                     'json_request_body_parser':Schema(type=TYPE_BOOLEAN),
-                                     'maximum_request_body_size': Schema(type=TYPE_INTEGER),
-                                     'request_body_size_files_excluded': Schema(type=TYPE_INTEGER),
-                                     'request_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject"]),
-                                     'maximum_parsing_depth_json': Schema(type=TYPE_INTEGER),
-                                     'maximum_number_args_request': Schema(type=TYPE_INTEGER),
-                                     'pcre_match_limit': Schema(type=TYPE_INTEGER),
-                                     'pcre_match_limit_recursion': Schema(type=TYPE_INTEGER),
-                                     'response_body_access':Schema(type=TYPE_BOOLEAN),
-                                     'response_body_mimetype': Schema(type=TYPE_STRING, enum=["text/html", "text/xml", "text/plain", "text/*"]),
-                                     'response_body_limit': Schema(type=TYPE_INTEGER),
-                                     'response_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject", "log", "log allow", "pass"]),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO UPDATE THE WAF CONFIG", 
+    request_body=Schema(
+        type=TYPE_OBJECT, required=[
+            "rule_engine_initialization", "access_request_bodies", "xml_request_body_parser",
+            "json_request_body_parser", "maximum_request_body_size", 
+            "request_body_size_files_excluded", "request_body_limit_action", 
+            "maximum_parsing_depth_json", "maximum_number_args_request", "pcre_match_limit", 
+            "pcre_match_limit_recursion", "response_body_access", "response_body_mimetype", 
+            "response_body_limit", "response_body_limit_action"],
+        properties={
+            'rule_engine_initialization': Schema(type=TYPE_STRING, enum=["On", "Off", "DetectionOnly"]),
+            'access_request_bodies':Schema(type=TYPE_BOOLEAN, default=False),
+            'xml_request_body_parser':Schema(type=TYPE_BOOLEAN, default=False),
+            'json_request_body_parser':Schema(type=TYPE_BOOLEAN, default=False),
+            'maximum_request_body_size': Schema(type=TYPE_INTEGER, example=13107200),
+            'request_body_size_files_excluded': Schema(type=TYPE_INTEGER, example=131072),
+            'request_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject"]),
+            'maximum_parsing_depth_json': Schema(type=TYPE_INTEGER, example=512),
+            'maximum_number_args_request': Schema(type=TYPE_INTEGER, example=1000),
+            'pcre_match_limit': Schema(type=TYPE_INTEGER, example=1000),
+            'pcre_match_limit_recursion': Schema(type=TYPE_INTEGER, example=1000),
+            'response_body_access':Schema(type=TYPE_BOOLEAN, default=True),
+            'response_body_mimetype': Schema(type=TYPE_STRING, enum=["text/html", "text/xml", "text/plain", "text/*"]),
+            'response_body_limit': Schema(type=TYPE_INTEGER, example=524288),
+            'response_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject", "log", "log allow", "pass"]),
+            }
+            ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -117,23 +120,41 @@ def get_waf_rule(request, id):
     return JsonResponse(snat, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO CREATE A WAF RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['name', 'variables', 'operators', 'transformations', 'actions'],
-                         properties={'name': Schema(type=TYPE_STRING, description="Name of the rule"),
-                                     'description': Schema(type=TYPE_STRING, description="Description of the rule"),
-                                     'variables': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
-                                     'operators': Schema(type=TYPE_ARRAY, description= "If a transformation don't have a value then value will be an empty string", 
-                                                         items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
-                                                             'type': Schema(type=TYPE_STRING),
-                                                             'value': Schema(type=TYPE_STRING)})),
-                                     'transformations': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
-                                     'action': Schema(type=TYPE_ARRAY, description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string", 
-                                                      items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
-                                                          'type': Schema(type=TYPE_STRING),
-                                                          'value': Schema(type=TYPE_STRING)})),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE A WAF RULE", 
+    request_body=Schema(
+        type=TYPE_OBJECT, 
+        required=['name', 'variables', 'operators', 'transformations', 'actions'],
+        properties={
+            'name': Schema(
+                type=TYPE_STRING, example="rule_waf", description="Name of the rule"),
+            'description': Schema(
+                type=TYPE_STRING, example="Description of rule waf", description="Description of the rule"),
+            'variables': Schema(
+                type=TYPE_ARRAY, example=["INBOUND_DATA_ERROR", "REQUEST_METHOD"], 
+                items=Schema(type=TYPE_STRING)),
+            'operators': Schema(
+                type=TYPE_ARRAY, 
+                example=[{"type": "eq", "value": 1}, {"type": "lt", "value": 45}], 
+                description= "If a transformation don't have a value then value will be an empty string", 
+                items=Schema(
+                    type=TYPE_OBJECT, required=['type', 'value'], 
+                    properties={'type': Schema(type=TYPE_STRING), 
+                                'value': Schema(type=TYPE_STRING)})),
+            'transformations': Schema(
+                type=TYPE_ARRAY, example=["sqlHexDecode", "base64DecodeExt"], 
+                items=Schema(type=TYPE_STRING)),
+            'action': Schema(
+                type=TYPE_ARRAY, 
+                description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string",
+                example=[{"type": "phase", "value": 3}, {"type": "id", "value": 30}],
+                items=Schema(
+                    type=TYPE_OBJECT, required=['type', 'value'],
+                    properties={'type': Schema(type=TYPE_STRING),
+                                'value': Schema(type=TYPE_STRING)})),
+            }
+            ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -187,23 +208,41 @@ def delete_waf_rule(request, id):
         return JsonResponse({"error": f"{CONSTANT_WAF_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO CREATE A WAF RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['name', 'variables', 'operators', 'transformations', 'actions'],
-                         properties={'name': Schema(type=TYPE_STRING, description="Name of the rule"),
-                                     'description': Schema(type=TYPE_STRING, description="Description of the rule"),
-                                     'variables': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
-                                     'operators': Schema(type=TYPE_ARRAY, description= "If a transformation don't have a value then value will be an empty string", 
-                                                         items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
-                                                             'type': Schema(type=TYPE_STRING),
-                                                             'value': Schema(type=TYPE_STRING)})),
-                                     'transformations': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
-                                     'action': Schema(type=TYPE_ARRAY, description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string", 
-                                                      items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
-                                                          'type': Schema(type=TYPE_STRING),
-                                                          'value': Schema(type=TYPE_STRING)})),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE A WAF RULE", 
+    request_body=Schema(
+        type=TYPE_OBJECT, 
+        required=['name', 'variables', 'operators', 'transformations', 'actions'],
+        properties={
+            'name': Schema(
+                type=TYPE_STRING, example="rule_waf", description="Name of the rule"),
+            'description': Schema(
+                type=TYPE_STRING, example="Description of rule waf", description="Description of the rule"),
+            'variables': Schema(
+                type=TYPE_ARRAY, example=["INBOUND_DATA_ERROR", "REQUEST_METHOD"], 
+                items=Schema(type=TYPE_STRING)),
+            'operators': Schema(
+                type=TYPE_ARRAY, 
+                example=[{"type": "eq", "value": 1}, {"type": "lt", "value": 45}], 
+                description= "If a transformation don't have a value then value will be an empty string", 
+                items=Schema(
+                    type=TYPE_OBJECT, required=['type', 'value'], 
+                    properties={'type': Schema(type=TYPE_STRING), 
+                                'value': Schema(type=TYPE_STRING)})),
+            'transformations': Schema(
+                type=TYPE_ARRAY, example=["sqlHexDecode", "base64DecodeExt"], 
+                items=Schema(type=TYPE_STRING)),
+            'action': Schema(
+                type=TYPE_ARRAY, 
+                description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string",
+                example=[{"type": "phase", "value": 3}, {"type": "id", "value": 30}],
+                items=Schema(
+                    type=TYPE_OBJECT, required=['type', 'value'],
+                    properties={'type': Schema(type=TYPE_STRING),
+                                'value': Schema(type=TYPE_STRING)})),
+            }
+            ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -264,24 +303,46 @@ def get_waf_application(request, id):
     return JsonResponse(waf_application, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO CREATE A WAF APPLICATION", request_body=Schema(
-                         type=TYPE_OBJECT, required=['name', 'application_type', 'application_value', 'description', 'rules'],
-                         properties={'name': Schema(type=TYPE_STRING, description="Name of the application"),
-                                     'application_type': Schema(type=TYPE_STRING, enum=['ip', 'domain']),
-                                     'application_protocol': Schema(type=TYPE_STRING, enum=['http', 'https']),
-                                     'certificate_name': Schema(type=TYPE_STRING, description="Required when choosing HTTPS protocol"),
-                                     'application_value': Schema(type=TYPE_STRING),
-                                     'application_port': Schema(type=TYPE_INTEGER, description="When choosing HTTPS protocol the port must be compatible with ssl in format of *443"),
-                                     'description': Schema(type=TYPE_STRING),
-                                     'country': Schema(type=TYPE_ARRAY, description="List of country code", items=Schema(type=TYPE_STRING)),
-                                     'rules': Schema(type=TYPE_ARRAY, description="List of rules object", 
-                                                     items=Schema(type=TYPE_OBJECT, required=['rule_waf', 'rule_policy', 'rule_log'],
-                                                                  properties={'rule_waf': Schema(type=TYPE_INTEGER, description="Id of the rule"),
-                                                                              'rule_policy': Schema(type=TYPE_BOOLEAN, description="True if the user select this rule in Block"),
-                                                                              'rule_log': Schema(type=TYPE_BOOLEAN)}))
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE A WAF APPLICATION", 
+    request_body=Schema(
+        type=TYPE_OBJECT, 
+        required=['name', 'application_type', 'application_value', 'description', 'rules'],
+        properties={'name': Schema(
+                        type=TYPE_STRING, example="application_waf", 
+                        description="Name of the application"),
+                    'application_type': Schema(
+                        type=TYPE_STRING, enum=['ip', 'domain']),
+                    'application_protocol': Schema(
+                        type=TYPE_STRING, enum=['http', 'https']),
+                    'certificate_name': Schema(
+                        type=TYPE_STRING, example="cert_server", 
+                        description="Required when choosing HTTPS protocol"),
+                    'application_value': Schema(
+                        type=TYPE_STRING, example="192.168.1.1"),
+                    'application_port': Schema(
+                        type=TYPE_INTEGER, example=1443, 
+                        description="When choosing HTTPS protocol the port must be compatible with ssl in format of *443"),
+                    'description': Schema(
+                        type=TYPE_STRING, example="Description of application waf"),
+                    'country': Schema(
+                        type=TYPE_ARRAY, example=["TN"], description="List of country code", 
+                        items=Schema(type=TYPE_STRING)),
+                    'rules': Schema(
+                        type=TYPE_ARRAY, 
+                        example=[{"rule_waf": 3, "rule_policy": True, "rule_log": False}], 
+                        description="List of rules object",
+                        items=Schema(
+                            type=TYPE_OBJECT, required=['rule_waf', 'rule_policy', 'rule_log'],
+                            properties={
+                                'rule_waf': Schema(type=TYPE_INTEGER, 
+                                                   description="Id of the rule"),
+                                'rule_policy': Schema(type=TYPE_BOOLEAN, 
+                                                      description="True if the user select this rule in Block"),
+                                'rule_log': Schema(type=TYPE_BOOLEAN)}))
+                    }
+                    ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -347,24 +408,46 @@ def delete_waf_application(request, id):
         return JsonResponse({"error": f"{CONSTANT_WAF_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO UPDATE A WAF APPLICATION", request_body=Schema(
-                         type=TYPE_OBJECT, required=['name', 'application_type', 'application_value', 'description', 'rules'],
-                         properties={'name': Schema(type=TYPE_STRING, description="Name of the application"),
-                                     'application_type': Schema(type=TYPE_STRING, enum=['ip', 'domain']),
-                                     'application_protocol': Schema(type=TYPE_STRING, enum=['http', 'https']),
-                                     'certificate_name': Schema(type=TYPE_STRING, description="Required when choosing HTTPS protocol"),
-                                     'application_value': Schema(type=TYPE_STRING),
-                                     'application_port': Schema(type=TYPE_INTEGER, description="When choosing HTTPS protocol the port must be compatible with ssl in format of *443"),
-                                     'description': Schema(type=TYPE_STRING),
-                                     'country': Schema(type=TYPE_ARRAY, description="List of country code", items=Schema(type=TYPE_STRING)),
-                                     'rules': Schema(type=TYPE_ARRAY, description="List of rules object", 
-                                                     items=Schema(type=TYPE_OBJECT, required=['rule_waf', 'rule_policy', 'rule_log'],
-                                                                  properties={'rule_waf': Schema(type=TYPE_INTEGER, description="Id of the rule"),
-                                                                              'rule_policy': Schema(type=TYPE_BOOLEAN, description="True if the user select this rule in Block"),
-                                                                              'rule_log': Schema(type=TYPE_BOOLEAN)}))
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE A WAF APPLICATION", 
+    request_body=Schema(
+        type=TYPE_OBJECT, 
+        required=['name', 'application_type', 'application_value', 'description', 'rules'],
+        properties={'name': Schema(
+                        type=TYPE_STRING, example="application_waf", 
+                        description="Name of the application"),
+                    'application_type': Schema(
+                        type=TYPE_STRING, enum=['ip', 'domain']),
+                    'application_protocol': Schema(
+                        type=TYPE_STRING, enum=['http', 'https']),
+                    'certificate_name': Schema(
+                        type=TYPE_STRING, example="cert_server", 
+                        description="Required when choosing HTTPS protocol"),
+                    'application_value': Schema(
+                        type=TYPE_STRING, example="192.168.1.1"),
+                    'application_port': Schema(
+                        type=TYPE_INTEGER, example=1443, 
+                        description="When choosing HTTPS protocol the port must be compatible with ssl in format of *443"),
+                    'description': Schema(
+                        type=TYPE_STRING, example="Description of application waf"),
+                    'country': Schema(
+                        type=TYPE_ARRAY, example=["TN"], description="List of country code", 
+                        items=Schema(type=TYPE_STRING)),
+                    'rules': Schema(
+                        type=TYPE_ARRAY, 
+                        example=[{"rule_waf": 3, "rule_policy": True, "rule_log": False}], 
+                        description="List of rules object",
+                        items=Schema(
+                            type=TYPE_OBJECT, required=['rule_waf', 'rule_policy', 'rule_log'],
+                            properties={
+                                'rule_waf': Schema(type=TYPE_INTEGER, 
+                                                   description="Id of the rule"),
+                                'rule_policy': Schema(type=TYPE_BOOLEAN, 
+                                                      description="True if the user select this rule in Block"),
+                                'rule_log': Schema(type=TYPE_BOOLEAN)}))
+                    }
+                    ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

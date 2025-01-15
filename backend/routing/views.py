@@ -76,19 +76,24 @@ def get_gateway(request, id):
     return JsonResponse(gateway, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO CREATE AN ROUTE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['destination_address', 'gateway_create', 'gateway'],
-                         properties={'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'gateway_create': Schema(type=TYPE_BOOLEAN, description="Sent True if the user want to create a new gateway"),
-                                     'gateway': Schema(type=TYPE_OBJECT, description="Contains fields of the new gateway that the user want to create it",
-                                                       required=['interface', 'gateway_address'],
-                                                       properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                                                   'gateway_address': Schema(type=TYPE_STRING, description="format of address/mask"),
-                                                                   'metric': Schema(type=TYPE_INTEGER)}),
-                                     'description': Schema(type=TYPE_STRING, description="description of the route"),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE AN ROUTE", 
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['destination_address', 'gateway_create', 'gateway'],
+        properties={
+            'destination_address': Schema(type=TYPE_STRING, example="10.1.12.80", description="format of address"),
+            'gateway_create': Schema(type=TYPE_BOOLEAN, default=False, description="Sent True if the user want to create a new gateway"),
+            'gateway': Schema(
+                type=TYPE_OBJECT, required=['interface', 'gateway_address'],
+                description="Contains fields of the new gateway that the user want to create it",
+                properties={
+                    'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+                    'gateway_address': Schema(type=TYPE_STRING, example="10.1.15.1", description="format of address/mask"),
+                    'metric': Schema(type=TYPE_INTEGER, example=20111)}),
+            'description': Schema(type=TYPE_STRING, example="Description of Route", description="description of the route"),
+            }
+            ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -165,19 +170,24 @@ def delete_routing(request, id):
         return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO UPDATE A ROUTE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['destination_address', 'gateway_create', 'gateway'],
-                         properties={'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'gateway_create': Schema(type=TYPE_BOOLEAN, description="Sent True if the user want to create a new gateway"),
-                                     'gateway': Schema(type=TYPE_OBJECT, description="Contains fields of the new gateway that the user want to create it",
-                                                       required=['interface', 'gateway_address'],
-                                                       properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                                                   'gateway_address': Schema(type=TYPE_STRING, description="format of address/mask"),
-                                                                   'metric': Schema(type=TYPE_INTEGER)}),
-                                     'description': Schema(type=TYPE_STRING, description="description of the route"),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE AN ROUTE", 
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['destination_address', 'gateway_create', 'gateway'],
+        properties={
+            'destination_address': Schema(type=TYPE_STRING, example="10.1.12.80", description="format of address"),
+            'gateway_create': Schema(type=TYPE_BOOLEAN, default=False, description="Sent True if the user want to create a new gateway"),
+            'gateway': Schema(
+                type=TYPE_OBJECT, required=['interface', 'gateway_address'],
+                description="Contains fields of the new gateway that the user want to create it",
+                properties={
+                    'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+                    'gateway_address': Schema(type=TYPE_STRING, example="10.1.15.1", description="format of address/mask"),
+                    'metric': Schema(type=TYPE_INTEGER, example=20111)}),
+            'description': Schema(type=TYPE_STRING, example="Description of Route", description="description of the route"),
+            }
+            ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

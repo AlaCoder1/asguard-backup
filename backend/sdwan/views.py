@@ -64,13 +64,15 @@ def get_area(request, id):
     return JsonResponse(area, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN AREA",
-                     request_body=Schema(type=TYPE_OBJECT, required=['name', 'members'],
-                                         properties={'name': Schema(type=TYPE_STRING),
-                                                     'members': Schema(type=TYPE_ARRAY, description="list of interfaces ids", 
-                                                                       items=Schema(type=TYPE_STRING)),
-                                                     }
-                                                     ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN AREA",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'members'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="area1"),
+            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces ids", items=Schema(type=TYPE_STRING)),
+                    }
+                    ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -107,13 +109,15 @@ def delete_area(request, id):
         return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN AREA",
-                     request_body=Schema(type=TYPE_OBJECT, required=['name', 'members'],
-                                         properties={'name': Schema(type=TYPE_STRING),
-                                                     'members': Schema(type=TYPE_ARRAY, description="list of interfaces ids", 
-                                                                       items=Schema(type=TYPE_STRING)),
-                                                     }
-                                                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN AREA",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'members'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="area1"),
+            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces ids", items=Schema(type=TYPE_STRING)),
+                    }
+                    ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -162,20 +166,23 @@ def get_sdwan_rule(request, id):
     return JsonResponse(sdwan_rule, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO CREATE AN SDWAN RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['name', 'source_address', 'area', 'algorythme_type', 
-                                                     'health_check', 'health_check_target'],
-                         properties={'name': Schema(type=TYPE_STRING),
-                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask"),
-                                     'area':Schema(type=TYPE_INTEGER, description="When choosing failover algorithm you can choose only areas with 2 members"),
-                                     'algorythme_type':Schema(type=TYPE_STRING, enum=["failover", "round_robin"]),
-                                     'destination_address':Schema(type=TYPE_STRING, description="format of address/mask"),
-                                     'health_check':Schema(type=TYPE_STRING),
-                                     'health_check_target':Schema(type=TYPE_STRING),
-                                     'primary_interface':Schema(type=TYPE_STRING, description="Name of the primary interface. This is used when choosing failover algorithm")
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE AN SDWAN RULE",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'source_address', 'area', 'algorythme_type',
+                                    'health_check', 'health_check_target'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="test failover"),
+            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2", description="format of address/mask"),
+            'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
+            'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
+            'destination_address':Schema(type=TYPE_STRING, example="10.1.12.13", description="format of address/mask"),
+            'health_check':Schema(type=TYPE_INTEGER, example=1),
+            'health_check_target':Schema(type=TYPE_STRING, example="8.8.8.8"),
+            'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")
+            }
+            ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -228,20 +235,23 @@ def delete_sdwan_rule(request, id):
         return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO UPDATE AN SDWAN RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['name', 'source_address', 'area', 'algorythme_type', 
-                                                     'health_check', 'health_check_target'],
-                         properties={'name': Schema(type=TYPE_STRING),
-                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask"),
-                                     'area':Schema(type=TYPE_INTEGER, description="When choosing failover algorithm you can choose only areas with 2 members"),
-                                     'algorythme_type':Schema(type=TYPE_STRING, enum=["failover", "round_robin"]),
-                                     'destination_address':Schema(type=TYPE_STRING, description="format of address/mask"),
-                                     'health_check':Schema(type=TYPE_STRING),
-                                     'health_check_target':Schema(type=TYPE_STRING),
-                                     'primary_interface':Schema(type=TYPE_STRING, description="This is used when choosing failover algorithm")
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE AN SDWAN RULE",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'source_address', 'area', 'algorythme_type',
+                                    'health_check', 'health_check_target'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="test failover"),
+            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2", description="format of address/mask"),
+            'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
+            'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
+            'destination_address':Schema(type=TYPE_STRING, example="10.1.12.13", description="format of address/mask"),
+            'health_check':Schema(type=TYPE_INTEGER, example=1),
+            'health_check_target':Schema(type=TYPE_STRING, example="8.8.8.8"),
+            'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")
+            }
+            ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

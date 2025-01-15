@@ -59,16 +59,18 @@ def get_one_to_one_nat(request, id):
     return JsonResponse(one_to_one_nat, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'},
-                     operation_summary="API TO CREATE A OneToOneNat RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'source_address', 'translation_address', 'destination_address'],
-                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'translation_address': Schema(type=TYPE_STRING, description="required when choosing Static, format of address like 51.32.100.5"),
-                                     'description': Schema(type=TYPE_STRING, description="description of OneToOneNat rule"),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE A OneToOneNat RULE", 
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['interface', 'source_address', 'translation_address', 'destination_address'],
+        properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
+                    'destination_address': Schema(type=TYPE_STRING, example="51.51.51.0/24", description="format of address/mask or blank for Any"),
+                    'translation_address': Schema(type=TYPE_STRING, example="", description="format of address like 51.32.100.5"),
+                    'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
+                    }
+                    ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -144,16 +146,18 @@ def delete_one_to_one_nat(request, id):
         return JsonResponse({"error": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
-                     operation_summary="API TO UPDATE A OneToOneNat RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'source_address', 'translation_address', 'destination_address'],
-                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'translation_address': Schema(type=TYPE_STRING, description="required when choosing Static, format of address like 51.32.100.5"),
-                                     'description': Schema(type=TYPE_STRING, description="description of OneToOneNat rule"),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE A OneToOneNat RULE", 
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['interface', 'source_address', 'translation_address', 'destination_address'],
+        properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
+                    'destination_address': Schema(type=TYPE_STRING, example="51.51.51.0/24", description="format of address/mask or blank for Any"),
+                    'translation_address': Schema(type=TYPE_STRING, example="", description="format of address like 51.32.100.5"),
+                    'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
+                    }
+                    ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -269,10 +273,12 @@ def stop_one_to_one_nat(request, id):
         return JsonResponse({"error": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
-                     operation_summary="API TO CHANGE POSITION OF A OneToOneNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=["new_position"],
-                         properties={'new_position': Schema(type=TYPE_INTEGER)}))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CHANGE POSITION OF A One To One NAT RULE",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=["new_position"], properties={
+            "new_position": Schema(type=TYPE_INTEGER, example="4", description="New position of One To One NAT rule after changing its position")}))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

@@ -230,7 +230,7 @@
     "action": "Actions",
     "create_msg_snat": "Créer une nouvelle règle SNAT",
     "update_msg_snat": "Mettre à jour la règle SNAT",
-    "create_msg_one": "Créer une nouvelle règle individuelle",
+    "create_msg_one": "Créer une nouvelle règle un à un",
     "update_msg_one": "Mettre à jour la règle un à un",
     "create_msg_dnat": "Créer une nouvelle règle DNAT",
     "update_msg_dnat": "Mettre à jour la nouvelle règle DNAT",

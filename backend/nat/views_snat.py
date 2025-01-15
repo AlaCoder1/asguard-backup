@@ -59,24 +59,28 @@ def get_snat(request, id):
     return JsonResponse(snat, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'},
-                     operation_summary="API TO CREATE AN SNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'source_address', 'source_port', 'destination_address',
-                                                     'destination_port', 'snat_type'],
-                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
-                                     'protocol': Schema(type=TYPE_STRING, description="required when choosing Static"),
-                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'source_port': Schema(type=TYPE_STRING),
-                                     'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'destination_port': Schema(type=TYPE_STRING),
-                                     'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
-                                     'translation_address_from': Schema(type=TYPE_STRING, description="required when choosing Static, format of address like 51.32.100.5"),
-                                     'translation_address_to': Schema(type=TYPE_STRING, description="Optional when choosing Static, format of address like 51.32.100.10"),
-                                     'translation_port': Schema(type=TYPE_STRING, description="Optional when choosing Static"),
-                                     'description': Schema(type=TYPE_STRING, description="description of SNAT rule"),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE AN SNAT RULE", 
+    request_body=Schema(
+        type=TYPE_OBJECT, required=[
+            'interface', 'source_address', 'source_port', 'destination_address',
+            'destination_port', 'snat_type'],
+        properties={
+            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+            'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
+            'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"], description="required when choosing Static"),
+            'source_address': Schema(type=TYPE_STRING, enum="10.1.12.0/24", description="format of address/mask or blank for Any"),
+            'source_port': Schema(type=TYPE_STRING, enum="80"),
+            'destination_address': Schema(type=TYPE_STRING, enum="192.168.30.0/24", description="format of address/mask or blank for Any"),
+            'destination_port': Schema(type=TYPE_STRING, enum="443"),
+            'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
+            'translation_address_from': Schema(type=TYPE_STRING, enum="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
+            'translation_address_to': Schema(type=TYPE_STRING, enum="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
+            'translation_port': Schema(type=TYPE_STRING, enum="100", description="Optional when choosing Static"),
+            'description': Schema(type=TYPE_STRING, enum="Description of SNAT", description="description of SNAT rule"),
+            }
+            ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -161,24 +165,28 @@ def delete_snat(request, id):
         return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
-                     operation_summary="API TO UPDATE AN SNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'source_address', 'source_port', 'destination_address',
-                                                     'destination_port', 'snat_type'],
-                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
-                                     'protocol': Schema(type=TYPE_STRING, description="required when choosing Static"),
-                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'source_port': Schema(type=TYPE_STRING),
-                                     'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'destination_port': Schema(type=TYPE_STRING),
-                                     'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
-                                     'translation_address_from': Schema(type=TYPE_STRING, description="required when choosing Static, format of address like 51.32.100.5"),
-                                     'translation_address_to': Schema(type=TYPE_STRING, description="Optional when choosing Static, format of address like 51.32.100.10"),
-                                     'translation_port': Schema(type=TYPE_STRING, description="Optional when choosing Static"),
-                                     'description': Schema(type=TYPE_STRING, description="description of SNAT rule"),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE AN SNAT RULE", 
+    request_body=Schema(
+        type=TYPE_OBJECT, required=[
+            'interface', 'source_address', 'source_port', 'destination_address',
+            'destination_port', 'snat_type'],
+        properties={
+            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+            'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
+            'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"], description="required when choosing Static"),
+            'source_address': Schema(type=TYPE_STRING, enum="10.1.12.0/24", description="format of address/mask or blank for Any"),
+            'source_port': Schema(type=TYPE_STRING, enum="80"),
+            'destination_address': Schema(type=TYPE_STRING, enum="192.168.30.0/24", description="format of address/mask or blank for Any"),
+            'destination_port': Schema(type=TYPE_STRING, enum="443"),
+            'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
+            'translation_address_from': Schema(type=TYPE_STRING, enum="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
+            'translation_address_to': Schema(type=TYPE_STRING, enum="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
+            'translation_port': Schema(type=TYPE_STRING, enum="100", description="Optional when choosing Static"),
+            'description': Schema(type=TYPE_STRING, enum="Description of SNAT", description="description of SNAT rule"),
+            }
+            ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -307,11 +315,12 @@ def stop_snat(request, id):
         return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
-                     operation_summary="API TO CHANGE POSITION OF AN SNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=["new_position"],
-                         properties={'new_position': Schema(type=TYPE_INTEGER)}
-                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CHANGE POSITION OF A SNAT RULE",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=["new_position"], properties={
+            "new_position": Schema(type=TYPE_INTEGER, example="4", description="New position of SNAT rule after changing its position")}))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

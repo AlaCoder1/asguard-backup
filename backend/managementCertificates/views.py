@@ -69,27 +69,29 @@ def get_cert_auth(request, id):
         return JsonResponse(cert, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE CERTIFICATE AUTHORITY",
-                     request_body=Schema(type=TYPE_OBJECT, required=['name', 'method'],
-                                                 properties={'name': Schema(type=TYPE_STRING),
-                                                             'method': Schema(type=TYPE_OBJECT, required=['name_method'],
-                                                                              properties={'name_method': Schema(type=TYPE_STRING, enum=["create", "import"]),
-                                                                                          'key_type': Schema(type=TYPE_STRING),
-                                                                                          'key_length': Schema(type=TYPE_INTEGER),
-                                                                                          'digest_algorithm': Schema(type=TYPE_STRING, pattern=r'\bsha\d+', description="start with sha like sha123"),
-                                                                                          'lifetime': Schema(type=TYPE_INTEGER),
-                                                                                          'country_code': Schema(type=TYPE_STRING),
-                                                                                          'state': Schema(type=TYPE_STRING),
-                                                                                          'city': Schema(type=TYPE_STRING),
-                                                                                          'organization': Schema(type=TYPE_STRING),
-                                                                                          'email': Schema(type=TYPE_STRING),
-                                                                                          'common_name': Schema(type=TYPE_STRING),
-                                                                                          'certificate_data': Schema(type=TYPE_STRING, description="When name_method is import"),
-                                                                                          'certificate_key': Schema(type=TYPE_STRING, description="When name_method is import"),
-                                                                                          'serial': Schema(type=TYPE_STRING, description="Optional, when name_method is import"),
-                                                                                          }),
-                                                                                          }
-                                                                                          ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE CERTIFICATE AUTHORITY",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'method'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="ca_create"),
+            'method': Schema(type=TYPE_OBJECT, required=['name_method'],
+            properties={
+                'name_method': Schema(type=TYPE_STRING, enum=["create", "import"]),
+                'key_type': Schema(type=TYPE_STRING, example="rsa"),
+                'key_length': Schema(type=TYPE_INTEGER, example=2048),
+                'digest_algorithm': Schema(type=TYPE_STRING, example="sha256", pattern=r'\bsha\d+', description="start with sha like sha123"),
+                'lifetime': Schema(type=TYPE_INTEGER, example=325),
+                'country_code': Schema(type=TYPE_STRING, example="\"TN\""),
+                'state': Schema(type=TYPE_STRING, example="\"Openvpn\""),
+                'city': Schema(type=TYPE_STRING, example="\"Bizerte\""),
+                'organization': Schema(type=TYPE_STRING, example="\"Numeryx\""),
+                'email': Schema(type=TYPE_STRING, example="\"root@numeryx.fr\""),
+                'common_name': Schema(type=TYPE_STRING, example="create-ca"),
+                'certificate_data': Schema(type=TYPE_STRING, example="-----BEGIN CERTIFICATE-----\nMIIDwDCCAqigAwIBAgIBADANBgkqhkiG9w0BAQsFADBdMQswCQYDVQQGEwJBRDEL\nMAkGA1UECAwCYWExCzAJBgNVBAcMAmFhMQswCQYDVQQKDAJhYTERMA8GCSqGSIb3\nDQEJARYCYWExFDASBgNVBAMMC2ludGVybmFsLWNhMB4XDTIzMDkyOTE1NTQ1OVoX\nDTI2MDEwMTE1NTQ1OVowXTELMAkGA1UEBhMCQUQxCzAJBgNVBAgMAmFhMQswCQYD\nVQQHDAJhYTELMAkGA1UECgwCYWExETAPBgkqhkiG9w0BCQEWAmFhMRQwEgYDVQQD\nDAtpbnRlcm5hbC1jYTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAK9F\n3mrjuAGr4JFwimHCE9zXA5MSKLIxpclDgKUpIu/JYEGV95jhbU1zRPwLHm2PxWq0\n3S7nGT9IcFuiclfRNUDu0/0OKiSdr25CAq81M1vYK9LwRVAJHDFExL/TeH3R1JlM\nZLyPFGTfYGCZXSc576ku6c+DuSCl6hgSAUYh1OJQ7oLWfmL7i+7LesosKTyV6MZu\ndtNFYuCR2J0TxY5Q/v8MQaUPTxbLCEYCtvB/CX8MvLTKjun3CE78j8B38tU3pfMP\nZHeawsE+LjxbszZywQ48XnKz7kzIA52w+N9NPInFaMlZk9DU5JR7zAbWLi3NzROu\nVFfK+HVjXrg9yvHx38UCAwEAAaOBijCBhzA3BglghkgBhvhCAQ0EKhYoRE1Tc2R3\nYW4gR2VuZXJhdGVkIENlcnRpZmljYXRlIEF1dGhvcml0eTAdBgNVHQ4EFgQUq77W\nkf2+33QVU2XGlYljpBCZZcIwHwYDVR0jBBgwFoAUq77Wkf2+33QVU2XGlYljpBCZ\nZcIwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAeUYo7BSqqEdY39aJ\nA64ObhNOZWI1i6L+xkSvMv0n5Y1/tFXOZN/8UWnNs/3PRhVdBGCNL6ToHgDx0b3/\nb6efERc87LVJ64boOVmfgI0SvkPEj/d6My4zOmFUD+EkLMLlLcqawWud9hizH9fR\ncnhdnOwsZMS7+IRjhiPXNiUTao1znYdYKxVziLPK5ImPE9RWZGerfXveKwTwq8Z/\nyhOUj41QV5WLIZ8xezt3PVYRuI3x6gvr383cO8HGWsoGhwSYY0Af4ZIhL5PkmbCf\ngKpY2ggl+wapth+bbpJ4C0fU8Ht1F/M1z9HUMgrQAm+WfYomrbSvVAbE1xeQiHjU\nrAjzXA==\n-----END CERTIFICATE-----", description="When name_method is import"),
+                'certificate_key': Schema(type=TYPE_STRING, example="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCvRd5q47gBq+CR\ncIphwhPc1wOTEiiyMaXJQ4ClKSLvyWBBlfeY4W1Nc0T8Cx5tj8VqtN0u5xk/SHBb\nonJX0TVA7tP9Diokna9uQgKvNTNb2CvS8EVQCRwxRMS/03h90dSZTGS8jxRk32Bg\nmV0nOe+pLunPg7kgpeoYEgFGIdTiUO6C1n5i+4vuy3rKLCk8lejGbnbTRWLgkdid\nE8WOUP7/DEGlD08WywhGArbwfwl/DLy0yo7p9whO/I/Ad/LVN6XzD2R3msLBPi48\nW7M2csEOPF5ys+5MyAOdsPjfTTyJxWjJWZPQ1OSUe8wG1i4tzc0TrlRXyvh1Y164\nPcrx8d/FAgMBAAECggEAJpFUSOcE9XExwC8odCx1nHG/upwTUmq0VV5CL5Wmt2bz\nhFsQmZZ5K8LCmkeEEY3CXiGgThLSLmetOay8RnClrD0hbpywT1BXawahepZVT894\njTkLt3nZt0mvlZpd+Cm1A2qY/Bjr3up8VaVJpzkLcIn/LweINBPuOA+2Mg19v7K8\nH1NZO/k8tTIID8JBsV/2nlWwPUuKJ5n6S0/KfuOV2kL9PO8zRFj1dARvAAY5Fj0u\ny7Yw7h1JPMYm+sffbeHIqS4OJUsK4Cx/v8mYJgSc/Q/GfloA3E4colWPDlXXCUga\nmFeYc/8Q3q3IjIIgp88GpxG8bw7KdyclQ7JzLW6XvQKBgQDVbZyIj6/VdPKCpUc3\nOY+YRPH1lDC584o/mwJxZHh/1ps+C7wGGNfkRxk9CZ4JO3vP8OwnkRiVBv8uUPQg\nKw+Y02wHiGPpKg3c/2yaIWbvHGPwReNJFccr50FOvbQnYjzcrWWeL70+2NA/qbzm\n6DVXeLUgCSFh0V/1VCBsKOYNDwKBgQDSO+rLbZrEgpF+4nqV9QG8DyiifvlCvlcA\n9T/TCrmmBQLxh2NdYRKDARj2URWiJyiGf5PVmUTazyVPGV4dOhpNOe8Ilsnr3wYj\n5QVA44pWc1mDI0X/1TDc0Thp7K5zBjXqGPeeuSeb1QIaO0mB48VByTFGC4nf0KF3\nk99UYoPt6wKBgQC0FkhFxpBEmehjKpjb1Vr/zfUoFcHDtebKYr599Zvjqq7VfMtL\njbzlZsS6Bxptid6gCBcMD9dhMEUzzKUhW5ROjN8TwBcl0BFgj7oQl+ymCBufyyjM\nK28i8X/etB2GOdNHFZywDHIvzHxzq4K0h+0ygKy8elfLlQLWHAU7nor3KwKBgQC8\nx6Lpsu0T4m8F8hbDyzMYjMAfUkc/gK2dpZv/RRU5mCxxd/Jo6n719ilVHbCAYAtK\n4wp79lpW5UWKRqw1MHRnvkr/em+tByJ7Xu6duvUA9il90VHNDcIHtzOiIi7wCLan\nFG5eL8L6coalyXETWtVJYoGFdV0EBlLHjpgvLRtsqwKBgD0TpsksfShhJ62mlBeJ\nN8gHJJX7NRs3yHdWuZgRUfgCn7pF7zoGwJW6ymO2TUQJkDa78Vv1MhONk7LBeyZ1\nIGuQvos3kTrbHtgmpqqD0/RnF7DhGqY3kjsVQuLjc9EAq8qPSHvtFs1tnw/p/VsC\ng6T46uQDHG5mLBV1/uZiDetw\n-----END PRIVATE KEY-----", description="When name_method is import"),
+                'serial': Schema(type=TYPE_STRING, example="5622", description="Optional, when name_method is import"),}),}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -219,9 +221,11 @@ def delete_cert_auth(request, id):
         return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD CERTIFICATE AUTHORITY",
-                     request_body=Schema(type=TYPE_OBJECT, required=['type'],
-                                                 properties={"type": Schema(type=TYPE_STRING, enum=['certificate', 'private_key'])}))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO DOWNLOAD CERTIFICATE AUTHORITY",
+    request_body=Schema(type=TYPE_OBJECT, required=['type'],
+    properties={"type": Schema(type=TYPE_STRING, enum=['certificate', 'private_key'])}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -289,31 +293,32 @@ def get_certificate(request, id):
         return JsonResponse(cert, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO GET LIST OF ALL CERTIFICATES",
-                     request_body=Schema(type=TYPE_OBJECT, required=['name', 'activation', 'method'],
-                                         properties={'name': Schema(type=TYPE_STRING),
-                                                     'activation': Schema(type=TYPE_BOOLEAN, default=True),
-                                                     'method': Schema(type=TYPE_OBJECT, required=['name_method'],
-                                                                      properties={'method_name': Schema(type=TYPE_STRING, enum=["create", "import"]),
-                                                                                  'certificate_type': Schema(type=TYPE_STRING, enum=["server", "client"]),
-                                                                                  'ca': Schema(type=TYPE_INTEGER, description="ID of a certificate authority"),
-                                                                                  'key_type': Schema(type=TYPE_STRING),
-                                                                                  'key_length': Schema(type=TYPE_INTEGER),
-                                                                                  'digest_algorithm': Schema(type=TYPE_STRING, pattern=r'\bsha\d+', description="start with sha like sha123"),
-                                                                                  'lifetime': Schema(type=TYPE_INTEGER),
-                                                                                  'private_key_location': Schema(type=TYPE_STRING, default="Save on this firewall"),
-                                                                                  'country_code': Schema(type=TYPE_STRING),
-                                                                                 'state': Schema(type=TYPE_STRING),
-                                                                                 'city': Schema(type=TYPE_STRING),
-                                                                                 'organization': Schema(type=TYPE_STRING),
-                                                                                 'email': Schema(type=TYPE_STRING),
-                                                                                 'common_name': Schema(type=TYPE_STRING),
-                                                                                 'certificate_data': Schema(type=TYPE_STRING, description="When name_method is import"),
-                                                                                 'certificate_key': Schema(type=TYPE_STRING, description="When name_method is import"),
-                                                                                 'serial': Schema(type=TYPE_STRING, description="Optional, when name_method is import"),
-                                                                                 }),
-                                                                                 }
-                                                                                 ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO GET LIST OF ALL CERTIFICATES",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'activation', 'method'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="cert_server"),
+            'activation': Schema(type=TYPE_BOOLEAN, default=True),
+            'method': Schema(type=TYPE_OBJECT, required=['name_method'],
+            properties={
+                'method_name': Schema(type=TYPE_STRING, enum=["create", "import"]),
+                'certificate_type': Schema(type=TYPE_STRING, enum=["server", "client"]),
+                'ca': Schema(type=TYPE_INTEGER, example=1, description="ID of a certificate authority"),
+                'key_type': Schema(type=TYPE_STRING, example="rsa"),
+                'key_length': Schema(type=TYPE_INTEGER, example=2048),
+                'digest_algorithm': Schema(type=TYPE_STRING, example="sha256", pattern=r'\bsha\d+', description="start with sha like sha123"),
+                'lifetime': Schema(type=TYPE_INTEGER, example=325),
+                'country_code': Schema(type=TYPE_STRING, example="\"TN\""),
+                'state': Schema(type=TYPE_STRING, example="\"Openvpn\""),
+                'city': Schema(type=TYPE_STRING, example="\"Bizerte\""),
+                'organization': Schema(type=TYPE_STRING, example="\"Numeryx\""),
+                'email': Schema(type=TYPE_STRING, example="\"root@numeryx.fr\""),
+                'common_name': Schema(type=TYPE_STRING, example="create-ca"),
+                'certificate_data': Schema(type=TYPE_STRING, example="-----BEGIN CERTIFICATE-----\nMIIDwDCCAqigAwIBAgIBADANBgkqhkiG9w0BAQsFADBdMQswCQYDVQQGEwJBRDEL\nMAkGA1UECAwCYWExCzAJBgNVBAcMAmFhMQswCQYDVQQKDAJhYTERMA8GCSqGSIb3\nDQEJARYCYWExFDASBgNVBAMMC2ludGVybmFsLWNhMB4XDTIzMDkyOTE1NTQ1OVoX\nDTI2MDEwMTE1NTQ1OVowXTELMAkGA1UEBhMCQUQxCzAJBgNVBAgMAmFhMQswCQYD\nVQQHDAJhYTELMAkGA1UECgwCYWExETAPBgkqhkiG9w0BCQEWAmFhMRQwEgYDVQQD\nDAtpbnRlcm5hbC1jYTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAK9F\n3mrjuAGr4JFwimHCE9zXA5MSKLIxpclDgKUpIu/JYEGV95jhbU1zRPwLHm2PxWq0\n3S7nGT9IcFuiclfRNUDu0/0OKiSdr25CAq81M1vYK9LwRVAJHDFExL/TeH3R1JlM\nZLyPFGTfYGCZXSc576ku6c+DuSCl6hgSAUYh1OJQ7oLWfmL7i+7LesosKTyV6MZu\ndtNFYuCR2J0TxY5Q/v8MQaUPTxbLCEYCtvB/CX8MvLTKjun3CE78j8B38tU3pfMP\nZHeawsE+LjxbszZywQ48XnKz7kzIA52w+N9NPInFaMlZk9DU5JR7zAbWLi3NzROu\nVFfK+HVjXrg9yvHx38UCAwEAAaOBijCBhzA3BglghkgBhvhCAQ0EKhYoRE1Tc2R3\nYW4gR2VuZXJhdGVkIENlcnRpZmljYXRlIEF1dGhvcml0eTAdBgNVHQ4EFgQUq77W\nkf2+33QVU2XGlYljpBCZZcIwHwYDVR0jBBgwFoAUq77Wkf2+33QVU2XGlYljpBCZ\nZcIwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAeUYo7BSqqEdY39aJ\nA64ObhNOZWI1i6L+xkSvMv0n5Y1/tFXOZN/8UWnNs/3PRhVdBGCNL6ToHgDx0b3/\nb6efERc87LVJ64boOVmfgI0SvkPEj/d6My4zOmFUD+EkLMLlLcqawWud9hizH9fR\ncnhdnOwsZMS7+IRjhiPXNiUTao1znYdYKxVziLPK5ImPE9RWZGerfXveKwTwq8Z/\nyhOUj41QV5WLIZ8xezt3PVYRuI3x6gvr383cO8HGWsoGhwSYY0Af4ZIhL5PkmbCf\ngKpY2ggl+wapth+bbpJ4C0fU8Ht1F/M1z9HUMgrQAm+WfYomrbSvVAbE1xeQiHjU\nrAjzXA==\n-----END CERTIFICATE-----", description="When name_method is import"),
+                'certificate_key': Schema(type=TYPE_STRING, example="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCvRd5q47gBq+CR\ncIphwhPc1wOTEiiyMaXJQ4ClKSLvyWBBlfeY4W1Nc0T8Cx5tj8VqtN0u5xk/SHBb\nonJX0TVA7tP9Diokna9uQgKvNTNb2CvS8EVQCRwxRMS/03h90dSZTGS8jxRk32Bg\nmV0nOe+pLunPg7kgpeoYEgFGIdTiUO6C1n5i+4vuy3rKLCk8lejGbnbTRWLgkdid\nE8WOUP7/DEGlD08WywhGArbwfwl/DLy0yo7p9whO/I/Ad/LVN6XzD2R3msLBPi48\nW7M2csEOPF5ys+5MyAOdsPjfTTyJxWjJWZPQ1OSUe8wG1i4tzc0TrlRXyvh1Y164\nPcrx8d/FAgMBAAECggEAJpFUSOcE9XExwC8odCx1nHG/upwTUmq0VV5CL5Wmt2bz\nhFsQmZZ5K8LCmkeEEY3CXiGgThLSLmetOay8RnClrD0hbpywT1BXawahepZVT894\njTkLt3nZt0mvlZpd+Cm1A2qY/Bjr3up8VaVJpzkLcIn/LweINBPuOA+2Mg19v7K8\nH1NZO/k8tTIID8JBsV/2nlWwPUuKJ5n6S0/KfuOV2kL9PO8zRFj1dARvAAY5Fj0u\ny7Yw7h1JPMYm+sffbeHIqS4OJUsK4Cx/v8mYJgSc/Q/GfloA3E4colWPDlXXCUga\nmFeYc/8Q3q3IjIIgp88GpxG8bw7KdyclQ7JzLW6XvQKBgQDVbZyIj6/VdPKCpUc3\nOY+YRPH1lDC584o/mwJxZHh/1ps+C7wGGNfkRxk9CZ4JO3vP8OwnkRiVBv8uUPQg\nKw+Y02wHiGPpKg3c/2yaIWbvHGPwReNJFccr50FOvbQnYjzcrWWeL70+2NA/qbzm\n6DVXeLUgCSFh0V/1VCBsKOYNDwKBgQDSO+rLbZrEgpF+4nqV9QG8DyiifvlCvlcA\n9T/TCrmmBQLxh2NdYRKDARj2URWiJyiGf5PVmUTazyVPGV4dOhpNOe8Ilsnr3wYj\n5QVA44pWc1mDI0X/1TDc0Thp7K5zBjXqGPeeuSeb1QIaO0mB48VByTFGC4nf0KF3\nk99UYoPt6wKBgQC0FkhFxpBEmehjKpjb1Vr/zfUoFcHDtebKYr599Zvjqq7VfMtL\njbzlZsS6Bxptid6gCBcMD9dhMEUzzKUhW5ROjN8TwBcl0BFgj7oQl+ymCBufyyjM\nK28i8X/etB2GOdNHFZywDHIvzHxzq4K0h+0ygKy8elfLlQLWHAU7nor3KwKBgQC8\nx6Lpsu0T4m8F8hbDyzMYjMAfUkc/gK2dpZv/RRU5mCxxd/Jo6n719ilVHbCAYAtK\n4wp79lpW5UWKRqw1MHRnvkr/em+tByJ7Xu6duvUA9il90VHNDcIHtzOiIi7wCLan\nFG5eL8L6coalyXETWtVJYoGFdV0EBlLHjpgvLRtsqwKBgD0TpsksfShhJ62mlBeJ\nN8gHJJX7NRs3yHdWuZgRUfgCn7pF7zoGwJW6ymO2TUQJkDa78Vv1MhONk7LBeyZ1\nIGuQvos3kTrbHtgmpqqD0/RnF7DhGqY3kjsVQuLjc9EAq8qPSHvtFs1tnw/p/VsC\ng6T46uQDHG5mLBV1/uZiDetw\n-----END PRIVATE KEY-----", description="When name_method is import"),
+                'serial': Schema(type=TYPE_STRING, example="5622", description="Optional, when name_method is import"),}),}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -429,8 +434,10 @@ def create_certificate(request):
         return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('DELETE', request_body=CertificateSerializer, responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO DELETE A CERTIFICATE AUTHORITY",)
+@swagger_auto_schema(
+    'DELETE', request_body=CertificateSerializer, 
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO DELETE A CERTIFICATE AUTHORITY",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -467,13 +474,14 @@ def delete_certificate(request, id):
         return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO REVOKE A CERTIFICATE",
-                     request_body=Schema(type=TYPE_OBJECT, required=['reason'],
-                                         properties={"reason": Schema(type=TYPE_STRING, 
-                                                                      enum=["No Status", "Unspecified", "key compromise", 
-                                                                            "CA compromise", "affiliation changed ", "Supersed", 
-                                                                            "Cessation of Operation", "Certificate Hold ", 
-                                                                            "End of Validity Period ", "Technical Issues"])}))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO REVOKE A CERTIFICATE",
+    request_body=Schema(type=TYPE_OBJECT, required=['reason'],
+    properties={"reason": Schema(type=TYPE_STRING, enum=[
+        "No Status", "Unspecified", "key compromise", "CA compromise", "affiliation changed ", 
+        "Supersed", "Cessation of Operation", "Certificate Hold ", "End of Validity Period ", 
+        "Technical Issues"])}))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -527,10 +535,12 @@ def unrevoke_certificate(request, id):
         return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD A CERTIFICATE",
-                     request_body=Schema(type=TYPE_OBJECT, required=['download_type'],
-                                         properties={"download_type": Schema(type=TYPE_STRING, enum=["certificate", "private_key", "p12"]),
-                                                     "password": Schema(type=TYPE_STRING, description="Required when download_type is p12")}))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO DOWNLOAD A CERTIFICATE",
+    request_body=Schema(type=TYPE_OBJECT, required=['download_type'],
+    properties={"download_type": Schema(type=TYPE_STRING, enum=["certificate", "private_key", "p12"]),
+                "password": Schema(type=TYPE_STRING, example="password certificate", description="Required when download_type is p12")}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

@@ -270,11 +270,8 @@ export default {
             features: features,
             price: props.prices[0].amount,
           });
-          if (response.status === 200) {
-            window.open(response.data.url, "_blank");
-          } else {
-            console.log("error");
-          }
+            // window.open(response.data.url, "_blank");
+            location.href = response.data.url;
         } catch (error) {
           console.log(error);
         }

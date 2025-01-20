@@ -192,6 +192,15 @@ def add_vxlan(request):
     method='PUT',
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
+         manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of VXLAN to update",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
         properties={
             'parent_interface': openapi.Schema(
                 type=openapi.TYPE_INTEGER,
@@ -312,6 +321,15 @@ def update_vxlan(request,id):
 
 @swagger_auto_schema(
     method='DELETE',
+     manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of VXLAN to delete",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={200: f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_DELETING}", 
                400: f"{CONSTANT_VXLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"},
     operation_summary="API DELETE VXLAN",
@@ -431,6 +449,15 @@ vxlan_request_schema_update = openapi.Schema(
 
 @swagger_auto_schema(
     method='PUT',
+     manual_parameters=[
+        openapi.Parameter(
+            'id_interface',
+            openapi.IN_PATH,
+            description="ID of interface VXLAN to update",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     request_body=vxlan_request_schema_update,
     responses={200:f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}",
                400: 'Bad Request'},
@@ -471,6 +498,15 @@ def update_vxlan_interface(request,id_interface):
    
 @swagger_auto_schema(
     method='DELETE',
+     manual_parameters=[
+        openapi.Parameter(
+            'id_interface',
+            openapi.IN_PATH,
+            description="ID of interface VXLAN to delete",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={200: f"{CONSTANT_VXLAN_INTERFACE} {SUCCESS_MESSAGES_DELETING}",
                404: f"{CONSTANT_VXLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"},
     operation_summary="API DELETE VxLAN interface",

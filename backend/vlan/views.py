@@ -146,6 +146,15 @@ def add_vlan(request):
     method='PUT',
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
+        manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of VLAN to update",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
         properties={
             'parent_interface': openapi.Schema(
                 type=openapi.TYPE_INTEGER,
@@ -240,6 +249,15 @@ def update_vlan(request,id):
 
 @swagger_auto_schema(
     method='DELETE',
+     manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of VLAN to delete",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={200:f"{CONSTANT_VLAN_CONFIG} {SUCCESS_MESSAGES_DELETING}",
                400: f"{CONSTANT_VLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"},
     operation_summary="API DELETE VLAN",
@@ -356,6 +374,15 @@ def assign_vlan_interface(request):
     method='PUT',
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
+        manual_parameters=[
+        openapi.Parameter(
+            'id_interface',
+            openapi.IN_PATH,
+            description="ID of interface VLAN to update",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
         properties={
             'id': openapi.Schema(
                 type=openapi.TYPE_INTEGER,
@@ -422,6 +449,15 @@ def update_vlan_interface(request,id_interface):
  
 @swagger_auto_schema(
     method='DELETE',
+    manual_parameters=[
+        openapi.Parameter(
+            'id_interface',
+            openapi.IN_PATH,
+            description="ID of interface VLAN to delete",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={200: f"{CONSTANT_VLAN_INTERFACE} {SUCCESS_MESSAGES_DELETING}", 
                400: f"{CONSTANT_VLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"},
     operation_summary="API DELETE VLAN interface",

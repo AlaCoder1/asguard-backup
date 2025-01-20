@@ -246,6 +246,14 @@ def download_logrotate_data(request):
 
 @swagger_auto_schema(
     method='DELETE',
+    manual_parameters=[
+        openapi.Parameter(
+            'file_id',
+            openapi.IN_PATH,
+            description="The ID of the logrotate file to delete",
+            type=openapi.TYPE_INTEGER
+        )
+    ],
     responses={200:"File  deleted successfully .",
                404:"Error: File does not exist ",
                400: "Error in deleting"},

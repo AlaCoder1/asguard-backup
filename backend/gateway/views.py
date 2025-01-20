@@ -122,7 +122,35 @@ def get_all_static_gateways(request):
             list_gateways.append(res[i]['fields'])
     return JsonResponse({"Gateways": list_gateways})
 
-
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="API to retrieve  gateway by id details.",
+      manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of gateway to get.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
+    responses={
+        200: openapi.Response(
+            description="Gateway details retrieved successfully. The response includes the following fields:\n"
+                        "-\t     `gwname`: Name of the gateway.\n"
+                        "- \t   `gwaddress`: IP address of the gateway.\n"
+                        "- \t   `staticgw`: Indicates if this is a static gateway.\n"
+                        "- \t   `description`: Description of the gateway.\n"
+                        "- \t   `default_aux`: Indicates if this is the default auxiliary gateway.\n"
+                        "- \t   `far_aux`: Indicates if this is a far auxiliary gateway.\n"
+                        "- \t   `multiwan_aux`: Indicates if this is a multi-WAN auxiliary gateway.\n"
+                        "- \t   `ipv4_gw`: Indicates if this gateway is IPv4.\n"
+                        "- \t   `created_at`: Creation timestamp of the gateway.\n"
+                        "- \t   `updated_at`: Last updated timestamp of the gateway.\n"
+                        "- \t   `id`: Unique ID of the gateway.",
+        )
+    }
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_gateway_by_id(request, id):
@@ -214,6 +242,15 @@ def add_static_gateway(request):
 
 @swagger_auto_schema(
     method='DELETE',
+     manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of gateway to delete",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={200: f"{CONSTANT_GATEWAY} {(SUCCESS_MESSAGES_DELETING)}", 
                400: f"{ERROR_MESSAGES_DELETING} {CONSTANT_GATEWAY}",
                404:f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"
@@ -252,6 +289,16 @@ def delete_gateway(request, id):
 
 @swagger_auto_schema(
     method='PUT',
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            type=openapi.TYPE_INTEGER,
+            required=True,
+            description="ID of gateway to update",
+        ),
+    ],
+      
     operation_summary="API to update  gateway.",
     operation_description="This endpoint allows users to update gateway with necessary details.",
     request_body=openapi.Schema(

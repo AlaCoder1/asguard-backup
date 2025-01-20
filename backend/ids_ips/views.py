@@ -41,6 +41,15 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 @swagger_auto_schema(
     method='PUT',
     operation_description="Save system configuration with interface details.",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of suricata config to update.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
@@ -261,6 +270,15 @@ def update_suricata_configuration(request, id):
 @swagger_auto_schema(
     method='POST',
     operation_summary="API TO activate suricata update.",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of suricata config to update suricata rules.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         200: f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}",
         400:f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
@@ -299,6 +317,15 @@ def activer_suricata_update(request, id):
 @swagger_auto_schema(
     method='GET',
     operation_summary="API to get all rules from the database.",
+    manual_parameters=[
+        openapi.Parameter(
+            'num',
+            openapi.IN_PATH,
+            description="Number of page of rules suricata.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         404:f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}",
         200: openapi.Response(
@@ -362,6 +389,15 @@ def get_rules_from_database(request, num):
     method='POST',
     operation_summary="API TO save rule suricata (add/update)",
     operation_description="API TO save rule suricata (add/update) ",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of suricata config.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={200:f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}", 
                400: 'Bad Request'},
     request_body=openapi.Schema(
@@ -432,6 +468,15 @@ def save_rules_suricata(request, id):
 @swagger_auto_schema(
     method='delete',
     operation_summary="API to delete a rule",
+    manual_parameters=[
+        openapi.Parameter(
+            'sid',
+            openapi.IN_PATH,
+            description="SID of the rule to be deleted.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         200: openapi.Response(
             description= f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}",
@@ -492,6 +537,15 @@ def delete_rule(request, sid):
 @swagger_auto_schema(
     method='POST',
     operation_summary="API TO add suricata alerts to database.",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of suricata config.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         200: f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}",
         400: f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ALERT}"
@@ -533,6 +587,15 @@ def add_alerts_to_database(request,id):
 @swagger_auto_schema(
     method='GET',
     operation_summary="API to get all alerts from the database.",
+      manual_parameters=[
+        openapi.Parameter(
+            'num',
+            openapi.IN_PATH,
+            description="Number of page of alerts suricata",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         404:f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}",
         200: openapi.Response(

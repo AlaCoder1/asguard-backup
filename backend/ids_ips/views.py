@@ -25,6 +25,7 @@ CONSTANT_RULE = _("Rule")
 CONSTANT_PAGE = _("Page")
 CONSTANT_SURICATA_FILE = _("Suricata File")
 CONSTANT_ALERT = _("Alert")
+CONSTANT_STATUS=_("Rule status")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -449,7 +450,7 @@ def save_rules_suricata(request, id):
                     serializer_rule=RuleIdsIpsSerializer(ids_ips_rule_from_db,data=contenu)
                     if serializer_rule.is_valid():
                         serializer_rule.save()
-                        message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"
+                        message = f"{CONSTANT_STATUS} {SUCCESS_MESSAGES_UPDATING}"
                         status=200
                     else:
                         message = str(serializer_rule.errors)

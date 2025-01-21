@@ -2,7 +2,7 @@
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.subscription')">
       <template #content>
-        <helpModal />
+        <helpModal help="subscription"  />
         <v-row class="justify-center mt-5 mb-4 ml-15" v-if="subInfo">
           <v-col cols="1"> </v-col>
           <v-col cols="3">

@@ -7,21 +7,24 @@
     ></span>
   </div>
   <v-row justify="center">
-    <v-dialog v-model="state.openModal" persistent width="600">
+    <v-dialog v-model="state.openModal" persistent width="800">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title> </v-card-title>
           <v-card-text>
             <v-container>
               <div class="d-flex justify-space-between align-center mb-2">
-                <span class="headline text-black"> HELP</span>
+                <span class="headline text-black"> </span>
                 <span
                   class="mdi mdi-close cursor-pointer text-black"
                   @click="state.openModal = false"
                 ></span>
               </div>
-              <div v-if="help" style="display: flex; justify-content: center">
-                {{ help }}
+              <div
+                v-if="help === 'subscription'"
+                style="display: flex; justify-content: center"
+              >
+                <subscription />
               </div>
             </v-container>
           </v-card-text>
@@ -36,9 +39,13 @@
 </template>
 
 <script>
+import subscription from "@/views/help/subscription.vue";
 import { reactive, toRefs } from "vue";
 
 export default {
+  components: {
+    subscription,
+  },
   props: {
     help: {
       type: Object,

@@ -61,25 +61,28 @@ def get_dnat(request, id):
     return JsonResponse(dnat, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO CREATE A DNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'source_address', 'source_port_from', 'source_port_to', 
-                                                     'external_address', 'internal_address', 'port_forwarding'],
-                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
-                                     'protocol': Schema(type=TYPE_STRING, description="required when choosing Static"),
-                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'source_port_from': Schema(type=TYPE_STRING),
-                                     'source_port_to': Schema(type=TYPE_STRING),
-                                     'external_address': Schema(type=TYPE_STRING, description="format of address or blank for Any"),
-                                     'internal_address': Schema(type=TYPE_STRING, description="required in format of address"),
-                                     'port_forwarding': Schema(type=TYPE_BOOLEAN),
-                                     'destination_port_from': Schema(type=TYPE_STRING, description="required when selecting Port Forwarding"),
-                                     'destination_port_to': Schema(type=TYPE_STRING, description="required when selecting Port Forwarding"),
-                                     'destination_port': Schema(type=TYPE_STRING, description="required when selecting Port Forwarding"),
-                                     'description': Schema(type=TYPE_STRING, description="description of DNAT rule"),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE A DNAT RULE", 
+    request_body=Schema(type=TYPE_OBJECT, required=[
+        'interface', 'source_address', 'source_port_from', 'source_port_to', 
+        'external_address', 'internal_address', 'port_forwarding'],
+    properties={
+        'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+        'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"]),
+        'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"]),
+        'source_address': Schema(type=TYPE_STRING, example="50.50.50.0/24", description="format of address/mask or blank for Any"),
+        'source_port_from': Schema(type=TYPE_STRING, example="80"),
+        'source_port_to': Schema(type=TYPE_STRING, example="443"),
+        'external_address': Schema(type=TYPE_STRING, example="41.41.41.0", description="format of address or blank for Any"),
+        'internal_address': Schema(type=TYPE_STRING, example="10.1.12.75", description="required in format of address"),
+        'port_forwarding': Schema(type=TYPE_BOOLEAN, default=False),
+        'destination_port_from': Schema(type=TYPE_STRING, example="80", description="required when selecting Port Forwarding"),
+        'destination_port_to': Schema(type=TYPE_STRING, example="443", description="required when selecting Port Forwarding"),
+        'destination_port': Schema(type=TYPE_STRING, example="5000", description="required when selecting Port Forwarding"),
+        'description': Schema(type=TYPE_STRING, example="Description DNAT", description="description of DNAT rule"),
+        }
+        ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -163,25 +166,28 @@ def delete_dnat(request, id):
         return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO UPDATE A DNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'source_address', 'source_port_from', 'source_port_to', 
-                                                     'external_address', 'internal_address', 'port_forwarding'],
-                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
-                                     'protocol': Schema(type=TYPE_STRING, description="required when choosing Static"),
-                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
-                                     'source_port_from': Schema(type=TYPE_STRING),
-                                     'source_port_to': Schema(type=TYPE_STRING),
-                                     'external_address': Schema(type=TYPE_STRING, description="format of address or blank for Any"),
-                                     'internal_address': Schema(type=TYPE_STRING, description="required in format of address"),
-                                     'port_forwarding': Schema(type=TYPE_BOOLEAN),
-                                     'destination_port_from': Schema(type=TYPE_STRING, description="required when selecting Port Forwarding"),
-                                     'destination_port_to': Schema(type=TYPE_STRING, description="required when selecting Port Forwarding"),
-                                     'destination_port': Schema(type=TYPE_STRING, description="required when selecting Port Forwarding"),
-                                     'description': Schema(type=TYPE_STRING, description="description of DNAT rule"),
-                                     }
-                                     ))
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE A DNAT RULE", 
+    request_body=Schema(type=TYPE_OBJECT, required=[
+        'interface', 'source_address', 'source_port_from', 'source_port_to', 
+        'external_address', 'internal_address', 'port_forwarding'],
+    properties={
+        'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+        'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"]),
+        'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"]),
+        'source_address': Schema(type=TYPE_STRING, example="50.50.50.0/24", description="format of address/mask or blank for Any"),
+        'source_port_from': Schema(type=TYPE_STRING, example="80"),
+        'source_port_to': Schema(type=TYPE_STRING, example="443"),
+        'external_address': Schema(type=TYPE_STRING, example="41.41.41.0", description="format of address or blank for Any"),
+        'internal_address': Schema(type=TYPE_STRING, example="10.1.12.75", description="required in format of address"),
+        'port_forwarding': Schema(type=TYPE_BOOLEAN, default=False),
+        'destination_port_from': Schema(type=TYPE_STRING, example="80", description="required when selecting Port Forwarding"),
+        'destination_port_to': Schema(type=TYPE_STRING, example="443", description="required when selecting Port Forwarding"),
+        'destination_port': Schema(type=TYPE_STRING, example="5000", description="required when selecting Port Forwarding"),
+        'description': Schema(type=TYPE_STRING, example="Description DNAT", description="description of DNAT rule"),
+        }
+        ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -307,8 +313,12 @@ def stop_dnat(request, id):
         return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO CHANGE POSITION OF A DNAT RULE",)
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CHANGE POSITION OF A DNAT RULE",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=["new_position"], properties={
+            "new_position": Schema(type=TYPE_INTEGER, example="4", description="New position of DNAT rule after changing its position")}))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -316,7 +326,6 @@ def change_dnat_position(request, id):
     """Change a rule position"""
     try:
         data = request.data
-        print(data)
         new_position = data["new_position"]
         dnat = DNat.objects.get(id=id)
         previous_position = dnat.dnat_position

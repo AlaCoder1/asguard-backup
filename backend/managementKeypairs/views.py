@@ -56,14 +56,14 @@ def get_private_key(request, id):
         return JsonResponse(private_key, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE A PRIVATE KEY",
-                     request_body=Schema(type=TYPE_OBJECT, required=['name', 'encryption_algorithm', 'key_size'],
-                                                 properties={'name': Schema(type=TYPE_STRING),
-                                                             'encryption_algorithm': Schema(type=TYPE_STRING, enum=['RSA'],
-                                                                                            description="Always is RSA"),
-                                                             'key_size': Schema(type=TYPE_STRING, enum=['2048', '4096', '8192'])
-                                                             }
-                                                             ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE A PRIVATE KEY",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'encryption_algorithm', 'key_size'],
+        properties={'name': Schema(type=TYPE_STRING, example="private_key"),
+                    'encryption_algorithm': Schema(type=TYPE_STRING, enum=['RSA'], description="Always is RSA"),
+                    'key_size': Schema(type=TYPE_STRING, enum=['2048', '4096', '8192'])}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -142,17 +142,18 @@ def get_public_key(request, id):
         return JsonResponse(public_key, safe=False)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE A PUBLIC KEY",
-                     request_body=Schema(type=TYPE_OBJECT, required=['name', 'method'],
-                                                 properties={'name': Schema(type=TYPE_STRING),
-                                                             'method': Schema(type=TYPE_OBJECT, required=['method_name'],
-                                                                              properties={'method_name': Schema(type=TYPE_STRING, enum=['create', 'import']),
-                                                                                          'private_key': Schema(type=TYPE_INTEGER, description="ID of the selected private key"),
-                                                                                          'encryption_algorithm': Schema(type=TYPE_STRING, enum=['RSA'], description="Always is RSA"),
-                                                                                          'public_key_value': Schema(type=TYPE_STRING, description="Value of the imported public key"),
-                                                                                          })
-                                                                                          }
-                                                                                          ))
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE A PUBLIC KEY",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'method'], 
+        properties={
+            'name': Schema(type=TYPE_STRING, example="public_key"),
+            'method': Schema(type=TYPE_OBJECT, required=['method_name'], properties={
+                'method_name': Schema(type=TYPE_STRING, enum=['create', 'import']),
+                'private_key': Schema(type=TYPE_INTEGER, example=1, description="ID of the selected private key"),
+                'encryption_algorithm': Schema(type=TYPE_STRING, enum=['RSA'], description="Always is RSA"),
+                'public_key_value': Schema(type=TYPE_STRING, example="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi1fcisJwGXHZ4/A9VC85\nr6fY7eV4l52FxP6wQOxGrTpIU8GH+ud9hxd3xWt3xXgNpxcVys7jLJ4qc3iRjiUU\nt/cqI+kZmdHUkyLJqFk9vhs/oymYuESDn5XN7AM2dgPKkYsXIhMVQ0d35WCKwADX\neWgV9d9ziPxQNNHr8GyASiqiwYcsf2fHlxOSB+jX62JI8eqHESU+cJl55KpmSY+9\nkbLnc7JQDU/g+hhvvwqwxgyMPORnNkS9cyXMMogSDzYMBiS/vHyuq5XolYCJkqOk\nZznx2nLXJPTc6CcNSfXDSkEt7QX5l8wlDdUUA76q+OxBtBxn61sl48Ni85tfxImM\n9wIDAQAB\n-----END PUBLIC KEY-----", description="Value of the imported public key when using import method"),})}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

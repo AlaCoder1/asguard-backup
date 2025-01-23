@@ -151,18 +151,21 @@ def get_next_nat_handle(rule_nat, chain="postrouting"):
     return -1
 
 
-def input_create_snat(snat:SNat):
-    source = {"address": snat.source_address,
-              "port": snat.source_port}
-    destination = {"address": snat.destination_address,
-                   "port": snat.destination_port}
+def input_create_snat(source_address, source_port, destination_address, destination_port, 
+                      snat_type, translation_address_from, translation_address_to, 
+                      translation_port):
+    """Return the input of an SNAT rule: source, destination and masking"""
+    source = {"address": source_address,
+              "port": source_port}
+    destination = {"address": destination_address,
+                   "port": destination_port}
     masking = ["masquerade"]
-    if snat.snat_type == "Static":
-        masking = snat.translation_address_from
-        if snat.translation_address_to != "":
-            masking += f"""-{snat.translation_address_to}"""
-        if snat.translation_port != "":
-            masking += f""":{snat.translation_port}"""
+    if snat_type == "Static":
+        masking = translation_address_from
+        if translation_address_to != "":
+            masking += f"""-{translation_address_to}"""
+        if translation_port != "":
+            masking += f""":{translation_port}"""
         masking = ["snat", "ip", "to",  masking]
     
     return source, destination, masking

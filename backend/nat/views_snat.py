@@ -97,19 +97,11 @@ def create_snat(request):
 
             interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
-            source = {"address": data["source_address"],
-                      "port": data["source_port"]}
-            destination = {"address": data["destination_address"],
-                           "port": data["destination_port"]}
-
-            masking = ["masquerade"]
-            if data["snat_type"] == "Static":
-                masking = data["translation_address_from"]
-                if data["translation_address_to"] != "":
-                    masking += f"""-{data["translation_address_to"]}"""
-                if data["translation_port"] != "":
-                    masking += f""":{data["translation_port"]}"""
-                masking = ["snat", "ip", "to",  masking]
+            # create the input for creating SNAT rule
+            source, destination, masking = input_create_snat(
+                data["source_address"], data["source_port"], data["destination_address"], 
+                data["destination_port"], data["snat_type"], data["translation_address_from"], 
+                data["translation_address_to"], data["translation_port"])
 
             # Add the rule in system and get the rule handle and content
             rule_number, rule_content = create_snat_rule_in_system(interface_ifname, source, destination, data["protocol"], masking)
@@ -202,19 +194,13 @@ def update_snat(request, id):
 
         interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
-        source = {"address": data["source_address"],
-                  "port": data["source_port"]}
-        destination = {"address": data["destination_address"],
-                       "port": data["destination_port"]}
-        masking = ["masquerade"]
-        if data["snat_type"] == "Static":
-            masking = data["translation_address_from"]
-            if data["translation_address_to"] != "":
-                masking += f"""-{data["translation_address_to"]}"""
-            if data["translation_port"] != "":
-                masking += f""":{data["translation_port"]}"""
-            masking = ["snat", "ip", "to",  masking]
-        else:
+        # create the input for creating SNAT rule
+        source, destination, masking = input_create_snat(
+            data["source_address"], data["source_port"], data["destination_address"], 
+            data["destination_port"], data["snat_type"], data["translation_address_from"], 
+            data["translation_address_to"], data["translation_port"])
+        
+        if data["snat_type"] != "Static":
             snat.translation_address_from = None
             snat.translation_address_to = None
             snat.translation_port = None
@@ -261,7 +247,11 @@ def start_snat(request, id):
     try:
         snat = SNat.objects.get(id=id)
 
-        source, destination, masking = input_create_snat(snat)
+        source, destination, masking = input_create_snat(
+            snat.source_address, snat.source_port, 
+            snat.destination_address, snat.destination_port,
+            snat.snat_type, snat.translation_address_from, snat.translation_address_to, 
+            snat.translation_port)
 
         # Add the rule in system
         # Find the next activated rule handle to insert the started rule above

@@ -53,7 +53,7 @@ ERROR_MESSAGES_EXPIRED = _("has expired")
         type=TYPE_OBJECT, required=["username", "password"],
         properties={
             "username": Schema(type=TYPE_STRING, example="asguard"),
-            "password": Schema(type=TYPE_STRING, example="asgaurd")
+            "password": Schema(type=TYPE_STRING, example="asguard")
         }
                      ))
 @api_view(['POST'])
@@ -137,7 +137,7 @@ def authentication(request):
             return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=401)
  
         # Connection with username and password
-        message, current_user, status =normal_connect(request,data)
+        message, current_user, status =normal_connect(request, data)
         return JsonResponse({'message': message, "currentUser": current_user}, status=status)
  
  

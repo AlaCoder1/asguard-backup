@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
 from datetime import datetime, timedelta
 
 import json
@@ -43,10 +44,18 @@ ERROR_MESSAGES_USER_NOTASSIGNED = _("Email not assigned in Asguard. Contact your
 ERROR_MESSAGES_EXPIRED = _("has expired")
  
  
-@swagger_auto_schema('POST', responses={201: 'Created', 400: 'Bad Request'},
-                     security=[{"session_auth": []}],  # Specify the security requirement
-                     operation_summary="Summary of your API endpoint",
-                     operation_description="Description of your API endpoint")
+@swagger_auto_schema(
+    'POST', responses={201: 'Created', 400: 'Bad Request'}, 
+    security=[{"session_auth": []}],  # Specify the security requirement
+    operation_summary="LOGIN API",
+    operation_description="LOGIN API",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=["username", "password"],
+        properties={
+            "username": Schema(type=TYPE_STRING, example="asguard"),
+            "password": Schema(type=TYPE_STRING, example="asgaurd")
+        }
+                     ))
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentication(request):

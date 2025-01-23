@@ -53,14 +53,14 @@ ERROR_MESSAGES_EXPIRED = _("has expired")
         type=TYPE_OBJECT, required=["username", "password"],
         properties={
             "username": Schema(type=TYPE_STRING, example="asguard"),
-            "password": Schema(type=TYPE_STRING, example="asgaurd")
+            "password": Schema(type=TYPE_STRING, example="asguard")
         }
                      ))
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentication(request):
     if (request.method == "POST"):
-        data = json.loads(request.body)
+        data = request.data
         username = data['username']
         password = data['password']
         ad_servers = ADServer.objects.all()
@@ -137,7 +137,7 @@ def authentication(request):
             return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=401)
  
         # Connection with username and password
-        message, current_user, status =normal_connect(request,data)
+        message, current_user, status =normal_connect(request, data)
         return JsonResponse({'message': message, "currentUser": current_user}, status=status)
  
  

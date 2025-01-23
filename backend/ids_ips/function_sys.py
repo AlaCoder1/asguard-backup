@@ -13,6 +13,13 @@ def execute_cmd(command):
     error = completed_process.stderr
     return output, error
 
+def execute_cmd2(command):
+    """function to execute command"""
+    completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
+    return output, error
+
 
 
 #*********** Fichier de configuration suricata.yaml ****************
@@ -98,11 +105,15 @@ def update_config(status_enabled):
         aux_enable="enable"
     else:
         aux_enable="disable"
+    cron_job = "0 * * * * /usr/bin/sudo /usr/bin/suricata-update -q >> /var/log/suricata/logcron.log 2>&1"
     commands = [
-    "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action)
+    "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action),
+    f'(sudo crontab -l 2>/dev/null; sudo echo "{cron_job}") | sudo crontab -',
+    "sudo systemctl enable cronie && sudo systemctl start cronie"
+   
     ]
     for cmd in commands:
-        _, error=execute_cmd(cmd)
+        _, error=execute_cmd2(cmd)
         if error!="":
             return error
     return True

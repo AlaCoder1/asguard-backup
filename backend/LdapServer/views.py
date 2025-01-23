@@ -17,6 +17,8 @@ from .list_Remote_servers import get_list_ad_servers,update_Ldapserver_DB
 from drf_yasg.utils import swagger_auto_schema
 from . import views
 from django.http import JsonResponse
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 # Constants
 CONSTANT_LDAP_SERVER = _('Directory Server')
@@ -38,32 +40,98 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 ################################### API GET ALL LDAP SERVERS ##################################################
 
-@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO GET LIST OF SERVERS",
-                     operation_description="API TO GET LIST OF SERVERS",)
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="API to retrieve all servers connections details.",
+    responses={
+        200: openapi.Response(
+            description=(
+                "Details of server connections retrieved successfully. "
+                "Each server connection includes the following attributes:\n"
+                "- **server_name**: The name of the server (e.g., 'hhhh').\n"
+                "- **server_url**: The server's URL or IP address (e.g., '54.38.218.21').\n"
+                "- **port**: The port number used for the connection (e.g., 389).\n"
+                "- **search_base**: The base DN for directory searches (e.g., 'dc=testing,dc=ad').\n"
+                "- **bind_user_dn**: The distinguished name of the user for binding (e.g., 'hela.touzi@testing.ad').\n"
+                "- **bind_user_password**: The hashed password of the bind user (e.g., 'pbkdf2_sha256$870000...').\n"
+                "- **ssl_tls_activation**: Boolean indicating if SSL/TLS is activated (e.g., `false`).\n"
+                "- **server_type**: The type of server (e.g., 'ad').\n"
+                "- **id**: The unique identifier of the server entry."
+            ),
+        )
+    }
+      
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def getALLServers(request):
-    """Getting list of servers from database"""
+    """
+    This function retrieves a list of servers from the database.
+
+    Parameters:
+    request (HttpRequest): The incoming request object containing the HTTP method and any relevant data.
+
+    Returns:
+    JsonResponse: A JSON response containing the list of servers. If the request method is not 'GET', the response will contain an error message.
+    """
     if (request.method == 'GET'):
         list_servers = get_list_ad_servers()
-        return JsonResponse(list_servers, safe=False)
+        return JsonResponse(list_servers, safe=False,status=200)
 
 ################################### API GET LDAP SERVER BY ID ############################################
 
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="API to retrieve server connection by id details.",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of AD server to get info",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
+    responses={
+        200: openapi.Response(
+            description=(
+                "Details of server connection retrieved successfully. "
+                "This server connection includes the following attributes:\n"
+                "- **server_name**: The name of the server (e.g., 'hhhh').\n"
+                "- **server_url**: The server's URL or IP address (e.g., '54.38.218.21').\n"
+                "- **port**: The port number used for the connection (e.g., 389).\n"
+                "- **search_base**: The base DN for directory searches (e.g., 'dc=testing,dc=ad').\n"
+                "- **bind_user_dn**: The distinguished name of the user for binding (e.g., 'hela.touzi@testing.ad').\n"
+                "- **bind_user_password**: The hashed password of the bind user (e.g., 'pbkdf2_sha256$870000...').\n"
+                "- **ssl_tls_activation**: Boolean indicating if SSL/TLS is activated (e.g., `false`).\n"
+                "- **server_type**: The type of server (e.g., 'ad').\n"
+                "- **id**: The unique identifier of the server entry."
+            ),
+           
+        ),
+        404: openapi.Response(description=f"{CONSTANT_LDAP_SERVER}{ERROR_MESSAGES_INEXISTANT}"),
+    }
+)
 
 
-@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO GET LIST OF SERVERS",
-                     operation_description="API TO GET LIST OF SERVERS",)
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def getServerById(request, id):
+    """
+    This function retrieves a specific server from the database.
+
+    Parameters:
+    request (HttpRequest): The incoming request object containing the HTTP method and any relevant data.
+
+    Returns:
+    JsonResponse: A JSON response containing the list of servers. 
+    If the request method is not 'GET', the response will contain an error message.
+    """
     if request.method == 'GET':
         try:
             ldap_server = ADServer.objects.get(id=id)
@@ -84,20 +152,92 @@ def getServerById(request, id):
 
 
 ############################################# API CREATE AND CONNECT TO LDAP SERVER ############################################
-
 @swagger_auto_schema(
     method='POST',
-    request_body=ADServerSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API Connect to Remote server ",
-    operation_description="API Connect to Remote server",
-)  
-# Create new Connection to Active Directory Server  
+    operation_summary="API to establish server connection.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "server_type": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The type of the server.",
+                enum=["openldap", "ad"],
+                default="openldap"
+            ),
+            "server_name": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The name of the server.",
+                example="ADServer"
+            ),
+            "server_url": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The URL or IP address of the server.",
+                example="10.1.12.54"
+            ),
+            "port": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description="The port used for server connection.",
+                example=389
+            ),
+            "search_base": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The base DN for directory searches.",
+                example="dc=testing,dc=local"
+            ),
+            "bind_user_dn": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The distinguished name of the user for binding.",
+                example="administrator@testing.local"
+            ),
+            "bind_user_password": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The password of the bind user.",
+                example="root123e.g"
+            ),
+            "ssl_tls_activation": openapi.Schema(
+                type=openapi.TYPE_BOOLEAN,
+                description="Indicates if SSL/TLS is activated.",
+                example=False
+            ),
+        },
+        required=["server_type", "server_name", "server_url", "port", "search_base", "bind_user_dn", "bind_user_password"],
+    ),
+    responses={
+        200: openapi.Response(
+            description=f"{CONSTANT_LDAP_SERVER} {SUCCESS_MESSAGES_CREATING}"
+        ),
+        400: openapi.Response(
+            description="Invalid input or missing required fields.",
+            examples={
+                "application/json": {
+                    "error": "Invalid input data."
+                }
+            }
+        ),
+    }
+)
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def connect_to_ad(request):
-    """Connect to Remote LDAP Server"""
+    """
+    Establishes a connection to a remote LDAP/Active Directory server and saves the server details.
+
+    This function attempts to connect to the specified LDAP server using the provided credentials,
+    performs a test search, and if successful, saves the server details to the database.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object .
+
+    Returns:
+    JsonResponse: A JSON response with a status code and a message.
+        - If successful: {'msg': 'Directory Server is created'}, status 200
+        - If failed: {'msg': <error_message>}, status 400
+
+    Raises:
+    JsonResponse: With appropriate error messages for various failure scenarios.
+    """
     if request.method == 'POST':
         try:
             # Get data from the request
@@ -163,16 +303,99 @@ def connect_to_ad(request):
 
 ################################################ API TO UPDATE THE PARAMERTERS OF Ldap server #####################
 
+
 @swagger_auto_schema(
     method='PUT',
-    request_body=ADServerSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO UPDATE directory Server",
-    operation_description="This API help us to update parametres in directory server added ",
+    operation_summary="API to update server connection.",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of AD server to update",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "server_type": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The type of the server.",
+                enum=["openldap", "ad"],
+                default="openldap"
+            ),
+            "server_name": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The name of the server.",
+                example="ADServer"
+            ),
+            "server_url": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The URL or IP address of the server.",
+                example="10.1.12.54"
+            ),
+            "port": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description="The port used for server connection.",
+                example=389
+            ),
+            "search_base": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The base DN for directory searches.",
+                example="dc=testing,dc=local"
+            ),
+            "bind_user_dn": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The distinguished name of the user for binding.",
+                example="administrator@testing.local"
+            ),
+            "bind_user_password": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The password of the bind user.",
+                example="root123e.g"
+            ),
+            "ssl_tls_activation": openapi.Schema(
+                type=openapi.TYPE_BOOLEAN,
+                description="Indicates if SSL/TLS is activated.",
+                example=False
+            ),
+        },
+        required=["server_type", "server_name", "server_url", "port", "search_base", "bind_user_dn", "bind_user_password"],
+    ),
+    responses={
+        201: openapi.Response(
+            description=f"{CONSTANT_LDAP_SERVER} {SUCCESS_MESSAGES_UPDATING}"
+        ),
+        400: openapi.Response(
+            description="Invalid input or missing required fields.",
+            examples={
+                "application/json": {
+                    "error": "Invalid input data."
+                }
+            }
+        ),
+    }
 )
 @api_view(['PUT'])
 @permission_classes([])
-def updateLdapServer(request,id):
+def updateLdapServer(request, id):
+    """
+    Update the parameters of an existing LDAP server.
+
+    This function handles the PUT request to update the details of a specific LDAP server
+    identified by its ID. It checks if the server exists, parses the request data,
+    and attempts to update the server's information in the database.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing the updated server data.
+    id (int): The ID of the LDAP server to be updated.
+
+    Returns:
+    JsonResponse: A JSON response containing a message indicating the result of the update operation.
+                  If successful, returns a success message with a 200 status code.
+                  If unsuccessful, returns an error message with a 400 status code.
+    """
     if (request.method == 'PUT'):
         msg=f"{ERROR_MESSAGES_UPDATING}"
         if (ADServer.objects.filter(id=id).exists()):
@@ -184,24 +407,48 @@ def updateLdapServer(request,id):
             elif 'msg' in result:
                 msg = result['msg'] 
                 status_code= 400
-    return JsonResponse({"msg":msg},status=status_code)      
+    return JsonResponse({"msg":msg},status=status_code)
 
 
 
 
 @swagger_auto_schema(
     method='DELETE',
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API DELETE Ldap Server",
-    operation_description="This API delete directory server ",
+     manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of AD server to delete",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
+    responses={200:f"{CONSTANT_LDAP_SERVER} {SUCCESS_MESSAGES_DELETING}",
+               404: f"{CONSTANT_LDAP_SERVER} {ERROR_MESSAGES_INEXISTANT}"},
+    operation_summary="API DELETE ldap server",
 )
 @api_view(['DELETE'])
 @permission_classes([])
 def deleteldap_server(request,id):
-    
+    """
+    Delete LDAP server from the database.
+    This function removes LDAP server configuration from both the system and the database.
+    Parameters:
+        request (HttpRequest): The incoming request object containing the DELETE data.#+
+        id (int): The ID of the LDAP server to be deleted.
+    Returns:
+        JsonResponse: A JSON response indicating the success or failure of the operation. 
+        The response includes a message and a status code. The status can be "success" or "error".
+        If the LDAP server is found and deleted, the response message will indicate successful deletion.
+        If the LDAP server is not found, the response will indicate an error.
+    """
     if (request.method == 'DELETE'):
         if (ADServer.objects.filter(id=id).exists()):
             ldap_servers = ADServer.objects.get(id=id)
             ldap_servers.delete()
             msg=f"{CONSTANT_LDAP_SERVER} {SUCCESS_MESSAGES_DELETING}"
-    return JsonResponse({"msg": msg}, status=200)
+            status=200
+        else:
+            msg=f"{CONSTANT_LDAP_SERVER} {ERROR_MESSAGES_INEXISTANT}"
+            status=404
+    return JsonResponse({"msg": msg}, status=status)

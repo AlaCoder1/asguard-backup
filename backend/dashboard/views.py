@@ -5,14 +5,19 @@ from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.authentication import SessionAuthentication
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from django.utils.translation import gettext_lazy as _
 
 @swagger_auto_schema(
-    method='put',
+    method='PUT',
+    operation_summary="API to update service action",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'service': openapi.Schema(type=openapi.TYPE_STRING),
-            'action': openapi.Schema(type=openapi.TYPE_STRING),
+            'service': openapi.Schema(type=openapi.TYPE_STRING,
+                                      enum=['sshd','dhclient@','suricata','squid',
+                                            'nftables','NetworkManager','openvpn',
+                                            'ipsec','clamv','Asguard-Networking'],default="sshd"),
+            'action': openapi.Schema(type=openapi.TYPE_STRING,enum=["enable","disable","start","stop"]),
         },
         required=['service', 'action'],
     ),
@@ -53,32 +58,42 @@ def set_actions_service(request):
                     data={
                         "status_enabled":True
                     }
+                    msg_suc=_('The service has enabled successfully!')
+                    msg_err=_('Failed to enable the service!')
                 case "disable":
                     data={
                         "status_enabled":False
                     }
+                    msg_suc=_('The service has disabled successfully!')
+                    msg_err=_('Failed to disable the service!')
                 case "start":
                     data={
                         "status_started":True
                     }
+                    msg_suc=_('The service has started successfully!')
+                    msg_err=_('Failed to start the service!')
                 case "stop":
                     data={
                         "status_started":False
                     }
+                    msg_suc=_('The service has stopped successfully!')
+                    msg_err=_('Failed to stop the service!')
                 case "restart":
                     data={
                         "status_started":True
                     }
+                    msg_suc=_('The service has restarted successfully!')
+                    msg_err=_('Failed to restart the service!')
         aux=service_action(service, action)
         if aux is True:
            if update_sevice_DB(service,data) is True:
-               msg=f"You {action} the service successfully!!"
+               msg=msg_suc
                status=200
            else:
                msg=update_sevice_DB(service,data)
                status=400
         else:
-            msg=aux
+            msg=msg_err
             status=400
            
         return JsonResponse({"msg": msg}, status=status)    

@@ -42,9 +42,13 @@ msgstr "Fichier Suricata"
 msgid "Alert"
 msgstr "Alerte"
 
+#: backend/ids_ips/views.py:28
+msgid "Rule status"
+msgstr "Status de la Règle"
+
 #: backend/ids_ips/views.py:29
 msgid "is created"
-msgstr ""
+msgstr "est crée"
 
 #: backend/ids_ips/views.py:30
 msgid "is deleted"

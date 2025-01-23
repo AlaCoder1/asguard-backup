@@ -25,6 +25,7 @@ CONSTANT_RULE = _("Rule")
 CONSTANT_PAGE = _("Page")
 CONSTANT_SURICATA_FILE = _("Suricata File")
 CONSTANT_ALERT = _("Alert")
+CONSTANT_STATUS=_("Rule status")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -41,6 +42,15 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 @swagger_auto_schema(
     method='PUT',
     operation_description="Save system configuration with interface details.",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of suricata config to update.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
@@ -261,6 +271,15 @@ def update_suricata_configuration(request, id):
 @swagger_auto_schema(
     method='POST',
     operation_summary="API TO activate suricata update.",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of suricata config to update suricata rules.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         200: f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}",
         400:f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
@@ -279,26 +298,35 @@ def activer_suricata_update(request, id):
         The response includes a status code.
     """
     if request.method=="POST":
-        cmd="sudo suricata-update -q"
-        _,error=execute_cmd(cmd)
-        if error.strip()=="":
-            rules_sys = get_suricata_default_rules()
-            if rules_sys is not None:
-                rules_list=[l['rule'] for l in RuleIdsIpsSerializer(ids_ips_rule.objects.all() , many=True).data]
-                if (len(list(set(rules_sys)-set(rules_list))))!=0 or (len(list(set(rules_list)-set(rules_sys))))!=0:
-                    rules_add = [log for log in rules_sys if log not in rules_list]
-                    rules_delete = [log for log in rules_list if log not in rules_sys] 
-                    if len(rules_add)!=0:
-                        add_rule_database(rules_add,id)
-                    if len(rules_delete)!=0:
-                        delete_rule_database(rules_delete)
-                return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
+        # cmd="sudo suricata-update --offline -q"
+        # _,error=execute_cmd(cmd)
+        # if error.strip()=="":
+        rules_sys = get_suricata_default_rules()
+        if rules_sys is not None:
+            rules_list=[l['rule'] for l in RuleIdsIpsSerializer(ids_ips_rule.objects.all() , many=True).data]
+            if (len(list(set(rules_sys)-set(rules_list))))!=0 or (len(list(set(rules_list)-set(rules_sys))))!=0:
+                rules_add = [log for log in rules_sys if log not in rules_list]
+                rules_delete = [log for log in rules_list if log not in rules_sys] 
+                if len(rules_add)!=0:
+                    add_rule_database(rules_add,id)
+                if len(rules_delete)!=0:
+                    delete_rule_database(rules_delete)
+            return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
             
         return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
 
 @swagger_auto_schema(
     method='GET',
     operation_summary="API to get all rules from the database.",
+    manual_parameters=[
+        openapi.Parameter(
+            'num',
+            openapi.IN_PATH,
+            description="Number of page of rules suricata.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         404:f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}",
         200: openapi.Response(
@@ -362,6 +390,15 @@ def get_rules_from_database(request, num):
     method='POST',
     operation_summary="API TO save rule suricata (add/update)",
     operation_description="API TO save rule suricata (add/update) ",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of suricata config.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={200:f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}", 
                400: 'Bad Request'},
     request_body=openapi.Schema(
@@ -413,7 +450,7 @@ def save_rules_suricata(request, id):
                     serializer_rule=RuleIdsIpsSerializer(ids_ips_rule_from_db,data=contenu)
                     if serializer_rule.is_valid():
                         serializer_rule.save()
-                        message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"
+                        message = f"{CONSTANT_STATUS} {SUCCESS_MESSAGES_UPDATING}"
                         status=200
                     else:
                         message = str(serializer_rule.errors)
@@ -432,6 +469,15 @@ def save_rules_suricata(request, id):
 @swagger_auto_schema(
     method='delete',
     operation_summary="API to delete a rule",
+    manual_parameters=[
+        openapi.Parameter(
+            'sid',
+            openapi.IN_PATH,
+            description="SID of the rule to be deleted.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         200: openapi.Response(
             description= f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}",
@@ -492,6 +538,15 @@ def delete_rule(request, sid):
 @swagger_auto_schema(
     method='POST',
     operation_summary="API TO add suricata alerts to database.",
+    manual_parameters=[
+        openapi.Parameter(
+            'id',
+            openapi.IN_PATH,
+            description="ID of suricata config.",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         200: f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}",
         400: f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ALERT}"
@@ -533,6 +588,15 @@ def add_alerts_to_database(request,id):
 @swagger_auto_schema(
     method='GET',
     operation_summary="API to get all alerts from the database.",
+      manual_parameters=[
+        openapi.Parameter(
+            'num',
+            openapi.IN_PATH,
+            description="Number of page of alerts suricata",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
     responses={
         404:f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}",
         200: openapi.Response(

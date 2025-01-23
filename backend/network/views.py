@@ -40,6 +40,15 @@ ERROR_MESSAGES_FAILED_DELETE = _("Failed to delete")
     method='PUT',
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
+        manual_parameters=[
+            openapi.Parameter(
+                'name_interface',
+                openapi.IN_PATH,
+                description="Name of interface to update",
+                type=openapi.TYPE_STRING,
+                required=True
+            ),
+        ],
         properties={
             'device': openapi.Schema(type=openapi.TYPE_STRING, description='Device name associated with the interface'),
             'description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the network interface'),
@@ -169,7 +178,7 @@ ERROR_MESSAGES_FAILED_DELETE = _("Failed to delete")
                     ),
                 },
             ),
-            # Other fields...
+            # IPv6 configuration
         },
         required=['nameInterface', 'device', 'setuptypeIP4', 'value_setup_Ipv4'],
     ),

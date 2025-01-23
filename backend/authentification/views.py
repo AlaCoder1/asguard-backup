@@ -60,7 +60,7 @@ ERROR_MESSAGES_EXPIRED = _("has expired")
 @permission_classes([AllowAny])
 def authentication(request):
     if (request.method == "POST"):
-        data = json.loads(request.body)
+        data = request.data
         username = data['username']
         password = data['password']
         ad_servers = ADServer.objects.all()

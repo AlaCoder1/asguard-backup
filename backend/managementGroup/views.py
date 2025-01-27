@@ -9,7 +9,9 @@ from .functions import *
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 # Constants
 CONSTANT_GROUPE_NAME= _('Groupe name')
 CONSTANT_GROUPE_DESCRIPTION= _('Groupe description')
@@ -24,7 +26,11 @@ ERROR_MESSAGES_EXISTANT = _("Already exist")
 
 
 
-
+@swagger_auto_schema(
+    method='get',
+    operation_description="Retrieve all user groups",
+    responses={200: openapi.Response("List of groups", GroupSerializer(many=True))}
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
@@ -44,7 +50,11 @@ def getAllGroups(request):
             list_group.append(res[i]['fields'])
         return JsonResponse(list_group, safe=False)
 
-
+@swagger_auto_schema(
+    method='get',
+    operation_description="Retrieve a group by ID",
+    responses={200: openapi.Response("Group details", GroupSerializer())}
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
@@ -56,6 +66,15 @@ def getGroup(request, id):
         groupDict.pop("_state")
         return JsonResponse(groupDict)
 
+@swagger_auto_schema(
+    method='post',
+    operation_description="Create a new group",
+    request_body=GroupSerializer,
+    responses={
+        201: openapi.Response("Group created", GroupSerializer()),
+        400: "Validation Error"
+    }
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
@@ -84,6 +103,8 @@ def createGroup(request):
     return JsonResponse({"msg": msg}, status=201)
 
 
+@swagger_auto_schema('DELETE', responses={200: 'Deleted', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE Group",)
 # API to delete group
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
@@ -101,6 +122,35 @@ def deleteGroup(request, id):
             msg = stderr
         return JsonResponse({"msg": msg})
 
+@swagger_auto_schema(
+    method='PUT',
+    operation_summary="Change Group Name and Description",
+    operation_description=(
+        "This API allows updating the name and description of an existing group. "
+        "It validates the new group name before making changes."
+    ),
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        required=['Newgroupname', 'description'],
+        properties={
+            'Newgroupname': Schema(
+                type=TYPE_STRING,
+                description="The new name for the group.",
+                example="NewGroupName123"
+            ),
+            'description': Schema(
+                type=TYPE_STRING,
+                description="The updated description of the group.",
+                example="Updated group description."
+            ),
+        },
+    ),
+    responses={
+        200: "Group name and description updated successfully.",
+        400: "Invalid input or group already exists.",
+        404: "Group not found.",
+    },
+)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

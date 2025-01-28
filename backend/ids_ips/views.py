@@ -25,6 +25,7 @@ CONSTANT_RULE = _("Rule")
 CONSTANT_PAGE = _("Page")
 CONSTANT_SURICATA_FILE = _("Suricata File")
 CONSTANT_ALERT = _("Alert")
+CONSTANT_STATUS=_("Rule status")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -297,20 +298,20 @@ def activer_suricata_update(request, id):
         The response includes a status code.
     """
     if request.method=="POST":
-        cmd="sudo suricata-update -q"
-        _,error=execute_cmd(cmd)
-        if error.strip()=="":
-            rules_sys = get_suricata_default_rules()
-            if rules_sys is not None:
-                rules_list=[l['rule'] for l in RuleIdsIpsSerializer(ids_ips_rule.objects.all() , many=True).data]
-                if (len(list(set(rules_sys)-set(rules_list))))!=0 or (len(list(set(rules_list)-set(rules_sys))))!=0:
-                    rules_add = [log for log in rules_sys if log not in rules_list]
-                    rules_delete = [log for log in rules_list if log not in rules_sys] 
-                    if len(rules_add)!=0:
-                        add_rule_database(rules_add,id)
-                    if len(rules_delete)!=0:
-                        delete_rule_database(rules_delete)
-                return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
+        # cmd="sudo suricata-update --offline -q"
+        # _,error=execute_cmd(cmd)
+        # if error.strip()=="":
+        rules_sys = get_suricata_default_rules()
+        if rules_sys is not None:
+            rules_list=[l['rule'] for l in RuleIdsIpsSerializer(ids_ips_rule.objects.all() , many=True).data]
+            if (len(list(set(rules_sys)-set(rules_list))))!=0 or (len(list(set(rules_list)-set(rules_sys))))!=0:
+                rules_add = [log for log in rules_sys if log not in rules_list]
+                rules_delete = [log for log in rules_list if log not in rules_sys] 
+                if len(rules_add)!=0:
+                    add_rule_database(rules_add,id)
+                if len(rules_delete)!=0:
+                    delete_rule_database(rules_delete)
+            return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
             
         return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
 
@@ -449,7 +450,7 @@ def save_rules_suricata(request, id):
                     serializer_rule=RuleIdsIpsSerializer(ids_ips_rule_from_db,data=contenu)
                     if serializer_rule.is_valid():
                         serializer_rule.save()
-                        message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"
+                        message = f"{CONSTANT_STATUS} {SUCCESS_MESSAGES_UPDATING}"
                         status=200
                     else:
                         message = str(serializer_rule.errors)

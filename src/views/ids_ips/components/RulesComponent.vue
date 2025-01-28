@@ -629,7 +629,7 @@ export default {
               if (rule.status === 200) {
                 showMessage({
                   color: "success",
-                  text: t("suricata.rulesavedSuccessfully"),
+                  text: rule.message,
                 });
                 setTimeout(() => {
                   location.reload();
@@ -637,7 +637,7 @@ export default {
               } else {
                 showMessage({
                   color: "error",
-                  text: t("suricata.failed"),
+                  text: rule.message,
                 });
               }
             });

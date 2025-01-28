@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
 from datetime import datetime, timedelta
 
 import json
@@ -43,15 +44,23 @@ ERROR_MESSAGES_USER_NOTASSIGNED = _("Email not assigned in Asguard. Contact your
 ERROR_MESSAGES_EXPIRED = _("has expired")
  
  
-@swagger_auto_schema('POST', responses={201: 'Created', 400: 'Bad Request'},
-                     security=[{"session_auth": []}],  # Specify the security requirement
-                     operation_summary="Summary of your API endpoint",
-                     operation_description="Description of your API endpoint")
+@swagger_auto_schema(
+    'POST', responses={201: 'Created', 400: 'Bad Request'}, 
+    security=[{"session_auth": []}],  # Specify the security requirement
+    operation_summary="LOGIN API",
+    operation_description="LOGIN API",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=["username", "password"],
+        properties={
+            "username": Schema(type=TYPE_STRING, example="asguard"),
+            "password": Schema(type=TYPE_STRING, example="asguard")
+        }
+                     ))
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentication(request):
     if (request.method == "POST"):
-        data = json.loads(request.body)
+        data = request.data
         username = data['username']
         password = data['password']
         ad_servers = ADServer.objects.all()
@@ -128,7 +137,7 @@ def authentication(request):
             return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=401)
  
         # Connection with username and password
-        message, current_user, status =normal_connect(request,data)
+        message, current_user, status =normal_connect(request, data)
         return JsonResponse({'message': message, "currentUser": current_user}, status=status)
  
  

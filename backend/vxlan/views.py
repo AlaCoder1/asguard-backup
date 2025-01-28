@@ -373,10 +373,9 @@ def delete_vxlan(request,id):
 vxlan_request_schema = openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'ifname': openapi.Schema(type=openapi.TYPE_STRING, description='ifname of the VxLAN',example='2'),
-        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VxLAN interface',example='vxlan20')
+        'ifname': openapi.Schema(type=openapi.TYPE_STRING, description='ifname of the VxLAN',example='vxlan10'),
     },
-    required=['ifname', 'name_interface']
+    required=['ifname']
 )
 
 

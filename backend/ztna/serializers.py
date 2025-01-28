@@ -113,7 +113,7 @@ class RelaysPolicySerializer(serializers.ModelSerializer):
         fields = [
             'ref_relay_policy',
             'name',
-            'semantique',
+            'semantic',
             'description',
             'relay_id',
             'identity_id',
@@ -131,7 +131,7 @@ class RelaysPolicySerializerUpdate(serializers.ModelSerializer):
         model = RelaysPolicy
         fields = [
             'name',
-            'semantique',
+            'semantic',
             'description',
             'relay_id',
             'identity_id',
@@ -153,7 +153,7 @@ class ServicesPolicySerializer(serializers.ModelSerializer):
         fields = [
             'ref_service_policy',
             'name',
-            'semantique',
+            'semantic',
             'description',
             'type',
             'service_id',
@@ -172,7 +172,7 @@ class ServicesPolicySerializerUpdate(serializers.ModelSerializer):
         model = ServicesPolicy
         fields = [
             'name',
-            'semantique',
+            'semantic',
             'description',
             'type',
             'service_id',
@@ -195,7 +195,7 @@ class ServicesRelaysPolicySerializer(serializers.ModelSerializer):
         fields = [
             'ref_service_relay_policy',
             'name',
-            'semantique',
+            'semantic',
             'description',
             'service_id',
             'relay_id',
@@ -212,7 +212,7 @@ class ServicesRelaysPolicySerializerUpdate(serializers.ModelSerializer):
         model = ServicesRelaysPolicy
         fields = [
             'name',
-            'semantique',
+            'semantic',
             'description',
             'service_id',
             'relay_id',

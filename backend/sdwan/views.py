@@ -319,18 +319,12 @@ def start_sdwan_rule(request, id):
         # Start the rule in system
         start_sdwan_rule_in_system(id)
 
-        # Check if the rules are working by checking the celery
-        celery_exist = check_celery()
-        if celery_exist <= 2:
-            SdwanRules.objects.update(rule_status=False)
-            return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}. {ERROR_MESSAGES_CHECK_INTERFACES}"}, status=400) 
-
         return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STARTING}"}, status=201)
         
     except CommandExecutionError:
         sdwan_rule.rule_status = False
         sdwan_rule.save()
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}"}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}. {ERROR_MESSAGES_CHECK_INTERFACES}"}, status=400)
     except SdwanRules.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except (Area.DoesNotExist, AreaInterface):

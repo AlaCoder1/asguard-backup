@@ -9,6 +9,7 @@ from celery import shared_task
 from backend.sdwan.models import SdwanRules
 from backend.sdwan.utils import rule_failover_requirements, rule_round_robin_requirements
 from utils.commands_utils import execute_command_str, execute_command_without_arguments
+from utils.errors_utils import CommandExecutionError
 
 
 def create_sdwan_rule_in_system(source_address, table_id):
@@ -44,14 +45,31 @@ def switch_gateway(previous_gateway, previous_ifname, new_gateway, new_ifname, t
                     new_gateway, "dev", new_ifname,"table", table_id])
 
 
+def run_celery():
+    """Function to run celery if it's not running and return if the celery is runing or not"""
+    # Check if celery is runned
+    celery_exist = check_celery()
+    # Run the celery if it's not running
+    if not celery_exist:
+        # Run celery in background
+        process = Popen("sudo celery -A asguard worker -l info 2>/dev/null &", stdout=PIPE, stderr=PIPE, shell=True)
+        time.sleep(5)
+        process.terminate()
+        process.wait()
+    # Return the existing celery in system
+    celery_exist = check_celery()
+    return celery_exist
+
+
 def check_celery():
     """Function to check if celery is opened or no"""
-    process = execute_command_str("sudo ps aux | grep celery")
+    process = execute_command_str("sudo ps aux | grep celery | grep -v grep")
     process = process.splitlines()
 
-    # Check if there is an active process for celery by checking if there is more than two:
-    # One for command ps and one for the grep
-    return len(process)
+    # Check if there is an active process for celery
+    if len(process) == 0:
+        return False
+    return True
 
 
 @shared_task
@@ -121,13 +139,9 @@ def script_round_robin(rule_id):
 def start_sdwan_rule_in_system(rule_id):
     """Function to start the SDwan rule in system"""
     # Check if celery is runned
-    celery_exist = check_celery()
-    if celery_exist <= 2:
-        # Run celery in background
-        process = Popen("sudo celery -A asguard worker -l info 2>/dev/null &", stdout=PIPE, stderr=PIPE, shell=True)
-        time.sleep(5)
-        process.terminate()
-        process.wait()
+    celery_exist = run_celery()
+    if not celery_exist:
+        raise CommandExecutionError
     
     # Run the SDwan rule
     sdwan_rule = SdwanRules.objects.get(id=rule_id)
@@ -173,6 +187,6 @@ def synchronize_sdwan_rule_status():
     """Synchronize SDWAN rules status with celery status, 
     if celery is enactive then all SDWAN rules are stopped"""
     # Check if celery is runned
-    celery_exist = check_celery()
-    if celery_exist <= 2:
+    celery_exist = run_celery()
+    if not celery_exist:
         SdwanRules.objects.update(rule_status=False)

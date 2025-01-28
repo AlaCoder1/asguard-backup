@@ -6,7 +6,6 @@ import subprocess
 
 def execute_command_str(command):
     """function to execute command"""
-    command="sudo "+command
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
     create_error_command(process, command)
     return process.stdout

@@ -282,7 +282,7 @@ export default {
 
         Description.value = data.description;
         selectedTitle.value = data.type;
-        selectedsemantic.value = data.semantique;
+        selectedsemantic.value = data.semantic;
 
         let service = "";
         let identity = "";
@@ -355,7 +355,7 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = t("ztna.missingFields");
+                state.textAlert = t(i.response.data.error);
               }
             });
         } else {
@@ -387,7 +387,7 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = t("ztna.missingFields");
+                state.textAlert = t(i.response.data.error);
               }
             });
         }

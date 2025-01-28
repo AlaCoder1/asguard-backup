@@ -114,7 +114,7 @@ def get_vxlan(request):
                 type=openapi.TYPE_STRING,
                 description='VXLAN source IP address (can be null)',
                 nullable=True,
-                example=None
+                example="10.1.12.8"
             ),
             'vxlan_destination_address': openapi.Schema(
                 type=openapi.TYPE_STRING,

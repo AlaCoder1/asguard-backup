@@ -230,7 +230,7 @@ console.log('current_user',current_user.value)
       },
       {
         headerName: semantic,
-        field: "semantique",
+        field: "semantic",
         autoHeight: true,
         resizable: true,
         width: 90,

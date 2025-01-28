@@ -1,16 +1,14 @@
 import requests
 import json
 
-from backend.ztna.constant_variables import PATH_CHECK_TEMPLATE_BASH, PATH_CREATE_ROUTER_BASH, PATH_DELETE_ROUTER_BASH, PATH_LINUX_TEMPLATE_BASH, PATH_START_ZTNA_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STATUS_ZTNA_BASH, PATH_STATUS_ZTNA_ROUTER_BASH, PATH_STOP_ZTNA_BASH, PATH_STOP_ZTNA_ROUTER_BASH, PATH_UPDATE_ROUTER_BASH, PATH_WINDOWS_TEMPLATE_BASH, PATH_ZTNA_ROUTER
+from backend.ztna.constant_variables import PATH_BASE_URL_ZTNA, CONSTANT_CONTENT_TYPE, PATH_CHECK_TEMPLATE_BASH, PATH_CREATE_ROUTER_BASH, PATH_DELETE_ROUTER_BASH, PATH_LINUX_TEMPLATE_BASH, PATH_START_ZTNA_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STATUS_ZTNA_BASH, PATH_STATUS_ZTNA_ROUTER_BASH, PATH_STOP_ZTNA_BASH, PATH_STOP_ZTNA_ROUTER_BASH, PATH_UPDATE_ROUTER_BASH, PATH_WINDOWS_TEMPLATE_BASH, PATH_ZTNA_ROUTER
 from utils.commands_utils import execute_command_with_arguments, execute_command_without_arguments, get_current_directory
 
 
-BASE_URL = "https://localhost:1280/edge/management/v1/"
-
-
-def get_Zt_Token():
+def get_ztna_token_from_system():
+    """Get the token to use openziti APIs"""
     try:
-        url = "https://localhost:1280/edge/management/v1/authenticate?method=password"
+        url = f"{PATH_BASE_URL_ZTNA}authenticate?method=password"
         
         # Prepare the payload
         payload = {
@@ -19,14 +17,14 @@ def get_Zt_Token():
         }
         
         # Convert the payload to JSON
-        headers = {'Content-Type': 'application/json'}
+        headers = {'Content-Type': CONSTANT_CONTENT_TYPE}
         
         # Send the POST request
         response = requests.post(url, data=json.dumps(payload), headers=headers, verify=False)
         # Check if the request was successful
         if response.status_code == 200:
             response_json = response.json()
-            token = response_json['data']['token']  
+            token = response_json['data']['token']
             return token
         return None
     except Exception:
@@ -35,8 +33,8 @@ def get_Zt_Token():
 
 def get_data(endpoint):
     try:
-        url = BASE_URL + endpoint
-        session_id = get_Zt_Token()
+        url = PATH_BASE_URL_ZTNA + endpoint
+        session_id = get_ztna_token_from_system()
         headers = {"zt-session": session_id}
 
         params = {
@@ -126,9 +124,11 @@ def delete_router(router_name):
                                        f"{router_name}\n", 3)
 
     
-def update_router(old_router_name,new_router_name):
-    current_dir = get_current_directory()
-    execute_command_with_arguments(["sudo", "bash", PATH_UPDATE_ROUTER_BASH.format(current_dir)], 
+def update_router_in_system(old_router_name, new_router_name):
+    """Update a router name in system by changing all dependencies file names if the name is changed"""
+    if old_router_name != new_router_name:
+        current_dir = get_current_directory()
+        execute_command_with_arguments(["sudo", "bash", PATH_UPDATE_ROUTER_BASH.format(current_dir)], 
                                        f"{old_router_name}\n{new_router_name}", 3)
 
 
@@ -144,6 +144,20 @@ def get_status_router_from_system(router_name):
     return stdout
 
 
+def get_local_domain_from_system(os="linux"):
+    """Get local domain for the current os from system"""
+    try:
+        current_dir = get_current_directory()
+        file_path=PATH_LINUX_TEMPLATE_BASH.format(current_dir)
+        if os == "windows":
+            file_path=PATH_WINDOWS_TEMPLATE_BASH.format(current_dir)
+        with open(f"{file_path}") as host_append_shell:
+            host = host_append_shell.read()
+            return host
+    except Exception:
+        return None
+
+
 def local_domain_linux_name():
     try:
         current_dir = get_current_directory()
@@ -151,8 +165,9 @@ def local_domain_linux_name():
         with open(f"{file_path}") as host_append_shell:
             linux_host = host_append_shell.read()
             return linux_host
-    except Exception as e:
-        print("error: ",e)
+    except Exception:
+        return None
+
 
 def local_domain_windows_name():
     try:
@@ -161,9 +176,10 @@ def local_domain_windows_name():
         with open(f"{file_path}") as host_append_shell:
             windows_host = host_append_shell.read()
             return windows_host
-    except Exception as e:
-        print("error: ",e) 
-           
+    except Exception:
+        return None
+
+
 def check_host_templates():
    
     current_dir = get_current_directory()

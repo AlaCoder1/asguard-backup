@@ -254,7 +254,7 @@ export default {
 
         idServRouter.value = data.id;
         name.value = data.name;
-        selectedsemantic.value = data.semantique;
+        selectedsemantic.value = data.semantic;
         name_description.value = data.description;
         console.log("namcription", name_description.value);
 
@@ -329,7 +329,7 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = t("ztna.missingFields");
+                state.textAlert = t(i.response.data.error);
               }
             });
         } else {
@@ -361,7 +361,7 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = t("ztna.missingFields");
+                state.textAlert = t(i.response.data.error);
               }
             });
         }

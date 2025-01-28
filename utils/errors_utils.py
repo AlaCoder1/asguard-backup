@@ -3,7 +3,7 @@ import subprocess
 
 class CommandExecutionError(Exception):
     """a class error when execution a command line"""
-    def __init__(self, command, message="Error executing command"):
+    def __init__(self, command="It's is not a known system command", message="Error executing command"):
         self.command = command
         self.message = message
         super().__init__(self.message)

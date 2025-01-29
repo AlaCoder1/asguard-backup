@@ -242,7 +242,7 @@ export default {
                 state.isLoadingDialogue = false;
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = t("ztna.missingFields");
+                state.textAlert = t(i.response.data.error);
               }
             });
         } else {
@@ -276,7 +276,7 @@ export default {
                 state.isLoadingDialogue = false;
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = t("ztna.missingFields");
+                state.textAlert = t(i.response.data.errors);
               }
             });
         }

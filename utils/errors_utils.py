@@ -16,6 +16,7 @@ def create_error_command(process:subprocess.CompletedProcess, command):
     """Raise an error if the command line doesn't works"""
     if process.returncode == 0:
         print('Output:', process.stdout)
-    else:
+    elif len(process.stderr) == 0:
         print('Error:', process.stderr)
+    else:
         raise CommandExecutionError(command=command, message=process.stderr)

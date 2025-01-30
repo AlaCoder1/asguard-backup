@@ -1,6 +1,7 @@
 from backend.gateway.models import Gateway, GatewayInterface
 from backend.gateway.serializers import GatewayInterfaceSerializer, GatewaySerializer
-from backend.network.models import Interface
+from backend.network.models import IP4Config, Interface
+from utils.utils_functions import is_same_subnet
 
 
 def create_gateway(gateway):
@@ -48,3 +49,20 @@ def create_gateway(gateway):
                 "error": list(serializer_gateway_interface.errors.values())[0][0]}
     return {"gateway": None,
             "error": list(serializer_gateway.errors.values())[0][0]}
+
+
+def check_gateway_address(gateway_address, interface_id):
+    """Get a gateway address and the id of the interface and 
+       check if a gateway address is correct or not:
+            1.Must be different to the interface address
+            2.Must be within the same subnet as the interface"""
+    try:
+        interface_address = IP4Config.objects.get(interface_id=interface_id).ip_address
+        interface_mask = IP4Config.objects.get(interface_id=interface_id).netmask
+        if gateway_address != interface_address:
+            is_correct = is_same_subnet(f"{interface_address}/{interface_mask}", gateway_address)
+            if is_correct:
+                return True
+        return False
+    except (Interface.DoesNotExist, IP4Config.DoesNotExist):
+        return False

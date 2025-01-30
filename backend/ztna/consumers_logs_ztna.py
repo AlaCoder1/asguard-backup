@@ -47,7 +47,7 @@ class LogsZTNAConsumer(AsyncWebsocketConsumer):
         while True:
             list_data=[]
             
-            file_path="/asguard/newdms/backend/ztna/relays_folder/"
+            file_path="/asguard/asguard/backend/ztna/relays_folder/"
             details_dir1=get_details_directory(file_path)
             for dir in details_dir1:
                 details_dir2=get_details_directory(file_path+dir)

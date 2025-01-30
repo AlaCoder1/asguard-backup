@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directory where the append_to_host files are located
-file_directory="/asguard/newdms/backend/ztna/shell_scripts/"
+file_directory="/asguard/asguard/backend/ztna/shell_scripts/"
 
 # Source the get_public_ip function from get_public_ip.sh
 source $file_directory/get_public_ip.sh

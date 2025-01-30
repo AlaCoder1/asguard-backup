@@ -60,7 +60,7 @@ def check_gateway_address(gateway_address, interface_id):
         interface_address = IP4Config.objects.get(interface_id=interface_id).ip_address
         interface_mask = IP4Config.objects.get(interface_id=interface_id).netmask
         if gateway_address != interface_address:
-            is_correct = is_same_subnet(f"{interface_address}/{interface_mask}", gateway_address)
+            is_correct = is_same_subnet(gateway_address, f"{interface_address}/{interface_mask}")
             if is_correct:
                 return True
         return False

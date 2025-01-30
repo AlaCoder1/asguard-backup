@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the base directory where the relays folders are stored
-base_directory="/asguard/newdms/backend/ztna/relays_folder"
+base_directory="/asguard/asguard/backend/ztna/relays_folder"
 
 # Define the directory containing the router-specific files to be deleted
 ziti_directory="/root/.ziti/quickstart/Asguard"

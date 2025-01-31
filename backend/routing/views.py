@@ -11,13 +11,14 @@ from backend.gateway.models import Gateway, GatewayInterface
 from backend.routing.list_routing import get_list_all_gateway, get_list_all_routing, get_one_gateway, get_one_routing
 from backend.routing.models import Routing
 from backend.routing.serializers import RoutingSerializer
-from backend.routing.utils import create_gateway
+from backend.routing.utils import check_gateway_address, create_gateway
 from backend.routing.utils_system import routing_in_system
 from utils.errors_utils import CommandExecutionError
 
 
 # Constants
 CONSTANT_ROUTE = _("Route")
+CONSTANT_GATEWAY = _("Gateway")
 CONSTANT_INTERFACE = _("Interface")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
@@ -30,6 +31,7 @@ ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY = _("Route with this network and gateway exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_USED_INTERFACE = _("Gateway for this interface exist")
+ERROR_MESSAGES_INCORRECT_GATEWAY = _("Check your gateway address, must belongs to the same Subnet as the Host and can't take the same address")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -85,7 +87,7 @@ def get_gateway(request, id):
             'destination_address': Schema(type=TYPE_STRING, example="10.1.12.80", description="format of address"),
             'gateway_create': Schema(type=TYPE_BOOLEAN, default=False, description="Sent True if the user want to create a new gateway"),
             'gateway': Schema(
-                type=TYPE_OBJECT, required=['interface', 'gateway_address'],
+                type=TYPE_OBJECT, required=['interface', 'gateway_address'], example=1,
                 description="Contains fields of the new gateway that the user want to create it",
                 properties={
                     'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
@@ -106,6 +108,9 @@ def create_routing(request):
 
         # Create a new Gateway and GatewayInterface
         if data.get("gateway_create"):
+            # Check if a gateway satisfy to the constraints of a correct gateway
+            if not check_gateway_address(gateway_data["gateway_address"], gateway_data["interface"]):
+                return JsonResponse({"error": ERROR_MESSAGES_INCORRECT_GATEWAY}, status=400)
             result_gateway = create_gateway(gateway)
             if result_gateway["gateway"]:
                 gateway = result_gateway["gateway"]
@@ -114,20 +119,22 @@ def create_routing(request):
                 return JsonResponse({"error": ERROR_MESSAGES_USED_INTERFACE}, status=400)
             else:
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
+        
         # Add an error message for unique constraints of Network and Gateway 
         if len(Routing.objects.filter(destination_address=data["destination_address"], gateway=gateway)) > 0:
             return JsonResponse({"error": ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY}, status=400)
+        
+        # Get the gateway instance
+        gateway_instance = Gateway.objects.get(id=gateway)
         serializer_routing = RoutingSerializer(data=data)
         if serializer_routing.is_valid():
-            gateway_instance = Gateway.objects.get(id=gateway)
-            gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)
+            gateway_interface_instance = GatewayInterface.objects.filter(gateway=gateway_instance)[0]
             gateway_address = gateway_instance.gwaddress
             interface_ifname = gateway_interface_instance.interface.ifname
             routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
                               gateway_interface_instance.metric)
             serializer_routing.save()
             return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
-
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
@@ -137,6 +144,8 @@ def create_routing(request):
                 gateway = Gateway.objects.get(gwname=gwname, gwaddress=gateway_data["gateway_address"])
                 gateway.delete()
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ROUTE}"}, status=400)
+    except Gateway.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -179,7 +188,7 @@ def delete_routing(request, id):
             'destination_address': Schema(type=TYPE_STRING, example="10.1.12.80", description="format of address"),
             'gateway_create': Schema(type=TYPE_BOOLEAN, default=False, description="Sent True if the user want to create a new gateway"),
             'gateway': Schema(
-                type=TYPE_OBJECT, required=['interface', 'gateway_address'],
+                type=TYPE_OBJECT, required=['interface', 'gateway_address'], example=1,
                 description="Contains fields of the new gateway that the user want to create it",
                 properties={
                     'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
@@ -238,3 +247,5 @@ def update_routing(request, id):
         
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ROUTE}"}, status=400)
+    except Gateway.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

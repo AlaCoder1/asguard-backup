@@ -35,7 +35,7 @@ for file in /var/log/suricata/fast.*.gz; do
     [ ! -e "${DEST_DIR}$(basename "$file")" ] && mv "$file" "${DEST_DIR}" 
 done 
 #command to update in database: NB you have to modify path of project!! 
-python /asguard/newdms/manage.py init_alerts_suricata_cron 
+python /asguard/asguard/manage.py init_alerts_suricata_cron 
             """ 
             file_path_log="/etc/logrotate.d/suricata"
             script_path="/usr/local/bin/logrotate-script.sh"

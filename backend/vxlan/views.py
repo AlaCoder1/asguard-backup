@@ -112,12 +112,14 @@ def get_vxlan(request):
             ),
             'vxlan_source_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
+                format='ipv4',
                 description='VXLAN source IP address (can be null)',
                 nullable=True,
                 example="10.1.12.8"
             ),
             'vxlan_destination_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
+                format='ipv4',
                 description='VXLAN destination IP address',
                 example='10.1.12.98'
             ),
@@ -219,12 +221,14 @@ def add_vxlan(request):
             ),
             'vxlan_source_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
+                format='ipv4',
                 description='VXLAN source IP address (can be null)',
                 nullable=True,
-                example=None
+                example="10.1.12.8"
             ),
             'vxlan_destination_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
+                format='ipv4',
                 description='VXLAN destination IP address',
                 example='10.1.12.98'
             ),

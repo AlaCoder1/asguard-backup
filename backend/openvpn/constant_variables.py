@@ -1,6 +1,6 @@
 CONSTANT_COMP_LZO = "comp-lzo"
 CONSTANT_COMPRESS_MIGRATE = "compress migrate"
-PATH_DH_FILES = '/asguard/newdms/DH_files/dh_{}.pem'
+PATH_DH_FILES = '/asguard/asguard/DH_files/dh_{}.pem'
 PATH_OPENVPN = '/etc/openvpn/'
 
 # Server Path

@@ -85,7 +85,7 @@ class Relays(models.Model):
 class RelaysPolicy(models.Model):
     ref_relay_policy = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
-    semantique = models.CharField(max_length=10, blank=False)
+    semantic = models.CharField(max_length=10, default="AllOf")
     description = models.CharField(max_length=800, null=True, blank=True)
     relay = models.ForeignKey(Relays, on_delete=models.CASCADE)
     identity = models.ForeignKey(Identities, on_delete=models.CASCADE)
@@ -99,7 +99,7 @@ class RelaysPolicy(models.Model):
 class ServicesPolicy(models.Model):
     ref_service_policy = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
-    semantique = models.CharField(max_length=10, blank=False)
+    semantic = models.CharField(max_length=10, default="AllOf")
     type = models.CharField(max_length=10, blank=False)
     description = models.CharField(max_length=800, null=True, blank=True)
     service_attribute = models.CharField(max_length=100, blank=False)
@@ -113,7 +113,7 @@ class ServicesPolicy(models.Model):
 class ServicesRelaysPolicy(models.Model):
     ref_service_relay_policy = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
-    semantique = models.CharField(max_length=10, blank=False)
+    semantic = models.CharField(max_length=10, default="AllOf")
     description = models.CharField(max_length=800, null=True, blank=True)
     service_attribute = models.CharField(max_length=100, blank=False)
     relay_attribute = models.CharField(max_length=100, blank=False)

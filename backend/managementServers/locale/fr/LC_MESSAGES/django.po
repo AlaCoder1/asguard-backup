@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-13 13:49+0000\n"
+"POT-Creation-Date: 2025-01-30 08:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,30 +17,31 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-#: backend/managementServers/views.py:17
+
+#: backend/managementServers/views.py:18
 msgid "User"
 msgstr "Utilisateur"
 
-#: backend/managementServers/views.py:18
+#: backend/managementServers/views.py:19
 msgid "Server"
 msgstr "Serveur"
 
-#: backend/managementServers/views.py:20
+#: backend/managementServers/views.py:21
 msgid "is created"
 msgstr "est créé"
 
-#: backend/managementServers/views.py:21
+#: backend/managementServers/views.py:22
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/managementServers/views.py:22
+#: backend/managementServers/views.py:23
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/managementServers/views.py:24
+#: backend/managementServers/views.py:25
 msgid "does not exist"
 msgstr "n'existe pas"
 
-#: backend/managementServers/views.py:25
+#: backend/managementServers/views.py:26
 msgid "Invalid password"
 msgstr "Mot de passe invalide"

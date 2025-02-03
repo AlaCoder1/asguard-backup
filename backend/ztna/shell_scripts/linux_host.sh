@@ -3,7 +3,7 @@
 # Read IP address from user input
 read -p "Enter IP address: " ipadd
 
-file_directory="/asguard/newdms/backend/ztna/shell_scripts/"
+file_directory="/asguard/asguard/backend/ztna/shell_scripts/"
 
 # Write IP address to a temporary file
 temp_file=$(mktemp)

@@ -6,9 +6,9 @@ source /root/.ziti/quickstart/Asguard/Asguard.env
 
 command_path="${ZITI_BIN_DIR:-}/ziti"
 
-router_config_file="/asguard/newdms/backend/ztna/relays_folder/${router_name}/${router_name}.yaml"
+router_config_file="/asguard/asguard/backend/ztna/relays_folder/${router_name}/${router_name}.yaml"
 
-log_file="/asguard/newdms/backend/ztna/relays_folder/${router_name}/${router_name}.log"
+log_file="/asguard/asguard/backend/ztna/relays_folder/${router_name}/${router_name}.log"
 
 nohup $command_path router run "$router_config_file" >"$log_file" 2>&1 &
 

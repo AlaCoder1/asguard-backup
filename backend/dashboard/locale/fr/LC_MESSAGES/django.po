@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-15 14:00+0100\n"
+"POT-Creation-Date: 2025-01-30 08:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,46 +18,46 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: models.py:13
+#: backend/dashboard/models.py:13
 msgid "service name"
 msgstr "nom du service"
 
-#: views.py:61
+#: backend/dashboard/views.py:61
 msgid "The service has enabled successfully!"
 msgstr "Le service a été activé avec succès !"
 
-#: views.py:62
+#: backend/dashboard/views.py:62
 msgid "Failed to enable the service!"
 msgstr "Échec de l'activation du service !"
 
-#: views.py:67
+#: backend/dashboard/views.py:67
 msgid "The service has disabled successfully!"
 msgstr "Le service a été désactivé avec succès!"
 
-#: views.py:68
+#: backend/dashboard/views.py:68
 msgid "Failed to disable the service!"
 msgstr "Échec de la désactivation du service !"
 
-#: views.py:73
+#: backend/dashboard/views.py:73
 msgid "The service has started successfully!"
 msgstr "Le service a démarré avec succès !"
 
-#: views.py:74
+#: backend/dashboard/views.py:74
 msgid "Failed to start the service!"
 msgstr "Échec du démarrage du service !"
 
-#: views.py:79
+#: backend/dashboard/views.py:79
 msgid "The service has stopped successfully!"
 msgstr "Le service s'est arrêté avec succès !"
 
-#: views.py:80
+#: backend/dashboard/views.py:80
 msgid "Failed to stop the service!"
 msgstr "Échec de l'arrêt du service !"
 
-#: views.py:85
+#: backend/dashboard/views.py:85
 msgid "The service has restarted successfully!"
 msgstr "Le service a redémarré avec succès !"
 
-#: views.py:86
+#: backend/dashboard/views.py:86
 msgid "Failed to restart the service!"
 msgstr "Échec du redémarrage du service !"

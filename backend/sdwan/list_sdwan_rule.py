@@ -3,11 +3,15 @@ import json
 
 from backend.sdwan.models import SdwanRules
 from backend.sdwan.utils_system import synchronize_sdwan_rule_status, synchronize_rule_table
+from utils.errors_utils import CommandExecutionError
 
 
 def get_list_all_sdwan_rule():
     """Getting all sdwan_rules from database"""
-    synchronize_sdwan_rule_status()
+    try:
+        synchronize_sdwan_rule_status()
+    except CommandExecutionError:
+        SdwanRules.objects.update(rule_status=False)
     synchronize_rule_table()
     list_sdwan_rule = []
     sdwan_rules = SdwanRules.objects.all()

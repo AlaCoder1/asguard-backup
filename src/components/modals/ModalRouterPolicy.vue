@@ -259,7 +259,7 @@ export default {
         relayId.value = data.id;
         name.value = data.name;
         lastname.value = data.name;
-        selectedTitle.value = data.semantique;
+        selectedTitle.value = data.semantic;
         Description.value = data.description;
         let relay = "";
         let identity = "";
@@ -330,7 +330,7 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = t("ztna.missingFields");
+                state.textAlert = t(i.response.data.error);
               }
             });
         } else {
@@ -362,7 +362,7 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = t("ztna.missingFields");
+                state.textAlert = t(i.response.data.error);
               }
             });
         }

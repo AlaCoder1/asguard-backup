@@ -112,12 +112,14 @@ def get_vxlan(request):
             ),
             'vxlan_source_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
+                format='ipv4',
                 description='VXLAN source IP address (can be null)',
                 nullable=True,
-                example=None
+                example="10.1.12.8"
             ),
             'vxlan_destination_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
+                format='ipv4',
                 description='VXLAN destination IP address',
                 example='10.1.12.98'
             ),
@@ -219,12 +221,14 @@ def add_vxlan(request):
             ),
             'vxlan_source_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
+                format='ipv4',
                 description='VXLAN source IP address (can be null)',
                 nullable=True,
-                example=None
+                example="10.1.12.8"
             ),
             'vxlan_destination_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
+                format='ipv4',
                 description='VXLAN destination IP address',
                 example='10.1.12.98'
             ),
@@ -373,10 +377,9 @@ def delete_vxlan(request,id):
 vxlan_request_schema = openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'ifname': openapi.Schema(type=openapi.TYPE_STRING, description='ifname of the VxLAN',example='2'),
-        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VxLAN interface',example='vxlan20')
+        'ifname': openapi.Schema(type=openapi.TYPE_STRING, description='ifname of the VxLAN',example='vxlan10'),
     },
-    required=['ifname', 'name_interface']
+    required=['ifname']
 )
 
 

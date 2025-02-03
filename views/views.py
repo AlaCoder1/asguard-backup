@@ -34,8 +34,8 @@ import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
 from backend.waf.list_waf import get_alerts, get_list_all_waf_application, get_list_all_waf_rule, get_one_waf_config
-from backend.ztna.list_ztna import get_edge_router_policies,get_local_domain_windows, get_host_configs, get_identities, get_intercept_configs, get_routers, get_service_policies, get_services,get_local_domain_linux
-from backend.ztna.utils import get_Zt_Token
+from backend.ztna.list_ztna import get_edge_router_policies, get_local_domain, get_host_configs, get_identities, get_intercept_configs, get_routers, get_service_policies, get_services
+from backend.ztna.utils import get_status_ztna_service, get_ztna_token_from_system
 from backend.ztna.list_ztna import get_service_edge_router_policies
 from views.functions import delete_inactive_conn, get_logrotate_data, get_uuid_v2, get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
 
@@ -614,10 +614,11 @@ def ztna_page(request):
     router_policies = get_edge_router_policies()
     service_policies = get_service_policies()
     service_edge_router_policies = get_service_edge_router_policies()
-    token = get_Zt_Token()
+    token = get_ztna_token_from_system()
+    ztna_status = get_status_ztna_service()
     last_subscription=list_features_about_last_subscription(request)
-    windows_file = get_local_domain_windows()
-    linux_file = get_local_domain_linux()
+    windows_file = get_local_domain("windows")
+    linux_file = get_local_domain()
     context = {'identities': json.dumps(identities),
                'routers':json.dumps(routers) ,
                'last_subscription':json.dumps(last_subscription),
@@ -630,6 +631,7 @@ def ztna_page(request):
                'service_edge_router_policies':json.dumps(service_edge_router_policies),
                'windows_file':json.dumps(windows_file),
                'linux_file':json.dumps(linux_file),
+               'ztna_status': json.dumps(ztna_status)
                }
     return render(request,'ztna.html',context)
 

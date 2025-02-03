@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 20:39+0000\n"
+"POT-Creation-Date: 2025-01-30 08:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,30 +24,30 @@ msgstr ""
 msgid "group name"
 msgstr "nom du groupe"
 
-#: backend/managementGroup/views.py:14
+#: backend/managementGroup/views.py:16
 msgid "Groupe name"
 msgstr "Nom du groupe"
 
-#: backend/managementGroup/views.py:15
+#: backend/managementGroup/views.py:17
 msgid "Groupe description"
 msgstr "Descriptif du groupe"
 
-#: backend/managementGroup/views.py:17
+#: backend/managementGroup/views.py:19
 msgid "is created"
 msgstr "est créé"
 
-#: backend/managementGroup/views.py:18
+#: backend/managementGroup/views.py:20
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/managementGroup/views.py:19
+#: backend/managementGroup/views.py:21
 msgid "is updated"
 msgstr "est mis à jour"
 
-#: backend/managementGroup/views.py:22
+#: backend/managementGroup/views.py:24
 msgid "Invalid"
 msgstr "invalide"
 
-#: backend/managementGroup/views.py:23
+#: backend/managementGroup/views.py:25
 msgid "Already exist"
 msgstr "Existe déjà"

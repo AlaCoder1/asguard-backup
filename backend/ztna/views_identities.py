@@ -77,33 +77,31 @@ def get_all_identities(request):
 def add_identities(request):
     """API to create a ZTNA identity"""
     try:
-        payload = {}
-        session_id = get_ztna_token_from_system()
-        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
         data = request.data
         datacopy = request.data.copy()
+        session_id = get_ztna_token_from_system()
+        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
         data_without_description = {key: value for key, value in datacopy.items() if key not in ['Description', 'os']}
         response = requests.post(PATH_ZTNA_IDENTITIES, headers=headers, json=data_without_description, verify=False)
         response_dict = json.loads(response.text)
         identity_id = response_dict.get('data', {}).get('id')
         if response.status_code == 201:
-            payload['ref_identitie'] = identity_id
-            payload['name'] = data['name']
-            if data['roleAttributes'][0] == "":
-                payload['attribute_identitie'] == None
-            else:
-                payload['attribute_identitie'] = data['roleAttributes'][0]
-            payload['type'] = data['type']
-            if 'Description' in data:
-                payload['description'] = data['Description']
-            else:
-                payload['description'] = None
-            payload['isAdmin'] = data['isAdmin']
-            payload['os'] = data['os']
             now = datetime.now()
             formatted_now = now.strftime("%Y-%m-%d %H:%M")
-            payload['date_creation'] = formatted_now
-            serializer_identitie = IdentitiesSerializer(data=payload,partial=True)
+            payload = {"ref_identitie": identity_id,
+                       "name": data["name"],
+                       "attribute_identitie": None,
+                       "description": None,
+                       "type": data["type"],
+                       "isAdmin": data["isAdmin"],
+                       "os": data["os"],
+                       "date_creation": formatted_now
+                       }
+            if data['roleAttributes'][0] != "":
+                payload['attribute_identitie'] = data['roleAttributes'][0]
+            if 'Description' in data:
+                payload['description'] = data['Description']
+            serializer_identitie = IdentitiesSerializer(data=payload, partial=True)
             if serializer_identitie.is_valid():
                 serializer_identitie.save()
                 return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
@@ -125,7 +123,7 @@ def delete_identities(request, id):
         session_id = get_ztna_token_from_system()
         headers = {"zt-session": session_id}
         response = requests.delete(f"{PATH_ZTNA_IDENTITIES}/{identitie.ref_identitie}", headers=headers, verify=False)
-        if response.status_code == 201:
+        if response.status_code == 200:
             identitie.delete()
             return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_IDENTITIE}"}, status=400)
@@ -161,23 +159,17 @@ def update_identities(request, id):
     try:
         identitie = Identities.objects.get(id=id)
         session_id = get_ztna_token_from_system()
-        payload={}
         headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
         data = request.data
         datacopy = request.data.copy()
         data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'}
-        payload['name'] = data['name']
-        if data['roleAttributes'][0] == "":
-            payload['attribute_identitie'] = None
-        else:
-            payload['attribute_identitie'] = data['roleAttributes'][0]
-        payload['type'] = data['type']
-        if 'Description' in data:
-            payload['description'] = data['Description']
-        else:
-            payload['description'] = None
-        payload['is_admin'] = data['isAdmin']
-        payload['os']= data['os']
+        payload = {"name": data["name"],
+                   "attribute_identitie": None,
+                   "description": None,
+                   "type": data["type"],
+                   "isAdmin": data["isAdmin"],
+                   "os": data["os"],
+                   }
         serializer_update_identity = IdentitiesSerializerUpdate(identitie, data=payload, partial=True)
         if serializer_update_identity.is_valid():
             response = requests.patch(f"{PATH_ZTNA_IDENTITIES}/{identitie}", headers=headers, json=data_without_description, verify=False)

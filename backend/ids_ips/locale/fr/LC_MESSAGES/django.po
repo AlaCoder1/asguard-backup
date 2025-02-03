@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-14 15:02+0000\n"
+"POT-Creation-Date: 2025-01-30 08:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -46,34 +46,34 @@ msgstr "Alerte"
 msgid "Rule status"
 msgstr "Status de la Règle"
 
-#: backend/ids_ips/views.py:29
+#: backend/ids_ips/views.py:30
 msgid "is created"
 msgstr "est crée"
 
-#: backend/ids_ips/views.py:30
+#: backend/ids_ips/views.py:31
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/ids_ips/views.py:31
+#: backend/ids_ips/views.py:32
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/ids_ips/views.py:33
+#: backend/ids_ips/views.py:34
 msgid "Error in deleting"
 msgstr "Erreur lors de la suppression de"
 
-#: backend/ids_ips/views.py:34
+#: backend/ids_ips/views.py:35
 msgid "Error in updating"
 msgstr "Erreur lors de la modification de"
 
-#: backend/ids_ips/views.py:35
+#: backend/ids_ips/views.py:36
 msgid "Unable to delete"
 msgstr "Impossible de supprimer"
 
-#: backend/ids_ips/views.py:36
+#: backend/ids_ips/views.py:37
 msgid "already exist"
 msgstr "existe déjà"
 
-#: backend/ids_ips/views.py:37
+#: backend/ids_ips/views.py:38
 msgid "does not exist"
 msgstr "n'existe pas"

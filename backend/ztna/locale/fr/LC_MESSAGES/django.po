@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 20:39+0000\n"
+"POT-Creation-Date: 2025-01-30 08:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,86 +25,122 @@ msgstr ""
 msgid "name"
 msgstr "nom"
 
-#: backend/ztna/views.py:20
+#: backend/ztna/views.py:13
 msgid "ZTNA"
 msgstr "ZTNA"
 
-#: backend/ztna/views.py:21
-msgid "Identity"
-msgstr "Identité"
+#: backend/ztna/views.py:14
+msgid "ZTNA token"
+msgstr "token ZTNA"
 
-#: backend/ztna/views.py:22
-msgid "Enrollment"
-msgstr "Inscription"
-
-#: backend/ztna/views.py:23
-msgid "Relay"
-msgstr "Relai"
-
-#: backend/ztna/views.py:24
-msgid "Configuration"
-msgstr "Configuration"
-
-#: backend/ztna/views.py:25
-msgid "Service"
-msgstr "Service"
-
-#: backend/ztna/views.py:26
-msgid "Relay Policy"
-msgstr "Politique des relais"
-
-#: backend/ztna/views.py:27
-msgid "Service Policy"
-msgstr "Politique des services"
-
-#: backend/ztna/views.py:28
-msgid "Service Relay Policy"
-msgstr "Politique de relais des service"
-
-#: backend/ztna/views.py:30
-msgid "is created"
-msgstr "est créé"
-
-#: backend/ztna/views.py:31
-msgid "is deleted"
-msgstr "est supprimé"
-
-#: backend/ztna/views.py:32
-msgid "is updated"
-msgstr "est modifié"
-
-#: backend/ztna/views.py:33
+#: backend/ztna/views.py:16 backend/ztna/views_routers.py:25
 msgid "is started"
 msgstr "est démarré"
 
-#: backend/ztna/views.py:34
+#: backend/ztna/views.py:17 backend/ztna/views_routers.py:26
 msgid "is stoped"
 msgstr "est arrêté"
 
-#: backend/ztna/views.py:36
-msgid "System error in creating"
-msgstr "Erreur système lors de la création de"
-
-#: backend/ztna/views.py:37
-msgid "System error in deleting"
-msgstr "Erreur système lors de la suppression de"
-
-#: backend/ztna/views.py:38
-msgid "System error in updating"
-msgstr "Erreur système lors de la modification de"
-
-#: backend/ztna/views.py:39
+#: backend/ztna/views.py:19 backend/ztna/views_routers.py:31
 msgid "System error in starting"
 msgstr "Erreur système lors de la démarrage de"
 
-#: backend/ztna/views.py:40
+#: backend/ztna/views.py:20 backend/ztna/views_routers.py:32
 msgid "System error in stoping"
 msgstr "Erreur système lors de l'arrêt de"
 
-#: backend/ztna/views.py:41
+#: backend/ztna/views.py:21
 msgid "System error in getting status"
 msgstr "Erreur système lors de la démarrage de"
 
-#: backend/ztna/views.py:42
+#: backend/ztna/views.py:22 backend/ztna/views_configurations.py:31
+#: backend/ztna/views_identities.py:30 backend/ztna/views_policies.py:30
+#: backend/ztna/views_routers.py:33 backend/ztna/views_services.py:30
 msgid "does not exist"
 msgstr "n'existe pas"
+
+#: backend/ztna/views.py:23 backend/ztna/views_configurations.py:32
+#: backend/ztna/views_identities.py:31 backend/ztna/views_policies.py:31
+#: backend/ztna/views_routers.py:34 backend/ztna/views_services.py:31
+msgid "Try to start the service"
+msgstr "Essayer de démarrer le service"
+
+#: backend/ztna/views_configurations.py:20
+msgid "Configuration"
+msgstr "Configuration"
+
+#: backend/ztna/views_configurations.py:21 backend/ztna/views_services.py:20
+#, fuzzy
+#| msgid "Configuration"
+msgid "Intercept Configuration"
+msgstr "Configuration d'interception"
+
+#: backend/ztna/views_configurations.py:22 backend/ztna/views_services.py:21
+#, fuzzy
+#| msgid "Configuration"
+msgid "Host Configuration"
+msgstr "Configuration de l'hôte"
+
+#: backend/ztna/views_configurations.py:24 backend/ztna/views_identities.py:23
+#: backend/ztna/views_policies.py:23 backend/ztna/views_routers.py:22
+#: backend/ztna/views_services.py:23
+msgid "is created"
+msgstr "est créé"
+
+#: backend/ztna/views_configurations.py:25 backend/ztna/views_identities.py:24
+#: backend/ztna/views_policies.py:24 backend/ztna/views_routers.py:23
+#: backend/ztna/views_services.py:24
+msgid "is deleted"
+msgstr "est supprimé"
+
+#: backend/ztna/views_configurations.py:26 backend/ztna/views_identities.py:25
+#: backend/ztna/views_policies.py:25 backend/ztna/views_routers.py:24
+#: backend/ztna/views_services.py:25
+msgid "is updated"
+msgstr "est modifié"
+
+#: backend/ztna/views_configurations.py:28 backend/ztna/views_identities.py:27
+#: backend/ztna/views_policies.py:27 backend/ztna/views_routers.py:28
+#: backend/ztna/views_services.py:27
+msgid "System error in creating"
+msgstr "Erreur système lors de la création de"
+
+#: backend/ztna/views_configurations.py:29 backend/ztna/views_identities.py:28
+#: backend/ztna/views_policies.py:28 backend/ztna/views_routers.py:29
+#: backend/ztna/views_services.py:28
+msgid "System error in deleting"
+msgstr "Erreur système lors de la suppression de"
+
+#: backend/ztna/views_configurations.py:30 backend/ztna/views_identities.py:29
+#: backend/ztna/views_policies.py:29 backend/ztna/views_routers.py:30
+#: backend/ztna/views_services.py:29
+msgid "System error in updating"
+msgstr "Erreur système lors de la modification de"
+
+#: backend/ztna/views_identities.py:20
+msgid "Identity"
+msgstr "Identité"
+
+#: backend/ztna/views_identities.py:21
+msgid "Enrollment"
+msgstr "Inscription"
+
+#: backend/ztna/views_policies.py:19
+msgid "Relay Policy"
+msgstr "Politique des relais"
+
+#: backend/ztna/views_policies.py:20
+msgid "Service Policy"
+msgstr "Politique des services"
+
+#: backend/ztna/views_policies.py:21
+msgid "Service Relay Policy"
+msgstr "Politique de relais des service"
+
+#: backend/ztna/views_routers.py:20
+msgid "Relay"
+msgstr "Relai"
+
+#: backend/ztna/views_services.py:19
+msgid "Service"
+msgstr "Service"

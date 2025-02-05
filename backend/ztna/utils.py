@@ -188,3 +188,45 @@ def check_host_templates():
     if status.stdout.find("IP address has not changed. Exiting.") >= 0:
         return True
     return False
+
+
+def get_payload_config_openziti(payload: dict):
+    """Filter the payload to use it in openziti api by removing the unused fields:
+            If the config is Host then remove Intercept fields
+            If the config is Intercept then remove Host fields"""
+    try:
+        if payload["configTypeId"] == 'g7cIWbcGg':
+                payload["data"].pop("address")
+                payload["data"].pop("port")
+                payload["data"].pop("protocol")
+        else:
+            payload["data"].pop("addresses")
+            payload["data"].pop("portRanges")
+            payload["data"].pop("protocols")
+    except KeyError:
+        pass
+    # Remove description from payload
+    payload.pop("Description")
+    return payload
+
+
+def get_payload_config_database(payload: dict):
+    """Create a payload to save config on database"""
+    payload_database={
+        "name": payload["name"],
+        "description": payload["Description"],
+        }
+    
+    # Intercept Configuration
+    if payload["configTypeId"] == 'g7cIWbcGg':
+        payload_database['protocol'] = payload['data']['protocols'][0] # Fixed to access first protocol
+        payload_database['address'] = payload['data']["addresses"][0] # Fixed to access first address
+        payload_database['low'] = payload['data']["portRanges"][0]["low"]  # Fixed to access first low port range
+        payload_database['high'] = payload['data']["portRanges"][0]["high"]  # Fixed to access first high port range
+
+    # Host Configuration
+    else :
+        payload_database['protocol'] = payload['data']['protocol']
+        payload_database['address'] = payload['data']["address"]
+        payload_database['port'] = payload['data']["port"]
+    return payload_database

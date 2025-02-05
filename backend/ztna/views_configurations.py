@@ -13,7 +13,7 @@ import json
 from backend.ztna.models import HostConfigs, InterceptConfigs
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_CONFIGS
 from backend.ztna.serializers import HostConfigsSerializer, HostSerializerUpdate, InterceptConfigsSerializer, InterceptSerializerUpdate
-from backend.ztna.utils import get_ztna_token_from_system
+from backend.ztna.utils import get_payload_config_database, get_payload_config_openziti, get_ztna_token_from_system
 
 
 # Constants
@@ -70,20 +70,20 @@ def get_intercept_configs(request):
             'name': Schema(type=TYPE_STRING, example="inter1", description="Name of the host configuration"),
             'configTypeId': Schema(type=TYPE_STRING, enum=["g7cIWbcGg", "NH5p4FpGR"],
                                    description="required for consuming openzit API and taking the id of the config type: g7cIWbcGg when using intercept config and NH5p4FpGR when using host config"),
-            'data': Schema(type=TYPE_OBJECT, example={'addresses': ['addr.inter1'], 'portRanges': [{'high': 200, 'low': 100}], 'protocols': ['tcp']}, 
+            'data': Schema(type=TYPE_OBJECT, 
                            properties={
                                # Intercept configs
-                               "addresses": Schema(type=TYPE_ARRAY, description="List of intercept addresses used for intercept configuration", items=Schema(type=TYPE_STRING)),
-                               "portRanges": Schema(type=TYPE_ARRAY, description="List of intercept port ranges used for intercept configuration. It takes two fields: high and low", items=Schema(type=TYPE_OBJECT, properties={
+                               "addresses": Schema(type=TYPE_ARRAY, example=['addr.inter1'], description="List of intercept addresses used for intercept configuration", items=Schema(type=TYPE_STRING)),
+                               "portRanges": Schema(type=TYPE_ARRAY, example=[{'high': 200, 'low': 100}], description="List of intercept port ranges used for intercept configuration. It takes two fields: high and low", items=Schema(type=TYPE_OBJECT, properties={
                                    "high": Schema(type=TYPE_INTEGER),
                                    "low": Schema(type=TYPE_INTEGER),
                                })),
                                "protocols": Schema(type=TYPE_ARRAY, description="List of intercept protocols used for intercept configuration", items=Schema(type=TYPE_STRING, enum=['tcp', 'udp'])),
                                # Host configs
-                               "address": Schema(type=TYPE_STRING, description="Address used for host configuration"),
-                               "port": Schema(type=TYPE_INTEGER, description="Port used for host configuration"),
+                               "address": Schema(type=TYPE_STRING, example='addr.inter1', description="Address used for host configuration"),
+                               "port": Schema(type=TYPE_INTEGER, example=150, description="Port used for host configuration"),
                                "protocol": Schema(type=TYPE_STRING, enum=["tcp", "udp"], description="List of intercept protocols used for intercept configuration")}),
-            'description': Schema(type=TYPE_STRING, description="Description of identity"),
+            'Description': Schema(type=TYPE_STRING, example="Description of Configuration"),
             }
             )
 )
@@ -94,46 +94,37 @@ def add_configs(request):
     """API to create an intercept or host configurations"""
     try:
         data = request.data
-        datacopy = request.data.copy()
+        data_payload_openziti = request.data.copy()
         session_id = get_ztna_token_from_system()
         headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'}
-        response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data_without_description, 
+        data_payload_openziti = get_payload_config_openziti(data_payload_openziti)
+        response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data_payload_openziti, 
                                  verify=False)
         response_dict = json.loads(response.text)
-        now = datetime.now()
-        formatted_now = now.strftime("%Y-%m-%d %H:%M")
         if response.status_code == 201:
-            payload={"name": data["name"],
-                     "description": data.get('Description', None),
-                     "date_creation": formatted_now}
-            ############### intercept ###############
+            payload = get_payload_config_database(data)
+
+            # Intercept Configuration
             if data["configTypeId"] == 'g7cIWbcGg':
+                payload["date_creation"] = datetime.now().strftime("%Y-%m-%d %H:%M")
                 payload['ref_intercept'] = response_dict.get('data', {}).get('id')
-                # Correctly accessing protocols from data['data']
-                payload['protocol'] = data['data']['protocols'][0] # Fixed to access first protocol
-                payload['address'] = data['data']["addresses"][0] # Fixed to access first address
-                payload['low'] = data['data']["portRanges"][0]["low"]  # Fixed to access first low port range
-                payload['high'] = data['data']["portRanges"][0]["high"]  # Fixed to access first high port range
 
                 # Serialize and save the payload
-                serializer_intercept = InterceptConfigsSerializer(data=payload,partial=True)
+                serializer_intercept = InterceptConfigsSerializer(data=payload, partial=True)
                 if serializer_intercept.is_valid():
                     serializer_intercept.save()
                     return JsonResponse({"message": f"{CONSTANT_INTERCEPT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
-                return JsonResponse({"error": serializer_intercept.errors}, status=400)
-
-            ############### host ###############
+                return JsonResponse({"error": list(serializer_intercept.errors.values())[0][0]}, status=400)
+            
+            # Host Configuration
             else :
+                payload["date_creation"] = datetime.now().strftime("%Y-%m-%d %H:%M")
                 payload['ref_host'] = response_dict.get('data', {}).get('id')
-                payload['protocol'] = data['data']['protocol']
-                payload['address'] = data['data']["address"]
-                payload['port'] = data['data']["port"]
                 serializer_host = HostConfigsSerializer(data=payload,partial=True)
                 if serializer_host.is_valid():
                     serializer_host.save()
                     return JsonResponse({"message": f"{CONSTANT_HOST_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
-                return JsonResponse({"error": serializer_host.errors}, status=400)
+                return JsonResponse({"error": list(serializer_host.errors.values())[0][0]}, status=400)
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_CONFIGURATION}"}, status=400)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
@@ -199,7 +190,7 @@ def delete_host_configs(request, id):
                                    "low": Schema(type=TYPE_INTEGER),
                                "protocols": Schema(type=TYPE_ARRAY, description="List of intercept protocols used for intercept configuration", items=Schema(type=TYPE_STRING, enum=['tcp', 'udp'])),
                                }))}),
-            'description': Schema(type=TYPE_STRING, description="Description of identity"),
+            'Description': Schema(type=TYPE_STRING, example="Description of intercept configuration"),
             }
             )
 )
@@ -211,21 +202,15 @@ def update_intercept_configs(request, id):
     try:
         intercept = InterceptConfigs.objects.get(id=id)
         data = request.data
-        datacopy = request.data.copy()
+        data_payload_openziti = request.data.copy()
         session_id = get_ztna_token_from_system()
         headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'}
+        data_payload_openziti = get_payload_config_openziti(data_payload_openziti)
         if data["configTypeId"] == 'g7cIWbcGg':
-            payload={
-                "name": data['name'],
-                "protocol": data['data']['protocols'][0],
-                "address": data['data']['addresses'][0],
-                "low": data['data']['portRanges'][0]["low"],
-                "high": data['data']['portRanges'][0]["high"],
-                "description": data.get('Description', None)}
+            payload = get_payload_config_database(data)
             serializer_update_intercept = InterceptSerializerUpdate(intercept,data=payload, partial=True)
             if serializer_update_intercept.is_valid():
-                response = requests.put(f"{PATH_ZTNA_CONFIGS}/{intercept}", headers=headers, json=data_without_description, verify=False)
+                response = requests.put(f"{PATH_ZTNA_CONFIGS}/{intercept}", headers=headers, json=data_payload_openziti, verify=False)
                 if response.status_code == 200:
                     serializer_update_intercept.save()
                     return JsonResponse({"message": f"{CONSTANT_INTERCEPT_CONFIGURATION} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
@@ -244,7 +229,7 @@ def update_intercept_configs(request, id):
     request_body=Schema(
         type=TYPE_OBJECT, required=['name', 'configTypeId', 'data', 'description'],
         properties={
-            'name': Schema(type=TYPE_STRING, example="inter1", description="Name of the host configuration"),
+            'name': Schema(type=TYPE_STRING, example="host1", description="Name of the host configuration"),
             'configTypeId': Schema(type=TYPE_STRING, enum=["NH5p4FpGR"], 
             description="required for consuming openzit API and taking the id of the config type: NH5p4FpGR when using host config"),
             'data': Schema(type=TYPE_OBJECT, example={'address': 'addr.host1', 'port': 53, 'protocol': 'tcp'}, 
@@ -252,7 +237,7 @@ def update_intercept_configs(request, id):
                                "address": Schema(type=TYPE_STRING, description="Address used for host configuration"),
                                "port": Schema(type=TYPE_INTEGER, description="Port used for host configuration"),
                                "protocol": Schema(type=TYPE_STRING, enum=["tcp", "udp"], description="List of intercept protocols used for intercept configuration")}),
-            'description': Schema(type=TYPE_STRING, description="Description of identity"),
+            'Description': Schema(type=TYPE_STRING, example="Description of host configuration"),
             }
             )
 )
@@ -264,24 +249,20 @@ def update_host_configs(request, id):
     try:
         host = HostConfigs.objects.get(id=id)
         data = request.data
-        print("update host configs=", data)
-        datacopy = request.data.copy()
+        data_payload_openziti = request.data.copy()
         session_id = get_ztna_token_from_system()
         headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'}
-        payload={
-            "name": data['name'],
-            "protocol": data['data']['protocol'],
-            "address": data['data']['address'],
-            "port": data['data']['port'],
-            "description": data.get('Description', None)}
-        serializer_update_host = HostSerializerUpdate(host,data=payload, partial=True)
-        if serializer_update_host.is_valid():
-            response = requests.put(f"{PATH_ZTNA_CONFIGS}/{host}", headers=headers, json=data_without_description, verify=False)
-            if response.status_code == 200:
-                serializer_update_host.save()
-                return JsonResponse({"message": f"{CONSTANT_HOST_CONFIGURATION} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-            return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_HOST_CONFIGURATION}"}, status=400)
+        data_payload_openziti = get_payload_config_openziti(data_payload_openziti)
+        if data["configTypeId"] == 'NH5p4FpGR':
+            payload = get_payload_config_database(data)
+            serializer_update_host = HostSerializerUpdate(host,data=payload, partial=True)
+            if serializer_update_host.is_valid():
+                response = requests.put(f"{PATH_ZTNA_CONFIGS}/{host}", headers=headers, json=data_payload_openziti, verify=False)
+                if response.status_code == 200:
+                    serializer_update_host.save()
+                    return JsonResponse({"message": f"{CONSTANT_HOST_CONFIGURATION} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+                return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_HOST_CONFIGURATION}"}, status=400)
+            return JsonResponse({"error": list(serializer_update_host.errors.values())[0][0]}, status=400)
         return JsonResponse({"error":  f"{ERROR_MESSAGES_UPDATING} {CONSTANT_HOST_CONFIGURATION}"}, status=400)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)

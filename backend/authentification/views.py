@@ -270,50 +270,21 @@ def logout_view(request):
     return JsonResponse({"msg": SUCCESS_MESSAGES_LOGOUT})
  
 @swagger_auto_schema(
-    method='post',
+    'POST', 
+
+    responses={200: 'subscrpition successfully', 400: 'Bad Request'}, 
+    security=[{"session_auth": []}],  # Specify the security requirement
+    operation_summary="subscrpition API",
     operation_description="Create a Stripe checkout session for subscription plans.",
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        required=['features', 'status', 'price'],
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['features', 'status', 'price'],
         properties={
-            'features': openapi.Schema(
-                type=openapi.TYPE_ARRAY,
-                items=openapi.Schema(type=openapi.TYPE_STRING),
-                description="List of selected subscription features."
-            ),
-            'status': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="Subscription status."
-            ),
-            'price': openapi.Schema(
-                type=openapi.TYPE_NUMBER,
-                format=openapi.FORMAT_FLOAT,
-                description="Subscription price."
-            ),
+            "features": Schema(type=TYPE_ARRAY,items=Schema(type=TYPE_STRING), example=["squid","ZTNA"]),
+            "status": Schema(type=TYPE_STRING, example="True"),
+            "price": Schema(type=TYPE_INTEGER, example=1199)
         }
-    ),
-    responses={
-        200: openapi.Response(
-            description="Stripe checkout session created successfully.",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'id': openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Stripe checkout session ID."
-                    ),
-                    'url': openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="URL to complete the checkout."
-                    )
-                }
-            )
-        ),
-        400: openapi.Response(
-            description="Invalid request parameters."
-        )
-    }
-)
+    )
+ )
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def create_checkout_session(request):

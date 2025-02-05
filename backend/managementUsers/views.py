@@ -23,6 +23,7 @@ from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING
 from django.conf import settings
 from rest_framework import status
 from backend.waf.models import RulesWaf
+from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
 
 # Constants
 CONSTANT_USER = _("User")
@@ -53,13 +54,45 @@ ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
 ERROR_MESSAGES_CONNECTION = _("System error in connecting to directory server")
 
 
-@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+@swagger_auto_schema('GET', responses={200: 'List of all users', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF Users",
                      operation_description="API TO GET LIST OF Users")
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_users(request):
+    """
+    Retrieves all users from the database and returns them in a formatted JSON response.
+
+    This function queries the `User` model for all users and serializes the results,
+    removing sensitive fields such as the password, and restructuring the data to 
+    include only relevant user details.
+
+    Args:
+        request (HttpRequest): The HTTP request used to trigger the retrieval.
+
+    Returns:
+        JsonResponse: A JSON response containing a list of all users' details without passwords.
+
+    Workflow:
+        1. Checks if the request method is 'GET'.
+        2. Retrieves all user objects from the `User` model.
+        3. Serializes the user data into JSON format.
+        4. Removes unnecessary fields (`model`, `password`, `pk`), and restructures the data.
+        5. Returns the list of users as a JSON response.
+
+    HTTP Status:
+        - 200: Successful retrieval of all users.
+
+    Dependencies:
+        - `User`: Django's user model.
+        - `serializers.serialize()`: Serializes the user data into JSON format.
+        - `json.loads()`: Parses the serialized JSON data into Python objects.
+        
+    Notes:
+        - The `password` field is explicitly removed to ensure sensitive information is not exposed.
+    """
     """Get all users from database"""
     list_users = []
     if (request.method == 'GET'):
@@ -74,12 +107,44 @@ def get_all_users(request):
             res[i]['fields']['id'] = user_id
             list_users.append(res[i]['fields'])
 
+@swagger_auto_schema('GET', responses={200: 'List of all roles', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF roles",
+                     operation_description="API TO GET LIST OF roles")
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_roles(request):
-    """Get all roles from database"""
+    """
+    Retrieves all roles from the database and returns them in a formatted JSON response.
+
+    This function queries the `Roles` model for all roles and serializes the results,
+    restructuring the data to include only relevant role details.
+
+    Args:
+        request (HttpRequest): The HTTP request used to trigger the retrieval.
+
+    Returns:
+        JsonResponse: A JSON response containing a list of all roles' details.
+
+    Workflow:
+        1. Checks if the request method is 'GET'.
+        2. Retrieves all role objects from the `Roles` model.
+        3. Serializes the role data into JSON format.
+        4. Removes unnecessary fields (`model`, `pk`), and restructures the data.
+        5. Returns the list of roles as a JSON response.
+
+    HTTP Status:
+        - 200: Successful retrieval of all roles.
+
+    Dependencies:
+        - `Roles`: The model representing roles in the application.
+        - `serializers.serialize()`: Serializes the role data into JSON format.
+        - `json.loads()`: Parses the serialized JSON data into Python objects.
+        
+    Notes:
+        - The `pk` and `model` fields are explicitly removed as they are not needed in the response.
+    """
     list_roles = []
     if (request.method == 'GET'):
         roles = Roles.objects.all()
@@ -94,11 +159,56 @@ def get_all_roles(request):
         
         return JsonResponse({"list_roles":list_roles})
 
+@swagger_auto_schema(
+    method='post',
+    operation_summary="Create Role API",
+    operation_description="Creates a new role in the database after validating the request data.",
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        required=["role_name"],
+        properties={
+            "role_name": Schema(type=TYPE_STRING, example="Admin"),
+        },
+    ),
+    responses={200: 'Create Role successfully', 400: 'Bad Request'}, 
+    security=[{"session_auth": []}],
+)
+
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_role(request):
+    """
+    Creates a new role in the database.
+
+    This function accepts data for a new role, validates it using the `RoleSerializer`,
+    and saves the role to the database. If validation fails, an error message is returned.
+
+    Args:
+        request (HttpRequest): The HTTP request containing the data for the new role.
+
+    Returns:
+        JsonResponse:
+            - 200: If the role is successfully created.
+            - 400: If the provided data is invalid, with error messages.
+
+    Workflow:
+        1. Checks if the request method is 'POST'.
+        2. Extracts the data from the request.
+        3. Uses `RoleSerializer` to validate and serialize the data.
+        4. If the data is valid, saves the new role to the database.
+        5. Returns a success message or validation error message based on the outcome.
+
+    HTTP Status:
+        - 200: Successful creation of the new role.
+        - 400: If the data is invalid, including a list of error messages.
+
+    Dependencies:
+        - `RoleSerializer`: Serializer for validating and serializing role data.
+        - `CONSTANT_ROLE`: A constant representing the role in the success message.
+        - `SUCCESS_MESSAGES_CREATING`: A constant for the success message.
+    """
     if (request.method == 'POST'):
         data = request.data
         serializer = RoleSerializer(data=data)
@@ -108,11 +218,57 @@ def create_role(request):
             return JsonResponse({'msg': serializer.error_messages}, status=400) 
         return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_CREATING}"}, status=200) 
 
+@swagger_auto_schema(
+    method='put',
+    operation_description="Modify an existing role in the database.",
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        properties={
+            'name': Schema(type=TYPE_STRING, description="Updated name of the role"),
+            'description': Schema(type=TYPE_STRING, description="Updated description of the role")
+        },
+        required=['name', 'description']
+    ),
+    responses={200: 'Role successfully updated', 400: 'Bad Request'}, 
+)
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def modify_role(request,id):
+    """
+    Modifies an existing role in the database.
+
+    This function retrieves an existing role by its ID, validates the updated data using 
+    the `RoleSerializer`, and saves the changes to the role in the database. If validation fails, 
+    an error message is returned.
+
+    Args:
+        request (HttpRequest): The HTTP request containing the updated data for the role.
+        id (int): The ID of the role to be modified.
+
+    Returns:
+        JsonResponse:
+            - 200: If the role is successfully updated.
+            - 400: If the provided data is invalid, with error messages.
+
+    Workflow:
+        1. Checks if the request method is 'PUT'.
+        2. Retrieves the role to be modified from the `Roles` model by its ID.
+        3. Validates and serializes the updated data using `RoleSerializer`.
+        4. If the data is valid, saves the changes to the database.
+        5. Returns a success message or validation error message based on the outcome.
+
+    HTTP Status:
+        - 200: Successful modification of the role.
+        - 400: If the data is invalid, including a list of error messages.
+
+    Dependencies:
+        - `Roles`: The model representing roles in the application.
+        - `RoleSerializer`: Serializer for validating and serializing role data.
+        - `CONSTANT_ROLE`: A constant representing the role in the success message.
+        - `SUCCESS_MESSAGES_UPDATING`: A constant for the success message.
+    """
     if (request.method == 'PUT'):
         role = Roles.objects.get(id=id)
         data = request.data
@@ -123,12 +279,49 @@ def modify_role(request,id):
             return JsonResponse({'msg': serializer.error_messages}, status=400) 
         return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_UPDATING}"}, status=200) 
 
-
+@swagger_auto_schema(
+    method='delete',
+    operation_description="Delete an existing role from the database.",
+    responses={200: 'Role successfully deleted', 400: 'Bad Request'}, 
+)
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_role(request, id):
-    """Delete role"""
+    """
+    Deletes a role from the database.
+
+    This function checks if any users are currently assigned to the specified role.
+    If there are users associated with the role, it returns an error message.
+    If no users are assigned, it deletes the role and returns a success message.
+
+    Args:
+        request (HttpRequest): The HTTP request to delete a role.
+        id (int): The ID of the role to be deleted.
+
+    Returns:
+        JsonResponse:
+            - 400: If there are users linked to the role, with a message detailing the error.
+            - 200: If the role is successfully deleted.
+
+    Workflow:
+        1. Retrieves the role to be deleted from the `Roles` model by its ID.
+        2. Checks if any users are currently assigned to this role.
+        3. If users are assigned to the role, returns an error message with the usernames.
+        4. If no users are assigned to the role, proceeds with deletion.
+        5. Returns a success message upon successful deletion of the role.
+
+    HTTP Status:
+        - 400: If the role is in use by any users.
+        - 200: Successful deletion of the role.
+
+    Dependencies:
+        - `Roles`: The model representing roles in the application.
+        - `User`: The model representing users in the application.
+        - `CONSTANT_DELETE_ROLE`: A constant for the error message when the role cannot be deleted.
+        - `CONSTANT_ROLE`: A constant representing the role in the success message.
+        - `SUCCESS_MESSAGES_DELETING`: A constant for the success message.
+    """
     role = Roles.objects.get(id=id)
     
     # Check if any users are linked to this role
@@ -142,14 +335,46 @@ def delete_role(request, id):
     return JsonResponse({"msg": f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_DELETING}"})
     
 
-@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO GET USER BY ID",
-                     operation_description="API TO GET USER BY ID")
+@swagger_auto_schema(
+    method='get',
+    operation_description="Retrieve a user by ID from the database.",
+    responses={200: 'User retrieved successfully', 400: 'Bad Request'}, 
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_user(request, id):
-    """Get user  by ID from database"""
+    """
+    Retrieves a user by ID from the database.
+
+    This function fetches the user details along with their profile information 
+    by the provided user ID. It combines the user and profile data into a single 
+    response before returning it as a JSON response.
+
+    Args:
+        request (HttpRequest): The HTTP request to fetch a user's data.
+        id (int): The ID of the user to be retrieved.
+
+    Returns:
+        JsonResponse:
+            - A JSON response containing the user details along with their profile information.
+
+    Workflow:
+        1. Fetches the user from the `User` model using the provided ID.
+        2. Serializes the user data into JSON format and extracts the user fields.
+        3. Fetches the profile associated with the user from the `Profile` model.
+        4. Serializes the profile data into JSON format and extracts the profile fields.
+        5. Combines the user and profile data into a single dictionary.
+        6. Returns a JSON response containing the combined user and profile data.
+
+    HTTP Status:
+        - 200: Returns the user data with profile information.
+
+    Dependencies:
+        - `User`: The model representing users in the application.
+        - `Profile`: The model representing user profiles.
+        - `serializers.serialize`: A method used to serialize model instances into JSON format.
+    """
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
         user_dict = serializers.serialize("json", user)
@@ -166,14 +391,73 @@ def get_user(request, id):
         return JsonResponse(user_json)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO Create New USER",
-                     operation_description="API TO Create New USER")
+@swagger_auto_schema(
+    method='post',
+    operation_description="Create a new user in the system.",
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        required=['username', 'password', 'email'],
+        properties={
+            'username': Schema(type=TYPE_STRING, description="The username of the user"),
+            'password': Schema(type=TYPE_STRING, description="Password for the user"),
+            'email': Schema(type=TYPE_STRING, description="Email address of the user"),
+            'password_ad': Schema(type=TYPE_STRING, description="Password for Active Directory (if applicable)"),
+            'id_server': Schema(type=TYPE_INTEGER, description="ID of the AD server (if applicable)"),
+            'group': Schema(
+                type=TYPE_ARRAY,
+                items=Schema(type=TYPE_INTEGER, description="Group ID(s) the user belongs to"),
+                description="List of group IDs the user is assigned to"
+            ),
+        }
+    ),
+    responses={200: 'User created successfully', 400: 'Bad Request'}, 
+)
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_user(request):
-    """Create user"""
+    """
+    Creates a new user in the system and synchronizes with an LDAP server if required.
+
+    This function handles the user creation process, including validation of the username, password,
+    and email. It also integrates with an LDAP server for authentication and email checking if required.
+    The function performs several checks, such as verifying that the email does not already exist, ensuring
+    the password meets security criteria, and creating a user in the database. Additionally, it interacts
+    with an Active Directory (AD) server if an `id_server` is provided for the user.
+
+    Args:
+        request (HttpRequest): The HTTP request containing the user creation data.
+
+    Returns:
+        JsonResponse:
+            - A JSON response containing the result of the user creation, including any error messages
+              or success messages.
+
+    Workflow:
+        1. Checks if the method is POST and extracts the data from the request.
+        2. Validates if the password and username are in a valid format.
+        3. Verifies the email against the database and LDAP servers (if provided).
+        4. If the email is found on the LDAP server, the function adds the corresponding DN information.
+        5. Creates a user record in the system and associates it with the provided organization and groups.
+        6. Returns a JSON response indicating success or failure.
+
+    HTTP Status Codes:
+        - 201: Successfully created the user.
+        - 400: Invalid input, such as email already existing, password mismatch, or LDAP errors.
+    
+    Dependencies:
+        - `User`: The model representing the user in the application.
+        - `ADServer`: The model representing Active Directory servers.
+        - `ldap`: Python's LDAP library for LDAP server communication.
+        - `UserSerializerPost`: The serializer used to create user records.
+        - `Profile`: The model representing user profiles.
+        - `GroupSerializer`: The serializer used to manage user groups.
+
+    Example Response:
+        - Success: {"msg": "Username successfully created on email system."}
+        - Failure: {"msg": "Email already exists."}
+    """
     msg = ''
     email_founded = False
     if request.method == 'POST':
@@ -301,13 +585,53 @@ def create_user(request):
                 return JsonResponse({"msg": ERROR_MESSAGES_INVALID_PASSWORD}, status=201)
 
 
-@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO DELETE USER",
-                     operation_description="API TO DELETE USER")
+@swagger_auto_schema(
+    method='delete',
+    operation_description="Deletes a user and their associated group(s). If the user and associated group(s) are deleted successfully, a success message is returned.",
+    responses={200: 'User and group deleted successfully', 400: 'Bad Request'}, 
+)
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_user(request, id):
-    """Delete group"""
+    """
+    Deletes a user and their associated group from the system.
+
+    This function handles the deletion of a user from the database, along with their associated group.
+    It performs necessary checks and executes commands to remove the user from the system and delete
+    any associated directories. The function returns a success message if the deletion is successful,
+    or an error message if there is an issue during the process.
+
+    Args:
+        request (HttpRequest): The HTTP request for the deletion operation.
+        id (int): The unique identifier of the user to be deleted.
+
+    Returns:
+        JsonResponse:
+            - A JSON response containing the result of the user deletion, either a success message or
+              an error message.
+
+    Workflow:
+        1. Retrieves the user object and associated group based on the provided user ID.
+        2. Executes the command to delete the user from the system.
+        3. Deletes any associated directories.
+        4. If both the user deletion and directory deletion are successful, removes the user and group
+           from the database.
+        5. Returns a JSON response indicating success or failure.
+
+    HTTP Status Codes:
+        - 200: Successfully deleted the user and their group.
+        - 400: Error during user deletion, such as issues with system commands or deletion failures.
+    
+    Dependencies:
+        - `User`: The model representing the user in the application.
+        - `Group`: The model representing the user group associated with the user.
+        - `delete_user_in_system`: Function that deletes the user from the system.
+        - `delete_directory`: Function that deletes the user directory.
+    
+    Example Response:
+        - Success: {"msg": "username successfully deleted."}
+        - Failure: {"error": "Error deleting user."}
+    """
     user = User.objects.get(id=id)
     group = Group.objects.filter(groupname=user.username)
     # # Execute the command on the remote machine
@@ -323,15 +647,80 @@ def delete_user(request, id):
 
 
 @swagger_auto_schema(
-    method='PUT',
-    request_body=UserSerializerPost,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO UPDATE User",
-    operation_description="This API help us to update User added")
+    method='put',
+    operation_description="Modify an existing user's details, including username, email, role, and Active Directory authentication.",
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        required=['username', 'email', 'role'],
+        properties={
+            'username': Schema(type=TYPE_STRING, description="New username for the user"),
+            'fullname': Schema(type=TYPE_STRING, description="Full name of the user"),
+            'email': Schema(type=TYPE_STRING, description="New email address"),
+            'role': Schema(type=TYPE_INTEGER, description="Role ID associated with the user"),
+            'password_ad': Schema(type=TYPE_STRING, description="Password for Active Directory authentication (if applicable)"),
+            'id_server': Schema(type=TYPE_INTEGER, description="ID of the Active Directory server (if applicable)"),
+            'group': Schema(
+                type=TYPE_ARRAY,
+                items=Schema(type=TYPE_INTEGER),
+                description="List of group IDs to which the user belongs"
+            ),
+        }
+    ),
+    responses={200: "User modified successfully", 400: "Bad Request"},
+)
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def modify_user(request, id):
+    """
+    Modifies user details, including username, full name, email, and role.
+
+    This function updates user information in the database, handles Active Directory (AD) authentication
+    for email validation, and manages group assignments. It also renames the user's system account 
+    and associated directories when the username is changed.
+
+    Args:
+        request (HttpRequest): The HTTP request containing updated user information.
+        id (int): The unique identifier of the user to be modified.
+
+    Returns:
+        JsonResponse:
+            - On success: JSON response containing updated user data and a success message.
+            - On failure: JSON response with an error message and HTTP status 400.
+
+    Workflow:
+        1. Fetches the user object from the database.
+        2. Serializes the user data to JSON and removes unnecessary fields (e.g., password).
+        3. Extracts old username and processes incoming request data.
+        4. If an AD password is provided, attempts to authenticate with the AD server:
+           - Checks if the given email exists in the AD server.
+           - If found, assigns `dn_user` to the user.
+           - Returns an error if the email is not found in the AD.
+        5. Validates email uniqueness within the database.
+        6. Updates the username, email, role, and other user attributes.
+        7. Renames system directories and groups if the username changes.
+        8. Updates the user’s group memberships.
+        9. Saves the updated user object and returns a success response.
+
+    HTTP Status Codes:
+        - 200: User successfully modified.
+        - 400: Errors encountered during update (e.g., invalid email, LDAP connection failure, username conflict).
+
+    Dependencies:
+        - `User`: The model representing the user in the application.
+        - `Group`: The model representing user groups.
+        - `ADServer`: The model storing Active Directory server configurations.
+        - `check_password`: Function to verify passwords.
+        - `valid_input`: Function to validate username format.
+        - `username_exists`: Function to check for duplicate usernames.
+        - `change_username`, `change_directory_name`, `change_groupname_username`: Functions for renaming system entities.
+        - `delete_user_group`, `add_user_group`: Functions for managing user-group associations.
+
+    Example Response:
+        - Success: {"data": {...}, "msg": "User successfully updated."}
+        - Failure: {"msg": "Error updating username."}
+    """
     if (request.method == 'PUT'):
         user_by_id = User.objects.filter(id=id)
         user_dict = serializers.serialize("json", user_by_id)
@@ -432,15 +821,83 @@ def modify_user(request, id):
 
 
 @swagger_auto_schema(
-    method='PUT',
-    request_body=ProfileSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO UpdateProfile",
-    operation_description="This API help us to update profile of user ")
+    method='put',
+    operation_description="Update a user's profile, including username, group name, and profile photo.",
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        required=['username'],
+        properties={
+            'username': Schema(type=TYPE_STRING, description="New username"),
+            'email': Schema(type=TYPE_STRING, description="User's email"),
+            'phone_number': Schema(type=TYPE_STRING, description="User's phone number"),
+            'photo': Schema(type=TYPE_STRING, description="Profile picture file")
+        }
+    ),
+    responses={200: "Profile updated successfully", 400: "Bad Request"},
+)
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_profile(request, id):
+    """
+    Updates a user's profile, including username changes and profile picture updates.
+
+    This function:
+    - Updates user attributes such as `username`.
+    - Modifies the associated profile data.
+    - Handles profile picture uploads by storing them in a user-specific directory.
+    - Ensures old profile pictures are deleted when a new one is uploaded.
+
+    Args:
+        request (HttpRequest): The HTTP request containing user update data.
+        id (int): The unique identifier of the user whose profile is being updated.
+
+    Returns:
+        JsonResponse:
+            - On success: JSON response with a success message.
+            - On failure: JSON response with an error message and HTTP status 400.
+
+    Workflow:
+        1. Retrieves user data from the database.
+        2. Serializes and validates user update data.
+        3. If the username is changed:
+            - Calls `change_username()` to update system-level username references.
+            - Calls `change_groupname_username()` to update group-related username references.
+        4. Saves the updated user data.
+        5. Retrieves the associated `Profile` instance.
+        6. If a new profile picture is provided:
+            - Stores the new image in a dedicated user-specific folder.
+            - Deletes the previous profile picture file.
+        7. Serializes and saves profile updates.
+        8. Returns success or error responses.
+
+    Profile Picture Handling:
+        - The uploaded image is stored in `/media/{user_id}/` directory.
+        - The old profile picture is deleted before saving a new one.
+
+    Exceptions:
+        - `ValidationError`: Raised when provided data is invalid.
+        - `Exception`: Catches other unexpected errors.
+
+    HTTP Status Codes:
+        - 200: Profile successfully updated.
+        - 400: Validation or processing error.
+
+    Dependencies:
+        - `User`: The model representing the user.
+        - `Profile`: The model storing additional profile information.
+        - `UserSerializerPost`: Serializer for user updates.
+        - `ProfileSerializer`: Serializer for profile updates.
+        - `change_username`: Function to update system username references.
+        - `change_groupname_username`: Function to update username references in groups.
+        - `os`: Used for file management.
+        - `settings.MEDIA_ROOT`: Django media root for file storage.
+
+    Example Response:
+        - Success: {"message": "Profile successfully updated."}
+        - Failure: {"msg": "Error message describing the failure."}
+    """
     try:
         data = request.data
         user_object = User.objects.get(id=id)
@@ -486,17 +943,48 @@ def update_profile(request, id):
         return JsonResponse({'msg': str(e)}, status=400)
         
 
+
 @swagger_auto_schema(
-    method='PUT',
-    request_body=UserSerializerGet,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO UPDATE Change Password User By Admin",
-    operation_description="This API help us to update User's password added By admin")
+    method='put',
+    operation_description="Allows an admin to reset a user's password. The new password must match the confirmation password.",
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        properties={
+            'new_password': Schema(type=TYPE_STRING, description="The new password to set for the user"),
+            'confirm_password': Schema(type=TYPE_STRING, description="Confirmation of the new password"),
+        }
+    ),
+    responses={200: "Password reset successfully by admin", 400: "Bad Request"},
+)
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def reset_password_by_admin(request, id):
-    """Change password user"""
+    """
+    Allows an admin to reset the password of a user by their ID.
+
+    Args:
+        request (HttpRequest): The HTTP request object containing the admin's request data.
+        id (int): The ID of the user whose password is being reset.
+
+    Returns:
+        JsonResponse: A JSON response indicating success or failure of the password reset.
+
+    Behavior:
+        - Accepts a PUT request to change the password for a specific user.
+        - Retrieves the user object using the provided `id`.
+        - Extracts `new_password` and `confirm_password` from the request data.
+        - Verifies that the new password matches the confirmation password.
+        - If the passwords match, attempts to reset the user's password by calling the `reset_password_by_admin_in_system` function.
+        - If the password reset is successful, securely hashes the new password and updates the user object.
+        - Returns a success message if the password reset was successful.
+        - If any condition fails, returns an error message with a 400 status code.
+
+    Notes:
+        - `reset_password_by_admin_in_system(new_password, user_object.username)` runs a system-level command to reset the user's password.
+        - `make_password(new_password)` securely hashes the new password before saving it to the user object.
+    """
     if (request.method == 'PUT'):
         user_object = User.objects.get(id=id)
         data = request.data
@@ -515,15 +1003,46 @@ def reset_password_by_admin(request, id):
 
 
 @swagger_auto_schema(
-    method='PUT',
-    request_body=UserSerializerPost,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO UPDATE Change Password User ",
-    operation_description="This API help us to update User's password added ")
+    method='put',
+    operation_description="Change the user's password after verifying the current password and matching the new passwords.",
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        properties={
+            'current_password': Schema(type=TYPE_STRING, description="The current password of the user"),
+            'new_password': Schema(type=TYPE_STRING, description="The new password to set for the user"),
+            'confirm_password': Schema(type=TYPE_STRING, description="Confirmation of the new password"),
+        }
+    ),
+    responses={200: "Password updated successfully", 400: "Bad Request"},
+)
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_password(request):
+    """
+    Change the password for the authenticated user.
+
+    Args:
+        request (HttpRequest): The HTTP request object containing the user request data.
+
+    Returns:
+        JsonResponse: A JSON response indicating success or failure of the password change.
+
+    Behavior:
+        - Accepts a PUT request to change the user's password.
+        - Extracts `current_password`, `new_password`, and `confirm_password` from the request data.
+        - Verifies if the new password matches the confirmation password and checks if the current password is correct.
+        - If valid, attempts to reset the password by calling the `reset_password` function.
+        - If the reset is successful, updates the user's password, marks the user as verified, and saves the changes.
+        - Returns a success message if the password change was successful.
+        - If any condition fails, returns an error message with a 400 status code.
+
+    Notes:
+        - `check_password(current_password, user.password)` checks if the current password is correct.
+        - `reset_password(user.username, new_password)` attempts to reset the password using an external system.
+        - `make_password(new_password)` securely hashes the new password before saving it.
+    """
     if (request.method == 'PUT'):
             user = request.user
             data = request.data
@@ -541,54 +1060,118 @@ def change_password(request):
 
             return JsonResponse({"msg": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"}, status=400)
 
-
 @swagger_auto_schema(
-    method='POST',
-    request_body=PermissionSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO ADD Permission ",
-    operation_description="This API help us to ADD Permission",)
-@api_view(['POST'])
-@authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
-def add_permission(request):
-    """API de create permission"""
-    if (request.method == 'POST'):
-        # parse the incoming information
-        data = request.data
-        # instanciate with the serializer
-        serializer = PermissionSerializer(data=data)
-        # check if the sent information is okay
-        if serializer.is_valid():
-            # if okay, save it on the database
-            serializer.save()
-            # provide a Json Response with the data that was saved
-            return JsonResponse({"msg": f"{CONSTANT_PERMISSION} {SUCCESS_MESSAGES_CREATING}"}, status=201)
-            # provide a Json Response with the necessary error information
-        return JsonResponse(serializer.errors, status=400)
-
-
-@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO GET PROFILE LANGUAGE",)
+    method='get',
+    operation_description="Retrieve a user's preferred profile language.",
+    responses={200: 'Successfully retrieved the language', 400: 'Bad Request'}, 
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_profile_language(request, id):
-    """Getting Profile language"""
+    """
+    Retrieves the language preference of a user's profile.
+
+    This function:
+    - Fetches the `Profile` associated with the given `User` ID.
+    - Returns the user's selected language as a JSON response.
+
+    Args:
+        request (HttpRequest): The HTTP request (not used in processing).
+        id (int): The unique identifier of the user whose language preference is being retrieved.
+
+    Returns:
+        JsonResponse: A JSON response containing the user's language setting.
+
+    Exceptions:
+        - `User.DoesNotExist`: Raised if no user with the given ID exists.
+        - `Profile.DoesNotExist`: Raised if the user's profile is missing.
+        - `Exception`: Catches other unexpected errors.
+
+    HTTP Status Codes:
+        - 200: Successfully retrieved the profile language.
+        - 400: If the user or profile does not exist.
+
+    Dependencies:
+        - `User`: The model representing the user.
+        - `Profile`: The model storing additional profile information.
+
+    Example Response:
+        - Success: {"language": "en"}
+        - Failure: {"error": "User does not exist."}
+
+    """
     profile = Profile.objects.get(user=User.objects.get(id=id))
     return JsonResponse({"language": profile.language})
 
 
 @swagger_auto_schema(
-        method='PUT', 
-        responses={200: 'Created', 400: 'Bad Request'}, 
-        operation_summary="API TO UPDATE PROFILE LANGUAGE",
-        request_body=Schema(type=TYPE_OBJECT, required=['language'], properties={'language': Schema(type=TYPE_STRING)}))
+    method='put',
+    operation_description="Update a user's profile language preference and modify WAF rule descriptions accordingly.",
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        required=['language'],
+        properties={
+            'language': Schema(
+                type=TYPE_STRING,
+                enum=['en', 'fr'],
+                description="Preferred language for the profile and WAF rule descriptions. Options: 'en' (English) or 'fr' (French)."
+            )
+        }
+    ),
+    responses={200: "Language updated successfully", 400: "Bad Request"},
+)
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_language(request, id):
-    """Update profile language"""
+    """
+    Updates a user's profile language and modifies WAF rule descriptions accordingly.
+
+    This function:
+    - Retrieves the user's profile.
+    - Updates the profile's language setting.
+    - Adjusts `RulesWaf` descriptions based on the selected language.
+    - Saves the updated profile data.
+
+    Args:
+        request (HttpRequest): The HTTP request containing language update data.
+        id (int): The unique identifier of the user whose profile language is being updated.
+
+    Returns:
+        JsonResponse:
+            - On success: JSON response with a success message.
+            - On failure: JSON response with an error message and HTTP status 400.
+
+    Workflow:
+        1. Retrieves the user's profile from the database.
+        2. Serializes and validates the language update request.
+        3. Updates the `description` field of `RulesWaf` objects where `created=False`:
+            - If the selected language is English (`"en"`), descriptions are set to `description_english`.
+            - Otherwise, descriptions are set to `description_french`.
+        4. Saves the updated profile.
+        5. Returns success or error responses.
+
+    Exceptions:
+        - `User.DoesNotExist`: Raised if the user ID does not exist.
+        - `Profile.DoesNotExist`: Raised if the user profile is missing.
+        - `Exception`: Catches other unexpected errors.
+
+    HTTP Status Codes:
+        - 200: Language successfully updated.
+        - 400: Validation or processing error.
+
+    Dependencies:
+        - `User`: The model representing the user.
+        - `Profile`: The model storing additional profile information.
+        - `RulesWaf`: Model containing WAF rules with multilingual descriptions.
+        - `ProfileSerializer`: Serializer for profile updates.
+
+    Example Response:
+        - Success: {"msg": "Language successfully updated."}
+        - Failure: {"error": "Error message describing the failure."}
+    """
     try:
         data = request.data
         profile = Profile.objects.get(user=User.objects.get(id=id))

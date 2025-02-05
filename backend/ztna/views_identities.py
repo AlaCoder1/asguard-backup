@@ -170,6 +170,10 @@ def update_identities(request, id):
                    "isAdmin": data["isAdmin"],
                    "os": data["os"],
                    }
+        if data['roleAttributes'][0] != "":
+            payload['attribute_identitie'] = data['roleAttributes'][0]
+        if 'Description' in data:
+            payload['description'] = data['Description']
         serializer_update_identity = IdentitiesSerializerUpdate(identitie, data=payload, partial=True)
         if serializer_update_identity.is_valid():
             response = requests.patch(f"{PATH_ZTNA_IDENTITIES}/{identitie}", headers=headers, json=data_without_description, verify=False)

@@ -1,3 +1,63 @@
+"""
+This module provides authentication and subscription functionalities for an API using Django REST Framework.
+
+It includes:
+- Authentication via username/password with Active Directory or OpenLDAP verification.
+- User login and logout.
+- Two-factor authentication (2FA) using verification codes.
+- Integration with Stripe for handling subscription payments.
+
+Dependencies:
+    - Django REST Framework (drf)
+    - Django authentication modules
+    - Stripe API
+    - LDAP for directory authentication
+    - DRF-YASG for API documentation
+
+Constants:
+    - `CONSTANT_USER_EMAIL`: Email constant for user authentication.
+    - `CONSTANT_VERIFICATION_CODE`: Constant for verification code messages.
+    - `SUCCESS_MESSAGES_*`: Various success messages.
+    - `ERROR_MESSAGES_*`: Various error messages related to authentication and servers.
+
+Functions:
+    - `authentication(request)`: Handles user login with directory server authentication.
+    - `logout_view(request)`: Logs out the current user session.
+    - `create_checkout_session(request)`: Creates a Stripe checkout session for user subscriptions.
+    - `verify_code(request, id)`: Verifies a user's 2FA code and logs them in if valid.
+
+Models:
+    - `User`: Represents application users.
+    - `Profile`: Stores additional user information such as 2FA status.
+    - `Roles`: Defines user roles and permissions.
+    - `ADServer`: Represents directory servers for authentication.
+    - `plan`: Represents subscription plans.
+
+Example Usage:
+    ```
+    POST /api/authentication/
+    {
+        "username": "user@example.com",
+        "password": "securepassword"
+    }
+    
+    GET /api/logout/
+    
+    POST /api/create-checkout-session/
+    {
+        "features": ["Basic"],
+        "status": "active",
+        "price": 9.99
+    }
+    
+    POST /api/verify-code/{id}/
+    {
+        "verification_code": "123456"
+    }
+    ```
+
+"""
+
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -45,7 +105,7 @@ ERROR_MESSAGES_EXPIRED = _("has expired")
  
  
 @swagger_auto_schema(
-    'POST', responses={201: 'Created', 400: 'Bad Request'}, 
+    'POST', responses={200: 'Login successfully', 400: 'Bad Request'}, 
     security=[{"session_auth": []}],  # Specify the security requirement
     operation_summary="LOGIN API",
     operation_description="LOGIN API",
@@ -59,6 +119,41 @@ ERROR_MESSAGES_EXPIRED = _("has expired")
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentication(request):
+    """
+    Handles user authentication via Active Directory (AD) or OpenLDAP.
+
+    This function verifies user credentials either through an LDAP-based authentication 
+    process (for users with an email address) or a standard username/password authentication.
+
+    Args:
+        request (HttpRequest): The HTTP request containing authentication data.
+
+    Returns:
+        JsonResponse: A JSON response indicating authentication success or failure.
+            - 200: Successful authentication (with or without 2FA).
+            - 400: Bad request (e.g., missing AD servers, user not assigned to a server).
+            - 401: Unauthorized (e.g., invalid credentials, non-existent user).
+    
+    Authentication Flow:
+        1. If the request method is not POST, the function does nothing.
+        2. Extracts `username` and `password` from the request data.
+        3. Checks if `username` contains '@' (indicating an email-based login via AD/OpenLDAP).
+           - If no AD servers are configured, returns an error.
+           - If the user does not exist in the session, returns an error.
+           - If assigned to an AD server, attempts LDAP authentication:
+             - AD: Uses `simple_bind_s` with `userPrincipalName`.
+             - OpenLDAP: Uses `simple_bind_s` with the user's DN.
+        4. On successful authentication, retrieves user details and role information.
+        5. If 2FA is enabled, sends a verification code and requires user validation.
+        6. Otherwise, logs the user in and returns a success response.
+
+    Dependencies:
+        - `ADServer`: Model containing LDAP server configurations.
+        - `Profile`: Model storing user profile details (e.g., 2FA settings).
+        - `Roles`: Model defining user roles and permissions.
+        - `ldap`: Python LDAP library for directory authentication.
+        - `send_verification_code`: Function for sending 2FA verification codes.
+    """
     if (request.method == "POST"):
         data = request.data
         username = data['username']
@@ -141,20 +236,128 @@ def authentication(request):
         return JsonResponse({'message': message, "currentUser": current_user}, status=status)
  
  
-@swagger_auto_schema('GET', responses={201: 'Created', 400: 'Bad Request'},
+@swagger_auto_schema('GET', responses={200: 'Logout successfully', 400: 'Bad Request'},
                      security=[{"session_auth": []}],  # Specify the security requirement
                      operation_summary="Summary of your API endpoint",
                      operation_description="Description of your API endpoint")
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def logout_view(request):
+    """
+    Logs out the currently authenticated user.
+
+    This function invalidates the user's session and logs them out. 
+    It can be accessed by any user, regardless of authentication status.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response confirming logout with a success message.
+    
+    HTTP Status:
+        - 200: Logout successful.
+
+    Decorators:
+        - `@api_view(['GET'])`: Restricts the view to handle only GET requests.
+        - `@permission_classes([AllowAny])`: Allows access to all users, authenticated or not.
+
+    Dependencies:
+        - `logout`: Django's built-in logout function to clear user sessions.
+        - `SUCCESS_MESSAGES_LOGOUT`: A predefined constant message for successful logout.
+    """
     logout(request)
     return JsonResponse({"msg": SUCCESS_MESSAGES_LOGOUT})
  
-
+@swagger_auto_schema(
+    method='post',
+    operation_description="Create a Stripe checkout session for subscription plans.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['features', 'status', 'price'],
+        properties={
+            'features': openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(type=openapi.TYPE_STRING),
+                description="List of selected subscription features."
+            ),
+            'status': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="Subscription status."
+            ),
+            'price': openapi.Schema(
+                type=openapi.TYPE_NUMBER,
+                format=openapi.FORMAT_FLOAT,
+                description="Subscription price."
+            ),
+        }
+    ),
+    responses={
+        200: openapi.Response(
+            description="Stripe checkout session created successfully.",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description="Stripe checkout session ID."
+                    ),
+                    'url': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description="URL to complete the checkout."
+                    )
+                }
+            )
+        ),
+        400: openapi.Response(
+            description="Invalid request parameters."
+        )
+    }
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def create_checkout_session(request):
+    """
+    Creates a Stripe checkout session for processing subscription payments.
+
+    This function initializes a payment session based on the selected subscription 
+    plan and price provided in the request data. It integrates with Stripe to 
+    generate a checkout URL.
+
+    Args:
+        request (HttpRequest): The HTTP request containing subscription details.
+
+    Returns:
+        Response: A Stripe checkout session URL on success.
+        JsonResponse: An error message if the session creation fails.
+
+    Workflow:
+        1. Extracts `features`, `status`, and `price` from request data.
+        2. Determines the subscription plan based on selected features:
+            - "Basic" → Retrieves `Basic` plan from the database.
+            - "Full" → Retrieves `Full` plan from the database.
+            - Otherwise, matches features to a plan using `group_descriptions_by_plan()`.
+        3. Sets Stripe API key and prepares checkout session parameters.
+        4. Creates a Stripe checkout session with:
+            - Payment method (`card`).
+            - Subscription details (plan, price, and metadata).
+            - Success and cancellation URLs.
+        5. Returns the checkout session response.
+
+    HTTP Status:
+        - 200: Checkout session successfully created.
+        - 400: Error in processing the request.
+
+    Dependencies:
+        - `stripe`: Stripe API for payment processing.
+        - `plan`: Model storing subscription plans.
+        - `group_descriptions_by_plan()`: Groups plan descriptions for selection.
+        - `get_plan_ids_by_descriptions()`: Matches selected features to a plan.
+        - `show_url(request)`: Retrieves the base URL for success/cancel redirection.
+
+    Raises:
+        - Exception: Catches any errors during session creation and returns an error response.
+    """
     data = request.data
     list_features = data['features']
     if "Basic"in list_features:
@@ -209,6 +412,43 @@ def create_checkout_session(request):
  
 @csrf_exempt
 def verify_code(request,id):
+    """
+    Verifies a user's authentication code and logs them in if valid.
+
+    This function checks whether the provided verification code matches the one 
+    stored for the user. If the code is valid and not expired, the user is logged in.
+
+    Args:
+        request (HttpRequest): The HTTP request containing the verification code.
+        id (int): The ID of the user attempting verification.
+
+    Returns:
+        JsonResponse: 
+            - 200: If login is successful or if the code has expired.
+            - 400: If the code is invalid or does not exist.
+
+    Workflow:
+        1. Extracts the verification code from the request body.
+        2. Retrieves the user and their stored verification code.
+        3. Checks if the code is still valid:
+            - If valid, logs in the user and deletes the verification code.
+            - If expired, deletes the code and returns an expiration message.
+            - If invalid, returns an error response.
+        4. Handles cases where no verification code exists.
+
+    HTTP Status:
+        - 200: Login successful or verification code expired.
+        - 400: Invalid verification code or no code found.
+
+    Dependencies:
+        - `User`: Django's user model.
+        - `VerificationCode`: Model storing temporary authentication codes.
+        - `timezone.now()`: Checks if the code is still valid.
+        - `login()`: Logs in the user upon successful verification.
+
+    Raises:
+        - `VerificationCode.DoesNotExist`: If no verification code is found for the user.
+    """
     if request.method == 'POST':
         user = User.objects.get(id=id)
         data = json.loads(request.body)
@@ -231,6 +471,42 @@ def verify_code(request,id):
 
 @csrf_exempt
 def resend_verification_code(request,id):
+    """
+    Resends a new verification code to the user's email.
+
+    This function generates a new verification code, sends it to the user's 
+    registered email, and updates the expiration time in the database.
+
+    Args:
+        request (HttpRequest): The HTTP request triggering the resend action.
+        id (int): The ID of the user requesting a new verification code.
+
+    Returns:
+        JsonResponse: 
+            - 200: If the verification code is successfully generated and sent.
+
+    Workflow:
+        1. Retrieves the user by ID.
+        2. Generates a new verification code using `generate_verification_code()`.
+        3. Sends the new code via email using `send_email_to_user()`.
+        4. Updates or creates a `VerificationCode` entry for the user, setting:
+            - The new code.
+            - A new expiration time (30 minutes from the current time).
+        5. Returns a success message.
+
+    HTTP Status:
+        - 200: Verification code successfully resent.
+
+    Dependencies:
+        - `User`: Django's user model.
+        - `generate_verification_code()`: Function that generates a new verification code.
+        - `send_email_to_user()`: Function to send the verification code via email.
+        - `VerificationCode`: Model storing authentication codes.
+        - `datetime.now() + timedelta(minutes=30)`: Sets the code expiration time.
+
+    Raises:
+        - `User.DoesNotExist`: If no user is found with the given ID.
+    """
     if request.method == 'POST':
         user = User.objects.get(id=id)
         verification_code = generate_verification_code()

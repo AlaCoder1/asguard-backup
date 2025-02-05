@@ -30,6 +30,7 @@ ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_MODSECURITY_RULE = _("Cannot deleting or updating one of the modsecurity rule")
 
 
 ########################################
@@ -136,7 +137,7 @@ def get_waf_rule(request, id):
                 items=Schema(type=TYPE_STRING)),
             'operators': Schema(
                 type=TYPE_ARRAY, 
-                example=[{"type": "eq", "value": 1}, {"type": "lt", "value": 45}], 
+                example=[{"type": "eq", "value": "1"}, {"type": "lt", "value": "45"}], 
                 description= "If a transformation don't have a value then value will be an empty string", 
                 items=Schema(
                     type=TYPE_OBJECT, required=['type', 'value'], 
@@ -148,7 +149,7 @@ def get_waf_rule(request, id):
             'action': Schema(
                 type=TYPE_ARRAY, 
                 description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string",
-                example=[{"type": "phase", "value": 3}, {"type": "id", "value": 30}],
+                example=[{"type": "phase", "value": "3"}, {"type": "id", "value": "30"}],
                 items=Schema(
                     type=TYPE_OBJECT, required=['type', 'value'],
                     properties={'type': Schema(type=TYPE_STRING),
@@ -162,6 +163,7 @@ def create_waf_rule(request):
     """Creating a new WAF Rule and adding it to the database"""
     try:
         data = request.data
+        print("data rule= ", data)
         data = convert_waf_rule_payload(data)
         
         serializer_rule_waf = RulesWafSerializer(data=data)
@@ -194,6 +196,10 @@ def delete_waf_rule(request, id):
     """Deleting a waf_rule from database"""
     try:
         waf_rule = RulesWaf.objects.get(id=id)
+
+        # Return an error when trying to delete one of the default modsecurity rules
+        if not waf_rule.created:
+            return JsonResponse({"error": ERROR_MESSAGES_MODSECURITY_RULE}, status=400)
 
         # Delete rule from system
         delete_rule_waf_in_system(waf_rule.rule_content)

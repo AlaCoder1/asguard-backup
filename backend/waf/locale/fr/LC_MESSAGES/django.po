@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 20:39+0000\n"
+"POT-Creation-Date: 2025-02-05 16:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -69,3 +69,7 @@ msgstr "Erreur système lors de la modification de"
 #: backend/waf/views.py:32
 msgid "does not exist"
 msgstr "n'existe pas"
+
+#: backend/waf/views.py:33
+msgid "Cannot deleting or updating one of the modsecurity rule"
+msgstr "Impossible de supprimer ou de mettre à jour l'une des règles de modsecurity"

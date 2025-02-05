@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 class Identities(models.Model):
     ref_identitie = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
-    attribute_identitie = models.CharField(max_length=500, null=True, blank=True)
+    attribute_identitie = models.CharField(max_length=500, default="attribute")
     type = models.CharField(max_length=200)
     hostname = models.CharField(max_length=200, null=True, blank=True)
     description = models.CharField(max_length=800, null=True, blank=True)

@@ -1,25 +1,26 @@
 from django.shortcuts import render
+from backend.double_mask.models import DoubleMask
 from backend.double_mask.serializers import DoubleMaskSerializer
-from backend.ipsecmonitoring.functions import run_command
 from django.utils.translation import gettext_lazy as _
 from rest_framework.decorators import api_view, authentication_classes
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.authentication import SessionAuthentication
 from django.http import JsonResponse
-
+from .functions import run_command
 CONSTANT_DOUBLE=_("Double Mask")
 SUCCESS_MESSAGES_ACTIVE=_("is active.")
 SUCCESS_MESSAGES_DEACTIVE=_("is deactive.")
 @swagger_auto_schema(
-    method='PUT', 
-    operation_summary="API to active double mask.",
-    operation_description="This endpoint allows users to active double mask.",
+    method='PUT',
+    operation_summary="API to activate double mask.",
+    operation_description="This endpoint allows users to activate the double mask.",
     responses={
         200: f"{CONSTANT_DOUBLE} {SUCCESS_MESSAGES_ACTIVE}",
-        400:  _("An error occurred while activating Double Mask.")
+        400: "An error occurred while activating Double Mask."
     }
 )
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def activate_double_mask(request):
@@ -31,10 +32,12 @@ def activate_double_mask(request):
     Otherwise, it activates double mask and returns a success message.
     """
     if request.method=="PUT":
-        _,error=run_command("cd /home/dbmask/dm && sudo make install")
+        out,error=run_command("cd /home/dbmask/dm && sudo make install")
+        print(error)
         if error!="":
             active=True
-            double_mask_ser=DoubleMaskSerializer({"active":active})
+            object_double_mask=DoubleMask.objects.first()
+            double_mask_ser=DoubleMaskSerializer(object_double_mask, data={"active":active})
             if double_mask_ser.is_valid():
                 double_mask_ser.save()
                 message=f"{CONSTANT_DOUBLE} {SUCCESS_MESSAGES_ACTIVE}"
@@ -51,7 +54,7 @@ def activate_double_mask(request):
     operation_description="This endpoint allows users to deactive double mask.",
     responses={
         200: f"{CONSTANT_DOUBLE} {SUCCESS_MESSAGES_DEACTIVE}",
-        400:  _("An error occurred while deactivating Double Mask.")
+        400: "An error occurred while deactivating Double Mask."
     }
 )
 @api_view(['PUT'])
@@ -65,10 +68,12 @@ def deactivate_double_mask(request):
     Otherwise, it deactivates double mask and returns a success message.
     """
     if request.method=="PUT":
-        _,error=run_command("cd /home/dbmask/dm && sudo make uninstall")
+        out,error=run_command("cd /home/dbmask/dm && sudo make uninstall")
+        print(error)
         if error!="":
             active=False
-            double_mask_ser=DoubleMaskSerializer({"active":active})
+            object_double_mask=DoubleMask.objects.first()
+            double_mask_ser=DoubleMaskSerializer(object_double_mask, data={"active":active})
             if double_mask_ser.is_valid():
                 double_mask_ser.save()
                 message=f"{CONSTANT_DOUBLE} {SUCCESS_MESSAGES_DEACTIVE}"
@@ -76,9 +81,31 @@ def deactivate_double_mask(request):
                 
         message=_("An error occurred while deactivating Double Mask.")
         status=400
-        
-        
     return JsonResponse({"msg": message},status=status)
 
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def get_double_mask(request):
+    """
+    API to get double mask status.
 
+    This function handles the GET request to get the status of double mask.
+    It checks if double mask is installed and returns its status.
+    
+    
+    """
+    if request.method == 'GET':
+        output,error=run_command('sudo lsmod | grep "calculateDM"')
+        if output=="":
+            active=False
+        else:
+            active=True
+        if DoubleMask.objects.all().count()==1:
+            double_mask_object=DoubleMask.objects.all().first()
+            double_mask_object.active=active
+            double_mask_object.save()
+        else:
+            double_mask_object=DoubleMask(active=active)
+            double_mask_object.save()
+    return JsonResponse({"msg": {"active":active}},status=200)
     

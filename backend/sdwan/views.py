@@ -13,8 +13,8 @@ from backend.sdwan.list_area import get_list_all_area, get_one_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule, get_one_sdwan_rule
 from backend.sdwan.models import Area, AreaInterface, SdwanRules
 from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
-from backend.sdwan.utils import routing_table_id
-from backend.sdwan.utils_system import check_celery, create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
+from backend.sdwan.utils import search_routing_table_id
+from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
 from utils.errors_utils import CommandExecutionError
 from utils.utils_functions import fix_ipv4_address
 
@@ -175,10 +175,9 @@ def get_sdwan_rule(request, id):
                                     'health_check', 'health_check_target'],
         properties={
             'name': Schema(type=TYPE_STRING, example="test failover"),
-            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2", description="format of address/mask"),
+            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2/32", description="format of address/mask"),
             'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
             'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
-            'destination_address':Schema(type=TYPE_STRING, example="10.1.12.13", description="format of address/mask"),
             'health_check':Schema(type=TYPE_INTEGER, example=1),
             'health_check_target':Schema(type=TYPE_STRING, example="8.8.8.8"),
             'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")
@@ -194,7 +193,7 @@ def create_sdwan_rule(request):
         # Apply correction for ipv4 addresses
         data["source_address"] = fix_ipv4_address(data["source_address"])
 
-        data["table_id"] = routing_table_id()
+        data["table_id"] = search_routing_table_id()
         if data["algorythme_type"] == "failover":
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
         serializer_sdwan_rule = SdwanRulesSerializer(data=data)
@@ -244,10 +243,9 @@ def delete_sdwan_rule(request, id):
                                     'health_check', 'health_check_target'],
         properties={
             'name': Schema(type=TYPE_STRING, example="test failover"),
-            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2", description="format of address/mask"),
+            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2/32", description="format of address/mask"),
             'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
             'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
-            'destination_address':Schema(type=TYPE_STRING, example="10.1.12.13", description="format of address/mask"),
             'health_check':Schema(type=TYPE_INTEGER, example=1),
             'health_check_target':Schema(type=TYPE_STRING, example="8.8.8.8"),
             'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")

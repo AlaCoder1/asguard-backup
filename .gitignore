@@ -92,6 +92,9 @@
 /backend/managementLogs/migrations/__pycache__/
 /backend/managementLogs/__pycache__/
 
+/backend/double_mask/migrations/__pycache__/
+/backend/double_mask/__pycache__/
+
 /node_modules/
 
 /static/

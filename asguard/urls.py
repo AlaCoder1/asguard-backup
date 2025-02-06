@@ -103,6 +103,7 @@ urlpatterns = [
     path("system_log/",system_log),
     path("logrotate/",logrotate_page),
     path("system_log/",include('backend.managementLogs.urls')),
+    path("double_mask/",include("backend.double_mask.urls"))
 
 
 

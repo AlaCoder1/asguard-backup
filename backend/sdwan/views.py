@@ -71,7 +71,7 @@ def get_area(request, id):
         type=TYPE_OBJECT, required=['name', 'members'],
         properties={
             'name': Schema(type=TYPE_STRING, example="area1"),
-            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces ids", items=Schema(type=TYPE_STRING)),
+            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces ids", items=Schema(type=TYPE_INTEGER)),
                     }
                     ))
 @api_view(['POST'])
@@ -116,7 +116,7 @@ def delete_area(request, id):
         type=TYPE_OBJECT, required=['name', 'members'],
         properties={
             'name': Schema(type=TYPE_STRING, example="area1"),
-            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces ids", items=Schema(type=TYPE_STRING)),
+            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces ids", items=Schema(type=TYPE_INTEGER)),
                     }
                     ))
 @api_view(['PUT'])

@@ -3,7 +3,7 @@ from backend.network.models import IP4Config, Interface
 from backend.sdwan.models import AreaInterface, SdwanRules
 
 
-def routing_table_id():
+def search_routing_table_id():
     """Return the first possible id that system can create a routing table with it"""
     sdwan_rule_list = SdwanRules.objects.order_by("table_id").values("table_id")
     sdwan_rule_list = [id['table_id'] for id in sdwan_rule_list]

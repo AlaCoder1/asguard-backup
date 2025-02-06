@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'backend.ipsecmonitoring',
     'backend.managementLogs',
+    'backend.double_mask'
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {

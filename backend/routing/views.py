@@ -120,12 +120,16 @@ def create_routing(request):
             else:
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
         
-        # Add an error message for unique constraints of Network and Gateway 
+        # Raise an error message for unique constraints of Network and Gateway 
         if len(Routing.objects.filter(destination_address=data["destination_address"], gateway=gateway)) > 0:
             return JsonResponse({"error": ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY}, status=400)
         
         # Get the gateway instance
         gateway_instance = Gateway.objects.get(id=gateway)
+        # Raise an error in the GatewayInterface with this gateway does not exist
+        if len(GatewayInterface.objects.filter(gateway=gateway_instance)) == 0:
+            raise Gateway.DoesNotExist
+        
         serializer_routing = RoutingSerializer(data=data)
         if serializer_routing.is_valid():
             gateway_interface_instance = GatewayInterface.objects.filter(gateway=gateway_instance)[0]
@@ -232,6 +236,9 @@ def update_routing(request, id):
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
         
         gateway_instance = Gateway.objects.get(id=gateway)
+        # Raise an error in the GatewayInterface with this gateway does not exist
+        if len(GatewayInterface.objects.filter(gateway=gateway_instance)) == 0:
+            raise Gateway.DoesNotExist
         gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)
         gateway_address = gateway_instance.gwaddress
         interface_ifname = gateway_interface_instance.interface.ifname

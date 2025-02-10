@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
 
+from backend.managementCertificates.models import Certificate
 from backend.waf.list_waf import get_alerts, get_list_all_waf_rule, get_list_all_waf_application, get_one_waf_rule, get_one_waf_application, get_one_waf_config
 from backend.waf.models import ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.serializers import ApplicationWafSerializer, ConfigWafSerializer, RulesWafSerializer
@@ -21,6 +22,7 @@ CONSTANT_WAF_CONFIG = _("WAF Config")
 CONSTANT_WAF_RULE = _("WAF Rule")
 CONSTANT_WAF_APPLICATION = _("WAF Application")
 CONSTANT_WAF_ALERT = _("WAF Alert")
+CONSTANT_CERTIFICATE = _("Certificate")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -30,6 +32,7 @@ ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_MODSECURITY_RULE = _("Cannot deleting or updating one of the modsecurity rule")
 
 
 ########################################
@@ -136,7 +139,7 @@ def get_waf_rule(request, id):
                 items=Schema(type=TYPE_STRING)),
             'operators': Schema(
                 type=TYPE_ARRAY, 
-                example=[{"type": "eq", "value": 1}, {"type": "lt", "value": 45}], 
+                example=[{"type": "eq", "value": "1"}, {"type": "lt", "value": "45"}], 
                 description= "If a transformation don't have a value then value will be an empty string", 
                 items=Schema(
                     type=TYPE_OBJECT, required=['type', 'value'], 
@@ -148,7 +151,7 @@ def get_waf_rule(request, id):
             'action': Schema(
                 type=TYPE_ARRAY, 
                 description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string",
-                example=[{"type": "phase", "value": 3}, {"type": "id", "value": 30}],
+                example=[{"type": "phase", "value": "3"}, {"type": "id", "value": "30"}],
                 items=Schema(
                     type=TYPE_OBJECT, required=['type', 'value'],
                     properties={'type': Schema(type=TYPE_STRING),
@@ -162,6 +165,7 @@ def create_waf_rule(request):
     """Creating a new WAF Rule and adding it to the database"""
     try:
         data = request.data
+        print("data rule= ", data)
         data = convert_waf_rule_payload(data)
         
         serializer_rule_waf = RulesWafSerializer(data=data)
@@ -194,6 +198,10 @@ def delete_waf_rule(request, id):
     """Deleting a waf_rule from database"""
     try:
         waf_rule = RulesWaf.objects.get(id=id)
+
+        # Return an error when trying to delete one of the default modsecurity rules
+        if not waf_rule.created:
+            return JsonResponse({"error": ERROR_MESSAGES_MODSECURITY_RULE}, status=400)
 
         # Delete rule from system
         delete_rule_waf_in_system(waf_rule.rule_content)
@@ -308,7 +316,7 @@ def get_waf_application(request, id):
     operation_summary="API TO CREATE A WAF APPLICATION", 
     request_body=Schema(
         type=TYPE_OBJECT, 
-        required=['name', 'application_type', 'application_value', 'description', 'rules'],
+        required=['name', 'application_type', 'application_value', 'description', 'rules', 'config'],
         properties={'name': Schema(
                         type=TYPE_STRING, example="application_waf", 
                         description="Name of the application"),
@@ -340,7 +348,31 @@ def get_waf_application(request, id):
                                                    description="Id of the rule"),
                                 'rule_policy': Schema(type=TYPE_BOOLEAN, 
                                                       description="True if the user select this rule in Block"),
-                                'rule_log': Schema(type=TYPE_BOOLEAN)}))
+                                'rule_log': Schema(type=TYPE_BOOLEAN)})),
+                    'config': Schema(
+                        type=TYPE_OBJECT, required=[
+                            "rule_engine_initialization", "access_request_bodies", "xml_request_body_parser",
+                            "json_request_body_parser", "maximum_request_body_size", 
+                            "request_body_size_files_excluded", "request_body_limit_action", 
+                            "maximum_parsing_depth_json", "maximum_number_args_request", "pcre_match_limit", 
+                            "pcre_match_limit_recursion", "response_body_access", "response_body_mimetype", 
+                            "response_body_limit", "response_body_limit_action"],
+                        properties={
+                            'rule_engine_initialization': Schema(type=TYPE_STRING, enum=["On", "Off", "DetectionOnly"]),
+                            'access_request_bodies':Schema(type=TYPE_BOOLEAN, default=False),
+                            'xml_request_body_parser':Schema(type=TYPE_BOOLEAN, default=False),
+                            'json_request_body_parser':Schema(type=TYPE_BOOLEAN, default=False),
+                            'maximum_request_body_size': Schema(type=TYPE_INTEGER, example=13107200),
+                            'request_body_size_files_excluded': Schema(type=TYPE_INTEGER, example=131072),
+                            'request_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject"]),
+                            'maximum_parsing_depth_json': Schema(type=TYPE_INTEGER, example=512),
+                            'maximum_number_args_request': Schema(type=TYPE_INTEGER, example=1000),
+                            'pcre_match_limit': Schema(type=TYPE_INTEGER, example=1000),
+                            'pcre_match_limit_recursion': Schema(type=TYPE_INTEGER, example=1000),
+                            'response_body_access':Schema(type=TYPE_BOOLEAN, default=True),
+                            'response_body_mimetype': Schema(type=TYPE_STRING, enum=["text/html", "text/xml", "text/plain", "text/*"]),
+                            'response_body_limit': Schema(type=TYPE_INTEGER, example=524288),
+                            'response_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject", "log", "log allow", "pass"])}),
                     }
                     ))
 @api_view(['POST'])
@@ -350,6 +382,10 @@ def create_waf_application(request):
     """Creating a new WAF Application and adding it to the database"""
     try:
         data = request.data
+
+        # Raise an error in https protocol if the certificate does not exist
+        if data.get("application_protocol") == "https":
+            Certificate.objects.get(name=data["certificate_name"])
 
         # Create another object that make country as a string to be saved in database
         data_serializer = data.copy()
@@ -380,7 +416,8 @@ def create_waf_application(request):
         # Delete application from system
         delete_application_waf_in_system(data["name"])
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_WAF_APPLICATION}"}, status=400)
-
+    except Certificate.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_CERTIFICATE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE A WAF RULE",)
@@ -413,7 +450,7 @@ def delete_waf_application(request, id):
     operation_summary="API TO CREATE A WAF APPLICATION", 
     request_body=Schema(
         type=TYPE_OBJECT, 
-        required=['name', 'application_type', 'application_value', 'description', 'rules'],
+        required=['name', 'application_type', 'application_value', 'description', 'rules', 'config'],
         properties={'name': Schema(
                         type=TYPE_STRING, example="application_waf", 
                         description="Name of the application"),
@@ -445,7 +482,31 @@ def delete_waf_application(request, id):
                                                    description="Id of the rule"),
                                 'rule_policy': Schema(type=TYPE_BOOLEAN, 
                                                       description="True if the user select this rule in Block"),
-                                'rule_log': Schema(type=TYPE_BOOLEAN)}))
+                                'rule_log': Schema(type=TYPE_BOOLEAN)})),
+                    'config': Schema(
+                        type=TYPE_OBJECT, required=[
+                            "rule_engine_initialization", "access_request_bodies", "xml_request_body_parser",
+                            "json_request_body_parser", "maximum_request_body_size", 
+                            "request_body_size_files_excluded", "request_body_limit_action", 
+                            "maximum_parsing_depth_json", "maximum_number_args_request", "pcre_match_limit", 
+                            "pcre_match_limit_recursion", "response_body_access", "response_body_mimetype", 
+                            "response_body_limit", "response_body_limit_action"],
+                        properties={
+                            'rule_engine_initialization': Schema(type=TYPE_STRING, enum=["On", "Off", "DetectionOnly"]),
+                            'access_request_bodies':Schema(type=TYPE_BOOLEAN, default=False),
+                            'xml_request_body_parser':Schema(type=TYPE_BOOLEAN, default=False),
+                            'json_request_body_parser':Schema(type=TYPE_BOOLEAN, default=False),
+                            'maximum_request_body_size': Schema(type=TYPE_INTEGER, example=13107200),
+                            'request_body_size_files_excluded': Schema(type=TYPE_INTEGER, example=131072),
+                            'request_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject"]),
+                            'maximum_parsing_depth_json': Schema(type=TYPE_INTEGER, example=512),
+                            'maximum_number_args_request': Schema(type=TYPE_INTEGER, example=1000),
+                            'pcre_match_limit': Schema(type=TYPE_INTEGER, example=1000),
+                            'pcre_match_limit_recursion': Schema(type=TYPE_INTEGER, example=1000),
+                            'response_body_access':Schema(type=TYPE_BOOLEAN, default=True),
+                            'response_body_mimetype': Schema(type=TYPE_STRING, enum=["text/html", "text/xml", "text/plain", "text/*"]),
+                            'response_body_limit': Schema(type=TYPE_INTEGER, example=524288),
+                            'response_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject", "log", "log allow", "pass"])}),
                     }
                     ))
 @api_view(['PUT'])
@@ -457,6 +518,10 @@ def update_waf_application(request, id):
         waf_application = ApplicationWaf.objects.get(id=id)
         config = waf_application.config
         data = request.data
+
+        # Raise an error in https protocol if the certificate does not exist
+        if data.get("application_protocol") == "https":
+            Certificate.objects.get(name=data["certificate_name"])
 
         # Create another object that make country as a string to be saved in database
         data_serializer = data.copy()
@@ -495,6 +560,8 @@ def update_waf_application(request, id):
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_WAF_APPLICATION}"}, status=400)
     except ApplicationWaf.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_WAF_APPLICATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except Certificate.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_CERTIFICATE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @api_view(['POST'])
@@ -502,7 +569,7 @@ def update_waf_application(request, id):
 @permission_classes([IsAuthenticated])
 def restart_nginx(request):
     restart_nginx_in_system()
-    return JsonResponse({"msg": ""}, status=201)
+    return JsonResponse({"msg": ""}, status=200)
 
 
 ########################################

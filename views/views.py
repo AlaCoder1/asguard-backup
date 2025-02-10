@@ -37,7 +37,7 @@ from backend.waf.list_waf import get_alerts, get_list_all_waf_application, get_l
 from backend.ztna.list_ztna import get_edge_router_policies, get_local_domain, get_host_configs, get_identities, get_intercept_configs, get_routers, get_service_policies, get_services
 from backend.ztna.utils import get_status_ztna_service, get_ztna_token_from_system
 from backend.ztna.list_ztna import get_service_edge_router_policies
-from views.functions import delete_inactive_conn, get_logrotate_data, get_uuid_v2, get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
+from views.functions import delete_inactive_conn, get_compr_ratio, get_double_mask, get_logrotate_data, get_uuid_v2, get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
 
 from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
@@ -831,8 +831,9 @@ def logrotate_page(request):
     return render(request, 'logrotate.html',context)
 
 @login_required(login_url='/')
-def double_masque(request):
-    return render(request, 'double_masque.html')
+def double_mask_page(request):
+    list_double=get_double_mask(request)
+    return render(request, 'double_mask.html',list_double)
 
 ################## generale information ##################
 

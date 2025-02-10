@@ -32,6 +32,7 @@ SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
 SUCCESS_MESSAGES_ENABLED = _("is enabled")
 SUCCESS_MESSAGES_DISABLED = _("is disabled")
+SUCCESS_MESSAGES_UP = _("is up")
 # Error messages
 ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_DELETING = _("System error in deleting")
@@ -573,7 +574,7 @@ def up_server_ipsec(request, id):
     server = ServerIPsec.objects.get(id=id)
     up_ipsec_status = up_ipsec_conn(server.conn_name)
     if up_ipsec_status:
-        return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+        return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_UP}"}, status=201)
     return JsonResponse({"error": ERROR_MESSAGES_UP_CONFIG}, status=400)
 
 

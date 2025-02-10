@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 20:39+0000\n"
+"POT-Creation-Date: 2025-02-05 16:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,15 +26,15 @@ msgstr "Configuration VLAN"
 msgid "Saved"
 msgstr "Sauvegardé"
 
-#: backend/vlan/models.py:8
+#: backend/vlan/models.py:18
 msgid "tag"
 msgstr "tag"
 
-#: backend/vlan/models.py:9
+#: backend/vlan/models.py:22
 msgid "priority"
 msgstr "priorité"
 
-#: backend/vlan/models.py:10
+#: backend/vlan/models.py:23
 msgid "description"
 msgstr "description"
 

@@ -272,6 +272,12 @@ export default {
               href: "/ztna",
               active: "ZTNA",
             },
+            {
+              title: "subtitle.Dmasque",
+              icon: "",
+              href: "/double-masque",
+              active: "double-masque",
+            },
           ],
           subMenuVisible: false,
         },

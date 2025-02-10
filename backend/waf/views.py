@@ -148,7 +148,7 @@ def get_waf_rule(request, id):
             'transformations': Schema(
                 type=TYPE_ARRAY, example=["sqlHexDecode", "base64DecodeExt"], 
                 items=Schema(type=TYPE_STRING)),
-            'action': Schema(
+            'actions': Schema(
                 type=TYPE_ARRAY, 
                 description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string",
                 example=[{"type": "phase", "value": "3"}, {"type": "id", "value": "30"}],
@@ -165,7 +165,6 @@ def create_waf_rule(request):
     """Creating a new WAF Rule and adding it to the database"""
     try:
         data = request.data
-        print("data rule= ", data)
         data = convert_waf_rule_payload(data)
         
         serializer_rule_waf = RulesWafSerializer(data=data)
@@ -241,7 +240,7 @@ def delete_waf_rule(request, id):
             'transformations': Schema(
                 type=TYPE_ARRAY, example=["sqlHexDecode", "base64DecodeExt"], 
                 items=Schema(type=TYPE_STRING)),
-            'action': Schema(
+            'actions': Schema(
                 type=TYPE_ARRAY, 
                 description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string",
                 example=[{"type": "phase", "value": 3}, {"type": "id", "value": 30}],

@@ -70,7 +70,8 @@ def start_ztna(request):
         change_status_ztna_service()
         return JsonResponse({"message": f"{CONSTANT_ZTNA} {SUCCESS_MESSAGES_STARTING}"}, status=200)
         
-    except CommandExecutionError:
+    except CommandExecutionError as err:
+        print("err= ", str(err))
         return JsonResponse({"error": f"{ERROR_MESSAGES_STATUS} {CONSTANT_ZTNA}"}, status=400)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)

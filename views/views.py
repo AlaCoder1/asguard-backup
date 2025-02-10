@@ -830,6 +830,10 @@ def logrotate_page(request):
     context = {'logrotate':list_service}
     return render(request, 'logrotate.html',context)
 
+@login_required(login_url='/')
+def double_masque(request):
+    return render(request, 'double_masque.html')
+
 ################## generale information ##################
 
 def get_generale_settings(request,id):

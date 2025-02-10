@@ -209,6 +209,8 @@ def create_sdwan_rule(request):
             if len(AreaInterface.objects.filter(area_id=data["area"])) != 2:
                 return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER}, status=400)
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
+        else:
+            data["primary_interface"] = None
         serializer_sdwan_rule = SdwanRulesSerializer(data=data)
         if serializer_sdwan_rule.is_valid():
 
@@ -281,6 +283,8 @@ def update_sdwan_rule(request, id):
             if len(AreaInterface.objects.filter(area_id=data["area"])) != 2:
                 return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER}, status=400)
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
+        else:
+            data["primary_interface"] = None
         sdwan_rule = SdwanRules.objects.get(id=id)
 
         serializer_sdwan_rule = SdwanRulesSerializer(sdwan_rule, data=data)

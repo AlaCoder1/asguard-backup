@@ -1,6 +1,6 @@
 import json
 import subprocess
-from backend.double_mask.functions import is_address_in_subnet
+from backend.double_mask.functions import get_nft_ip_addresses, is_address_in_subnet
 from backend.double_mask.models import DoubleMask
 from backend.managementLogs.models import LogrotateData, LogsData
 from backend.network.functions import run_command
@@ -10,7 +10,7 @@ from backend.server_dhcp4.models import ServerDhcp4
 from backend.vlan.models import Vlan
 from django.core import serializers
 from backend.vxlan.models import Vxlan
-from views.test_address import get_nft_ip_addresses
+
 
 def delete_inactive_conn():
     result = subprocess.run("sudo nmcli connection show | awk '$NF == \"--\" {print $2}'", shell=True, capture_output=True, text=True)

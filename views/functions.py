@@ -1,6 +1,6 @@
 import json
 import subprocess
-from backend.double_mask.functions import get_nft_ip_addresses, is_address_in_subnet
+from backend.double_mask.functions import get_compr_ratio
 from backend.double_mask.models import DoubleMask
 from backend.managementLogs.models import LogrotateData, LogsData
 from backend.network.functions import run_command
@@ -190,7 +190,9 @@ def get_uuid_v2(ifname):
         output=[value for value in output if value]
         uuid=output[1]
         return uuid
-    
+ 
+
+        
 def get_double_mask(request):
     """API to get the double mask status from the database"""
     if request.method == 'GET':
@@ -199,32 +201,15 @@ def get_double_mask(request):
             active=False
         else:
             active=True
+        ratio=get_compr_ratio()
         if DoubleMask.objects.all().count()==1:
             double_mask_object=DoubleMask.objects.all().first()
             double_mask_object.active=active
+            double_mask_object.ratio=ratio
             double_mask_object.save()
         else:
             double_mask_object=DoubleMask(active=active)
             double_mask_object.save()
-    return active
+    return json.dumps({"active":active ,"ratio":ratio})
     
     
-def get_compr_ratio(request):
-    """
-    API to get compression ratioo.
-    
-    This function handles the GET request to get the compression ratio of double mask.
-    
-    
-    """
-    if request.method == 'GET':
-        output,error=run_command('sudo dmesg | grep "The Double mask for"')
-        if output=="":
-            ratio=0
-        else:
-            ruleset_list,n=get_nft_ip_addresses()
-            subnet_double=output.split("is")[1].split("/")[0:1]
-            subnet=subnet_double[0]+"/"+subnet_double[1]
-            ruleset_compr=[x for x in ruleset_list if is_address_in_subnet(x,subnet) ]
-            ratio=(len(ruleset_compr)/n)
-        return ratio

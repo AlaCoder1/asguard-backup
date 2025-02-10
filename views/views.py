@@ -833,9 +833,7 @@ def logrotate_page(request):
 @login_required(login_url='/')
 def double_mask_page(request):
     list_double=get_double_mask(request)
-    ratio=get_compr_ratio(request)
-    context=json.dumps({"status":list_double,"ratio":ratio})
-    return render(request, 'double_mask.html',context)
+    return render(request, 'double_mask.html',list_double)
 
 ################## generale information ##################
 

@@ -6,7 +6,7 @@ urlpatterns = [
     path('activate', views.activate_double_mask, name="activate"),
     path('deactivate', views.deactivate_double_mask, name="deactivate"),
     path('getstatus', views.get_double_mask, name="getstatus"),
-    path('getratio', views.get_compr_ratio, name="getratio"),
+    # path('getratio', views.get_compr_ratio, name="getratio"),
     
    
 ]

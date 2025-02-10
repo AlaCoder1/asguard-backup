@@ -23,11 +23,11 @@ msgid "Double Mask"
 msgstr "Double masque"
 
 #: backend/double_mask/views.py:12
-msgid "is active."
+msgid "is activated."
 msgstr "est activé."
 
 #: backend/double_mask/views.py:13
-msgid "is deactive."
+msgid "is deactivated."
 msgstr "est désactivé."
 
 #: backend/double_mask/views.py:45

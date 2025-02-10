@@ -30,3 +30,23 @@ def get_nft_ip_addresses():
     except Exception as e:
         print(f"Error: {e}")
         return [],0
+    
+def get_compr_ratio():
+    """
+    API to get compression ratioo.
+    
+    This function handles the GET request to get the compression ratio of double mask.
+    
+    
+    """
+    output,error=run_command('sudo dmesg | grep "The Double mask for"')
+    if output=="":
+        ratio=0
+    else:
+        ruleset_list,n=get_nft_ip_addresses()
+        subnet_double=output.split("is")[1].split("/")[0:2]
+        print(subnet_double)
+        subnet=subnet_double[0].strip()+"/"+subnet_double[1].strip()
+        ruleset_compr=[x for x in ruleset_list if is_address_in_subnet(x,subnet) ]
+        ratio=(len(ruleset_compr)/n)*100
+    return ratio

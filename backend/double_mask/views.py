@@ -7,10 +7,10 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.authentication import SessionAuthentication
 from django.http import JsonResponse
-from .functions import get_nft_ip_addresses, is_address_in_subnet, run_command
+from .functions import get_compr_ratio, get_nft_ip_addresses, is_address_in_subnet, run_command
 CONSTANT_DOUBLE=_("Double Mask")
-SUCCESS_MESSAGES_ACTIVE=_("is active.")
-SUCCESS_MESSAGES_DEACTIVE=_("is deactive.")
+SUCCESS_MESSAGES_ACTIVE=_("is activated.")
+SUCCESS_MESSAGES_DEACTIVE=_("is deactivated.")
 @swagger_auto_schema(
     method='PUT',
     operation_summary="API to activate double mask.",
@@ -33,17 +33,21 @@ def activate_double_mask(request):
     """
     if request.method=="PUT":
         out,error=run_command("cd /home/dbmask/dm && sudo make install")
-        print(error)
-        if error!="":
+        if error.strip()=="":
             active=True
             object_double_mask=DoubleMask.objects.first()
             double_mask_ser=DoubleMaskSerializer(object_double_mask, data={"active":active})
             if double_mask_ser.is_valid():
+               
                 double_mask_ser.save()
                 message=f"{CONSTANT_DOUBLE} {SUCCESS_MESSAGES_ACTIVE}"
                 status=200
-        message=_("An error occurred while activating Double Mask.")
-        status=400
+            else:
+                message=str(next(iter(double_mask_ser.errors.values()))[0]).strip('.')+"!"
+                status=400
+        else:
+            message=_("An error occurred while activating Double Mask.")
+            status=400
         
         
     return JsonResponse({"msg": message},status=status)
@@ -69,18 +73,22 @@ def deactivate_double_mask(request):
     """
     if request.method=="PUT":
         out,error=run_command("cd /home/dbmask/dm && sudo make uninstall")
-        print(error)
-        if error!="":
+        if error.strip()=="":
+            print("hello")
             active=False
             object_double_mask=DoubleMask.objects.first()
             double_mask_ser=DoubleMaskSerializer(object_double_mask, data={"active":active})
             if double_mask_ser.is_valid():
+                print(double_mask_ser)
                 double_mask_ser.save()
                 message=f"{CONSTANT_DOUBLE} {SUCCESS_MESSAGES_DEACTIVE}"
                 status=200
-                
-        message=_("An error occurred while deactivating Double Mask.")
-        status=400
+            else:
+                message=str(next(iter(double_mask_ser.errors.values()))[0]).strip('.')+"!"
+                status=400  
+        else:  
+            message=_("An error occurred while deactivating Double Mask.")
+            status=400
     return JsonResponse({"msg": message},status=status)
 
 @api_view(['GET'])
@@ -100,37 +108,19 @@ def get_double_mask(request):
             active=False
         else:
             active=True
+        ratio=get_compr_ratio()
         if DoubleMask.objects.all().count()==1:
             double_mask_object=DoubleMask.objects.all().first()
             double_mask_object.active=active
+            double_mask_object.ratio=ratio
             double_mask_object.save()
         else:
             double_mask_object=DoubleMask(active=active)
             double_mask_object.save()
-    return JsonResponse({"msg": {"active":active}},status=200)
+    return JsonResponse({"msg": {"active":active,"ratio":ratio}},status=200)
     
     
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-def get_compr_ratio(request):
-    """
-    API to get compression ratioo.
-    
-    This function handles the GET request to get the compression ratio of double mask.
-    
-    
-    """
-    if request.method == 'GET':
-        output,error=run_command('sudo dmesg | grep "The Double mask for"')
-        if output=="":
-            ratio=0
-        else:
-            ruleset_list,n=get_nft_ip_addresses()
-            subnet_double=output.split("is")[1].split("/")[0:1]
-            subnet=subnet_double[0]+"/"+subnet_double[1]
-            ruleset_compr=[x for x in ruleset_list if is_address_in_subnet(x,subnet) ]
-            ratio=len(ruleset_compr)/n
-        return JsonResponse({"msg": {"ratio":ratio}},status=200)
+
                     
             
             

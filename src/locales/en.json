@@ -129,6 +129,7 @@
     "SDWAN": "SDWAN",
     "WAF": "WAF",
     "ZTNA": "ZTNA",
+    "Dmasque": "Double Mask",
     "health": "Health",
     "insight": "Insight",
     "traffic": "Traffic",

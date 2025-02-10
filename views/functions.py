@@ -1,5 +1,6 @@
 import json
 import subprocess
+from backend.double_mask.functions import is_address_in_subnet
 from backend.double_mask.models import DoubleMask
 from backend.managementLogs.models import LogrotateData, LogsData
 from backend.network.functions import run_command
@@ -9,6 +10,7 @@ from backend.server_dhcp4.models import ServerDhcp4
 from backend.vlan.models import Vlan
 from django.core import serializers
 from backend.vxlan.models import Vxlan
+from views.test_address import get_nft_ip_addresses
 
 def delete_inactive_conn():
     result = subprocess.run("sudo nmcli connection show | awk '$NF == \"--\" {print $2}'", shell=True, capture_output=True, text=True)
@@ -189,14 +191,6 @@ def get_uuid_v2(ifname):
         uuid=output[1]
         return uuid
     
-def get_mask_compression():
-    all_rules_count=Rule.objects.all().count()
-    output,_=run_command('sudo dmesg | grep "The Double mask for"')
-    if output!="":
-        output=output.split("is")[1].split("/")[0:1]
-        address=output[0]
-        mask=output[1]
-        
 def get_double_mask(request):
     """API to get the double mask status from the database"""
     if request.method == 'GET':
@@ -212,6 +206,25 @@ def get_double_mask(request):
         else:
             double_mask_object=DoubleMask(active=active)
             double_mask_object.save()
-    return json.dumps({"active":active})
+    return active
     
     
+def get_compr_ratio(request):
+    """
+    API to get compression ratioo.
+    
+    This function handles the GET request to get the compression ratio of double mask.
+    
+    
+    """
+    if request.method == 'GET':
+        output,error=run_command('sudo dmesg | grep "The Double mask for"')
+        if output=="":
+            ratio=0
+        else:
+            ruleset_list,n=get_nft_ip_addresses()
+            subnet_double=output.split("is")[1].split("/")[0:1]
+            subnet=subnet_double[0]+"/"+subnet_double[1]
+            ruleset_compr=[x for x in ruleset_list if is_address_in_subnet(x,subnet) ]
+            ratio=(len(ruleset_compr)/n)
+        return ratio

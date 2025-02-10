@@ -831,7 +831,7 @@ def logrotate_page(request):
     return render(request, 'logrotate.html',context)
 
 @login_required(login_url='/')
-def double_mask_page(request):
+def double_mask(request):
     list_double=get_double_mask(request)
     return render(request, 'double_mask.html',list_double)
 

@@ -3,7 +3,7 @@ from django.utils import timezone
 # Create your models here.
 class DoubleMask(models.Model):
     active = models.BooleanField(default=False)
-    taux_compression=models.FloatField(default=0)
+    ratio=models.FloatField(default=0)
     created_at = models.DateTimeField(default=timezone.now, editable=False, null=True)
     updated_at = models.DateTimeField(default=timezone.now, editable=False, null=True)
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 17:47+0000\n"
+"POT-Creation-Date: 2025-02-06 16:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,18 +66,22 @@ msgstr "est activé"
 msgid "is disabled"
 msgstr "est desactivé"
 
-#: backend/ipsec/views.py:36
+#: backend/ipsec/views.py:35
+msgid "is up"
+msgstr "est monté"
+
+#: backend/ipsec/views.py:37
 msgid "System error in creating"
 msgstr "Erreur système lors de la création de"
 
-#: backend/ipsec/views.py:37
+#: backend/ipsec/views.py:38
 msgid "System error in deleting"
 msgstr "Erreur système lors de la suppression de"
 
-#: backend/ipsec/views.py:38
+#: backend/ipsec/views.py:39
 msgid "System error in up ipsec"
 msgstr "Erreur système lors de up IPsec"
 
-#: backend/ipsec/views.py:39
+#: backend/ipsec/views.py:40
 msgid "does not exist"
 msgstr "n'existe pas"

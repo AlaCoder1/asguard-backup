@@ -7,7 +7,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.authentication import SessionAuthentication
 from django.http import JsonResponse
-from .functions import run_command
+from .functions import get_nft_ip_addresses, is_address_in_subnet, run_command
 CONSTANT_DOUBLE=_("Double Mask")
 SUCCESS_MESSAGES_ACTIVE=_("is active.")
 SUCCESS_MESSAGES_DEACTIVE=_("is deactive.")
@@ -109,3 +109,29 @@ def get_double_mask(request):
             double_mask_object.save()
     return JsonResponse({"msg": {"active":active}},status=200)
     
+    
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def get_compr_ratio(request):
+    """
+    API to get compression ratioo.
+    
+    This function handles the GET request to get the compression ratio of double mask.
+    
+    
+    """
+    if request.method == 'GET':
+        output,error=run_command('sudo dmesg | grep "The Double mask for"')
+        if output=="":
+            ratio=0
+        else:
+            ruleset_list,n=get_nft_ip_addresses()
+            subnet_double=output.split("is")[1].split("/")[0:1]
+            subnet=subnet_double[0]+"/"+subnet_double[1]
+            ruleset_compr=[x for x in ruleset_list if is_address_in_subnet(x,subnet) ]
+            ratio=len(ruleset_compr)/n
+        return JsonResponse({"msg": {"ratio":ratio}},status=200)
+                    
+            
+            
+        

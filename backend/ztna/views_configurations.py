@@ -13,7 +13,8 @@ import json
 from backend.ztna.models import HostConfigs, InterceptConfigs
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_CONFIGS
 from backend.ztna.serializers import HostConfigsSerializer, HostSerializerUpdate, InterceptConfigsSerializer, InterceptSerializerUpdate
-from backend.ztna.utils import get_payload_config_database, get_payload_config_openziti, get_ztna_token_from_system
+from backend.ztna.utils import get_ztna_token_from_system
+from backend.ztna.utils_configurations import get_payload_config_database, get_payload_config_openziti, is_exist_config
 
 
 # Constants
@@ -29,6 +30,7 @@ ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_NAME_EXISTANT = _("Host or Intercept Configuration with this name exist")
 ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 
 
@@ -98,6 +100,10 @@ def add_configs(request):
         session_id = get_ztna_token_from_system()
         headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
         data_payload_openziti = get_payload_config_openziti(data_payload_openziti)
+        
+        # OpenZiti does not allow a host configuration to have the same name as an intercept configuration, and vice versa.
+        if is_exist_config(data["name"]):
+            return JsonResponse({"error": ERROR_MESSAGES_NAME_EXISTANT}, status=400)
         response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data_payload_openziti, 
                                  verify=False)
         response_dict = json.loads(response.text)
@@ -206,6 +212,11 @@ def update_intercept_configs(request, id):
         session_id = get_ztna_token_from_system()
         headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
         data_payload_openziti = get_payload_config_openziti(data_payload_openziti)
+        
+        # OpenZiti does not allow a host configuration to have the same name as an intercept configuration, and vice versa.
+        if intercept.name != data["name"] and is_exist_config(data["name"]):
+            return JsonResponse({"error": ERROR_MESSAGES_NAME_EXISTANT}, status=400)
+        
         if data["configTypeId"] == 'g7cIWbcGg':
             payload = get_payload_config_database(data)
             serializer_update_intercept = InterceptSerializerUpdate(intercept,data=payload, partial=True)
@@ -253,6 +264,11 @@ def update_host_configs(request, id):
         session_id = get_ztna_token_from_system()
         headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
         data_payload_openziti = get_payload_config_openziti(data_payload_openziti)
+        
+        # OpenZiti does not allow a host configuration to have the same name as an intercept configuration, and vice versa.
+        if host.name != data["name"] and is_exist_config(data["name"]):
+            return JsonResponse({"error": ERROR_MESSAGES_NAME_EXISTANT}, status=400)
+        
         if data["configTypeId"] == 'NH5p4FpGR':
             payload = get_payload_config_database(data)
             serializer_update_host = HostSerializerUpdate(host,data=payload, partial=True)
@@ -268,4 +284,3 @@ def update_host_configs(request, id):
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
     except HostConfigs.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_HOST_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-    

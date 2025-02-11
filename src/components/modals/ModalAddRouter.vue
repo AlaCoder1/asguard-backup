@@ -32,12 +32,6 @@
                   <v-text-field id="RouterAttribute" v-model="RouterAttribute" :placeholder="$t('ztna.relayAttribute')"
                     :rules="rulesatt" persistent-placeholder />
                 </v-col>
-                <v-col cols="12" class="mb-n3">
-                  <label for="Traversal" class="mr-3">{{
-                    $t("ztna.traversal")
-                  }}</label>
-                  <input type="checkbox" id="Traversal" value="Traversal" v-model="Traversal" />
-                </v-col>
                 <v-col cols="12">
                   <v-text-field id="Description" v-model="Description" placeholder="Description"
                     persistent-placeholder />

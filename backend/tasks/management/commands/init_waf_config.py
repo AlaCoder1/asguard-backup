@@ -27,8 +27,12 @@ class Command(BaseCommand):
                 with open(PATH_RULES_WAF.format('custom_rules'), 'w') as rule_file:
                     rule_file.write('')
                 main_file.write(f"Include {PATH_RULES_WAF.format('custom_rules')}")
+
+                # Add modsecrity rules to the main file and database
                 for rule in LIST_RULES_WAF:
+                    # Add modsecrity rules to the main file
                     main_file.write(f"\nInclude {PATH_RULES_WAF.format(rule['name'])}")
+                    # Add modsecrity rules to the database with it's description in two languages
                     rule_waf = RulesWaf(name=rule['name'],
                                         description=rule['description_english'], 
                                         description_english=rule['description_english'], 
@@ -36,6 +40,9 @@ class Command(BaseCommand):
                                         created=False, 
                                         rule_id=rule['id'])
                     rule_waf.save()
+                
+                # Add GEOIP rule to the main file
+                main_file.write("""\nSecRule REMOTE_ADDR "@geoLookup" "phase:1,id:900001,log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """)
             
             # Restart nginx service
             execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])

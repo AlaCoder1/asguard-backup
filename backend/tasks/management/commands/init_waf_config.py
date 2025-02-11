@@ -44,7 +44,7 @@ class Command(BaseCommand):
                     rule_waf.save()
                 
                 # Add GEOIP rule to the main file
-                main_file.write("""\nSecRule REMOTE_ADDR "@geoLookup" "phase:1,id:900001,log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """)
+                main_file.write("""\nSecRule REMOTE_ADDR "@geoLookup" "phase:1,id:900001,log,pass,logdata:'Country: %{GEO:COUNTRY_CODE}, Latitude: %{GEO:LATITUDE}, Longitude: %{GEO:LONGITUDE}'" """)
             
             ########## Restart nginx service
             execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])

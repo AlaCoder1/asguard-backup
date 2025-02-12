@@ -13,7 +13,8 @@ import json
 from backend.ztna.models import Identities
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES
 from backend.ztna.serializers import EnrollementsSerializer, IdentitiesSerializer, IdentitiesSerializerUpdate
-from backend.ztna.utils import get_ztna_token_from_system, get_identities_from_ziti
+from backend.ztna.utils import get_ztna_token_from_system
+from backend.ztna.utils_identities import get_identitie_from_ziti
 
 
 # Constants
@@ -170,6 +171,10 @@ def update_identities(request, id):
                    "isAdmin": data["isAdmin"],
                    "os": data["os"],
                    }
+        if data['roleAttributes'][0] != "":
+            payload['attribute_identitie'] = data['roleAttributes'][0]
+        if 'Description' in data:
+            payload['description'] = data['Description']
         serializer_update_identity = IdentitiesSerializerUpdate(identitie, data=payload, partial=True)
         if serializer_update_identity.is_valid():
             response = requests.patch(f"{PATH_ZTNA_IDENTITIES}/{identitie}", headers=headers, json=data_without_description, verify=False)
@@ -216,7 +221,7 @@ def add_enrollments(request):
             serializer_enrollement.save()
             response = requests.post(PATH_ZTNA_ENROLLMENTS, headers=headers, json=data, verify=False)
             if response.status_code == 201:
-                identity_from_ziti = get_identities_from_ziti(identitie.ref_identitie)
+                identity_from_ziti = get_identitie_from_ziti(identitie.ref_identitie)
                 payload_update_identity['token'] = identity_from_ziti['enrollment'][f'{data['method']}']['jwt']
                 combined_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M:%S")
                 payload_update_identity['date_expiration'] = combined_datetime

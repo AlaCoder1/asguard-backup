@@ -39,6 +39,7 @@ Encore.setOutputPath("static/")
   .addEntry("systemLog", "./src/middleware/systemLog.js")
   .addEntry("settings", "./src/middleware/settings.js")
   .addEntry("logrotate", "./src/middleware/logrotate.js")
+  .addEntry("double_masque", "./src/middleware/double_masque.js")
   .enableVueLoader(() => {}, {
     version: 3,
   })

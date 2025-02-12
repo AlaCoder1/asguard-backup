@@ -6,15 +6,15 @@ from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_OBJECT, TYPE_STRING, TYPE_
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
-from backend.gateway.models import GatewayInterface
+from backend.gateway.models import Gateway, GatewayInterface
 from backend.network.models import Interface
 
 from backend.sdwan.list_area import get_list_all_area, get_one_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule, get_one_sdwan_rule
 from backend.sdwan.models import Area, AreaInterface, SdwanRules
 from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
-from backend.sdwan.utils import routing_table_id
-from backend.sdwan.utils_system import check_celery, create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
+from backend.sdwan.utils import search_routing_table_id
+from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
 from utils.errors_utils import CommandExecutionError
 from utils.utils_functions import fix_ipv4_address
 
@@ -22,6 +22,8 @@ from utils.utils_functions import fix_ipv4_address
 # Constants
 CONSTANT_SDWAN_RULE = _("SDwan rule")
 CONSTANT_AREA = _("Area")
+CONSTANT_GATEWAY = _("Gateway")
+CONSTANT_INTERFACE = _("Interface")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -36,6 +38,8 @@ ERROR_MESSAGES_STARTING = _("System error in starting")
 ERROR_MESSAGES_STOPING = _("System error in stoping")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_CHECK_INTERFACES = _("Check your interfaces and its gateways")
+ERROR_MESSAGES_CHECK_INTERFACES_NUMBERS = _("An area contains at least two interfaces")
+ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER = _("An area contains only two interfaces")
 
 
 ########################################
@@ -70,7 +74,7 @@ def get_area(request, id):
         type=TYPE_OBJECT, required=['name', 'members'],
         properties={
             'name': Schema(type=TYPE_STRING, example="area1"),
-            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces ids", items=Schema(type=TYPE_STRING)),
+            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces'id, contains at least two interfaces", items=Schema(type=TYPE_INTEGER)),
                     }
                     ))
 @api_view(['POST'])
@@ -79,6 +83,10 @@ def get_area(request, id):
 def create_area(request):
     """Creating a new area and adding it to the database"""
     data = request.data
+
+    # Check if members contains at least two interfaces
+    if len(data["members"]) < 2:
+        return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_NUMBERS}, status=400)
 
     serializer_area = AreaSerializer(data=data)
     if serializer_area.is_valid():
@@ -115,7 +123,7 @@ def delete_area(request, id):
         type=TYPE_OBJECT, required=['name', 'members'],
         properties={
             'name': Schema(type=TYPE_STRING, example="area1"),
-            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces ids", items=Schema(type=TYPE_STRING)),
+            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces'id, contains at least two interfaces", items=Schema(type=TYPE_INTEGER)),
                     }
                     ))
 @api_view(['PUT'])
@@ -127,14 +135,17 @@ def update_area(request, id):
         area = Area.objects.get(id=id)
         data = request.data
 
+        # Check if members contains at least two interfaces
+        if len(data["members"]) < 2:
+            return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_NUMBERS}, status=400)
+
         serializer_area = AreaSerializer(area, data=data)
         if serializer_area.is_valid():
 
             # Add the server to the database
             serializer_area.save()
             return JsonResponse({"msg": f"{area.name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
-        else:
-            return JsonResponse({"error": list(serializer_area.errors.values())[0][0]}, status=400)
+        return JsonResponse({"error": list(serializer_area.errors.values())[0][0]}, status=400)
     
     except Area.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
@@ -174,10 +185,9 @@ def get_sdwan_rule(request, id):
                                     'health_check', 'health_check_target'],
         properties={
             'name': Schema(type=TYPE_STRING, example="test failover"),
-            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2", description="format of address/mask"),
+            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2/32", description="format of address/mask"),
             'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
             'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
-            'destination_address':Schema(type=TYPE_STRING, example="10.1.12.13", description="format of address/mask"),
             'health_check':Schema(type=TYPE_INTEGER, example=1),
             'health_check_target':Schema(type=TYPE_STRING, example="8.8.8.8"),
             'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")
@@ -193,9 +203,14 @@ def create_sdwan_rule(request):
         # Apply correction for ipv4 addresses
         data["source_address"] = fix_ipv4_address(data["source_address"])
 
-        data["table_id"] = routing_table_id()
+        data["table_id"] = search_routing_table_id()
         if data["algorythme_type"] == "failover":
+            # Check if the area contains only two interfaces in failover method
+            if len(AreaInterface.objects.filter(area_id=data["area"])) != 2:
+                return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER}, status=400)
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
+        else:
+            data["primary_interface"] = None
         serializer_sdwan_rule = SdwanRulesSerializer(data=data)
         if serializer_sdwan_rule.is_valid():
 
@@ -210,6 +225,8 @@ def create_sdwan_rule(request):
         
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SDWAN_RULE}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -243,10 +260,9 @@ def delete_sdwan_rule(request, id):
                                     'health_check', 'health_check_target'],
         properties={
             'name': Schema(type=TYPE_STRING, example="test failover"),
-            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2", description="format of address/mask"),
+            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2/32", description="format of address/mask"),
             'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
             'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
-            'destination_address':Schema(type=TYPE_STRING, example="10.1.12.13", description="format of address/mask"),
             'health_check':Schema(type=TYPE_INTEGER, example=1),
             'health_check_target':Schema(type=TYPE_STRING, example="8.8.8.8"),
             'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")
@@ -263,7 +279,12 @@ def update_sdwan_rule(request, id):
         data["source_address"] = fix_ipv4_address(data["source_address"])
         
         if data["algorythme_type"] == "failover":
+            # Check if the area contains only two interfaces in failover method
+            if len(AreaInterface.objects.filter(area_id=data["area"])) != 2:
+                return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER}, status=400)
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
+        else:
+            data["primary_interface"] = None
         sdwan_rule = SdwanRules.objects.get(id=id)
 
         serializer_sdwan_rule = SdwanRulesSerializer(sdwan_rule, data=data)
@@ -292,6 +313,8 @@ def update_sdwan_rule(request, id):
         
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SDWAN_RULE}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except SdwanRules.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
@@ -309,8 +332,7 @@ def start_sdwan_rule(request, id):
         list_area_interface = AreaInterface.objects.filter(area=sdwan_rule.area)
         list_interface = [area_intefrace.interface for area_intefrace in list_area_interface]
         for interface in list_interface:
-            if len(GatewayInterface.objects.filter(interface=interface)) == 0:
-                return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}. {ERROR_MESSAGES_CHECK_INTERFACES}"}, status=400) 
+            GatewayInterface.objects.get(interface=interface)
         
         # Change status of the rule to True to start the process
         sdwan_rule.rule_status = True
@@ -326,9 +348,11 @@ def start_sdwan_rule(request, id):
         sdwan_rule.save()
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}. {ERROR_MESSAGES_CHECK_INTERFACES}"}, status=400)
     except SdwanRules.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-    except (Area.DoesNotExist, AreaInterface):
-        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except (Area.DoesNotExist, AreaInterface.DoesNotExist):
+        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except (GatewayInterface.DoesNotExist, Gateway.DoesNotExist):
+        return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @api_view(['PUT'])

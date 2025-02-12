@@ -1,12 +1,16 @@
 import json
 import subprocess
+from backend.double_mask.functions import get_compr_ratio
+from backend.double_mask.models import DoubleMask
 from backend.managementLogs.models import LogrotateData, LogsData
 from backend.network.functions import run_command
 from backend.network.models import Interface
+from backend.rules.models import Rule
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.vlan.models import Vlan
 from django.core import serializers
 from backend.vxlan.models import Vxlan
+
 
 def delete_inactive_conn():
     result = subprocess.run("sudo nmcli connection show | awk '$NF == \"--\" {print $2}'", shell=True, capture_output=True, text=True)
@@ -186,4 +190,26 @@ def get_uuid_v2(ifname):
         output=[value for value in output if value]
         uuid=output[1]
         return uuid
+ 
+
+        
+def get_double_mask(request):
+    """API to get the double mask status from the database"""
+    if request.method == 'GET':
+        output,_=run_command('sudo lsmod | grep "calculateDM"')
+        if output=="":
+            active=False
+        else:
+            active=True
+        ratio=get_compr_ratio()
+        if DoubleMask.objects.all().count()==1:
+            double_mask_object=DoubleMask.objects.all().first()
+            double_mask_object.active=active
+            double_mask_object.ratio=ratio
+            double_mask_object.save()
+        else:
+            double_mask_object=DoubleMask(active=active)
+            double_mask_object.save()
+    return json.dumps({"active":active ,"ratio":ratio})
+    
     

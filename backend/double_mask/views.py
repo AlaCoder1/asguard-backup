@@ -103,12 +103,14 @@ def get_double_mask(request):
     
     """
     if request.method == 'GET':
+        n=0
+        n_comp=0
         output,error=run_command('sudo lsmod | grep "calculateDM"')
         if output=="":
             active=False
         else:
             active=True
-        ratio=get_compr_ratio()
+        ratio,n_comp,n=get_compr_ratio()
         if DoubleMask.objects.all().count()==1:
             double_mask_object=DoubleMask.objects.all().first()
             double_mask_object.active=active
@@ -117,7 +119,7 @@ def get_double_mask(request):
         else:
             double_mask_object=DoubleMask(active=active)
             double_mask_object.save()
-    return JsonResponse({"msg": {"active":active,"ratio":ratio}},status=200)
+    return JsonResponse({"msg": {"active":active,"ratio":ratio,"n_actuel":n_comp,"n_init":n}},status=200)
     
     
 

@@ -102,7 +102,7 @@ export default {
         if (!value) return t("ztna.enterValue");
         if (existingName(value)) return t("ztna.nameExist");
         if (inValidRelay(value)) return t("ztna.namerelay");
-        return inValidRelay(value) ? true : t("ztna.namerelay");
+        return ValidName(value) ? true : t("ztna.validName");
       },
     ];
     const rulesatt = [

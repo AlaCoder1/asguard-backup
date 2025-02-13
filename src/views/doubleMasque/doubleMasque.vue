@@ -61,14 +61,14 @@
 
       <!-- Performance Info -->
       <v-alert variant="outlined" type="info" color="#213E9F">
-        <div>{{ performanceGain }}% Gain de performance</div>
+        <div>{{ chartOptions.series[0] }}% Gain de performance</div>
         <v-expansion-panels>
           <v-expansion-panel>
-            <v-expansion-panel-title>Numéro initial des règles:
+            <v-expansion-panel-title>Numéro initial des règles :
               {{ initialRules }}</v-expansion-panel-title>
           </v-expansion-panel>
           <v-expansion-panel>
-            <v-expansion-panel-title>Numéro de règles actuel:
+            <v-expansion-panel-title>Numéro de règles actuel :
               {{ actualRules }}</v-expansion-panel-title>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -123,7 +123,7 @@ export default {
 
     onMounted(() => {
       getInfo()
-    
+
     })
 
     const getInfo = () => {
@@ -132,9 +132,11 @@ export default {
 
       axios.get("/double_mask/getstatus").then(
         (response) => {
-          console.log('response', response)
+          console.log('response', response.data)
           enabled.value = response.data.msg?.active;
           chartOptions.value.series = [response.data.msg?.ratio];
+          actualRules.value = response.data.msg?.n_actuel
+          initialRules.value = response.data.msg?.n_init
         },
       ).catch((e) => {
         console.log('e', e)

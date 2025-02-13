@@ -53,5 +53,5 @@ def get_payload_config_database(payload: dict):
 def is_exist_config(config_name):
     """Check if the host or intercept config exist in database in HostConfigs or InterceptConfigs"""
     if len(HostConfigs.objects.filter(name=config_name)) == 0 or len(InterceptConfigs.objects.filter(name=config_name)) == 0:
-        return True
-    return False
+        return False
+    return True

@@ -90,7 +90,6 @@ export default {
     const RouterName = ref("");
     const RouterAttribute = ref("");
     const Description = ref("");
-    const lastname = ref("");
     const Relays = ref([]);
     const Tunneler = ref(true);
     const Traversal = ref(false);
@@ -101,10 +100,9 @@ export default {
     const rulesName = [
       (value) => {
         if (!value) return t("ztna.enterValue");
-        if (modalMode.value === "edit" && value === lastname.value) return true;
         if (existingName(value)) return t("ztna.nameExist");
         if (inValidRelay(value)) return t("ztna.namerelay");
-        return ValidName(value) ? true : t("ztna.validName");
+        return inValidRelay(value) ? true : t("ztna.namerelay");
       },
     ];
     const rulesatt = [
@@ -137,7 +135,6 @@ export default {
     }
     function inValidRelay(value) {
       const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*\.relay$/;
-
       // Check if the value matches the hostname pattern and is not entirely numeric
       if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
         return false;
@@ -181,8 +178,6 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        lastname.value = data.name;
-
         RouterId.value = data.id;
         RouterName.value = data.name;
         RouterAttribute.value = data.attribute_relay;

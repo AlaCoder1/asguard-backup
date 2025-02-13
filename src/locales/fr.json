@@ -686,7 +686,7 @@
     "servicerouterpolUpdated": "Politique de relais de service mise à jour avec succès",
     "ztnadate": "Date",
     "ztnatime": "Temps",
-    "namerelay": "Nom du relais doit suivre le format: {nom-service}.relay"
+    "namerelay": "Nom du relais doit suivre le format: nom_relay.relay"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

@@ -1,6 +1,58 @@
 from backend.nat.models import DNat, OneToOneNat, SNat
 from backend.nat import utils_system
 
+def change_position_rule(id_rule:int,new_position:int,nat_type:str,position_type:str)->list:
+    """
+    This function changes the position of a rule in the list.
+    If the new position is greater than the old position, it moves the rules to the top.
+    If the new position is smaller than the old position, it moves the rules to the bottom.
+    
+    """
+    all_rules_object=nat_type.objects.all().order_by(position_type)
+    all_rules=[{"id":rule["id"],position_type:rule[position_type] }for rule in all_rules_object]
+    all_rules_position=[rule[position_type] for rule in all_rules]
+    input_rule_update={"id":id_rule,position_type:new_position}
+    new_position=input_rule_update[position_type]
+    old_position=next((rule for rule in all_rules if rule["id"] == input_rule_update["id"]), None)[position_type]
+    if (old_position<new_position):
+        result_list=permut_from_top(old_position,new_position,all_rules_position,input_rule_update,
+                                    position_type,all_rules)
+    elif (old_position>new_position):
+        result_list=permut_to_top(old_position,new_position,all_rules_position,input_rule_update,
+                                  position_type,all_rules)
+    return result_list  
+def permut_from_top(old_position:int,new_position:int,all_rules_position:list,
+                    input_rule_update:dict,position_type:str, all_rules:list[dict] )->list:
+    """
+    This function takes the old and new position of a rule and returns a list of rules
+    that should be in the top of the list before the update.
+    
+    """
+    result_list=[]
+    modified_rules=all_rules[all_rules_position.index(old_position)+1:all_rules_position.index(new_position)+1]
+    for i in modified_rules:
+        i[position_type]=i[position_type]-1
+    result_list=all_rules[0:all_rules_position.index(old_position)]+modified_rules
+    result_list.append(input_rule_update)
+    result_list+=all_rules[all_rules_position.index(new_position)+1:]
+    return result_list
+
+def permut_to_top(old_position:int,new_position:int,all_rules_position:list,
+                  input_rule_update:dict,position_type:str,all_rules:list[dict]
+                  )->list:
+    """
+    This function takes the old and new position of a rule and returns a list of rules
+    that should be in the top of the list after the update.
+    """
+    result_list=[]
+    modified_rules=all_rules[all_rules_position.index(new_position):all_rules_position.index(old_position)]
+    for i in modified_rules:
+        i[position_type]=i[position_type]+1
+    result_list+=all_rules[0:all_rules_position.index(new_position)]
+    result_list.append(input_rule_update)
+    result_list+=modified_rules+all_rules[all_rules_position.index(old_position)+1:]
+    return result_list
+
 
 def get_rule_handle_with_position(list_nat_rules:list[str], position):
     """Get a list of nat rules and rule position and return it's handle"""

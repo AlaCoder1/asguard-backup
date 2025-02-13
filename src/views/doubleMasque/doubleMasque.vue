@@ -61,14 +61,14 @@
 
       <!-- Performance Info -->
       <v-alert variant="outlined" type="info" color="#213E9F">
-        <div>{{ performanceGain }}% Gain de performance</div>
+        <div>{{ chartOptions.series[0] }}% Gain de performance</div>
         <v-expansion-panels>
           <v-expansion-panel>
-            <v-expansion-panel-title>Numéro initial des règles:
+            <v-expansion-panel-title>Numéro initial des règles :
               {{ initialRules }}</v-expansion-panel-title>
           </v-expansion-panel>
           <v-expansion-panel>
-            <v-expansion-panel-title>Numéro de règles actuel:
+            <v-expansion-panel-title>Numéro de règles actuel :
               {{ actualRules }}</v-expansion-panel-title>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -123,19 +123,20 @@ export default {
 
     onMounted(() => {
       getInfo()
-      chartOptions.value.series = [50];
+
     })
 
     const getInfo = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/double_mask/").then(
+      axios.get("/double_mask/getstatus").then(
         (response) => {
-          console.log('response', response)
-          // enabled.value = '';
-          // chartOptions.series[0] = ""
-
+          console.log('response', response.data)
+          enabled.value = response.data.msg?.active;
+          chartOptions.value.series = [response.data.msg?.ratio];
+          actualRules.value = response.data.msg?.n_actuel
+          initialRules.value = response.data.msg?.n_init
         },
       ).catch((e) => {
         console.log('e', e)
@@ -147,14 +148,14 @@ export default {
       state.isLoadingDialogue = true;
 
       axios
-        .post(`/double_mask/${status}`)
+        .put(`/double_mask/${status}`)
         .then((response) => {
           if (response.status == "200") {
             state.snackbar = true;
             state.loading = false;
             state.isLoadingDialogue = false;
             state.color = "success";
-            // state.textAlert = response.data.msg;
+            state.textAlert = response.data.msg;
             setTimeout(() => {
               location.reload();
             }, 1000);
@@ -193,11 +194,11 @@ export default {
 
       if (enabled.value) {
         changeStatus('activate')
-        console.log('enabled', enabled)
+        console.log('enabledTrue', enabled.value)
 
       }
       else {
-        console.log('enabled', enabled)
+        console.log('enabledfalse', enabled.value)
         changeStatus('deactivate')
       }
     };

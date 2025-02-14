@@ -32,6 +32,8 @@ ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY = _("Route with this network and gateway
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_USED_INTERFACE = _("Gateway for this interface exist")
 ERROR_MESSAGES_INCORRECT_GATEWAY = _("Check your gateway address, must belongs to the same Subnet as the Host and can't take the same address")
+ERROR_MESSAGES_INCORRECT_GATEWAY_LOADING = _("If you want to use an existing gateway, then the 'gateway' field should contain the ID of the gateway")
+ERROR_MESSAGES_INCORRECT_GATEWAY_CREATING = _("If you want to create a new gateway, then the 'gateway' field must contain all the fields of the new gateway")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -143,6 +145,7 @@ def create_routing(request):
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
+        # Delete the created gateway if system doesn't accept the new routing
         if data.get("gateway_create"):
             gwname = f'static_gw_{gateway_data["gateway_address"]}'
             if len(Gateway.objects.filter(gwname=gwname, gwaddress=gateway_data["gateway_address"])) == 1:
@@ -151,6 +154,12 @@ def create_routing(request):
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ROUTE}"}, status=400)
     except Gateway.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except TypeError:
+        # Catching the error when choosing to create a new gateway
+        if data.get("gateway_create"):
+            return JsonResponse({"error": ERROR_MESSAGES_INCORRECT_GATEWAY_CREATING}, status=400)
+        # Catching the error when choosing to load a gateway
+        return JsonResponse({"error": ERROR_MESSAGES_INCORRECT_GATEWAY_LOADING}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -258,3 +267,9 @@ def update_routing(request, id):
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ROUTE}"}, status=400)
     except Gateway.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except TypeError:
+        # Catching the error when choosing to create a new gateway
+        if data.get("gateway_create"):
+            return JsonResponse({"error": ERROR_MESSAGES_INCORRECT_GATEWAY_CREATING}, status=400)
+        # Catching the error when choosing to load a gateway
+        return JsonResponse({"error": ERROR_MESSAGES_INCORRECT_GATEWAY_LOADING}, status=400)

@@ -2,7 +2,7 @@
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.user')">
       <template #content>
-        <helpModal />
+        <helpModal help="users"  />
         <!-- <v-tabs
           v-model="selectedTab"
           background-color="#fff"

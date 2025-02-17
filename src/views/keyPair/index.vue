@@ -20,7 +20,7 @@
   <v-app id="inspire">
     <base-layout title="Key Pair" active-menu="Key_Pair">
       <template #content>
-        <helpModal />
+        <helpModal help="key-pair"/>
         <div class="mr-3">
           <div
             class="certificats-management mt-6 ml-5"

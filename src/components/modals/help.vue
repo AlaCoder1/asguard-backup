@@ -1,10 +1,7 @@
 <template>
-  <div class="mt-2 mr-5 d-flex justify-end">
-    <span
-      @click="openModal"
-      style="font-size: 30px; color: #213e9f"
-      class="mdi mdi-help-circle-outline cursor-pointer"
-    ></span>
+  <div class="mt-2 mr-5 d-flex justify-end cursor-pointer">
+    <span @click="openModal" style="font-size: 30px; color: #213e9f"
+      class="mdi mdi-help-circle-outline cursor-pointer"></span>
   </div>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="800">
@@ -15,16 +12,19 @@
             <v-container>
               <div class="d-flex justify-space-between align-center mb-2">
                 <span class="headline text-black"> </span>
-                <span
-                  class="mdi mdi-close cursor-pointer text-black"
-                  @click="state.openModal = false"
-                ></span>
+                <span class="mdi mdi-close cursor-pointer text-black" @click="state.openModal = false"></span>
               </div>
-              <div
-                v-if="help === 'subscription'"
-                style="display: flex; justify-content: center"
-              >
+              <div v-if="help === 'subscription'" style="display: flex; justify-content: center">
                 <subscription />
+              </div>
+              <div v-if="help === 'users'">
+                <users />
+              </div>
+              <div v-if="help === 'certificates'">
+                <certificates />
+              </div>
+              <div v-if="help === 'key-pair'">
+                <keyPair />
               </div>
             </v-container>
           </v-card-text>
@@ -40,11 +40,17 @@
 
 <script>
 import subscription from "@/views/help/subscription.vue";
+import certificates from "@/views/help/certificates.vue";
+import keyPair from "@/views/help/key-pair.vue";
+import users from "@/views/help/users.vue";
 import { reactive, toRefs } from "vue";
 
 export default {
   components: {
     subscription,
+    certificates,
+    users,
+    keyPair,
   },
   props: {
     help: {

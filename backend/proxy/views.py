@@ -1286,114 +1286,114 @@ def allProxyUsers(request):
     return JsonResponse({"data":list_proxyUsers})
 
 
-@swagger_auto_schema(
-    method='POST',
-    operation_summary="Create a New Cron Job for Password Change Script",
-    operation_description=(
-        "This API endpoint creates a new cron job to run the Python script `g_pwd.py` at a specified time and frequency. "
-        "The cron job will be created based on the parameters provided in the request, which include the time of execution "
-        "and the desired execution period (e.g., daily, weekly, or monthly)."
-    ),
-    request_body=Schema(
-        type=TYPE_OBJECT,
-        properties={
-            'time': Schema(
-                type=TYPE_STRING,
-                description="The time at which the script should be executed, in the format HH:MM.",
-                example="14:30"
-            ),
-            'period': Schema(
-                type=TYPE_STRING,
-                description="The frequency of execution for the script. Possible values are:",
-                enum=["every days", "MON -> FRI", "every week", "every month"],
-                example="every days"
-            ),
-        },
-        required=['time', 'period']
-    ),
-    responses={
-        200: Schema(
-            type=TYPE_OBJECT,
-            properties={
-                'msg': Schema(
-                    type=TYPE_STRING,
-                    description="A message indicating the success of the cron job creation.",
-                    example="Cron job created successfully."
-                ),
-            }
-        ),
-        404: Schema(
-            type=TYPE_OBJECT,
-            properties={
-                'msg': Schema(
-                    type=TYPE_STRING,
-                    description="Error message indicating an issue with cron job creation.",
-                    example="An error occurred while creating the cron job."
-                ),
-            }
-        ),
-    }
-)
-@api_view(['POST'])
-@authentication_classes([SessionAuthentication])
-def change_pwd(request):
-    """
-    Crée un nouveau travail cron pour exécuter un script à des intervalles spécifiés en fonction des paramètres de la requête.
+# @swagger_auto_schema(
+#     method='POST',
+#     operation_summary="Create a New Cron Job for Password Change Script",
+#     operation_description=(
+#         "This API endpoint creates a new cron job to run the Python script `g_pwd.py` at a specified time and frequency. "
+#         "The cron job will be created based on the parameters provided in the request, which include the time of execution "
+#         "and the desired execution period (e.g., daily, weekly, or monthly)."
+#     ),
+#     request_body=Schema(
+#         type=TYPE_OBJECT,
+#         properties={
+#             'time': Schema(
+#                 type=TYPE_STRING,
+#                 description="The time at which the script should be executed, in the format HH:MM.",
+#                 example="14:30"
+#             ),
+#             'period': Schema(
+#                 type=TYPE_STRING,
+#                 description="The frequency of execution for the script. Possible values are:",
+#                 enum=["every days", "MON -> FRI", "every week", "every month"],
+#                 example="every days"
+#             ),
+#         },
+#         required=['time', 'period']
+#     ),
+#     responses={
+#         200: Schema(
+#             type=TYPE_OBJECT,
+#             properties={
+#                 'msg': Schema(
+#                     type=TYPE_STRING,
+#                     description="A message indicating the success of the cron job creation.",
+#                     example="Cron job created successfully."
+#                 ),
+#             }
+#         ),
+#         404: Schema(
+#             type=TYPE_OBJECT,
+#             properties={
+#                 'msg': Schema(
+#                     type=TYPE_STRING,
+#                     description="Error message indicating an issue with cron job creation.",
+#                     example="An error occurred while creating the cron job."
+#                 ),
+#             }
+#         ),
+#     }
+# )
+# @api_view(['POST'])
+# @authentication_classes([SessionAuthentication])
+# def change_pwd(request):
+#     """
+#     Crée un nouveau travail cron pour exécuter un script à des intervalles spécifiés en fonction des paramètres de la requête.
 
-    Cette fonction permet de configurer un travail cron pour exécuter un script Python (`g_pwd.py`) à une heure et une 
-    fréquence spécifiques, en fonction des données fournies par la requête. Les périodes supportées incluent : 
-    tous les jours, du lundi au vendredi, chaque semaine, ou chaque mois.
+#     Cette fonction permet de configurer un travail cron pour exécuter un script Python (`g_pwd.py`) à une heure et une 
+#     fréquence spécifiques, en fonction des données fournies par la requête. Les périodes supportées incluent : 
+#     tous les jours, du lundi au vendredi, chaque semaine, ou chaque mois.
 
-    Args:
-        request (HttpRequest): L'objet de la requête HTTP contenant les informations nécessaires pour configurer le travail cron.
-            - `time`: Heure à laquelle le script doit être exécuté (format "HH:MM").
-            - `period`: Période d'exécution du script. Les valeurs possibles sont :
-              - "every days"
-              - "MON -> FRI"
-              - "every week"
-              - "every month"
+#     Args:
+#         request (HttpRequest): L'objet de la requête HTTP contenant les informations nécessaires pour configurer le travail cron.
+#             - `time`: Heure à laquelle le script doit être exécuté (format "HH:MM").
+#             - `period`: Période d'exécution du script. Les valeurs possibles sont :
+#               - "every days"
+#               - "MON -> FRI"
+#               - "every week"
+#               - "every month"
 
-    Returns:
-        JsonResponse: Réponse JSON avec un message indiquant si le travail cron a été créé avec succès.
-            - Message de succès : Si le travail cron a été créé avec succès.
-            - Message d'erreur : Si une erreur survient lors de l'ajout du travail cron.
+#     Returns:
+#         JsonResponse: Réponse JSON avec un message indiquant si le travail cron a été créé avec succès.
+#             - Message de succès : Si le travail cron a été créé avec succès.
+#             - Message d'erreur : Si une erreur survient lors de l'ajout du travail cron.
 
-    Example:
-        Si `data['time']` = "14:30" et `data['period']` = "every days", le travail cron configuré sera :
-        "30 14 * * * python /home/vagrant/g_pwd.py"
+#     Example:
+#         Si `data['time']` = "14:30" et `data['period']` = "every days", le travail cron configuré sera :
+#         "30 14 * * * python /home/vagrant/g_pwd.py"
 
-    Raises:
-        subprocess.CalledProcessError: Si une erreur survient lors de l'exécution des commandes `crontab`.
-    """
-    data = request.data
-    data_to_convert = datetime.strptime(data['time'], "%H:%M")
-    script_path = "/home/vagrant/g_pwd.py"
-    if data['period'] == "every days":
-        cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * * python {script_path}" 
-    elif data['period'] == "MON -> FRI":
-        cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * 1-5 python {script_path}" 
-    elif data['period'] == "every week":
-        cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * 0 python {script_path}" 
-    elif data['period'] == "every month":
-        month_expression = [ "$(date +\%m -d 'last monday')" != "$(date +\%m)" ]
-        cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * {month_expression} python {script_path}" 
+#     Raises:
+#         subprocess.CalledProcessError: Si une erreur survient lors de l'exécution des commandes `crontab`.
+#     """
+#     data = request.data
+#     data_to_convert = datetime.strptime(data['time'], "%H:%M")
+#     script_path = "/home/vagrant/g_pwd.py"
+#     if data['period'] == "every days":
+#         cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * * python {script_path}" 
+#     elif data['period'] == "MON -> FRI":
+#         cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * 1-5 python {script_path}" 
+#     elif data['period'] == "every week":
+#         cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * 0 python {script_path}" 
+#     elif data['period'] == "every month":
+#         month_expression = [ "$(date +\%m -d 'last monday')" != "$(date +\%m)" ]
+#         cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * {month_expression} python {script_path}" 
 
-    try:
-        # Use subprocess to execute the crontab -l command and capture the current crontab content
-        current_crontab = subprocess.check_output(["crontab", "-l"], universal_newlines=True)
-        ## reset our cron with a empty str
-        current_crontab = ''
-        # Add the new cron job to the existing crontab content  
-        # new_crontab = f"{current_crontab.strip()}\n{cron_job}\n"
-        new_crontab = f"{current_crontab.strip()}{cron_job}\n"
+#     try:
+#         # Use subprocess to execute the crontab -l command and capture the current crontab content
+#         current_crontab = subprocess.check_output(["crontab", "-l"], universal_newlines=True)
+#         ## reset our cron with a empty str
+#         current_crontab = ''
+#         # Add the new cron job to the existing crontab content  
+#         # new_crontab = f"{current_crontab.strip()}\n{cron_job}\n"
+#         new_crontab = f"{current_crontab.strip()}{cron_job}\n"
 
-        # Use subprocess to set the new crontab content
-        subprocess.run(["echo", new_crontab], stdout=subprocess.PIPE, input=new_crontab, universal_newlines=True)
-        subprocess.run(["crontab", "-"], input=new_crontab, universal_newlines=True)
+#         # Use subprocess to set the new crontab content
+#         subprocess.run(["echo", new_crontab], stdout=subprocess.PIPE, input=new_crontab, universal_newlines=True)
+#         subprocess.run(["crontab", "-"], input=new_crontab, universal_newlines=True)
 
-        return JsonResponse({"msg": f"{CONSTANT_CRON_JOB} {SUCCESS_MESSAGES_CREATING}"}, status=200)
-    except subprocess.CalledProcessError as e:
-        return JsonResponse({"msg": e}, status=404)
+#         return JsonResponse({"msg": f"{CONSTANT_CRON_JOB} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+#     except subprocess.CalledProcessError as e:
+#         return JsonResponse({"msg": e}, status=404)
 
 @swagger_auto_schema(
     method='POST',
@@ -1950,17 +1950,17 @@ def readFromFile(request):
             ),
             'list_elements': Schema(
                 type=TYPE_ARRAY,
-                description="A list of elements to update. Each element is a tuple containing the target URL and a boolean indicating whether to comment or uncomment the line.",
+                description="A list of elements to update. Each element is an object containing the target URL and a boolean indicating whether to comment or uncomment the line.",
                 items=Schema(
-                    type=TYPE_ARRAY,
-                    items=[
-                        Schema(type=TYPE_STRING, description="The target URL to modify"),
-                        Schema(type=TYPE_BOOLEAN, description="True to comment the URL, False to uncomment it")
-                    ]
+                    type=TYPE_OBJECT,
+                    properties={
+                        'url': Schema(type=TYPE_STRING, description="The target URL to modify", example="url1.com"),
+                        'comment': Schema(type=TYPE_BOOLEAN, description="True to comment the URL, False to uncomment it", example=False)
+                    }
                 ),
                 example=[
-                    ["url1.com", False],
-                    ["url2.com", True]
+                    {"url": "url1.com", "comment": False},
+                    {"url": "url2.com", "comment": True}
                 ]
             ),
         }

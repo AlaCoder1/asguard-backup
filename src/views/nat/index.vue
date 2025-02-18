@@ -16,7 +16,9 @@
           >
             <v-card>
               <v-card-text>
-                <helpModal />
+                <helpModal v-if="activeTab === 'tabs.SNAT'" help="snat" />
+                <helpModal v-if="activeTab === 'tabs.DNAT'" help="dnat" />
+                <helpModal v-if="activeTab === 'tabs.OneToOne'" help="one" />
                 <component :is="tab.component" />
               </v-card-text>
             </v-card>

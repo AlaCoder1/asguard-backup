@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from backend.double_mask.constant_variables import PATH_DOUBLE_MASK
 from backend.double_mask.models import DoubleMask
 from backend.double_mask.serializers import DoubleMaskSerializer
 from django.utils.translation import gettext_lazy as _
@@ -32,7 +33,7 @@ def activate_double_mask(request):
     Otherwise, it activates double mask and returns a success message.
     """
     if request.method=="PUT":
-        out,error=run_command("cd /home/dbmask/dm && sudo make install")
+        out,error=run_command(f"cd {PATH_DOUBLE_MASK} && sudo make install")
         if error.strip()=="":
             active=True
             object_double_mask=DoubleMask.objects.first()
@@ -72,7 +73,7 @@ def deactivate_double_mask(request):
     Otherwise, it deactivates double mask and returns a success message.
     """
     if request.method=="PUT":
-        out,error=run_command("cd /home/dbmask/dm && sudo make uninstall")
+        out,error=run_command(f"cd {PATH_DOUBLE_MASK} && sudo make uninstall")
         if error.strip()=="":
             print("hello")
             active=False

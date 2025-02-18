@@ -19,7 +19,7 @@
         @change="confirmSwitch" class="mt-3"></v-switch>
 
 
-      <v-dialog v-model="dialog" max-width="410px">
+      <v-dialog v-model="dialog" persistent  max-width="410px">
         <v-card>
           <v-card-title>Confirmation</v-card-title>
           <v-card-text>Voulez-vous vraiment {{ !tempValue ? 'activer' : 'désactiver' }} cette option ?</v-card-text>
@@ -64,11 +64,11 @@
         <div>{{ chartOptions.series[0] }}% Gain de performance</div>
         <v-expansion-panels>
           <v-expansion-panel>
-            <v-expansion-panel-title>Numéro initial des règles :
+            <v-expansion-panel-title>Nombre initial des règles :
               {{ initialRules }}</v-expansion-panel-title>
           </v-expansion-panel>
           <v-expansion-panel>
-            <v-expansion-panel-title>Numéro de règles actuel :
+            <v-expansion-panel-title>Nombre de règles actuel :
               {{ actualRules }}</v-expansion-panel-title>
           </v-expansion-panel>
         </v-expansion-panels>

@@ -1842,8 +1842,8 @@ def changeStausGroup(request):
         properties={
             'file_name': Schema(
                 type=TYPE_STRING,
-                description="The name of the ACL file (without the '.acl' extension).",
-                example="example"
+                description="The name of the ACL file like 123found (without the '.acl' extension and we have a project content all .acl files).",
+                example="ads" 
             ),
         }
     ),
@@ -1946,7 +1946,7 @@ def readFromFile(request):
             'file_name': Schema(
                 type=TYPE_STRING,
                 description="The name of the ACL file to modify (without the '.acl' extension).",
-                example="example"
+                example="ads"
             ),
             'list_elements': Schema(
                 type=TYPE_ARRAY,
@@ -1959,8 +1959,8 @@ def readFromFile(request):
                     ]
                 ),
                 example=[
-                    ["url1.com", False],
-                    ["url2.com", True]
+                    {"url": "123found.com", "comment": False},
+                    {"url": "123freeavatars.com", "comment": True}
                 ]
             ),
         }

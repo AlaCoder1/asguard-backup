@@ -2,7 +2,7 @@
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.cert')">
       <template #content>
-        <helpModal />
+        <helpModal help="certificates" />
         <div class="ml-5 mr-5 mb-5">
           <authorites :authoritesData="authoritesData" />
           <certificats

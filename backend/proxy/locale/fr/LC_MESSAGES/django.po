@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 20:39+0000\n"
+"POT-Creation-Date: 2025-02-14 11:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,130 +22,130 @@ msgstr ""
 msgid "username"
 msgstr "nom d'utilisateur"
 
-#: backend/proxy/views.py:18
+#: backend/proxy/views.py:19
 msgid "Squid"
 msgstr "Squid"
 
-#: backend/proxy/views.py:19
+#: backend/proxy/views.py:20
 msgid "Pattern"
 msgstr "Pattern"
 
-#: backend/proxy/views.py:20
+#: backend/proxy/views.py:21
 msgid "Lines"
 msgstr "Lignes"
 
-#: backend/proxy/views.py:21
+#: backend/proxy/views.py:22
 msgid "interface"
 msgstr "interface"
 
-#: backend/proxy/views.py:22
+#: backend/proxy/views.py:23
 msgid "Address"
 msgstr "Adresse"
 
-#: backend/proxy/views.py:23
+#: backend/proxy/views.py:24
 msgid "File"
 msgstr "Fichier"
 
-#: backend/proxy/views.py:24
+#: backend/proxy/views.py:25
 msgid "Path"
 msgstr "Chemin"
 
-#: backend/proxy/views.py:25
+#: backend/proxy/views.py:26
 msgid "Port"
 msgstr "Port"
 
-#: backend/proxy/views.py:26
+#: backend/proxy/views.py:27
 msgid "Please provide the correct"
 msgstr "Veuillez fournir le correct"
 
-#: backend/proxy/views.py:27
+#: backend/proxy/views.py:28
 msgid "Cron job"
 msgstr "Cron job"
 
-#: backend/proxy/views.py:28
+#: backend/proxy/views.py:29
 msgid "User"
 msgstr "Utilisateur"
 
-#: backend/proxy/views.py:29
+#: backend/proxy/views.py:30
 msgid "Status"
 msgstr "Statut"
 
-#: backend/proxy/views.py:30
+#: backend/proxy/views.py:31
 msgid "Rule"
 msgstr "Règle"
 
-#: backend/proxy/views.py:34
+#: backend/proxy/views.py:35
 msgid "is Unblocked"
 msgstr "est Débloqué"
 
-#: backend/proxy/views.py:35
+#: backend/proxy/views.py:36
 msgid "is blocked"
 msgstr "est Bloqué"
 
-#: backend/proxy/views.py:36
+#: backend/proxy/views.py:37
 msgid "are Uncommented"
 msgstr "sont décommentées"
 
-#: backend/proxy/views.py:37
+#: backend/proxy/views.py:38
 msgid "are Commented"
 msgstr "sont Commentées"
 
-#: backend/proxy/views.py:38
+#: backend/proxy/views.py:39
 msgid "is created"
 msgstr "est créé"
 
-#: backend/proxy/views.py:39
+#: backend/proxy/views.py:40
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/proxy/views.py:40
+#: backend/proxy/views.py:41
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/proxy/views.py:41
+#: backend/proxy/views.py:42
 msgid "is started"
 msgstr "est démarré"
 
-#: backend/proxy/views.py:42
+#: backend/proxy/views.py:43
 msgid "is restarted"
 msgstr "est redémarré"
 
-#: backend/proxy/views.py:43
+#: backend/proxy/views.py:44
 msgid "is stoped"
 msgstr "est arrêté"
 
-#: backend/proxy/views.py:44
+#: backend/proxy/views.py:45
 msgid "is changed"
 msgstr "est changé"
 
-#: backend/proxy/views.py:46
+#: backend/proxy/views.py:47
 msgid "System error in starting"
 msgstr "Erreur système lors de démarrage"
 
-#: backend/proxy/views.py:47
+#: backend/proxy/views.py:48
 msgid "System error in restarting"
 msgstr "Erreur système lors de redémarrage"
 
-#: backend/proxy/views.py:48
+#: backend/proxy/views.py:49
 msgid "System error in stoping"
 msgstr "Erreur système lors de l'arrêt"
 
-#: backend/proxy/views.py:49
+#: backend/proxy/views.py:50
 msgid "Error Occurred"
 msgstr "Une erreur s'est produite"
 
-#: backend/proxy/views.py:50
+#: backend/proxy/views.py:51
 msgid "Not Found in"
 msgstr "Non trouvé dans"
 
-#: backend/proxy/views.py:51
+#: backend/proxy/views.py:52
 msgid "Error in saving instance"
 msgstr "Erreur lors de l'enregistrement de l'instance"
 
-#: backend/proxy/views.py:52
+#: backend/proxy/views.py:53
 msgid "Error in adding user"
 msgstr "Erreur lors de l'ajout de l'utilisateur"
 
-#: backend/proxy/views.py:53
+#: backend/proxy/views.py:54
 msgid "does not exist"
 msgstr "n'existe pas"

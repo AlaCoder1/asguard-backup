@@ -105,7 +105,7 @@ def get_double_mask(request):
     if request.method == 'GET':
         n=0
         n_comp=0
-        output,error=run_command('sudo lsmod | grep "calculateDM"')
+        output,error=run_command('sudo lsmod | grep "ip_filter"')
         if output=="":
             active=False
         else:

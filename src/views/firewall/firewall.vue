@@ -37,7 +37,7 @@
           >
             <v-card>
               <v-card-text>
-                <helpModal />
+                <helpModal help="rules" />
 
                 <FirewallComponent
                   :id="tab.name_interface"

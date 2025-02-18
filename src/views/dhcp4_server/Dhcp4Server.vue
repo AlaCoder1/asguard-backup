@@ -11,8 +11,8 @@
 
         <v-window v-model="activeTab">
 
+          <helpModal help="dhcp" />
           <v-window-item v-for="tab in tabs" :key="tab.name_interface" :value="tab.name_interface">
-            <helpModal help="dhcp" />
             <ConfigServerDhcp4Component :id="tab.name_interface" :activeTab="activeTab" :configInfo="tab" />
           </v-window-item>
         </v-window>

@@ -39,6 +39,18 @@
                 <div v-if="help === 'routing'">
                   <routing />
                 </div>
+                <div v-if="help === 'rules'">
+                  <rules />
+                </div>
+                <div v-if="help === 'snat'">
+                  <snat />
+                </div>
+                <div v-if="help === 'one'">
+                  <one />
+                </div>
+                <div v-if="help === 'dnat'">
+                  <dnat />
+                </div>
               </v-container>
             </v-card-text>
 
@@ -61,6 +73,10 @@ import listInter from "@/views/help/interfaces/list-interfaces.vue";
 import typeInter from "@/views/help/interfaces/type_interfaces.vue";
 import dhcp from "@/views/help/interfaces/dhcp.vue";
 import routing from "@/views/help/interfaces/routing.vue";
+import rules from "@/views/help/rules.vue";
+import snat from "@/views/help/nat/snat.vue";
+import one from "@/views/help/nat/oneTone.vue";
+import dnat from "@/views/help/nat/dnat.vue";
 import { reactive, toRefs } from "vue";
 
 export default {
@@ -68,6 +84,10 @@ export default {
     subscription,
     certificates,
     users,
+    rules,
+    snat,
+    dnat,
+    one,
     keyPair,
     listInter,
     dhcp,

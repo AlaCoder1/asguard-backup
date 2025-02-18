@@ -5,7 +5,7 @@
       active-menu="interface"
     >
       <template #content>
-        <helpModal />
+        <helpModal help="type-interfaces"/>
         <div class="mr-3">
           <vlan />
           <vxlan />

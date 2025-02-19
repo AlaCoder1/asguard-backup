@@ -1,7 +1,7 @@
 import os
 from backend.managementCertificates.constant_variables import CONSTANT_EASYRSA_VARIABLE, PATH_CA_CRL_PEM, PATH_CA_CRT, PATH_CA_KEY, PATH_PKI_CA, PATH_PKI_CA_CRL, PATH_PKI_CA_KEY, PATH_PKI_CERT, PATH_PKI_CERT_KEY, PATH_PKI_VARS, PATH_VARS, PATH_CLIENT_CERT_CRT, PATH_CLIENT_CERT_KEY, PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
 from backend.managementCertificates.get_data_from_certificate import get_certificates_details
-from utils.commands_utils import execute_list_commands_with_arguments
+from utils.commands_utils import execute_list_commands_with_arguments, write_file_from_system_safe_method
 from utils.commands_utils import execute_command_with_arguments, execute_command_without_arguments, execute_list_commands_without_arguments
 
 
@@ -30,9 +30,7 @@ def change_vars(current_dir, updated_field:dict):
         else:
             # Append the input in vars file
             vars_content += f'\n{CONSTANT_EASYRSA_VARIABLE}{field[0]}\t{field[1]}'
-
-    with open(PATH_PKI_VARS.format(current_dir), 'w') as file:
-        file.write(vars_content)
+    write_file_from_system_safe_method(PATH_PKI_VARS.format(current_dir), vars_content)
 
     return vars_content
 

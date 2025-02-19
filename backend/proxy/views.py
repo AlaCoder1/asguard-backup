@@ -345,6 +345,10 @@ def enable_by_time():
         type=TYPE_OBJECT,
         required=['allow_by_auth', 'type', 'value', 'status'],
         properties={
+            'rule_name': Schema(
+                type=TYPE_STRING,
+                description="The rule name.",
+            ),
             'allow_by_auth': Schema(
                 type=TYPE_BOOLEAN,
                 description="Indicates whether the rule applies to authenticated users.",
@@ -424,6 +428,7 @@ def addRuleSquid(request):
         request (HttpRequest): The HTTP request containing rule data (expected to be a POST request with JSON data).
 
     Request Data:
+        - `rule_name` (str): The rule name.
         - `allow_by_auth` (bool): Whether the rule applies to authenticated users.
         - `type` (str): The rule type (`"ip"`, `"domain"`, or `"subnet"`).
         - `value` (str): The IP, domain, or subnet to be blocked/allowed.

@@ -1,4 +1,4 @@
-from ipaddress import IPv4Interface
+from ipaddress import IPv4Interface, ip_address, ip_network
 
 
 def fix_ipv4_address(ipv4_address: str):
@@ -11,3 +11,13 @@ def fix_ipv4_address(ipv4_address: str):
         network_mask = network_mask[1]
         ipv4_address = f"{network_address}/{network_mask}"
     return ipv4_address
+
+
+def is_same_subnet(ip: str, subnet: str):
+    """Function that check if an IP address in format of x.x.x.x belongs to the same subnet
+      as another address with a subnet mask:"""
+    try:
+        network = ip_network(subnet, strict=False)
+        return ip_address(ip) in network
+    except ValueError:
+        return False

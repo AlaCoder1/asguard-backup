@@ -10,6 +10,7 @@ celery_app = Celery('asguard')
 
 # Load task modules from all registered Django app configs.
 celery_app.config_from_object('django.conf:settings', namespace='CELERY')
+celery_app.conf.broker_connection_retry_on_startup = True
 
 # Auto-discover tasks in all installed apps
 celery_app.autodiscover_tasks(['asguard'])

@@ -9,14 +9,12 @@
         </v-tabs>
 
         <v-window v-model="activeTab">
-          <v-window-item
-            v-for="(tab, index) in tabs"
-            :key="index"
-            :value="tab.label"
-          >
+          <v-window-item v-for="(tab, index) in tabs" :key="index" :value="tab.label">
             <v-card>
               <v-card-text>
-                <helpModal />
+                <helpModal v-if="activeTab === 'tabs.SNAT'" help="snat" />
+                <helpModal v-if="activeTab === 'tabs.DNAT'" help="dnat" />
+                <helpModal v-if="activeTab === 'tabs.OneToOne'" help="one" />
                 <component :is="tab.component" />
               </v-card-text>
             </v-card>
@@ -80,6 +78,7 @@ export default {
   object-fit: cover;
   overflow: hidden;
 }
+
 .img-containter {
   display: flex;
   width: 100%;

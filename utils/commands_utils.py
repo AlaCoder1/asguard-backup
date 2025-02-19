@@ -68,7 +68,7 @@ def read_file_from_system(path_file):
     return file_content.stdout
 
 
-def write_file_from_system(path_file, content_file):
+def write_file_from_system(path_file, content_file: str):
     """A function to create a file if it doesn't exist and write on it using command lines"""
     execute_command_without_arguments(["sudo", "rm", "-f", path_file])
     execute_command_without_arguments(["sudo", "touch", path_file])
@@ -78,7 +78,19 @@ def write_file_from_system(path_file, content_file):
 EOF""".format(path_file, content_file))
 
 
-def append_file_from_system(path_file, content_file):
+def write_file_from_system_safe_method(path_file, content_file: str):
+    """A function to create a file if it doesn't exist and write on it using command lines and escaping special characters"""
+    execute_command_without_arguments(["sudo", "rm", "-f", path_file])
+    execute_command_without_arguments(["sudo", "touch", path_file])
+    
+    # Escape special characters properly
+    safe_content = content_file.replace("'", "'\\''")  # Escape single quotes
+
+    command = f"echo '{safe_content}' | sudo tee {path_file} > /dev/null"
+    execute_command_str(command)
+
+
+def append_file_from_system(path_file, content_file: str):
     """A function to create a file if it doesn't exist and write on it using command lines"""
     # execute_command_str(f"""echo '{content_file}' | cat >> {path_file}""")
     execute_command_str("""sudo cat <<EOF >> {}

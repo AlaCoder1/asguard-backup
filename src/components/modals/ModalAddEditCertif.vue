@@ -518,7 +518,7 @@ export default {
             isValidlifeTime: helpers.withMessage(
               champNumberAndMax,
 
-              (value) => /^[0-9]+$/.test(value) && parseInt(value, 10) <= 825
+              helpers.regex(/^(?:[0-9]{1,2}|[1-7][0-9]{2}|8[0-1][0-9]|82[0-5])$/)
             ),
           },
 

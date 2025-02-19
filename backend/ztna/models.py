@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 class Identities(models.Model):
     ref_identitie = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
-    attribute_identitie = models.CharField(max_length=500, null=True, blank=True)
+    attribute_identitie = models.CharField(max_length=500, default="attribute")
     type = models.CharField(max_length=200)
     hostname = models.CharField(max_length=200, null=True, blank=True)
     description = models.CharField(max_length=800, null=True, blank=True)
@@ -18,7 +18,8 @@ class Identities(models.Model):
         db_table = 'identities'
     def __str__(self):
         return self.ref_identitie
-    
+
+
 class Enrollements(models.Model):
     date = models.DateField()
     time = models.TimeField()
@@ -26,6 +27,7 @@ class Enrollements(models.Model):
     identitie = models.ForeignKey(Identities, on_delete=models.CASCADE)
     class Meta:
         db_table = 'enrollements'
+
 
 class InterceptConfigs(models.Model):
     ref_intercept=models.CharField(max_length=200, unique=True)
@@ -40,7 +42,8 @@ class InterceptConfigs(models.Model):
         db_table = 'interceptconfigs'
     def __str__(self):
         return self.ref_intercept
-    
+
+
 class HostConfigs(models.Model):
     ref_host=models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
@@ -53,7 +56,8 @@ class HostConfigs(models.Model):
         db_table = 'hostconfigs'
     def __str__(self):
         return self.ref_host
-    
+
+
 class Services(models.Model):
     ref_service = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
@@ -65,6 +69,7 @@ class Services(models.Model):
     date_creation = models.DateTimeField()
     class Meta:
         db_table = 'servicesztna'
+
 
 class Relays(models.Model):
     ref_relay=models.CharField(max_length=200, unique=True)
@@ -81,7 +86,8 @@ class Relays(models.Model):
         db_table = 'relays'
     def __str__(self):
         return self.ref_relay
-    
+
+
 class RelaysPolicy(models.Model):
     ref_relay_policy = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
@@ -95,6 +101,7 @@ class RelaysPolicy(models.Model):
     date_creation = models.DateTimeField()
     class Meta:
         db_table = 'relaypolicy'
+
 
 class ServicesPolicy(models.Model):
     ref_service_policy = models.CharField(max_length=200, unique=True)
@@ -110,6 +117,7 @@ class ServicesPolicy(models.Model):
     class Meta:
         db_table = 'servicepolicies'
 
+
 class ServicesRelaysPolicy(models.Model):
     ref_service_relay_policy = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
@@ -122,17 +130,18 @@ class ServicesRelaysPolicy(models.Model):
     date_creation = models.DateTimeField()
     class Meta:
         db_table = 'servicerelaypolicies'
-        
-        
-        
+
+
 class ZtnaControllerLogs(models.Model):
     log=models.TextField()
 
     class Meta:
-        db_table = 'ztna_controller_logs'    
+        db_table = 'ztna_controller_logs'
+
+
 class ZtnaRouterLogs(models.Model):
     file_path=models.CharField(max_length=100, blank=False)
     log=models.TextField()
 
     class Meta:
-        db_table = 'ztna_router_logs'    
+        db_table = 'ztna_router_logs'

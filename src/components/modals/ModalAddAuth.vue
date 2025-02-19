@@ -303,7 +303,9 @@
               :rounded="true"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ $t("buttons.create") }}</span>
+              <span class="text-white pr-3 pl-3">{{
+                $t("buttons.create")
+              }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -448,8 +450,7 @@ export default {
             ),
             isValidlifeTime: helpers.withMessage(
               champNumberAndMax,
-
-              (value) => /^[0-9]+$/.test(value) && parseInt(value, 10) <= 825
+              helpers.regex(/^(?:[0-9]{1,2}|[1-7][0-9]{2}|8[0-1][0-9]|82[0-5])$/)
             ),
           },
           country: {
@@ -539,6 +540,8 @@ export default {
   watch: {
     isImportCetif() {
       this.v$.$reset();
+      this.state.formData.lifeTime = "";
+      console.log("this.state.formData.lifeTime", this.state.formData.lifeTime);
     },
     isCreateCetif(test) {
       this.v$.$reset();
@@ -678,6 +681,8 @@ export default {
               }, 2000);
             }
           });
+      } else {
+        console.log("this.v$.$error", this.v$);
       }
     },
   },

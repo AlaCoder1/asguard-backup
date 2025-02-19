@@ -26,27 +26,35 @@ msgstr "Configuration VxLAN"
 msgid "Saved"
 msgstr "Sauvegardé"
 
-#: backend/vxlan/models.py:8
+#: backend/vxlan/models.py:7
+msgid "Port must contain only digits."
+msgstr "Le port ne doit contenir que des chiffres."
+
+#: backend/vxlan/models.py:10
+msgid "Port must be a number between 1 and 65535."
+msgstr "Le port doit être un nombre compris entre 1 et 65535."
+
+#: backend/vxlan/models.py:13
 msgid "interface Name"
 msgstr "nom d'interface "
 
-#: backend/vxlan/models.py:9
+#: backend/vxlan/models.py:14
 msgid "vxlan id"
 msgstr "vxlan id"
 
-#: backend/vxlan/models.py:10
+#: backend/vxlan/models.py:15
 msgid "source address"
 msgstr "adresse source"
 
-#: backend/vxlan/models.py:11
+#: backend/vxlan/models.py:16
 msgid "destination address"
 msgstr "adresse destination"
 
-#: backend/vxlan/models.py:12
+#: backend/vxlan/models.py:17
 msgid "port"
 msgstr "port"
 
-#: backend/vxlan/models.py:13
+#: backend/vxlan/models.py:18
 msgid "connection name"
 msgstr "nom de la connection"
 

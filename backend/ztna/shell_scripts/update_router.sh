@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base directory where the folders are stored
-base_directory="/asguard/newdms/backend/ztna/relays_folder"
+base_directory="/asguard/asguard/backend/ztna/relays_folder"
 
 # Read the current and new names from the command line arguments
 read current_name

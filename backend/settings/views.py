@@ -1,3 +1,58 @@
+"""
+Django Views for System and Network Configuration Management
+
+This module provides a set of API endpoints to manage general system settings, 
+time zones, gateways, network configurations, and system information. 
+
+Features:
+---------
+- Update system settings (hostname, domain, timezone, DNS servers).
+- Retrieve general system settings.
+- Retrieve available time zones.
+- Retrieve gateway information.
+- Retrieve system and network details.
+- Create system entries.
+
+Endpoints:
+----------
+1. `generale_settings(request, id) [PUT]`
+   - Updates system settings based on user input.
+   - Requires `hostname`, `domain`, `timezone`, and `dns_servers`.
+
+2. `get_generale_settings(request, id) [GET]`
+   - Retrieves system settings (hostname, domain, and time zone).
+
+3. `time_zones(request) [GET]`
+   - Returns a list of available time zones.
+
+4. `gatways_information(request) [GET]`
+   - Fetches details of network gateways.
+
+5. `getSystem(request, id) [GET]`
+   - Retrieves system details for a given ID.
+
+6. `getNetwork(request, id) [GET]`
+   - Fetches network details for a given ID.
+
+7. `getServerReseau(request, id) [GET]`
+   - Retrieves server network details.
+
+8. `createSystem(request) [POST]`
+   - Creates a new system entry.
+
+Dependencies:
+-------------
+- Django REST framework (`api_view`, `authentication_classes`)
+- Django Models: `System`, `Network`, `Gateway`, `Timezone`, `Interface`
+- JSON serialization for responses
+
+Constants:
+----------
+- Success messages (`SUCCESS_MESSAGES_CREATING`, etc.)
+- Error messages (`ERROR_MESSAGES_CREATING`, etc.)
+- System-related constants (`CONSTANT_SYSTEM`, etc.)
+
+"""
 from django.http import JsonResponse
 # from backend.managementGroup.remoteFunctions import sudo
 from backend.network.models import Interface
@@ -52,6 +107,39 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def generale_settings(request,id):
+    """
+    Updates the general system settings including hostname, domain, timezone, and DNS configurations.
+
+    This function handles PUT requests to modify system settings such as:
+    - Hostname: Updates the system hostname if valid.
+    - Domain: Changes the system domain if it meets the required format.
+    - Timezone: Updates the system's timezone based on the provided value.
+    - DNS Servers: Adds new DNS servers and associates gateways with them.
+    - Network Configuration: Updates or creates a network entry with DNS server settings.
+
+    Parameters:
+    ----------
+    request : HttpRequest
+        The HTTP request object containing the updated system settings.
+    id : int
+        The ID of the system object to be updated.
+
+    Returns:
+    -------
+    JsonResponse
+        A JSON response containing a success or error message with an appropriate HTTP status code.
+
+    Raises:
+    ------
+    System.DoesNotExist
+        If the system object with the given ID does not exist.
+    Timezone.DoesNotExist
+        If the provided timezone is not found.
+    Gateway.DoesNotExist
+        If the specified gateway does not exist.
+    Interface.DoesNotExist
+        If the specified network interface does not exist.
+    """
     msg = ''
     if (request.method == 'PUT'):
         system_object = System.objects.get(id=id)
@@ -94,10 +182,64 @@ def generale_settings(request,id):
             status = 400
     return JsonResponse({"msg": msg}, status=status)
 
+@swagger_auto_schema(
+    method='GET',
+    responses={
+        200: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "generale_settings": Schema(
+                    type=TYPE_OBJECT,
+                    properties={
+                        "hostname": Schema(type=TYPE_STRING),
+                        "domaine": Schema(type=TYPE_STRING),
+                        "time_zone": Schema(
+                            type=TYPE_OBJECT,
+                            properties={
+                                "name": Schema(type=TYPE_STRING),
+                                "id": Schema(type=TYPE_INTEGER)
+                            }
+                        )
+                    }
+                )
+            }
+        ),
+        400: 'Bad Request',
+        404: 'Not Found'
+    },
+    operation_summary="API to retrieve general settings",
+    operation_description="Retrieve general system settings, including hostname, domain, and time zone."
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def get_generale_settings(request,id):
+    """
+    Retrieves the general system settings including hostname, domain, and timezone.
+
+    This function handles GET requests to retrieve the system settings for a specific system 
+    identified by the provided ID. It returns the system's hostname, domain, and timezone details.
+
+    Parameters:
+    ----------
+    request : HttpRequest
+        The HTTP request object used to retrieve the system settings.
+    id : int
+        The ID of the system object for which the settings are being retrieved.
+
+    Returns:
+    -------
+    JsonResponse
+        A JSON response containing the general system settings (hostname, domain, and timezone) 
+        for the system with the given ID.
+
+    Raises:
+    ------
+    System.DoesNotExist
+        If the system object with the given ID does not exist.
+    Timezone.DoesNotExist
+        If the timezone associated with the system object cannot be found.
+    """
     if (request.method == 'GET'):
         system_object = System.objects.get(id=id)
         time_zone = Timezone.objects.get(name = system_object.time_zone.name)
@@ -110,11 +252,72 @@ def get_generale_settings(request,id):
             }
         }
         return JsonResponse({"generale_settings":system_dict})
-    
+
+@swagger_auto_schema(
+    method='GET',
+    responses={
+        200: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "timezones": Schema(
+                    type=TYPE_ARRAY,
+                    items=Schema(
+                        type=TYPE_OBJECT,
+                        properties={
+                            "id": Schema(type=TYPE_INTEGER),
+                            "name": Schema(type=TYPE_STRING),
+                            "offset": Schema(type=TYPE_STRING)
+                        }
+                    )
+                )
+            }
+        ),
+        400: 'Bad Request'
+    },
+    operation_summary="API to retrieve time zone information",
+    operation_description="Retrieve a list of available time zones with their ID, name, and offset."
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def time_zones(request):
+    """
+    Retrieves a list of all available timezones.
+
+    This function handles GET requests to retrieve all timezones from the database. It serializes 
+    the timezone data into JSON format, removes unnecessary fields, and returns a cleaned list of timezones.
+
+    Parameters:
+    ----------
+    request : HttpRequest
+        The HTTP request object used to retrieve the list of timezones.
+
+    Returns:
+    -------
+    JsonResponse
+        A JSON response containing the list of timezones with their respective details.
+
+    Example:
+    --------
+    {
+        "timezones": [
+            {
+                "id": 1,
+                "name": "UTC",
+                "offset": "+00:00"
+            },
+            {
+                "id": 2,
+                "name": "PST",
+                "offset": "-08:00"
+            }
+        ]
+    }
+
+    Raises:
+    ------
+    None
+    """
     list_timezones=[]
     if (request.method == 'GET'):
         timezones=Timezone.objects.all()
@@ -128,11 +331,96 @@ def time_zones(request):
             list_timezones.append(res[i]['fields'])
         return JsonResponse({"timezones": list_timezones})
 
-
+@swagger_auto_schema(
+    method='GET',
+    responses={
+        200: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "gatways_information": Schema(
+                    type=TYPE_ARRAY,
+                    items=Schema(
+                        type=TYPE_OBJECT,
+                        properties={
+                            "gateway": Schema(
+                                type=TYPE_OBJECT,
+                                properties={
+                                    "id": Schema(type=TYPE_INTEGER),
+                                    "address": Schema(type=TYPE_STRING)
+                                }
+                            ),
+                            "info": Schema(
+                                type=TYPE_ARRAY,
+                                items=Schema(
+                                    type=TYPE_OBJECT,
+                                    properties={
+                                        "interface_id": Schema(type=TYPE_INTEGER),
+                                        "metric": Schema(type=TYPE_INTEGER),
+                                        "dns_server": Schema(type=TYPE_STRING),
+                                        "gateway": Schema(type=TYPE_STRING)
+                                    }
+                                )
+                            )
+                        }
+                    )
+                )
+            }
+        ),
+        400: 'Bad Request'
+    },
+    operation_summary="API to retrieve gateway information",
+    operation_description="Retrieve gateway information along with associated details, including DNS servers, interfaces, and metrics."
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def gatways_information(request):
+    """
+    Retrieves information about gateways and their associated details.
+
+    This function handles GET requests to retrieve all gateways' interface information from the database. 
+    It serializes the data, processes the information to map it by gateway, and returns a structured JSON response.
+
+    Parameters:
+    ----------
+    request : HttpRequest
+        The HTTP request object used to retrieve gateway information.
+
+    Returns:
+    -------
+    JsonResponse
+        A JSON response containing the gateway information, structured with each gateway's 
+        associated details.
+
+    Example:
+    --------
+    {
+        "gatways_information": [
+            {
+                "gateway": {
+                    "id": 1,
+                    "address": "192.168.1.1"
+                },
+                "info": [
+                    {
+                        "interface_name": "eth0",
+                        "metric": 10,
+                        "status": "active"
+                    },
+                    {
+                        "interface_name": "eth1",
+                        "metric": 20,
+                        "status": "inactive"
+                    }
+                ]
+            }
+        ]
+    }
+
+    Raises:
+    ------
+    None
+    """
     gatways_information=[]
     if (request.method == 'GET'):
         gateway=GatewayInterface.objects.all()
@@ -159,18 +447,66 @@ def gatways_information(request):
         ]
         return JsonResponse({"gatways_information": output_data})
 
-
-
-
-
-
-
-
-
+@swagger_auto_schema(
+    method='GET',
+    responses={
+        200: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "id": Schema(type=TYPE_INTEGER),
+                "hostname": Schema(type=TYPE_STRING),
+                "domain": Schema(type=TYPE_STRING),
+                "timezone": Schema(
+                    type=TYPE_OBJECT,
+                    properties={
+                        "name": Schema(type=TYPE_STRING),
+                        "id": Schema(type=TYPE_INTEGER)
+                    }
+                )
+            }
+        ),
+        404: 'Not Found'
+    },
+    operation_summary="API to retrieve system information",
+    operation_description="Retrieve system information by ID."
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getSystem(request, id):
+    """
+    Retrieves system information for a specific ID.
+
+    This function handles GET requests to retrieve system information (System) based on the provided `id`. It fetches the data from the database, formats it by removing unnecessary fields, and returns the system details as a JSON response.
+
+    Parameters:
+    ----------
+    request : HttpRequest
+        The HTTP request object containing the request details.
+
+    id : int
+        The unique identifier for the system entry to be retrieved.
+
+    Returns:
+    -------
+    JsonResponse
+        A JSON response containing the system details, excluding unnecessary fields.
+
+    Example:
+    --------
+    Success response:
+    {
+        "id": 1,
+        "hostname": "system1",
+        "domain": "example.com",
+        "time_zone": "UTC"
+    }
+
+    Raises:
+    ------
+    KeyError:
+        If no system is found for the provided `id`.
+    """
     if (request.method == 'GET'):
         system = System.objects.filter(id=id)
         systemDict = serializers.serialize("json", system)
@@ -183,11 +519,61 @@ def getSystem(request, id):
         # return a no content response.
         return JsonResponse(systemJson)
 
-
+@swagger_auto_schema(
+    method='GET',
+    responses={
+        200: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "id": Schema(type=TYPE_INTEGER),
+                "name": Schema(type=TYPE_STRING),
+                "subnet": Schema(type=TYPE_STRING),
+                "gateway": Schema(type=TYPE_STRING),
+                "dns_servers": Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING))
+            }
+        ),
+        404: 'Not Found'
+    },
+    operation_summary="API to retrieve network information",
+    operation_description="Retrieve network information by ID."
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getNetwork(request, id):
+    """
+    Retrieves the network information for a specific ID.
+
+    This function handles GET requests to retrieve network information (Network) based on the provided `id`. It fetches the data from the database, formats it by removing unnecessary fields, and returns the information as a JSON response.
+
+    Parameters:
+    ----------
+    request : HttpRequest
+        The HTTP request object containing the request details.
+
+    id : int
+        The unique identifier for the network entry to be retrieved.
+
+    Returns:
+    -------
+    JsonResponse
+        A JSON response containing the network details, excluding unnecessary fields.
+
+    Example:
+    --------
+    Success response:
+    {
+        "id": 1,
+        "name": "Network A",
+        "status": "active",
+        "ip_range": "192.168.1.0/24"
+    }
+
+    Raises:
+    ------
+    KeyError:
+        If no network is found for the provided `id`.
+    """
     if (request.method == 'GET'):
         network = Network.objects.filter(id=id)
         networkDict = serializers.serialize("json", network)
@@ -200,11 +586,60 @@ def getNetwork(request, id):
         # return a no content response.
         return JsonResponse(networkJson)
 
-
+@swagger_auto_schema(
+    method='GET',
+    responses={
+        200: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "id": Schema(type=TYPE_INTEGER),
+                "name": Schema(type=TYPE_STRING),
+                "address": Schema(type=TYPE_STRING),
+                "status": Schema(type=TYPE_STRING)
+            }
+        ),
+        404: 'Not Found'
+    },
+    operation_summary="API to retrieve server network information",
+    operation_description="Retrieve server network information by ID."
+)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getServerReseau(request, id):
+    """
+    Retrieves the server network information for a specific ID.
+
+    This function handles GET requests to retrieve the server network (ServerReseau) information based on the provided `id`. It fetches the data from the database, formats it by removing unnecessary fields, and returns the information as a JSON response.
+
+    Parameters:
+    ----------
+    request : HttpRequest
+        The HTTP request object containing the request details.
+
+    id : int
+        The unique identifier for the server network entry to be retrieved.
+
+    Returns:
+    -------
+    JsonResponse
+        A JSON response containing the server network details, excluding unnecessary fields.
+
+    Example:
+    --------
+    Success response:
+    {
+        "id": 1,
+        "name": "Server 1",
+        "address": "192.168.1.1",
+        "status": "active"
+    }
+
+    Raises:
+    ------
+    KeyError:
+        If no server network is found for the provided `id`.
+    """
     if (request.method == 'GET'):
         serverReseau = ServerReseau.objects.filter(id=id)
         serverReseauDict = serializers.serialize("json", serverReseau)
@@ -217,11 +652,64 @@ def getServerReseau(request, id):
         # return a no content response.
         return JsonResponse(serverReseauJson)
 
-
+@swagger_auto_schema(
+    method='POST',
+    request_body=SystemSerializer,
+    responses={
+        201: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "msg": Schema(type=TYPE_STRING)
+            }
+        ),
+        400: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "detail": Schema(type=TYPE_STRING)
+            }
+        )
+    },
+    operation_summary="API to create a new system",
+    operation_description="Create a new system and store it in the database. A success message is returned upon successful creation."
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def createSystem(request):
+    """
+    Creates a new system entry in the database based on incoming data.
+
+    This function handles POST requests to create a new system entry. It parses the incoming request data, validates it using the `SystemSerializer`, and saves it to the database if valid. Upon successful creation, it returns a JSON response with a success message. If the data is invalid, it returns a JSON response with error details.
+
+    Parameters:
+    ----------
+    request : HttpRequest
+        The HTTP request object containing the data for the system to be created.
+
+    Returns:
+    -------
+    JsonResponse
+        A JSON response indicating the success or failure of the system creation.
+
+    Example:
+    --------
+    Success response:
+    {
+        "msg": "System created successfully."
+    }
+
+    Error response:
+    {
+        "errors": {
+            "field1": ["This field is required."],
+            "field2": ["Invalid value."]
+        }
+    }
+
+    Raises:
+    ------
+    None
+    """
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
@@ -238,208 +726,6 @@ def createSystem(request):
         # provide a Json Response with the necessary error information
         return JsonResponse(SystemSerializer.errors, status=400)
 
-
-
-
-
-
-# @api_view(['POST'])
-# @authentication_classes([SessionAuthentication])
-# #@permission_classes([IsAuthenticated])
-# def createServerReseau(request):
-#     msg = ''
-#     if (request.method == 'POST'):
-#         # parse the incoming information
-#         data = request.data
-#         # instanciate with the serializer
-#         serializerServerReseau = ServerReseauSerializer(data=data)
-#         # check if the sent information is okay
-#         if (serializerServerReseau.is_valid()):
-#             msg = 'ServerReseau added succesfully'
-#                 # if okay, save it on the database
-#             serializerServerReseau.save()
-#                 # provide a Json Response with the data that was saved
-#             return JsonResponse({"msg": msg}, status=201)
-#             # provide a Json Response with the necessary error information
-#             return JsonResponse(serializerUser.errors, status=400)
-#         # provide a Json Response with the necessary error information
-#         return JsonResponse(SystemSerializer.errors, status=400)
-
-
-
-
-# def sys(request):
-#     #hostname
-#     hostname = socket.gethostname()
-    
-#     # Get the IP address of the machine
-#     ip_address = socket.gethostbyname(socket.gethostname())
-
-#     # Perform a reverse DNS lookup to get the domain name
-#     domain_name = socket.getfqdn(ip_address)
-
-    
-#     # Get the local timezone
-#     local_timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
-#     print(local_timezone)
-#     a=datetime.timezone(datetime.timedelta(0))
-#     print(a)
-#     # Get the timezone name
-#     print({"Timezone": local_timezone})
-    
-#     # Get the hostname
-#     hostname = subprocess.check_output(["hostname"]).decode().strip()
-
-#     # Get the IP address of the machine
-#     ip_address = socket.gethostbyname(hostname)
-#     print({"ipadress":ip_address})
-#     # Perform a reverse DNS lookup to get the domain name
-#     domain_name = socket.getfqdn(ip_address)
-#     print({"domain_name":domain_name})
-#     # Extract the domain name from the FQDN
-#     domain = '.'.join(domain_name.split('.')[1:])
-#     return JsonResponse({"hostname": hostname,"domain":domain_name}, status=201)
-
-
-
-
-# ############################################   gateway and Interface ############################################################
-# @csrf_exempt
-# def InsertInterface(request):
-#     liste_getway =[]
-#     liste_interfaces =[]
-#     cmd1="ip route list | grep default | cut -d ' ' -f 3-5"
-#     stdin1, stdout1, stderr1 = ssh.exec_command(cmd1)
-#     print({'stderr1':stderr1.read().decode('utf-8')})
-#     output_getway_interface=stdout1.read().decode('utf-8').split('\n')
-#     output_getway_interface.pop()
-#     print({'output_getway_interface':output_getway_interface})
-#     print({'len_output_getway_interface':len(output_getway_interface)})
-#     for i in output_getway_interface:
-#         liste_getway.append(i.split(' ')[0])
-#         liste_interfaces.append(i.split(' ')[2])
-#     file_path = "/etc/ConfigInterfaces"
-#     # Open an SFTP session
-#     sftp = ssh.open_sftp()
-
-#     # Open the remote file in write mode
-#     remote_file = sftp.open(file_path, 'w')
-#     list_LAN_WAN = ['LAN', 'WAN', "LAN1", "WAN1"]
-#     content=""
-#     num_elements_to_select=len(liste_interfaces)
-#     print({"num_elements_to_select":num_elements_to_select})
-#     for i in liste_interfaces:
-#         if num_elements_to_select <= len(list_LAN_WAN):
-#             random_element = random.choice(list_LAN_WAN)
-#             print({"random_element":random_element})
-#         #content
-#         content+="{}: {} \n".format(i,random_element)
-#     # Write content to the remote file
-#     remote_file.write(content)
-
-#     # Close the remote file
-#     remote_file.close()
-
-#     # Close the SFTP session
-#     sftp.close()
-#     cmd = f"cat {file_path}"
-#     stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
-#     if stderr.read().decode('utf-8') == '':
-#         lines = stdout.read().decode('utf-8').split('\n')
-#         lines.pop()
-#         for i in range(0,len(lines)):
-#             # Check if an object with the same ifname exists
-#             existing_interface = Interface.objects.filter(ifname=lines[i].split(':')[0]).first()
-#             # print({"loul":lines[i].split(':')[0],"thani":lines[i].split(':')[1].strip()})
-#             if existing_interface:
-#                 pass
-#             else:
-#                 Interface.objects.create(ifname=lines[i].split(':')[0],name_interface=lines[i].split(':')[1].strip())
-#     else:
-#         return JsonResponse({"msg": "erreur: "+stderr.read().decode('utf-8')}) 
-#     # Gateway_Interface = GateWayInterface(gateway=i.split(' ')[0],interface=i.split(' ')[2])
-#     # Gateway_Interface.save()
-#     print({'liste_getway':liste_getway})
-#     print({'liste_interfaces':liste_interfaces})
-#     return JsonResponse({"msg": "all gateway are saved"}) 
-
-# def InterfaceFromGateway(gateway):
-#     interfaceFromGateway = GateWayInterface.objects.filter(gateway=gateway)
-#     interfaceDict = serializers.serialize("json", interfaceFromGateway)
-#     res = json.loads(interfaceDict)
-#     interface=res[0]['fields']['interface']
-#     return interface
-
-# def AllGateway():
-#     list_gateways=[]
-#     gateways=Gateway.objects.all()
-#     gatewaysDict = serializers.serialize("json", gateways)
-#     res = json.loads(gatewaysDict)
-#     print(res)
-#     for i in range(0, len(res)):
-#         list_gateways.append(res[i]['fields']['gateway'])
-    
-#     # return JsonResponse({"list_gateways": list_gateways})
-#     return list_gateways
-# ############################################   gateway and Interface ############################################################
-
-# ############################################   TimeZone ############################################################
-
-
-# def timeZones(request):
-#     list_timezones=[]
-#     if (request.method == 'GET'):
-#         timezones=Timezone.objects.all()
-#         timezonesDict = serializers.serialize("json", timezones)
-#         res = json.loads(timezonesDict)
-#         for i in range(0, len(res)):
-#             res[i].pop('model')
-#             id = res[i]['pk']
-#             res[i].pop('pk')
-#             res[i]['fields']['id'] = id
-#             list_timezones.append(res[i]['fields'])
-#         return JsonResponse({"timezones": list_timezones})
-
-# ############################################   TimeZone ############################################################
-
-# ############################################   createNetwork ############################################################
-
-
-# @api_view(['POST'])
-# @authentication_classes([SessionAuthentication])
-# #@permission_classes([IsAuthenticated])
-# def createNetwork(request):
-#     # cmdNetwork = []
-#     # interface="eth0"
-#     msg = ''
-#     if (request.method == 'POST'):
-#         # parse the incoming information
-#         data = request.data
-#         # instanciate with the serializer
-#         serializerNetwork = NetworkSerializer(data=data)
-#         print({'allGatway':AllGateway()})
-#         InterfaceFromGateway(data['gateway'])
-#         # check if the sent information is okay
-#         if (serializerNetwork.is_valid()):
-#             if data['prever_IPV4_IPV6']:
-#                 cmdNetwork="nmcli connection mod "+InterfaceFromGateway(data['gateway'])+" +ipv4.dns "+data['server_DNS']
-#             else:
-#                 cmdNetwork="nmcli connection mod "+InterfaceFromGateway(data['gateway'])+" +ipv6.dns "+data['server_DNS']+" ipv6.method auto"
-#             # Execute the command on the remote machine
-#             stdin, stdout, stderr = ssh.exec_command(cmdNetwork)
-#             print({'stdout':stdout.read().decode('utf-8')})
-#             print({'stderr':stderr.read().decode('utf-8')})
-#             if stderr.read().decode('utf-8') =="":
-#                 msg = 'Network added succesfully'
-#                 # if okay, save it on the database
-#                 serializerNetwork.save()
-#             # provide a Json Response with the data that was saved
-#             return JsonResponse({"msg": msg}, status=201)
-#         # provide a Json Response with the necessary error information
-#         return JsonResponse(SystemSerializer.errors, status=400)
-    
-    
-############################################   createNetwork ############################################################
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 

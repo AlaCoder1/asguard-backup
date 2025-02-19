@@ -12,7 +12,8 @@ import json
 from backend.ztna.models import Relays
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_ROUTERS
 from backend.ztna.serializers import RelaysSerializer, RelaysSerializerUpdate
-from backend.ztna.utils import change_ports_yaml_file, change_status_router, create_router, delete_router, get_ztna_token_from_system, get_routers_from_ziti, get_status_router_from_system, get_status_ztna_service, update_router_in_system
+from backend.ztna.utils import get_ztna_token_from_system, get_status_ztna_service
+from backend.ztna.utils_routers import change_ports_router_yaml_file, change_status_router, create_router, delete_router, get_router_from_ziti, get_status_router_from_system, update_router_in_system
 from utils.errors_utils import CommandExecutionError
 
 
@@ -32,6 +33,23 @@ ERROR_MESSAGES_STARTING = _("System error in starting")
 ERROR_MESSAGES_STOPING = _("System error in stoping")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
+                     operation_summary="API TO GET LIST OF ALL ZTNA ROUTERS FROM OPENZITI API",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_routers_from_openziti(request):
+    """Getting all routers existing in system using openziti API"""
+    try:
+        session_id = get_ztna_token_from_system()
+        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
+        response = requests.get(PATH_ZTNA_ROUTERS, headers=headers, verify=False)
+        response_dict = json.loads(response.text)
+        return JsonResponse(response_dict["data"], safe=False)
+    except requests.exceptions.ConnectionError:
+        return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
@@ -82,7 +100,7 @@ def add_routers(request):
         response_dict = json.loads(response.text)
         relay_id = response_dict.get('data', {}).get('id')
         if response.status_code == 201:
-            relay_created=get_routers_from_ziti(relay_id)
+            relay_created=get_router_from_ziti(relay_id)
             payload={
                 "ref_relay": relay_id,
                 "name": data['name'],
@@ -106,7 +124,7 @@ def add_routers(request):
                 saved_instance=serializer_relay.save()
                 create_router(payload['name'],payload['token'])
                 created_id = saved_instance.id
-                change_ports_yaml_file(payload['name'],created_id)
+                change_ports_router_yaml_file(payload['name'],created_id)
                 return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_CREATING}"}, status=200)
             return JsonResponse({"error": list(serializer_relay.errors.values())[0][0]}, status=400)
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_RELAY}"}, status=400)

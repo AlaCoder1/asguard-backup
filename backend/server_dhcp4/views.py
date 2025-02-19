@@ -171,9 +171,9 @@ def add_server_dhcp4(request):
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'subnet_addr': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet address',example="192.168.20.0"),
-            'subnet_mask': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet mask',example="255.255.255.0"),
-            'available_range': openapi.Schema(type=openapi.TYPE_STRING, description='Subnet address',example="192.168.20.1 - 192.168.20.254"),
+            # 'subnet_addr': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet address',example="192.168.20.0"),
+            # 'subnet_mask': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet mask',example="255.255.255.0"),
+            # 'available_range': openapi.Schema(type=openapi.TYPE_STRING, description='Subnet address',example="192.168.20.1 - 192.168.20.254"),
             'dns_server': openapi.Schema(type=openapi.TYPE_ARRAY,
                                          items=openapi.Schema(
                                            type=openapi.TYPE_STRING
@@ -236,30 +236,38 @@ def update_config_dhcp4_server(request,id_server):
         # parse the incoming information
         data_input=request.data
         ##parse data 
-        available_range,ranges_from,ranges_to=parse_range_address(data_input)
-        if is_ip_in_range(ranges_from,ranges_to, available_range,data_input['subnet_addr'],data_input['subnet_mask']) is True:
-            data=parse_server_info(data_input)
-            if ServerDhcp4.objects.filter(id=id_server).exists() and data['enable_dhcpv4'] is True :
-                server_object=ServerDhcp4.objects.get(id=id_server)
-                ifname=Interface.objects.get(id=server_object.interface_id).ifname
-                aux_init=init_file_dhcp4(ifname) 
-                if aux_init is True:
-                    list_config=retur_config_file(data['subnet_addr'],data['subnet_mask'],ranges_from,ranges_to,data['dns_server'],data['gateway'],data['domain_name'])
-                    aux_save_sys=save_config_in_system(list_config,ifname)
-                    if aux_save_sys is True:
-                       msg,status=save_server_db(data,ranges_from,ranges_to,server_object)
+        if ServerDhcp4.objects.filter(id=id_server).exists():
+            object_server=ServerDhcp4.objects.get(id=id_server)
+            data_input["available_range"]=object_server.available_range
+            data_input['subnet_addr']=object_server.subnet_addr
+            data_input['subnet_mask']=object_server.subnet_mask
+            available_range,ranges_from,ranges_to=parse_range_address(data_input)
+            if is_ip_in_range(ranges_from,ranges_to, available_range,data_input['subnet_addr'],data_input['subnet_mask']) is True:
+                data=parse_server_info(data_input)
+                if  data['enable_dhcpv4'] is True :
+                    ifname=Interface.objects.get(id=object_server.interface_id).ifname
+                    aux_init=init_file_dhcp4(ifname) 
+                    if aux_init is True:
+                        list_config=retur_config_file(data['subnet_addr'],data['subnet_mask'],ranges_from,ranges_to,data['dns_server'],data['gateway'],data['domain_name'])
+                        aux_save_sys=save_config_in_system(list_config,ifname)
+                        if aux_save_sys is True:
+                            msg,status=save_server_db(data,ranges_from,ranges_to,object_server)
+                        else:
+                            msg=aux_save_sys
+                            status=400
                     else:
-                        msg=aux_save_sys
-                        status=400
+                        msg=aux_init
+                        status=400  
                 else:
-                    msg=aux_init
-                    status=400  
+                    msg=f"{CONSTANT_DHCP_SERVER} {ERROR_MESSAGES_NOACTIVE}"
+                    status=400   
+
             else:
-                msg=f"{CONSTANT_DHCP_SERVER} {ERROR_MESSAGES_NOACTIVE}"
-                status=400   
+                msg=f"{CONSTANT_RANGE}"
+                status=400     
         else:
-            msg=f"{CONSTANT_RANGE}"
-            status=400      
+            msg=f"{CONSTANT_DHCP_SERVER} {ERROR_MESSAGES_NOTFOUND}"
+            status=400
     return JsonResponse({"msg": msg},status=status)  
 @swagger_auto_schema(
     method='delete',

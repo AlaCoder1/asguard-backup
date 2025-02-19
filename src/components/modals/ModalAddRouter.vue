@@ -32,12 +32,6 @@
                   <v-text-field id="RouterAttribute" v-model="RouterAttribute" :placeholder="$t('ztna.relayAttribute')"
                     :rules="rulesatt" persistent-placeholder />
                 </v-col>
-                <v-col cols="12" class="mb-n3">
-                  <label for="Traversal" class="mr-3">{{
-                    $t("ztna.traversal")
-                  }}</label>
-                  <input type="checkbox" id="Traversal" value="Traversal" v-model="Traversal" />
-                </v-col>
                 <v-col cols="12">
                   <v-text-field id="Description" v-model="Description" placeholder="Description"
                     persistent-placeholder />
@@ -96,7 +90,6 @@ export default {
     const RouterName = ref("");
     const RouterAttribute = ref("");
     const Description = ref("");
-    const lastname = ref("");
     const Relays = ref([]);
     const Tunneler = ref(true);
     const Traversal = ref(false);
@@ -107,7 +100,6 @@ export default {
     const rulesName = [
       (value) => {
         if (!value) return t("ztna.enterValue");
-        if (modalMode.value === "edit" && value === lastname.value) return true;
         if (existingName(value)) return t("ztna.nameExist");
         if (inValidRelay(value)) return t("ztna.namerelay");
         return ValidName(value) ? true : t("ztna.validName");
@@ -143,7 +135,6 @@ export default {
     }
     function inValidRelay(value) {
       const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*\.relay$/;
-
       // Check if the value matches the hostname pattern and is not entirely numeric
       if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
         return false;
@@ -187,8 +178,6 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        lastname.value = data.name;
-
         RouterId.value = data.id;
         RouterName.value = data.name;
         RouterAttribute.value = data.attribute_relay;

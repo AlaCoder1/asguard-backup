@@ -20,7 +20,7 @@
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.routing')" active-menu="Key_Pair">
       <template #content>
-        <helpModal />
+        <helpModal help="routing" />
         <div class="mr-3">
           <div class="certificats-management mt-6 ml-5" style="display: flex; flex-direction: column">
             <h4>{{ $t("routing.staticRouting") }}</h4>

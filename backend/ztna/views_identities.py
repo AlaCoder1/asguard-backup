@@ -13,7 +13,8 @@ import json
 from backend.ztna.models import Identities
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES
 from backend.ztna.serializers import EnrollementsSerializer, IdentitiesSerializer, IdentitiesSerializerUpdate
-from backend.ztna.utils import get_ztna_token_from_system, get_identities_from_ziti
+from backend.ztna.utils import get_ztna_token_from_system
+from backend.ztna.utils_identities import get_identitie_from_ziti
 
 
 # Constants
@@ -29,6 +30,23 @@ ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
+                     operation_summary="API TO GET LIST OF ALL ZTNA IDENTITIES FROM OPENZITI API",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_identities_from_openziti(request):
+    """Getting all identities existing in system using openziti API"""
+    try:
+        session_id = get_ztna_token_from_system()
+        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
+        response = requests.get(PATH_ZTNA_IDENTITIES, headers=headers, verify=False)
+        response_dict = json.loads(response.text)
+        return JsonResponse(response_dict["data"], safe=False)
+    except requests.exceptions.ConnectionError:
+        return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
@@ -77,33 +95,31 @@ def get_all_identities(request):
 def add_identities(request):
     """API to create a ZTNA identity"""
     try:
-        payload = {}
-        session_id = get_ztna_token_from_system()
-        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
         data = request.data
         datacopy = request.data.copy()
+        session_id = get_ztna_token_from_system()
+        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
         data_without_description = {key: value for key, value in datacopy.items() if key not in ['Description', 'os']}
         response = requests.post(PATH_ZTNA_IDENTITIES, headers=headers, json=data_without_description, verify=False)
         response_dict = json.loads(response.text)
         identity_id = response_dict.get('data', {}).get('id')
         if response.status_code == 201:
-            payload['ref_identitie'] = identity_id
-            payload['name'] = data['name']
-            if data['roleAttributes'][0] == "":
-                payload['attribute_identitie'] == None
-            else:
-                payload['attribute_identitie'] = data['roleAttributes'][0]
-            payload['type'] = data['type']
-            if 'Description' in data:
-                payload['description'] = data['Description']
-            else:
-                payload['description'] = None
-            payload['isAdmin'] = data['isAdmin']
-            payload['os'] = data['os']
             now = datetime.now()
             formatted_now = now.strftime("%Y-%m-%d %H:%M")
-            payload['date_creation'] = formatted_now
-            serializer_identitie = IdentitiesSerializer(data=payload,partial=True)
+            payload = {"ref_identitie": identity_id,
+                       "name": data["name"],
+                       "attribute_identitie": None,
+                       "description": None,
+                       "type": data["type"],
+                       "isAdmin": data["isAdmin"],
+                       "os": data["os"],
+                       "date_creation": formatted_now
+                       }
+            if data['roleAttributes'][0] != "":
+                payload['attribute_identitie'] = data['roleAttributes'][0]
+            if 'Description' in data:
+                payload['description'] = data['Description']
+            serializer_identitie = IdentitiesSerializer(data=payload, partial=True)
             if serializer_identitie.is_valid():
                 serializer_identitie.save()
                 return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
@@ -125,7 +141,7 @@ def delete_identities(request, id):
         session_id = get_ztna_token_from_system()
         headers = {"zt-session": session_id}
         response = requests.delete(f"{PATH_ZTNA_IDENTITIES}/{identitie.ref_identitie}", headers=headers, verify=False)
-        if response.status_code == 201:
+        if response.status_code == 200:
             identitie.delete()
             return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_IDENTITIE}"}, status=400)
@@ -161,23 +177,21 @@ def update_identities(request, id):
     try:
         identitie = Identities.objects.get(id=id)
         session_id = get_ztna_token_from_system()
-        payload={}
         headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
         data = request.data
         datacopy = request.data.copy()
         data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'}
-        payload['name'] = data['name']
-        if data['roleAttributes'][0] == "":
-            payload['attribute_identitie'] = None
-        else:
+        payload = {"name": data["name"],
+                   "attribute_identitie": None,
+                   "description": None,
+                   "type": data["type"],
+                   "isAdmin": data["isAdmin"],
+                   "os": data["os"],
+                   }
+        if data['roleAttributes'][0] != "":
             payload['attribute_identitie'] = data['roleAttributes'][0]
-        payload['type'] = data['type']
         if 'Description' in data:
             payload['description'] = data['Description']
-        else:
-            payload['description'] = None
-        payload['is_admin'] = data['isAdmin']
-        payload['os']= data['os']
         serializer_update_identity = IdentitiesSerializerUpdate(identitie, data=payload, partial=True)
         if serializer_update_identity.is_valid():
             response = requests.patch(f"{PATH_ZTNA_IDENTITIES}/{identitie}", headers=headers, json=data_without_description, verify=False)
@@ -224,7 +238,7 @@ def add_enrollments(request):
             serializer_enrollement.save()
             response = requests.post(PATH_ZTNA_ENROLLMENTS, headers=headers, json=data, verify=False)
             if response.status_code == 201:
-                identity_from_ziti = get_identities_from_ziti(identitie.ref_identitie)
+                identity_from_ziti = get_identitie_from_ziti(identitie.ref_identitie)
                 payload_update_identity['token'] = identity_from_ziti['enrollment'][f'{data['method']}']['jwt']
                 combined_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M:%S")
                 payload_update_identity['date_expiration'] = combined_datetime

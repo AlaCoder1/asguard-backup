@@ -6,7 +6,7 @@ read -p "Enter IP address: " ipadd
 # Write IP address to a temporary file
 temp_file=$(mktemp)
 echo "$ipadd" > "$temp_file"
-file_directory="/asguard/newdms/backend/ztna/shell_scripts/"
+file_directory="/asguard/asguard/backend/ztna/shell_scripts/"
 current_hostname=$(hostname)
 
 # Create the final batch script

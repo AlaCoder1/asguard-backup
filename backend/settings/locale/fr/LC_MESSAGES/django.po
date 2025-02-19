@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 20:39+0000\n"
+"POT-Creation-Date: 2025-02-05 16:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,34 +22,34 @@ msgstr ""
 msgid "name"
 msgstr "nom"
 
-#: backend/settings/views.py:26
+#: backend/settings/views.py:81
 msgid "System"
 msgstr "Système"
 
-#: backend/settings/views.py:27
+#: backend/settings/views.py:82
 msgid "Language"
 msgstr "Langue"
 
-#: backend/settings/views.py:28
+#: backend/settings/views.py:83
 msgid "Configuration"
 msgstr "Configuration"
 
-#: backend/settings/views.py:31
+#: backend/settings/views.py:86
 msgid "is created"
 msgstr "est créé"
 
-#: backend/settings/views.py:32
+#: backend/settings/views.py:87
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/settings/views.py:33
+#: backend/settings/views.py:88
 msgid "is updated"
 msgstr "est mis à jour"
 
-#: backend/settings/views.py:36
+#: backend/settings/views.py:91
 msgid "System error in creating"
 msgstr "Erreur système lors de la création"
 
-#: backend/settings/views.py:37
+#: backend/settings/views.py:92
 msgid "does not exist"
 msgstr "n'existe pas"

@@ -51,6 +51,21 @@
                 <div v-if="help === 'dnat'">
                   <dnat />
                 </div>
+                <div v-if="help === 'config'">
+                  <config />
+                </div>
+                <div v-if="help === 'listing'">
+                  <listingIPSEC />
+                </div>
+                <div v-if="help === 'monitoring'">
+                  <monitoring />
+                </div>
+                <div v-if="help === 'serverVPN'">
+                  <serverVPN />
+                </div>
+                <div v-if="help === 'clientVPN'">
+                  <clientVPN />
+                </div>
               </v-container>
             </v-card-text>
 
@@ -77,6 +92,11 @@ import rules from "@/views/help/rules.vue";
 import snat from "@/views/help/nat/snat.vue";
 import one from "@/views/help/nat/oneTone.vue";
 import dnat from "@/views/help/nat/dnat.vue";
+import config from "@/views/help/ipsec/config.vue";
+import listingIPSEC from "@/views/help/ipsec/listing.vue";
+import monitoring from "@/views/help/ipsec/monitoring.vue";
+import serverVPN from "@/views/help/openvpn/servers.vue";
+import clientVPN from "@/views/help/openvpn/clients.vue";
 import { reactive, toRefs } from "vue";
 
 export default {
@@ -93,11 +113,17 @@ export default {
     dhcp,
     typeInter,
     routing,
+    config,
+    listingIPSEC,
+    monitoring,
+    serverVPN,
+    clientVPN,
   },
   props: {
     help: {
       type: Object,
       Array,
+      String,
       required: true,
     },
   },

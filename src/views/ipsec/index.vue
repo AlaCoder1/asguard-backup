@@ -17,7 +17,10 @@
           <v-window-item v-for="(tab, index) in tabs" :key="index" :value="tab.label">
             <v-card>
               <v-card-text>
-                <helpModal />
+
+                <helpModal v-if="activeTab === 'tabs.tunnelConfig'" help="config" />
+                <helpModal v-if="activeTab === 'tabs.ipsecPeers'" help="listing" />
+                <helpModal v-if="activeTab === 'tabs.monitoring'" help="monitoring" />
 
                 <component :is="tab.component" :dataServer="dataServer" />
               </v-card-text>

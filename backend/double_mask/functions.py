@@ -31,6 +31,26 @@ def get_nft_ip_addresses():
         print(f"Error: {e}")
         return [],0
     
+def parse_subnet_address(config_text):
+    """
+    API to parse subnet addresses from a given configuration text.
+    
+    This function handles the parsing of subnet addresses from the given configuration text.
+    The function returns a list of tuples, where each tuple contains the start and end subnet addresses.
+    
+    """
+    result_pattern = re.compile(r"\d+\.\d+\.\d+\.\d+/\d+/\d+")
+
+    lines = config_text.strip().split("\n")
+
+    parsed_data = []
+    for x in lines:
+        if  result_pattern.match(x):
+            x=x.strip().split('/')
+            parsed_data.append(x[0].strip()+"/"+x[1].strip())
+    
+    return parsed_data
+
 def get_compr_ratio():
     """
     API to get compression ratioo.
@@ -39,17 +59,18 @@ def get_compr_ratio():
     
     
     """
-    output,error=run_command('sudo dmesg | grep "The Double mask for"')
+    output,error=run_command('sudo cat /etc/DoubleMask.conf')
     if output=="":
         ratio=0
         n_comp=0
         n=0
     else:
         ruleset_list,n=get_nft_ip_addresses()
-        subnet_double=output.split("is")[1].split("/")[0:2]
-        print(subnet_double)
-        subnet=subnet_double[0].strip()+"/"+subnet_double[1].strip()
-        ruleset_compr=[x for x in ruleset_list if is_address_in_subnet(x,subnet) ]
-        ratio=(len(ruleset_compr)/n)*100
-        n_comp=n-len(ruleset_compr)+1
+        subnet_double=parse_subnet_address(output)
+        ruleset_compr=[]
+        if (len(subnet_double))!=0:
+            for s in subnet_double:
+                ruleset_compr+=[x for x in ruleset_list if is_address_in_subnet(x,s) and x not in ruleset_compr ]
+            ratio=round((len(ruleset_compr)/n)*100,2)
+            n_comp=n-len(ruleset_compr)+len(subnet_double)
     return ratio,n_comp,n

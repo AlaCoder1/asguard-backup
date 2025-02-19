@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated
 from backend.gateway.models import Gateway, GatewayInterface
 
+from backend.network.models import Interface
 from backend.routing.list_routing import get_list_all_gateway, get_list_all_routing, get_one_gateway, get_one_routing
 from backend.routing.models import Routing
 from backend.routing.serializers import RoutingSerializer
@@ -135,7 +136,7 @@ def create_routing(request):
         
         serializer_routing = RoutingSerializer(data=data)
         if serializer_routing.is_valid():
-            gateway_interface_instance = GatewayInterface.objects.filter(gateway=gateway_instance)[0]
+            gateway_interface_instance = GatewayInterface.objects.filter(gateway=gateway_instance).first()
             gateway_address = gateway_instance.gwaddress
             interface_ifname = gateway_interface_instance.interface.ifname
             routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
@@ -172,7 +173,7 @@ def delete_routing(request, id):
     try:
         routing = Routing.objects.get(id=id)
         
-        gateway_interface_instance = GatewayInterface.objects.get(gateway=routing.gateway.pk)
+        gateway_interface_instance = GatewayInterface.objects.filter(gateway=routing.gateway.pk).first()
         interface_ifname = gateway_interface_instance.interface.ifname
         routing_in_system("del", routing.destination_address, routing.gateway.gwaddress, interface_ifname, 
                           gateway_interface_instance.metric)
@@ -223,13 +224,13 @@ def update_routing(request, id):
         return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     
     data = request.data
-    try:    
+    try:
         # Delete a route
         gateway_interface_instance = GatewayInterface.objects.get(gateway=routing.gateway.pk)
         interface_ifname = gateway_interface_instance.interface.ifname
         routing_in_system("del", routing.destination_address, routing.gateway.gwaddress, interface_ifname, 
                           gateway_interface_instance.metric)
-    except CommandExecutionError:
+    except (CommandExecutionError, GatewayInterface.DoesNotExist, GatewayInterface.MultipleObjectsReturned):
         pass
     
     try:    
@@ -250,7 +251,7 @@ def update_routing(request, id):
         # Raise an error in the GatewayInterface with this gateway does not exist
         if len(GatewayInterface.objects.filter(gateway=gateway_instance)) == 0:
             raise Gateway.DoesNotExist
-        gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)
+        gateway_interface_instance = GatewayInterface.objects.filter(gateway=gateway_instance).first()
         gateway_address = gateway_instance.gwaddress
         interface_ifname = gateway_interface_instance.interface.ifname
         routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
@@ -267,6 +268,8 @@ def update_routing(request, id):
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ROUTE}"}, status=400)
     except Gateway.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except TypeError:
         # Catching the error when choosing to create a new gateway
         if data.get("gateway_create"):

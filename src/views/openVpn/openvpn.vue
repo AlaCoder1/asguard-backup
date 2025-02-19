@@ -16,7 +16,9 @@
           >
             <v-card>
               <v-card-text>
-                <helpModal help="OpenVpn" />
+
+                <helpModal v-if="activeTab === 'tabs.servers'" help="serverVPN" />
+                <helpModal v-if="activeTab === 'tabs.clients'" help="clientVPN" />
 
                 <component
                   :is="tab.component"

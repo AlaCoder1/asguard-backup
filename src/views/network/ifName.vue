@@ -23,7 +23,7 @@
             :key="tab.name_interface"
             :value="tab.name_interface"
           >
-            <helpModal />
+            <helpModal help="list-interfaces" />
 
             <IfNameComponent :id="tab.name_interface" :activeTab="activeTab" />
           </v-window-item>

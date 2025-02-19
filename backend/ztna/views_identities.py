@@ -33,6 +33,23 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
+                     operation_summary="API TO GET LIST OF ALL ZTNA IDENTITIES FROM OPENZITI API",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_identities_from_openziti(request):
+    """Getting all identities existing in system using openziti API"""
+    try:
+        session_id = get_ztna_token_from_system()
+        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
+        response = requests.get(PATH_ZTNA_IDENTITIES, headers=headers, verify=False)
+        response_dict = json.loads(response.text)
+        return JsonResponse(response_dict["data"], safe=False)
+    except requests.exceptions.ConnectionError:
+        return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA IDENTITIES",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])

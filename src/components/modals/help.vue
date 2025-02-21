@@ -66,6 +66,18 @@
                 <div v-if="help === 'clientVPN'">
                   <clientVPN />
                 </div>
+                <div v-if="help === 'config-suricata'">
+                  <configSuricata />
+                </div>
+                <div v-if="help === 'suricata-rules'">
+                  <suricataRules />
+                </div>
+                <div v-if="help === 'suricata-alerts'">
+                  <suricataAlerts />
+                </div>
+                <div v-if="help === 'proxy'">
+                  <proxy />
+                </div>
               </v-container>
             </v-card-text>
 
@@ -97,6 +109,10 @@ import listingIPSEC from "@/views/help/ipsec/listing.vue";
 import monitoring from "@/views/help/ipsec/monitoring.vue";
 import serverVPN from "@/views/help/openvpn/servers.vue";
 import clientVPN from "@/views/help/openvpn/clients.vue";
+import configSuricata from "@/views/help/suricata/config.vue";
+import suricataRules from "@/views/help/suricata/rules.vue";
+import suricataAlerts from "@/views/help/suricata/alerts.vue";
+import proxy from "@/views/help/proxy.vue";
 import { reactive, toRefs } from "vue";
 
 export default {
@@ -118,6 +134,10 @@ export default {
     monitoring,
     serverVPN,
     clientVPN,
+    configSuricata,
+    suricataRules,
+    suricataAlerts,
+    proxy,
   },
   props: {
     help: {

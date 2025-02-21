@@ -8,7 +8,7 @@
           type="warning"
           :title="$t('squid.restart')"
         ></v-alert>
-        <helpModal />
+        <helpModal help="proxy" />
 
         <div class="mr-6 ml-3">
           <general_info />

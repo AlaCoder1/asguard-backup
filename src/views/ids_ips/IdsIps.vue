@@ -9,19 +9,15 @@
         </v-tabs>
 
         <v-window v-model="activeTab">
-          <v-window-item
-            v-for="(tab, index) in tabs"
-            :key="index"
-            :value="tab.label"
-          >
+          <v-window-item v-for="(tab, index) in tabs" :key="index" :value="tab.label">
             <v-card>
               <v-card-text>
-                <helpModal />
 
-                <component
-                  :is="tab.component"
-                  :configInfo="configurationInfo"
-                />
+                <helpModal v-if="activeTab === 'tabs.configuration'" help="config-suricata" />
+                <helpModal v-if="activeTab === 'tabs.rules'" help="suricata-rules" />
+                <helpModal v-if="activeTab === 'tabs.alerts'" help="suricata-alerts" />
+
+                <component :is="tab.component" :configInfo="configurationInfo" />
               </v-card-text>
             </v-card>
           </v-window-item>
@@ -99,6 +95,7 @@ export default {
 .ag-paging-row-summary-panel {
   display: none;
 }
+
 .img-view {
   border-style: none;
   width: 100%;
@@ -106,6 +103,7 @@ export default {
   object-fit: cover;
   overflow: hidden;
 }
+
 .img-containter {
   display: flex;
   width: 100%;

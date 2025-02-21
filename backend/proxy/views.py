@@ -1945,31 +1945,40 @@ def readFromFile(request):
         "whether the element should be commented or uncommented. If `uncomment` is False, the element will be uncommented; "
         "if True, it will be commented."
     ),
-    request_body=Schema(
-        type=TYPE_OBJECT,
-        properties={
-            'file_name': Schema(
-                type=TYPE_STRING,
-                description="The name of the ACL file to modify (without the '.acl' extension).",
-                example="ads"
+    request_body = Schema(
+    type=TYPE_OBJECT,
+    properties={
+        'file_name': Schema(
+            type=TYPE_STRING,
+            description="Le nom du fichier ACL à modifier (sans l'extension '.acl'). "
+                        "Ce nom détermine les URLs associées à cette liste.",
+            example="ads"
+        ),
+        'list_elements': Schema(
+            type=TYPE_ARRAY,
+            description="Une liste d'éléments à mettre à jour dans le fichier ACL spécifié. "
+                        "Chaque élément contient une URL cible et un booléen indiquant s'il faut commenter "
+                        "ou décommenter la ligne correspondante. Les URLs concernées dépendent du fichier ACL donné en entrée.",
+            items=Schema(
+                type=TYPE_OBJECT,
+                properties={
+                    "url": Schema(
+                        type=TYPE_STRING,
+                        description="L'URL cible à modifier dans le fichier ACL spécifié."
+                    ),
+                    "comment": Schema(
+                        type=TYPE_BOOLEAN,
+                        description="True pour commenter l'URL (la désactiver), False pour la décommenter (l'activer)."
+                    )
+                }
             ),
-            'list_elements': Schema(
-                type=TYPE_ARRAY,
-                description="A list of elements to update. Each element is a tuple containing the target URL and a boolean indicating whether to comment or uncomment the line.",
-                items=Schema(
-                    type=TYPE_ARRAY,
-                    items=[
-                        Schema(type=TYPE_STRING, description="The target URL to modify"),
-                        Schema(type=TYPE_BOOLEAN, description="True to comment the URL, False to uncomment it")
-                    ]
-                ),
-                example=[
-                    {"url": "123found.com", "comment": False},
-                    {"url": "123freeavatars.com", "comment": True}
-                ]
-            ),
-        }
-    ),
+            example=[
+                {"url": "123found.com", "comment": False},
+                {"url": "123freeavatars.com", "comment": True}
+            ]
+        ),
+    }
+),
     responses={
         200: Schema(
             type=TYPE_OBJECT,

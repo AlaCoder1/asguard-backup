@@ -14,7 +14,13 @@
             :value="tab.label"
           >
             <v-card>
-              <v-card-header> <helpModal /></v-card-header>
+              <v-card-header> 
+                <helpModal v-if="activeTab === 'tabs.configuration'" help="wafConfig" />
+                <helpModal v-if="activeTab === 'tabs.rules'" help="wafRules" />
+                <helpModal v-if="activeTab === 'tabs.application'" help="wafApplications" />
+                <helpModal v-if="activeTab === 'tabs.alerts'" help="wafalerts" />
+
+              </v-card-header>
               <v-card-text>
                 <component :is="tab.component" />
               </v-card-text>

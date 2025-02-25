@@ -16,7 +16,7 @@
           >
             <v-card>
               <v-card-text>
-                <helpModal />
+                <helpModal help="sdwan" />
 
                 <ConfigurationComponent />
               </v-card-text>

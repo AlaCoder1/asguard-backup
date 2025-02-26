@@ -78,6 +78,36 @@
                 <div v-if="help === 'proxy'">
                   <proxy />
                 </div>
+                <div v-if="help === 'wafConfig'">
+                  <wafConfig />
+                </div>
+                <div v-if="help === 'wafRules'">
+                  <wafRules />
+                </div>
+                <div v-if="help === 'wafalerts'">
+                  <wafalerts />
+                </div>
+                <div v-if="help === 'wafApplications'">
+                  <wafApplications />
+                </div>
+                <div v-if="help === 'sdwan'">
+                  <sdwan />
+                </div>
+                <div v-if="help === 'ztnaIdentities'">
+                  <ztnaIdentities />
+                </div>
+                <div v-if="help === 'ztnaConfigurations'">
+                  <configurations />
+                </div>
+                <div v-if="help === 'ztnaServices'">
+                  <services />
+                </div>
+                <div v-if="help === 'ztnaRelays'">
+                  <relays />
+                </div>
+                <div v-if="help === 'ztnaPolicies'">
+                  <policies />
+                </div>
               </v-container>
             </v-card-text>
 
@@ -92,6 +122,7 @@
 </template>
 
 <script>
+import { reactive, toRefs } from "vue";
 import subscription from "@/views/help/subscription.vue";
 import certificates from "@/views/help/certificates.vue";
 import keyPair from "@/views/help/key-pair.vue";
@@ -113,10 +144,24 @@ import configSuricata from "@/views/help/suricata/config.vue";
 import suricataRules from "@/views/help/suricata/rules.vue";
 import suricataAlerts from "@/views/help/suricata/alerts.vue";
 import proxy from "@/views/help/proxy.vue";
-import { reactive, toRefs } from "vue";
+import wafConfig from "@/views/help/waf/config.vue";
+import wafRules from "@/views/help/waf/rules.vue";
+import wafalerts from "@/views/help/waf/alerts.vue";
+import wafApplications from "@/views/help/waf/applications.vue";
+import sdwan from "@/views/help/sdwan.vue";
+import ztnaIdentities from "@/views/help/ztna/identities.vue";
+import configurations from "@/views/help/ztna/configurations.vue";
+import services from "@/views/help/ztna/services.vue";
+import relays from "@/views/help/ztna/relays.vue";
+import policies from "@/views/help/ztna/policies.vue";
 
 export default {
   components: {
+    ztnaIdentities,
+    configurations,
+    services,
+    relays,
+    policies,
     subscription,
     certificates,
     users,
@@ -138,6 +183,11 @@ export default {
     suricataRules,
     suricataAlerts,
     proxy,
+    wafConfig,
+    wafRules,
+    wafalerts,
+    wafApplications,
+    sdwan,
   },
   props: {
     help: {

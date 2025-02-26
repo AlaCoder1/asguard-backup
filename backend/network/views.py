@@ -50,14 +50,22 @@ ERROR_MESSAGES_FAILED_DELETE = _("Failed to delete")
             ),
         ],
         properties={
-            'device': openapi.Schema(type=openapi.TYPE_STRING, description='Device name associated with the interface'),
+            # 'device': openapi.Schema(type=openapi.TYPE_STRING, description='Device name associated with the interface'),
             'description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the network interface'),
             'bogon_aux': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enable or disable bogon filtering'),
             'private_aux': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enable or disable private network filtering'),
-            'addmac': openapi.Schema(type=openapi.TYPE_STRING, description='MAC address to add (if applicable)'),
-            'mtuv': openapi.Schema(type=openapi.TYPE_STRING, description='MTU value for the interface (optional)'),
-            'mssv': openapi.Schema(type=openapi.TYPE_INTEGER, description='MSS value for the interface'),
-            'speed_duplex': openapi.Schema(type=openapi.TYPE_STRING, description='Speed and duplex setting'),
+            'addmac': openapi.Schema(type=openapi.TYPE_STRING, description='MAC address to add (if applicable)',
+                                     example='00:50:56:aa:bb:cc'
+                                     ),
+            'mtuv': openapi.Schema(type=openapi.TYPE_INTEGER, description='MTU value for the interface (optional)',
+                                   example=1500,  
+                                   ),
+            'mssv': openapi.Schema(type=openapi.TYPE_INTEGER, description='MSS value for the interface',
+                                   example=1005
+                                   ),
+            'speed_duplex': openapi.Schema(type=openapi.TYPE_STRING, description='Speed and duplex setting',
+                enum=['100baseTx-FD', '100baseTx-HD',"10baseT-FD",'10baseT-HD'],
+                example="100baseTx-FD"),
             'setuptypeIP4': openapi.Schema(
                 type=openapi.TYPE_STRING,
                 description='IPv4 setup type (STATIC, DHCP Base, DHCP Advanced)',
@@ -166,12 +174,12 @@ ERROR_MESSAGES_FAILED_DELETE = _("Failed to delete")
                         description='Required options (Advanced only)',
                         example='subnet-mask, domain-name-servers'
                     ),
-                    'domaine_name': openapi.Schema(
+                    'domain_name': openapi.Schema(
                         type=openapi.TYPE_STRING,
                         description='Domain names (Advanced only)',
                         example='fugue.comrc.vix.comhome.vix.com'
                     ),
-                    'prepend_domain_server': openapi.Schema(
+                    'domain_server': openapi.Schema(
                         type=openapi.TYPE_STRING,
                         description='Prepend domain servers (Advanced only)',
                         example='127.0.0.1'
@@ -214,47 +222,54 @@ def conf(request,name_interface):
         device_info,ifname,id_interface,aux_main,generic_config_object,uuid = device_name_interface(name_interface)
         if uuid is not None:
             data = request.data
-            commandes=[]
-            commandes_final=[]
-            commandes_ipv6=[]
-            cmd_final_ipv6=[]
-            data,setuptype_ip4,setuptype_ip6,bogon_aux,private_aux,mtuv,mssv,speed_duplex,addmac=parse_data_generic(data)
-            output_service,error=get_old_config()
-            if error!="" or len(output_service)==0:
-                msg=f"{ERROR_MESSAGES_FAILED} {CONSTANT_INTERFACE_NETWORK}"
-                status=400
+            resulltat=validate_data_input(data)
+            print(type(resulltat))
+            if resulltat is  None:
+                print("hello")
+                commandes=[]
+                commandes_final=[]
+                commandes_ipv6=[]
+                cmd_final_ipv6=[]
+                data,setuptype_ip4,setuptype_ip6,bogon_aux,private_aux,mtuv,mssv,speed_duplex,addmac=parse_data_generic(data)
+                output_service,error=get_old_config()
+                if error!="" or len(output_service)==0:
+                    msg=f"{ERROR_MESSAGES_FAILED} {CONSTANT_INTERFACE_NETWORK}"
+                    status=400
+                else:
+                        output_service=add_requirement(ifname,output_service)
+                        json_ipv4={}
+                        json_ipv4,commandes_final,commandes,cmd_final_ipv4,list_metric=configuration_ipv4(data,setuptype_ip4,uuid,ifname,name_interface,id_interface,aux_main,commandes_final,output_service)
+                        json_ipv6=data
+                        if  setuptype_ip6 is not None:
+                            configuration_ipv6(commandes_final,data,setuptype_ip6,Gateway,GatewayInterface,list_metric,ifname,name_interface,uuid,id_interface)
+                        cmds,output_service,cmd_final_gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuv,mssv,generic_config_object)
+                        configs,cmds_block,output_service,cmd_final_block=block_address_commandes(output_service,ifname,bogon_aux,private_aux,device_info)
+                        commandes+=commandes_ipv6+cmds+cmds_block
+                        commandes = [x for x in commandes if x not in output_service]
+                        output_service = add_cmd(output_service,commandes)
+                        cmd_final_conf=refresh_conf_system(uuid,aux_main)
+                        commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_conf+cmd_final_gen+cmd_final_block
+                        aux_run=run_all_commands(commandes_final,setuptype_ip4,10,output_service)
+                        if aux_run is True:
+                                aux_gw_dhcp,json_ipv4=save_address_dhcp_ip4(setuptype_ip4,aux_main,ifname,name_interface,json_ipv4)
+                                aux_gw6_dhcp,json_ipv6=save_address_dhcp_ip6(setuptype_ip4,setuptype_ip6,ifname,name_interface,json_ipv6)
+                                aux_ipv4=update_DB(id_interface,json_ipv4,IP4Config,IP4ConfigSerializer) if not aux_main else True
+                                aux_ipv6=update_DB(id_interface,json_ipv6,IP6Config,IP6ConfigSerializer) if not aux_main else True
+                                aux_gen=update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
+                                aux_inter=update_interface_table(name_interface,data,InterfaceSerializer)     
+                                if aux_ipv4 is True and  aux_ipv6 is True and aux_gen  is True and aux_inter is True and aux_gw_dhcp is True and aux_gw6_dhcp is True:
+                                    if setuptype_ip4.lower()=="static" and not ifname.lower().startswith("vlan") and not name_interface.lower().startswith("vxlan") :
+                                        aux_server=create_dhcpv4_db(id_interface,json_ipv4["ip_address"],json_ipv4["netmask"])
+                                    elif setuptype_ip4.lower()=="dhcp":
+                                        aux_server=delete_dhcp4_server(id_interface,ifname)
+                                    else:
+                                        aux_server=True
+                                    if aux_server is True:
+                                            msg=f"{CONSTANT_INTERFACE_NETWORK} {SUCCESS_MESSAGES_CONFIGURED}"
+                                            status=200
             else:
-                    output_service=add_requirement(ifname,output_service)
-                    json_ipv4={}
-                    json_ipv4,commandes_final,commandes,cmd_final_ipv4,list_metric=configuration_ipv4(data,setuptype_ip4,uuid,ifname,name_interface,id_interface,aux_main,commandes_final,output_service)
-                    json_ipv6=data
-                    if  setuptype_ip6 is not None:
-                        configuration_ipv6(commandes_final,data,setuptype_ip6,Gateway,GatewayInterface,list_metric,ifname,name_interface,uuid,id_interface)
-                    cmds,output_service,cmd_final_gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuv,mssv,generic_config_object)
-                    configs,cmds_block,output_service,cmd_final_block=block_address_commandes(output_service,ifname,bogon_aux,private_aux,device_info)
-                    commandes+=commandes_ipv6+cmds+cmds_block
-                    commandes = [x for x in commandes if x not in output_service]
-                    output_service = add_cmd(output_service,commandes)
-                    cmd_final_conf=refresh_conf_system(uuid,aux_main)
-                    commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_conf+cmd_final_gen+cmd_final_block
-                    aux_run=run_all_commands(commandes_final,setuptype_ip4,10,output_service)
-                    if aux_run is True:
-                            aux_gw_dhcp,json_ipv4=save_address_dhcp_ip4(setuptype_ip4,aux_main,ifname,name_interface,json_ipv4)
-                            aux_gw6_dhcp,json_ipv6=save_address_dhcp_ip6(setuptype_ip4,setuptype_ip6,ifname,name_interface,json_ipv6)
-                            aux_ipv4=update_DB(id_interface,json_ipv4,IP4Config,IP4ConfigSerializer) if not aux_main else True
-                            aux_ipv6=update_DB(id_interface,json_ipv6,IP6Config,IP6ConfigSerializer) if not aux_main else True
-                            aux_gen=update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
-                            aux_inter=update_interface_table(name_interface,data,InterfaceSerializer)     
-                            if aux_ipv4 is True and  aux_ipv6 is True and aux_gen  is True and aux_inter is True and aux_gw_dhcp is True and aux_gw6_dhcp is True:
-                                if setuptype_ip4.lower()=="static" and not ifname.lower().startswith("vlan") and not name_interface.lower().startswith("vxlan") :
-                                    aux_server=create_dhcpv4_db(id_interface,json_ipv4["ip_address"],json_ipv4["netmask"])
-                                elif setuptype_ip4.lower()=="dhcp":
-                                    aux_server=delete_dhcp4_server(id_interface,ifname)
-                                else:
-                                    aux_server=True
-                                if aux_server is True:
-                                        msg=f"{CONSTANT_INTERFACE_NETWORK} {SUCCESS_MESSAGES_CONFIGURED}"
-                                        status=200
+                msg=resulltat
+                status=400
         else:
             msg=f"{CONSTANT_INTERFACE_CONNECTION } {ERROR_MESSAGES_NOACTIVE}"
             status=400

@@ -8,9 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from backend.nat.models import OneToOneNat, SNat
 from backend.nat.serializers import SNatSerializer
-from backend.nat.utils import get_next_nat_handle, input_create_snat
+from backend.nat.utils import change_position_rule, get_next_nat_handle, input_create_snat, save_rules_positions
 from backend.nat.list_nat import get_list_all_snat, get_one_snat
-from backend.nat.utils_snat_system import create_snat_rule_in_system, delete_snat_rule_in_system, update_snat_rule_in_system
+from backend.nat.utils_snat_system import change_rule_snat_position_in_system, create_snat_rule_in_system, delete_snat_rule_in_system, update_snat_rule_in_system
 from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
 from utils.utils_functions import fix_ipv4_address
@@ -100,17 +100,26 @@ def create_snat(request):
             # create the input for creating SNAT rule
             source, destination, masking = input_create_snat(
                 data["source_address"], data["source_port"], data["destination_address"], 
-                data["destination_port"], data["snat_type"], data["translation_address_from"], 
-                data["translation_address_to"], data["translation_port"])
+                data["destination_port"], data["snat_type"])
+            if data["snat_type"] == "Static":
+                source, destination, masking = input_create_snat(
+                    data["source_address"], data["source_port"], data["destination_address"], 
+                    data["destination_port"], data["snat_type"], data["translation_address_from"], 
+                    data["translation_address_to"], data["translation_port"])
 
             # Add the rule in system and get the rule handle and content
             rule_number, rule_content = create_snat_rule_in_system(interface_ifname, source, destination, data["protocol"], masking)
+            
+            # Remove the new rule from the system if a similar rule already exists
+            if len(SNat.objects.filter(rule_content=rule_content)) > 0:
+                delete_snat_rule_in_system(rule_number)
+
             data["rule_number"] = int(rule_number)
             data["rule_content"] = rule_content
 
-            data["snat_position"] = 1
-            for snat_rule in SNat.objects.all().order_by("-snat_position"):
-                snat_rule.snat_position += 1
+            data["db_position"] = 1
+            for snat_rule in SNat.objects.all().order_by("-db_position"):
+                snat_rule.db_position += 1
                 snat_rule.save()
 
             serializer_snat = SNatSerializer(data=data)
@@ -142,8 +151,8 @@ def delete_snat(request, id):
 
             snat.delete()
 
-            for snat_rule in SNat.objects.filter(snat_position__gt=snat.snat_position).order_by("snat_position"):
-                snat_rule.snat_position -= 1
+            for snat_rule in SNat.objects.filter(db_position__gt=snat.db_position).order_by("db_position"):
+                snat_rule.db_position -= 1
                 snat_rule.save()
             return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
 
@@ -197,8 +206,12 @@ def update_snat(request, id):
         # create the input for creating SNAT rule
         source, destination, masking = input_create_snat(
             data["source_address"], data["source_port"], data["destination_address"], 
-            data["destination_port"], data["snat_type"], data["translation_address_from"], 
-            data["translation_address_to"], data["translation_port"])
+            data["destination_port"], data["snat_type"])
+        if data["snat_type"] == "Static":
+            source, destination, masking = input_create_snat(
+                data["source_address"], data["source_port"], data["destination_address"], 
+                data["destination_port"], data["snat_type"], data["translation_address_from"], 
+                data["translation_address_to"], data["translation_port"])
         
         if data["snat_type"] != "Static":
             snat.translation_address_from = None
@@ -255,11 +268,11 @@ def start_snat(request, id):
 
         # Add the rule in system
         # Find the next activated rule handle to insert the started rule above
-        list_next_snat = SNat.objects.filter(rule_status=True, snat_position__gt=snat.snat_position)
-        position_insert = 0
+        list_next_snat = SNat.objects.filter(rule_status=True, db_position__gt=snat.db_position)
+        position_insert = -1
         postrouting_position = 0
         if len(list_next_snat) > 0:
-            next_snat = list_next_snat.order_by('snat_position')[0]
+            next_snat = list_next_snat.order_by('db_position')[0]
             postrouting_position = next_snat.postrouting_position - 1
             position_insert = next_snat.rule_number
         rule_number, _ = create_snat_rule_in_system(
@@ -320,72 +333,11 @@ def change_snat_position(request, id):
         data = request.data
         new_position = data["new_position"]
         snat = SNat.objects.get(id=id)
-        previous_position = snat.snat_position
-
-        # Up or down the rule position
-        up_position = True
-        # Inputs for changing position of the rule to UP
-        # Get list of SNAT between previous and new position (DESC order).
-        list_snat_in_interval = SNat.objects.filter(snat_position__gte=new_position,
-                                                    snat_position__lt=snat.snat_position).order_by("-snat_position")
-        # Get list of activated SNAT between previous and new position.
-        list_active_snat_in_interval = SNat.objects.filter(rule_status=True,
-                                                           snat_position__gte=new_position,
-                                                           snat_position__lt=snat.snat_position)
-        # Position offset
-        position_offset = 1
-
-        if new_position > previous_position:
-            # Inputs for changing position of the rule to DOWN
-            up_position = False
-            # Get list of SNAT between previous and new position (ASC order).
-            list_snat_in_interval = SNat.objects.filter(snat_position__gt=snat.snat_position,
-                                                        snat_position__lte=new_position).order_by("snat_position")
-            # Get list of activated SNAT between previous and new position.
-            list_active_snat_in_interval = SNat.objects.filter(rule_status=True,
-                                                               snat_position__gt=snat.snat_position,
-                                                               snat_position__lte=new_position)
-            # Position offset
-            position_offset = -1
-
-        # Change position in system if the rule is activated and there is at least one activated rule in this interval
-        if snat.rule_status and len(list_active_snat_in_interval) > 0:
-            source, destination, masking = input_create_snat(snat)
-
-            if up_position:
-                next_snat = list_active_snat_in_interval.order_by("snat_position")[0]
-                delete_snat_rule_in_system(snat.rule_number)
-                rule_number, _ = create_snat_rule_in_system(
-                    snat.interface.ifname, source, destination, snat.protocol, masking,
-                    next_snat.rule_number, next_snat.postrouting_position-1)
-            else:
-                list_next_snat = SNat.objects.filter(rule_status=True, snat_position__gt=new_position)
-                if len(list_next_snat) > 0:
-                    next_snat = list_next_snat.order_by("snat_position")[0]
-                    delete_snat_rule_in_system(snat.rule_number)
-                    rule_number, _ = create_snat_rule_in_system(
-                        snat.interface.ifname, source, destination, snat.protocol, masking,
-                        next_snat.rule_number, next_snat.postrouting_position-2)
-                else:
-                    new_position_in_system = len(SNat.objects.filter(rule_status=True)) + len(OneToOneNat.objects.filter(rule_status=True)) - 1
-                    delete_snat_rule_in_system(snat.rule_number)
-                    rule_number, _ = create_snat_rule_in_system(
-                        snat.interface.ifname, source, destination, snat.protocol, masking, -1,
-                        new_position_in_system)
-            snat.rule_number = int(rule_number)
-            snat.save()
-
-        # Update snat_position
-        snat.snat_position = None
-        snat.save()
-        for snat_rule in list_snat_in_interval:
-            snat_rule.snat_position += position_offset
-            snat_rule.save()
-        snat.snat_position = new_position
-        snat.save()
+        change_rule_snat_position_in_system(snat, new_position)
+        rules_result = change_position_rule(snat.pk, new_position, SNat, "db_position")
+        save_rules_positions(rules_result, SNat)
 
         return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
-
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CHANGING} {CONSTANT_SNAT_RULE_POSITION}"}, status=400)
     except SNat.DoesNotExist:

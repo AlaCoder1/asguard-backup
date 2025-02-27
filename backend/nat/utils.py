@@ -1,7 +1,21 @@
 from backend.nat.models import DNat, OneToOneNat, SNat
 from backend.nat import utils_system
+from django.core import serializers
+import json
 
-def change_position_rule(id_rule:int,new_position:int,nat_type:str,position_type:str)->list:
+
+def save_rules_positions(rules_result:list, nat_type):
+    """
+    function to update rules positions in database
+    """
+    nat_type.objects.update(db_position=None)
+    for rule in rules_result:
+        nat_object = nat_type.objects.get(id=rule['id'])
+        nat_object.db_position = rule["db_position"]
+        nat_object.save()
+
+
+def change_position_rule(id_rule:int, new_position:int, nat_type, position_type:str)->list:
     """
     This function changes the position of a rule in the list.
     If the new position is greater than the old position, it moves the rules to the top.
@@ -9,24 +23,28 @@ def change_position_rule(id_rule:int,new_position:int,nat_type:str,position_type
     
     """
     all_rules_object=nat_type.objects.all().order_by(position_type)
-    all_rules=[{"id":rule["id"],position_type:rule[position_type] }for rule in all_rules_object]
+    data_rules= json.loads(serializers.serialize("json", all_rules_object))
+    all_rules=[{"id":rule['pk'],position_type:rule['fields'][position_type] } for rule in data_rules]
     all_rules_position=[rule[position_type] for rule in all_rules]
     input_rule_update={"id":id_rule,position_type:new_position}
     new_position=input_rule_update[position_type]
     old_position=next((rule for rule in all_rules if rule["id"] == input_rule_update["id"]), None)[position_type]
-    if (old_position<new_position):
-        result_list=permut_from_top(old_position,new_position,all_rules_position,input_rule_update,
+    result_list = []
+    if old_position and new_position:
+        if (old_position<new_position):
+            result_list=permut_from_top(old_position,new_position,all_rules_position,input_rule_update,
+                                        position_type,all_rules)
+        elif (old_position>new_position):
+            result_list=permut_to_top(old_position,new_position,all_rules_position,input_rule_update,
                                     position_type,all_rules)
-    elif (old_position>new_position):
-        result_list=permut_to_top(old_position,new_position,all_rules_position,input_rule_update,
-                                  position_type,all_rules)
-    return result_list  
-def permut_from_top(old_position:int,new_position:int,all_rules_position:list,
-                    input_rule_update:dict,position_type:str, all_rules:list[dict] )->list:
+    return result_list
+
+
+def permut_from_top(old_position:int, new_position:int, all_rules_position:list,
+                    input_rule_update:dict, position_type:str, all_rules:list[dict] )->list:
     """
     This function takes the old and new position of a rule and returns a list of rules
     that should be in the top of the list before the update.
-    
     """
     result_list=[]
     modified_rules=all_rules[all_rules_position.index(old_position)+1:all_rules_position.index(new_position)+1]
@@ -37,9 +55,9 @@ def permut_from_top(old_position:int,new_position:int,all_rules_position:list,
     result_list+=all_rules[all_rules_position.index(new_position)+1:]
     return result_list
 
-def permut_to_top(old_position:int,new_position:int,all_rules_position:list,
-                  input_rule_update:dict,position_type:str,all_rules:list[dict]
-                  )->list:
+
+def permut_to_top(old_position:int, new_position:int, all_rules_position:list,
+                  input_rule_update:dict, position_type:str, all_rules:list[dict])->list:
     """
     This function takes the old and new position of a rule and returns a list of rules
     that should be in the top of the list after the update.
@@ -203,9 +221,8 @@ def get_next_nat_handle(rule_nat, chain="postrouting"):
     return -1
 
 
-def input_create_snat(source_address, source_port, destination_address, destination_port, 
-                      snat_type, translation_address_from, translation_address_to, 
-                      translation_port):
+def input_create_snat(source_address, source_port, destination_address, destination_port, snat_type, 
+                      translation_address_from=None, translation_address_to=None, translation_port=None):
     """Return the input of an SNAT rule: source, destination and masking"""
     source = {"address": source_address,
               "port": source_port}
@@ -221,6 +238,13 @@ def input_create_snat(source_address, source_port, destination_address, destinat
         masking = ["snat", "ip", "to",  masking]
     
     return source, destination, masking
+
+
+def input_create_one_to_one_nat(destination_address: str):
+    """Return the input of an OneToOneNAT rule: destination"""
+    if destination_address != "":
+        return destination_address
+    return "any"
 
 
 def input_create_dnat(dnat:DNat):

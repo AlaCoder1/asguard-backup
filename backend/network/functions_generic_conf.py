@@ -33,6 +33,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
         case '10baseT-HD':
             speedV=10
             duplexV='half'
+
    #tester si addmac is not None
     if addmac is not None and (genericConfigObject is not None and genericConfigObject.addmac!=addmac or genericConfigObject is None):
             #lancer la fonction de "remove old config"

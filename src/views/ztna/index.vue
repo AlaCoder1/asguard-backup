@@ -3,9 +3,8 @@
     <base-layout title="ZTNA" active-menu="activeTab" ztnaTab="ztna">
 
       <template #content>
-        <v-alert v-model="isZTNArunning" density="compact" type="warning"
-          ><span style="font-size: 19px"
-            >{{ $t("ztna.ZTNAStatus") }}
+        <v-alert v-model="isZTNArunning" density="compact" type="warning"><span style="font-size: 19px">{{
+          $t("ztna.ZTNAStatus") }}
           </span>
         </v-alert>
         <v-tabs v-model="activeTab">
@@ -14,14 +13,16 @@
           </v-tab>
         </v-tabs>
         <v-window v-model="activeTab">
-          <v-window-item
-            v-for="(tab, index) in tabs"
-            :key="index"
-            :value="tab.label"
-          >
+          <v-window-item v-for="(tab, index) in tabs" :key="index" :value="tab.label">
             <v-card>
               <v-card-text>
-                <helpModal />
+                
+                <helpModal v-if="activeTab === 'ztna.identities'" help="ztnaIdentities" />
+                <helpModal v-if="activeTab === 'ztna.configurations'" help="ztnaConfigurations" />
+                <helpModal v-if="activeTab === 'ztna.services'" help="ztnaServices" />
+                <helpModal v-if="activeTab === 'ztna.relays'" help="ztnaRelays" />
+                <helpModal v-if="activeTab === 'ztna.policies'" help="ztnaPolicies" />
+
                 <component :is="tab.component" :dataServer="dataServer" />
               </v-card-text>
             </v-card>
@@ -34,7 +35,6 @@
 
 <script>
 import helpModal from "@/components/modals/help.vue";
-
 import BaseLayout from "@/layouts/layout.vue";
 import identities from "./identities.vue";
 import routers from "./routers.vue";
@@ -79,7 +79,7 @@ export default {
     let tab = localStorage.getItem("identities") || "ztna.identite";
     this.activeTab = tab;
 
-   this.emitter.on("reload-tabs", () => {
+    this.emitter.on("reload-tabs", () => {
       let tab = localStorage.getItem("identities") || "ztna.identite";
       if (tab) this.activeTab = tab;
     });
@@ -103,6 +103,7 @@ export default {
   object-fit: cover;
   overflow: hidden;
 }
+
 .img-containter {
   display: flex;
   width: 100%;

@@ -1,14 +1,18 @@
+from django.http import JsonResponse
 from backend.gateway.functions import get_gateway_dhcp, save_gateway_static_ip, save_gateways_database
+from backend.network.validation import InvalidIPAddressException, InvalidNetmaskException, validate_ip_address, validate_netmask
 from .functions import *
 #############################################ipv4#############################################
 ################### None 
 # convert  to None
 
 def parse_static_ip4(data):
-    ip_address4 =  None if data['value_setup_Ipv4'].get('ip_address4', None) == "" else  data['value_setup_Ipv4'].get('ip_address4', None)
-    netmask4 =  None if data['value_setup_Ipv4'].get('netmask4', None) == "" else  data['value_setup_Ipv4'].get('netmask4', None)
-    gateway4 =  None if data['value_setup_Ipv4']['gateway4'].get('value', None) == "" else  data['value_setup_Ipv4']['gateway4'].get('value', None)
-    return ip_address4,netmask4,gateway4
+        ip_address4 =  None if data['value_setup_Ipv4'].get('ip_address4', None) == "" else  data['value_setup_Ipv4'].get('ip_address4', None)
+        netmask4 =  None if data['value_setup_Ipv4'].get('netmask4', None) == "" else  data['value_setup_Ipv4'].get('netmask4', None)
+        gateway4 =  None if data['value_setup_Ipv4']['gateway4'].get('value', None) == "" else  data['value_setup_Ipv4']['gateway4'].get('value', None)
+        
+        return ip_address4,netmask4,gateway4
+  
 ###
 def parse_dhcp_base_ip4(data):
     type_dhcp4 = data.get('value_setup_Ipv4')['typeDHCP4']

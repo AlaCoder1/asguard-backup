@@ -1,11 +1,77 @@
 import subprocess
 
-
-
-
+from backend.network.validation import HostnameException, InvalidBooleanxception, InvalidIPAddressException, InvalidMacAddressException, InvalidNetmaskException, InvalidSetupIV4Exception, InvalidSpeedDuplexException, MSSException, MTUException, TimeoutException, validate_boolean, validate_dhcp_ipv4, validate_hostname, validate_ip_address, validate_mac_address, validate_mss, validate_mtu, validate_netmask, validate_setup_ipv4, validate_speed_duplex, validate_timeout
 from .models import *
 from django.conf import settings
 import time
+def validate_data_input(data):
+    try:
+        setuptype_ip4 = data.get('setuptypeIP4')
+        setuptype_ip6 = data.get('setuptypeIP6')
+        bogon_aux = data.get('bogon_aux')
+        private_aux = data.get('private_aux')
+        mtuv =  None if data.get('mtuv', None) == "" else data.get('mtuv', None)
+        mssv =  None if data.get('mssv', None) == "" else data.get('mssv', None)
+        speed_duplex =  None if data.get('speed_duplex', None) == "" else data.get('speed_duplex', None)
+        addmac =  None if data.get('addmac', None) == "" else data.get('addmac', None)
+        validate_mac_address(addmac)
+        validate_speed_duplex(speed_duplex)
+        validate_setup_ipv4(setuptype_ip4)
+        # validate_setup_ipv4(setuptype_ip6)
+        validate_boolean(bogon_aux)
+        validate_boolean(private_aux)
+        validate_mtu(mtuv)
+        validate_mss(mssv)
+        match setuptype_ip4.lower():
+            case "static":
+                type_dhcp4=''
+                ip_address4 =  None if data['value_setup_Ipv4'].get('ip_address4', None) == "" else  data['value_setup_Ipv4'].get('ip_address4', None)
+                netmask4 =  None if data['value_setup_Ipv4'].get('netmask4', None) == "" else  data['value_setup_Ipv4'].get('netmask4', None)
+                gateway4 =  None if data['value_setup_Ipv4']['gateway4'].get('value', None) == "" else  data['value_setup_Ipv4']['gateway4'].get('value', None)
+                validate_ip_address(ip_address4)
+                validate_netmask(ip_address4,netmask4)
+                validate_ip_address(gateway4)
+                
+            case "dhcp" :
+                type_dhcp4 = data.get('value_setup_Ipv4')['typeDHCP4']
+                alias_add =  None if data['value_setup_Ipv4'].get('alias_add', None) == "" else  data['value_setup_Ipv4'].get('alias_add', None)
+                alias_mask =  None if data['value_setup_Ipv4'].get('alias_mask', None) == "" else  data['value_setup_Ipv4'].get('alias_mask', None)
+                reject =  None if data['value_setup_Ipv4'].get('reject', None) == "" else  data['value_setup_Ipv4'].get('reject', None)
+                hostname =  None if data['value_setup_Ipv4'].get('hostname', None) == "" else  data['value_setup_Ipv4'].get('hostname', None)
+                validate_dhcp_ipv4(type_dhcp4)
+                validate_ip_address(alias_add)
+                validate_netmask(alias_add,alias_mask)
+                validate_dhcp_ipv4(reject)
+                validate_hostname(hostname)
+                if type_dhcp4.lower()=="advanced":
+                    timeout =  None if data['value_setup_Ipv4'].get('timeout', None) == "" else  data['value_setup_Ipv4'].get('timeout', None)
+                    retry =  None if data['value_setup_Ipv4'].get('retry', None) == "" else  data['value_setup_Ipv4'].get('retry', None)
+                    select_timeout =  None if data['value_setup_Ipv4'].get('select_timeout', None) == "" else  data['value_setup_Ipv4'].get('select_timeout', None)
+                    reboot =  None if data['value_setup_Ipv4'].get('reboot', None) == "" else  data['value_setup_Ipv4'].get('reboot', None)
+                    backoff =  None if data['value_setup_Ipv4'].get('backoff', None) == "" else  data['value_setup_Ipv4'].get('backoff', None)
+                    initial_interval =  None if data['value_setup_Ipv4'].get('initial_interval', None) == "" else  data['value_setup_Ipv4'].get('initial_interval', None)
+                    dhcp_client =  None if data['value_setup_Ipv4'].get('dhcp_client', None) == "" else  data['value_setup_Ipv4'].get('dhcp_client', None)
+                    lease_time  =  None if data['value_setup_Ipv4'].get('lease_time ', None) == "" else  data['value_setup_Ipv4'].get('lease_time', None)
+                    request =  None if data['value_setup_Ipv4'].get('request', None) == "" else  data['value_setup_Ipv4'].get('request', None)
+                    require =  None if data['value_setup_Ipv4'].get('require', None) == "" else  data['value_setup_Ipv4'].get('require', None)
+                    domain_name =  None if data['value_setup_Ipv4'].get('domain_name', None) == "" else  data['value_setup_Ipv4'].get('domain_name', None)
+                    domain_server =  None if data['value_setup_Ipv4'].get('domain_server', None) == "" else  data['value_setup_Ipv4'].get('domain_server', None)
+                    validate_timeout(timeout)
+                    validate_timeout(retry)
+                    validate_timeout(select_timeout)
+                    validate_timeout(reboot)
+                    validate_timeout(backoff)
+                    validate_timeout(initial_interval)
+                    validate_mac_address(dhcp_client)
+                    validate_timeout(lease_time)
+                    validate_hostname(domain_name)
+                    validate_ip_address(domain_server)
+    except (InvalidMacAddressException,InvalidSpeedDuplexException,InvalidSetupIV4Exception,
+            InvalidBooleanxception,MTUException,MSSException,
+            HostnameException,TimeoutException,InvalidIPAddressException,InvalidNetmaskException,InvalidBooleanxception,
+            Exception
+            ) as e:
+        return str(e)
 ####################################################  BD functions  ############################################################### 
 
 ####update in Database functions

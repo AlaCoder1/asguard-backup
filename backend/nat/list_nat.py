@@ -15,7 +15,7 @@ def get_list_all_snat():
         deactivate_all_rules()
 
     list_snat = []
-    snats = SNat.objects.all().order_by('snat_position')
+    snats = SNat.objects.all().order_by('db_position')
     snat_dict = serializers.serialize("json", snats)
     res = json.loads(snat_dict)
     for snat in res:
@@ -44,7 +44,7 @@ def get_list_all_one_to_one_nat():
     """Getting all one_to_one_nat from database"""
 
     list_one_to_one_nat = []
-    one_to_one_nats = OneToOneNat.objects.all().order_by('one_to_one_nat_position')
+    one_to_one_nats = OneToOneNat.objects.all().order_by('db_position')
     one_to_one_nat_dict = serializers.serialize("json", one_to_one_nats)
     res = json.loads(one_to_one_nat_dict)
     for one_to_one_nat in res:
@@ -73,7 +73,7 @@ def get_list_all_dnat():
     """Getting all dnat from database"""
 
     list_dnat = []
-    dnats = DNat.objects.all().order_by('dnat_position')
+    dnats = DNat.objects.all().order_by('db_position')
     dnat_dict = serializers.serialize("json", dnats)
     res = json.loads(dnat_dict)
     for dnat in res:

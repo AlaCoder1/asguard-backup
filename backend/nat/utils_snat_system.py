@@ -1,4 +1,6 @@
-from backend.nat.utils_system import get_rule_content_in_system
+from backend.nat.models import SNat
+from backend.nat.utils import input_create_snat
+from backend.nat.utils_system import exist_change_rule_position_in_system, get_rule_content_in_system
 from backend.nat.utils_system import delete_nat_rule_in_system, get_rule_handle_in_system, save_ruleset_nft
 from utils.commands_utils import execute_command_without_arguments
 
@@ -71,3 +73,17 @@ def update_snat_rule_in_system(oifname, source, destination, protocol, masking, 
     # Save ruleset in ruleset file
     save_ruleset_nft()
     return new_handle_number, new_content_number
+
+
+def change_rule_snat_position_in_system(snat: SNat, new_positon: int):
+    """Change an SNAT rule position in system"""
+    next_rule_number = exist_change_rule_position_in_system(SNat, snat, new_positon)
+    if next_rule_number:
+        delete_snat_rule_in_system(snat.rule_number)
+        source, destination, masking = input_create_snat(
+                snat.source_address, snat.source_port, 
+                snat.destination_address, snat.destination_port,
+                snat.snat_type, snat.translation_address_from, snat.translation_address_to, 
+                snat.translation_port)
+        create_snat_rule_in_system(snat.interface.ifname, source, destination, snat.protocol, masking, 
+                                next_rule_number, new_positon)

@@ -1,21 +1,10 @@
 <template>
   <v-overlay v-model="state.isExec"> </v-overlay>
   <v-overlay v-model="state.viewModal">
-    <v-dialog
-      v-model="state.isviewModal"
-      persistent
-      :scrim="false"
-      width="auto"
-    >
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img
-            src="@/assets/images/view.png"
-            alt="logo"
-            class="img-view"
-            width="100"
-            height="100"
-        /></v-card-title>
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
         <v-card-text>
           {{ $t("profil.NoPermission") }}
           <br />
@@ -23,15 +12,8 @@
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton
-            rounded
-            outlined
-            color="#ffffff"
-            label-color="#213E9F"
-            :label="$t('buttons.close')"
-            :isLarge="true"
-            @click="close"
-          />
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
         </div>
       </v-card>
     </v-dialog>
@@ -43,43 +25,19 @@
       <v-row>
         <v-col cols="12">
           <div style="overflow: hidden; flex-grow: 1">
-            <ag-grid-vue
-              id="grid-wrapper"
-              domLayout="autoHeight"
-              class="ag-theme-alpine mt-3"
-              style="width: 100%"
-              @grid-ready="onGridReady"
-              :columnDefs="columnSnat"
-              :rowData="rowDataSnat.value"
-              :gridOptions="gridOptions"
-              :overlayNoRowsTemplate="overlayTemplate"
-              :rowDragManaged="state.user === 'viewer' ? false : true"
-              :rowDragEntireRow="state.user === 'viewer' ? false : true"
-              @row-drag-enter="onRowDragStart"
-              @row-drag-end="onRowDragEnd"
-              :localeText="paginationLocalization"
-            />
+            <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+              @grid-ready="onGridReady" :columnDefs="columnSnat" :rowData="rowDataSnat.value" :gridOptions="gridOptions"
+              :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="state.user === 'viewer' ? false : true"
+              :rowDragEntireRow="state.user === 'viewer' ? false : true" @row-drag-enter="onRowDragStart"
+              @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
           </div>
-          <div class="d-flex justify-end mt-3">
-            <VButton
-              rounded
-              outlined
-              color="#213E9F"
-              label-color="#ffffff"
-              :label="$t('firewall.add')"
-              :isLarge="true"
-              type="submit"
-              class="ml-2"
-              @click="openModalAdd"
-            />
+          <div class="d-flex justify-end mt-3 mb-14">
+            <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('firewall.add')" :isLarge="true"
+              type="submit" class="ml-2" @click="openModalAdd" />
           </div>
         </v-col>
       </v-row>
-      <SnatModal
-        :isOpen="state.isModalAreaOpen"
-        :editRow="state.editRow"
-        :modalMode="state.modalMode"
-      />
+      <SnatModal :isOpen="state.isModalAreaOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
@@ -98,12 +56,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </div>
@@ -190,10 +143,12 @@ export default {
     });
 
     const gridOptions = ref({
-      pagination: true,
-      paginationPageSize: 5,
+      // pagination: true,
+      // paginationPageSize: 5,
       rowSelection: "single",
     });
+
+
 
     const columnSnat = ref([
       {
@@ -238,7 +193,7 @@ export default {
         autoHeight: true,
         // resizable: true,
         width: 90,
-        minWidth: 170,
+        minWidth: 210,
         flex: 1,
       },
       {
@@ -247,7 +202,7 @@ export default {
         autoHeight: true,
         // resizable: true,
         width: 90,
-        minWidth: 150,
+        minWidth: 210,
         flex: 1,
       },
       {
@@ -256,7 +211,7 @@ export default {
         autoHeight: true,
         // resizable: true,
         width: 100,
-        minWidth: 170,
+        minWidth: 210,
         flex: 1,
       },
       {
@@ -265,7 +220,7 @@ export default {
         autoHeight: true,
         // resizable: true,
         width: 90,
-        minWidth: 150,
+        minWidth: 210,
         flex: 1,
       },
       {

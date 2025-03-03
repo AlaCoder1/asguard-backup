@@ -332,6 +332,7 @@ export default {
 
     const closeModal = () => {
       emitter.emit("closeOneModal");
+      v$.value.$reset();
       if (modalMode.value === "create") {
         state.interface = "";
         state.sourceAddress = "";

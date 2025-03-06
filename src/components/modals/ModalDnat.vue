@@ -654,6 +654,7 @@ export default {
 
     const closeModal = () => {
       emitter.emit("closeDnatModal");
+      v$.value.$reset();
       if (modalMode.value === "create") {
         state.interface = "";
         state.tcpIpVersion = { name: "IPv4", slug: "ipv4" };

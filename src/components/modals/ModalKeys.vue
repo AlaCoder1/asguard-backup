@@ -10,44 +10,26 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    :label="`${$t('KeyPair.EnterKeyName')} *`"
-                    v-model="state.keyName"
-                  ></v-text-field>
+                  <v-text-field :label="`${$t('KeyPair.EnterKeyName')} *`" v-model="state.keyName"></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.keyName.$error">
                     {{ v$.keyName.$errors[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.type"
-                    :label="`${$t('KeyPair.SelectType')} *`"
-                    item-title="name"
-                    item-value="slug"
-                    :items="listType"
-                    return-object
-                  ></v-select>
+                  <v-select v-model="state.type" :label="`${$t('KeyPair.SelectType')} *`" item-title="name"
+                    item-value="slug" :items="listType" return-object></v-select>
                   <p class="error-feedback mb-5" v-if="v$.type.$error">
                     {{ v$.type.$errors[0].$message }}
                   </p>
                 </v-col>
                 <template v-if="isPrivate">
                   <v-col cols="6" class="mb-n6">
-                    <v-text-field
-                      model-value="RSA algorithm"
-                      readonly
-                    ></v-text-field>
+                    <v-text-field model-value="RSA algorithm" readonly></v-text-field>
                   </v-col>
                   <v-col cols="6" class="mb-n6">
-                    <v-select
-                      v-model="state.key"
-                      :label="`${$t('KeyPair.KeyLength')} *`"
-                      item-title="name"
-                      item-value="slug"
-                      :items="listKey"
-                      return-object
-                    ></v-select>
+                    <v-select v-model="state.key" :label="`${$t('KeyPair.KeyLength')} *`" item-title="name"
+                      item-value="slug" :items="listKey" return-object></v-select>
                     <p class="error-feedback mb-5" v-if="v$.key.$error">
                       {{ v$.key.$errors[0].$message }}
                     </p>
@@ -55,24 +37,15 @@
                 </template>
 
                 <v-col cols="12" class="mb-n6" v-if="isPublic">
-                  <v-select
-                    v-model="state.privateKey"
-                    :label="`${$t('KeyPair.SelectPrivateKey')} *`"
-                    item-title="name"
-                    item-value="id"
-                    :items="state.mapedListKeyPrivate"
-                    return-object
-                  ></v-select>
+                  <v-select v-model="state.privateKey" :label="`${$t('KeyPair.SelectPrivateKey')} *`" item-title="name"
+                    item-value="id" :items="state.mapedListKeyPrivate" return-object></v-select>
                   <p class="error-feedback mb-5" v-if="v$.privateKey.$error">
                     {{ v$.privateKey.$errors[0].$message }}
                   </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6" v-if="isImport">
-                  <v-textarea
-                    v-model="state.externKey"
-                    :label="`${$t('KeyPair.EnterExternKey')} *`"
-                    variant="outlined"
-                  ></v-textarea>
+                  <v-textarea v-model="state.externKey" :label="`${$t('KeyPair.EnterExternKey')} *`"
+                    variant="outlined"></v-textarea>
                   <p class="error-feedback mb-5" v-if="v$.externKey.$error">
                     {{ v$.externKey.$errors[0].$message }}
                   </p>
@@ -84,37 +57,18 @@
             <div class="text-start ml-6 mt-3">
               <span class="text-sm">
                 <span class="text-red text-lg">*</span>
-                {{ $t("errors.oblig") }}</span
-              >
+                {{ $t("errors.oblig") }}</span>
             </div>
             <v-spacer></v-spacer>
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              @click="closeModal"
-              class="mt-3 btn-add"
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
+              @click="closeModal" class="mt-3 btn-add">
               <span class="text-white pr-3 pl-3">{{
                 $t("buttons.close")
               }}</span>
             </v-btn>
 
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              type="submit"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 btn-add"
-            >
+            <v-btn large rounded outlined label-color="#213E9F" type="submit" color="indigo-darken-3" :rounded="true"
+              variant="flat" class="mt-3 btn-add">
               <span class="text-white pr-3 pl-3">{{
                 $t("buttons.create")
               }}</span>
@@ -124,12 +78,7 @@
       </form>
     </v-dialog>
 
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -349,7 +298,24 @@ export default {
       }
     };
 
+    const resetForm = () => {
+      state.openModal = false;
+      state.type = {
+        name: "Create Private Key",
+        slug: "Create Private Key",
+      };
+      state.keyName = null;
+      state.key = {
+        name: "2048",
+        slug: "2048",
+      };
+      state.privateKey = null;
+      state.externKey = null;
+    };
+
     const closeModal = () => {
+      resetForm()
+      v$.value.$reset();
       emitter.emit("closeKeyPairModal");
     };
     const error = computed(() => {
@@ -428,6 +394,7 @@ export default {
   color: red;
   font-size: 0.85em;
 }
+
 .actionBtn {
   justify-content: center;
 }

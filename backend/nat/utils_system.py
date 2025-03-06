@@ -51,3 +51,31 @@ def get_rule_content_in_system(nat_type="postrouting", rule_position=0):
     list_nat_rules = utils.find_nat_in_ruleset(rule_set.stdout, nat_type)
     handle_number = utils.get_rule_content_with_position(list_nat_rules, rule_position)
     return handle_number
+
+
+def exist_change_rule_position_in_system(type_nat, rule_nat, new_position)->int:
+    """Function that get a rule NAT and it's new position and 
+    check if there is a changes will be affected on system.
+    The function return the next rule_number wich will be used in changing position on system.
+    If there is no changes than the function will return False."""
+    if rule_nat.rule_status:
+        next_rule = get_next_active_rule(type_nat, rule_nat.db_position, new_position)
+        if next_rule:
+            return next_rule.rule_number
+        return -1
+    return False
+
+
+def get_next_active_rule(type_nat, old_position, new_position):
+    """Function that retrieves the NAT rule and its new position and finds the next active rule by position.
+    If there are no active rules below this rule after the position change, then the function will return False"""
+    # Get the list of next rules below the changed rule
+    # If the rule is changed to down than the list must start from the rule with position grather than the new position
+    if old_position < new_position:
+        list_next_rule = type_nat.objects.filter(rule_status=True, db_position__gt=new_position)
+    # If the rule is changed to up than the list must start from the rule with position grather or equal than the new position
+    else:
+        list_next_rule = type_nat.objects.filter(rule_status=True, db_position__gte=new_position)
+    if len(list_next_rule) > 0:
+        return list_next_rule.order_by("db_position").first()
+    return False

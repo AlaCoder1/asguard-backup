@@ -1,4 +1,6 @@
-from backend.nat.utils_system import get_rule_content_in_system, get_rule_handle_in_system
+from backend.nat.models import OneToOneNat
+from backend.nat.utils import input_create_one_to_one_nat
+from backend.nat.utils_system import exist_change_rule_position_in_system, get_rule_content_in_system, get_rule_handle_in_system
 from backend.nat.utils_system import delete_nat_rule_in_system, save_ruleset_nft
 from utils.commands_utils import execute_command_without_arguments
 
@@ -55,3 +57,15 @@ def update_one_to_one_nat_rule_in_system(oifname, source, destination, outgoing_
     # Save ruleset in ruleset file
     save_ruleset_nft()
     return new_handle_number, new_content_number
+
+
+def change_rule_one_to_one_nat_position_in_system(one_to_one_nat: OneToOneNat, new_positon: int):
+    """Change an SNAT rule position in system"""
+    next_rule_number = exist_change_rule_position_in_system(OneToOneNat, one_to_one_nat, new_positon)
+    if next_rule_number:
+        delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
+        destination = input_create_one_to_one_nat(one_to_one_nat.destination_address)
+        create_one_to_one_nat_rule_in_system(
+            one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination, 
+            one_to_one_nat.translation_address, 
+            next_rule_number, new_positon)

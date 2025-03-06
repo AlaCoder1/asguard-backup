@@ -97,7 +97,7 @@ def run_command(command):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -121,7 +121,7 @@ def restart(request):
     Returns:
         JsonResponse: A JSON response containing a success or error message.
                       - HTTP 200 if the restart is successful.
-                      - HTTP 404 if the restart fails.
+                      - HTTP 400 if the restart fails.
     
     Side Effects:
         - Executes the 'sudo systemctl restart squid' command.
@@ -136,7 +136,7 @@ def restart(request):
         status = 200
     else:
         msg = f"{ERROR_MESSAGES_RESTARTING} {CONSTANT_SQUID}"
-        status =404 
+        status =400 
     return JsonResponse({"msg": msg}, status=status)
 
 @swagger_auto_schema(
@@ -148,7 +148,7 @@ def restart(request):
     ),
     responses={
         200: "Squid service started successfully.",
-        404: "Failed to start the Squid service.",
+        400: "Failed to start the Squid service.",
     },
 )
 @api_view(['POST'])
@@ -163,7 +163,7 @@ def start(request):
     Returns:
         JsonResponse: A JSON response containing a success or error message.
                       - HTTP 200 if the start command is successful.
-                      - HTTP 404 if the start command fails.
+                      - HTTP 400 if the start command fails.
     
     Side Effects:
         - Executes the 'sudo systemctl start squid' command.
@@ -174,7 +174,7 @@ def start(request):
         status = 200
     else:
         msg = f"{ERROR_MESSAGES_STARTING} {CONSTANT_SQUID}"
-        status =404 
+        status =400
     return JsonResponse({"msg": msg}, status=status)
 
 @swagger_auto_schema(
@@ -186,7 +186,7 @@ def start(request):
     ),
     responses={
         200: "Squid service stopped successfully.",
-        404: "Failed to stop the Squid service.",
+        400: "Failed to stop the Squid service.",
     },
 )
 @api_view(['POST'])
@@ -201,7 +201,7 @@ def stop(request):
     Returns:
         JsonResponse: A JSON response containing a success or error message.
                       - HTTP 200 if the stop command is successful.
-                      - HTTP 404 if the stop command fails.
+                      - HTTP 400 if the stop command fails.
     
     Side Effects:
         - Executes the 'sudo systemctl stop squid' command.
@@ -212,7 +212,7 @@ def stop(request):
         status = 200
     else:
         msg = f"{ERROR_MESSAGES_STOPING} {CONSTANT_SQUID}"
-        status =404 
+        status =400
     return JsonResponse({"msg": msg}, status=status)
 
 @swagger_auto_schema(
@@ -224,7 +224,7 @@ def stop(request):
     ),
     responses={
         200: "Successfully retrieved the list of all proxy rules.",
-        404: "Failed to retrieve proxy rules.",
+        400: "Failed to retrieve proxy rules.",
     },
 )
 @api_view(['GET'])
@@ -398,7 +398,7 @@ def enable_by_time():
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -445,7 +445,7 @@ def addRuleSquid(request):
     Returns:
         JsonResponse:
             - HTTP 200 if the rule is successfully added.
-            - HTTP 404 if there are validation errors or an exception occurs.
+            - HTTP 400 if there are validation errors or an exception occurs.
 
     Notes:
         - The function assumes appropriate permissions to modify Squid configuration files.
@@ -505,10 +505,10 @@ def addRuleSquid(request):
                     status=200
                     return JsonResponse({"msg": msg}, status=status)
                 else:
-                    return JsonResponse(serializerProxyRules.errors, status=404 )
+                    return JsonResponse(serializerProxyRules.errors, status=400 )
             except Exception as e:
                 msg = e
-                status=404 
+                status=400
                 return JsonResponse({"msg": msg}, status=status)
         else:
             serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
@@ -518,7 +518,7 @@ def addRuleSquid(request):
                 status=200
                 return JsonResponse({"msg": msg}, status=status)
             else:
-                return JsonResponse(serializerProxyRules.errors, status=404 )
+                return JsonResponse(serializerProxyRules.errors, status=400 )
 
 @swagger_auto_schema(
     method='DELETE',
@@ -530,7 +530,7 @@ def addRuleSquid(request):
     ),
     responses={
         200: "Squid rule deleted successfully and configuration updated.",
-        404: "Failed to delete the Squid rule or update the configuration.",
+        400: "Failed to delete the Squid rule or update the configuration.",
     },
 ) 
 @api_view(['DELETE'])
@@ -582,7 +582,7 @@ def deleteRuleSquid(request,id):
                     return JsonResponse({"msg": msg}, status=status)
                 else:
                     msg =stderr
-                    status = 404 
+                    status = 400 
                 return JsonResponse({"msg": msg}, status=status)
             else:
                 file_path = '/etc/squid/blocked_domain.acl'
@@ -614,7 +614,7 @@ def deleteRuleSquid(request,id):
         status =200
     else:
         msg =stderr
-        status = 404 
+        status = 400 
     return JsonResponse({"msg": msg}, status=status)
 
 def get_squid_status():
@@ -815,7 +815,7 @@ def update_generale_info(request):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -886,7 +886,7 @@ def disable_auth(request):
         return JsonResponse({"msg":f"{CONSTANT_LINES} {SUCCESS_MESSAGES_COMMENTED}"}, status=200)
     
     except FileNotFoundError:
-        return JsonResponse({"msg": f"{CONSTANT_FILE} {ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=404 )
+        return JsonResponse({"msg": f"{CONSTANT_FILE} {ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=400 )
     except Exception as e:
         return JsonResponse({"msg": f"{ERROR_MESSAGES_OCCURRED}: {e}"}, status=400 )
 
@@ -925,7 +925,7 @@ def disable_auth(request):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -1002,10 +1002,10 @@ def change_auth_status(request):
             return JsonResponse({"msg":f"{CONSTANT_LINES} {SUCCESS_MESSAGES_COMMENTED}"}, status=200)
         except FileNotFoundError:
             print(f"Error: File not found at path {config_file_path}. Please provide the correct path.")
-            return JsonResponse({"msg": f"{CONSTANT_FILE} {ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=404 )
+            return JsonResponse({"msg": f"{CONSTANT_FILE} {ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=400 )
         except Exception as e:
             print(f"An error occurred: {e}")
-            return JsonResponse({"msg": f"{ERROR_MESSAGES_OCCURRED}: {e}"}, status=404 )
+            return JsonResponse({"msg": f"{ERROR_MESSAGES_OCCURRED}: {e}"}, status=400 )
     else:
         with open(config_file_path, 'r') as file:
             config_lines = file.readlines()
@@ -1045,7 +1045,7 @@ def change_auth_status(request):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -1125,7 +1125,7 @@ def enable_auth(request):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -1327,7 +1327,7 @@ def allProxyUsers(request):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -1398,7 +1398,7 @@ def change_pwd(request):
 
         return JsonResponse({"msg": f"{CONSTANT_CRON_JOB} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     except subprocess.CalledProcessError as e:
-        return JsonResponse({"msg": e}, status=404)
+        return JsonResponse({"msg": e}, status=400)
 
 @swagger_auto_schema(
     method='POST',
@@ -1440,7 +1440,7 @@ def change_pwd(request):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -1502,17 +1502,17 @@ def add_user_squid(request):
             return JsonResponse({"msg": msg}, status=status)
         except IntegrityError as e:
             msg = f"{ERROR_MESSAGES_SAVING_INSTANCE}: {e}"
-            status=404 
+            status=400 
             return JsonResponse({"msg": msg}, status=status)
         except Exception as e:
             msg = (f"{ERROR_MESSAGES_OCCURRED}: {e}")
-            status=404 
+            status=400 
             return JsonResponse({"msg": msg}, status=status)
         ### to add only one user every time in file
         # subprocess.run(['htpasswd', '-b', '-c', squid_conf_path, username_squid, password_squid], check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error adding user: {e}")
-        return JsonResponse({"msg": f"{ERROR_MESSAGES_SAVING_USER}: {e}"}, status=404 )
+        return JsonResponse({"msg": f"{ERROR_MESSAGES_SAVING_USER}: {e}"}, status=400 )
 
 @swagger_auto_schema(
     method='DELETE',
@@ -1532,7 +1532,7 @@ def add_user_squid(request):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -1592,7 +1592,7 @@ def delete_user_squid(request, id):
         server_satus.save() 
         return JsonResponse({"msg":f"{CONSTANT_USER} {SUCCESS_MESSAGES_DELETING}"},status=200)
     else:
-        return JsonResponse({"msg":f"{ERROR_MESSAGES_OCCURRED}"},status = 404 )
+        return JsonResponse({"msg":f"{ERROR_MESSAGES_OCCURRED}"},status = 400 )
 
 
 def get_line_from_file(file_path, target_line):
@@ -1662,7 +1662,7 @@ def get_line_from_file(file_path, target_line):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -1772,7 +1772,7 @@ def allGroups(request):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -1869,7 +1869,7 @@ def changeStausGroup(request):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -1899,7 +1899,7 @@ def readFromFile(request):
     Returns:
         JsonResponse: Une réponse JSON contenant une liste des lignes du fichier et leur statut :
             - Chaque ligne est une liste contenant le texte de la ligne et un booléen qui indique si elle est active (`True`) ou commentée (`False`).
-            - Si le fichier n'existe pas, une erreur est retournée avec un message d'erreur 404.
+            - Si le fichier n'existe pas, une erreur est retournée avec un message d'erreur 400.
             - Si une autre exception se produit, un message d'erreur générique est renvoyé.
 
     Example:
@@ -1930,9 +1930,9 @@ def readFromFile(request):
                 else:
                     content.append([line.lstrip('#').split('\n')[0], True])
     except FileNotFoundError:
-        return JsonResponse({"msg":f"{CONSTANT_PATH} {squid_config_path} {ERROR_MESSAGES_INEXISTANT}"},status=404 )
+        return JsonResponse({"msg":f"{CONSTANT_PATH} {squid_config_path} {ERROR_MESSAGES_INEXISTANT}"},status=400 )
     except Exception as e:
-        return JsonResponse({"msg":f"{ERROR_MESSAGES_OCCURRED}{e}"},status=404 )
+        return JsonResponse({"msg":f"{ERROR_MESSAGES_OCCURRED}{e}"},status=400 )
                 
     return JsonResponse({"content": content}, status=200)  
 
@@ -2147,7 +2147,7 @@ def deleteElement(type, value, file_path):
         status =200
     else:
         msg =stderr
-        status = 404 
+        status = 400 
     return JsonResponse({"msg": msg}, status=status)
 
 
@@ -2167,7 +2167,7 @@ def addElement(type, allow_by_auth, status, value):
 
     Returns:
         JsonResponse: Une réponse JSON contenant un message de succès ou d'erreur lors de l'ajout de l'élément dans le fichier ACL.
-            Si une erreur se produit lors de l'ajout, le message d'erreur est retourné avec le code d'état 404.
+            Si une erreur se produit lors de l'ajout, le message d'erreur est retourné avec le code d'état 400.
 
     Example:
         Si `type` est "ip", `allow_by_auth` est False, `status` est True et `value` est "192.168.1.1",
@@ -2202,7 +2202,7 @@ def addElement(type, allow_by_auth, status, value):
     except Exception as e:
         print(f"{ERROR_MESSAGES_OCCURRED}: {e}")
         msg = e
-        status=404 
+        status=400 
         return JsonResponse({"msg": msg}, status=status)
     
 # def restart_squid(request):
@@ -2247,7 +2247,7 @@ def addElement(type, allow_by_auth, status, value):
                 ),
             }
         ),
-        404: Schema(
+        400: Schema(
             type=TYPE_OBJECT,
             properties={
                 'msg': Schema(
@@ -2276,7 +2276,7 @@ def updateStatusRule(request, id):
     Returns:
         JsonResponse: Une réponse JSON indiquant le succès ou l'échec de la mise à jour du statut de la règle. 
             En cas de succès, un message de confirmation est retourné avec un code d'état 200.
-            En cas d'erreur, un message d'erreur est retourné avec un code d'état 404.
+            En cas d'erreur, un message d'erreur est retourné avec un code d'état 400.
 
     Example:
         Si la règle proxy a un `status` de "True" et un `allow_by_auth` de "False", et que la requête met à jour 

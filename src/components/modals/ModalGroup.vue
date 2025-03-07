@@ -4,38 +4,25 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"
-              >{{
-                mode === "create" ? $t("modal.create") : $t("modal.update")
+            <span class="text-h5">{{
+              mode === "create" ? $t("modal.create") : $t("modal.update")
               }}
-              group</span
-            >
+              {{ $t('modal.group') }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row class="mb-5">
                 <v-col cols="12" class="mb-n5">
-                  <v-text-field
-                    :label="`${$t('form.goupname')} *`"
-                    v-model="state.formData.groupname"
-                  ></v-text-field>
-                  <span
-                    class="error-feedback mb-1"
-                    v-if="v$.formData.groupname.$error"
-                    >{{ v$.formData.groupname.$errors[0].$message }}</span
-                  >
+                  <v-text-field :label="`${$t('form.goupname')} *`" v-model="state.formData.groupname"></v-text-field>
+                  <span class="error-feedback mb-1" v-if="v$.formData.groupname.$error">{{
+                    v$.formData.groupname.$errors[0].$message }}</span>
                 </v-col>
 
                 <v-col cols="12" class="mb-n5">
-                  <v-text-field
-                    :label="`${$t('form.description')} *`"
-                    v-model="state.formData.description"
-                  ></v-text-field>
-                  <span
-                    class="error-feedback"
-                    v-if="v$.formData.description.$error"
-                    >{{ v$.formData.description.$errors[0].$message }}</span
-                  >
+                  <v-text-field :label="`${$t('form.description')} *`"
+                    v-model="state.formData.description"></v-text-field>
+                  <span class="error-feedback" v-if="v$.formData.description.$error">{{
+                    v$.formData.description.$errors[0].$message }}</span>
                 </v-col>
               </v-row>
             </v-container>
@@ -44,29 +31,17 @@
             <div class="text-start ml-6 mt-3">
               <span class="text-sm">
                 <span class="text-red text-lg">*</span>
-                {{ $t("errors.oblig") }}</span
-              >
+                {{ $t("errors.oblig") }}</span>
             </div>
             <v-spacer></v-spacer>
 
-            <v-btn
-              :rounded="true"
-              class="mt-3 btn-add"
-              color="asguard_primary_light"
-              variant="text"
-              @click="closeModal"
-            >
+            <v-btn :rounded="true" class="mt-3 btn-add" color="asguard_primary_light" variant="text"
+              @click="closeModal">
               <span class="pr-3 pl-3 text-white" style="color: #213e9f">{{
                 $t("buttons.close")
               }}</span>
             </v-btn>
-            <v-btn
-              :rounded="true"
-              class="mt-3 btn-add"
-              color="asguard_primary_light"
-              variant="text"
-              type="submit"
-            >
+            <v-btn :rounded="true" class="mt-3 btn-add" color="asguard_primary_light" variant="text" type="submit">
               <span class="text-white pr-3 pl-3">{{
                 mode === "create" ? $t("buttons.create") : $t("buttons.update")
               }}</span>
@@ -75,12 +50,7 @@
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="snackbar"
-      location="bottom right"
-      :color="color"
-    >
+    <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
       {{ textAlert }}
     </v-snackbar>
   </v-row>
@@ -91,7 +61,7 @@ import axios from "axios";
 import { useI18n } from "vue-i18n";
 import useValidate from "@vuelidate/core";
 import { required, helpers } from "@vuelidate/validators";
-import { reactive, computed } from "vue";
+import { reactive, computed, inject } from "vue";
 export default {
   name: "Modal_Group",
   props: {
@@ -113,6 +83,7 @@ export default {
     },
   },
   setup() {
+    const emitter = inject("emitter");
     const { t } = useI18n();
     const state = reactive({
       formData: {
@@ -120,6 +91,14 @@ export default {
         description: "",
       },
     });
+
+    const closeModal = () => {
+      v$.value.$reset();
+      emitter.emit("closeGroupModal");
+      state.formData.description = ""
+      state.formData.groupname = ""
+    };
+
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -148,6 +127,7 @@ export default {
     return {
       state,
       v$,
+      closeModal
     };
   },
   data() {
@@ -184,9 +164,7 @@ export default {
       }
     },
 
-    closeModal() {
-      this.$emit("closeModal");
-    },
+
     resetForm() {
       this.state.formData = {
         firstname: "",

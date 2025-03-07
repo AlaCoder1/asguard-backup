@@ -29,7 +29,7 @@
                 <v-col>
                   <v-select
                     v-model="state.interfaces"
-                    :label="`${$t('sdwan.listWAN')} *`"
+                    label="Interfaces"
                     item-title="name"
                     item-value="id"
                     multiple

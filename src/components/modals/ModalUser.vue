@@ -400,6 +400,7 @@ export default {
     },
 
     closeModal() {
+      this.v$.$reset();
       this.resetForm();
       this.$emit("closeModal");
     },

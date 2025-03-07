@@ -153,7 +153,7 @@
   "noInterfaces": "Il n'y a pas d'interfaces",
 
   "delete": {
-    "DeleteConfirmation": "Confirmation de Suppression",
+    "DeleteConfirmation": "Confirmation de suppression",
     "questionuser": "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
     "questiongroup": "Êtes-vous sûr de vouloir supprimer ce groupe ?",
     "questionserver": "Êtes-vous sûr de vouloir supprimer ce server ?",
@@ -367,7 +367,7 @@
     "network": "Réseau",
     "createRoute": "Créer une nouvelle",
     "gatewayAddress": "Adresse de passerelle",
-    "parentInterface":"Interface parentale"
+    "parentInterface": "Interface parentale"
   },
   "subscription": {
     "chooseYourPlan": "Choisissez votre plan !",
@@ -706,8 +706,9 @@
     "addClient": "Ajouter Client"
   },
   "modal": {
-    "create": "Créer Un",
-    "update": "Modifier Un"
+    "create": "Créer un",
+    "update": "Modifier un",
+    "group": "groupe"
   },
 
   "PageGeneral": {

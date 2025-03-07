@@ -4,7 +4,7 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5">Revoke Certificat</span>
+            <span class="text-h5">Revoke certificat</span>
           </v-card-title>
           <v-card-text>
             <v-container>

@@ -405,7 +405,7 @@
     "createNewArea": "Créer une nouvelle zone",
     "updateArea": "Modifier la zone",
     "enterAreaName": "Saisir le nom de la zone",
-    "listWAN": "Liste WAN",
+    "listWAN": "Liste des interfaces",
     "minimumTwoInterfaces": "Deux interfaces minimum",
     "pleaseWait": "Veuillez patienter...",
     "SDWANRules": "Règles SDWAN",

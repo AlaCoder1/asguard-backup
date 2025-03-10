@@ -408,7 +408,7 @@
     "createNewArea": "Create New Area",
     "updateArea": "Update Area",
     "enterAreaName": "Enter Area Name",
-    "listWAN": "List WAN",
+    "listWAN": "List interfaces",
     "minimumTwoInterfaces": "Minimum Two Interfaces",
     "pleaseWait": "Please Wait...",
     "SDWANRules": "SDWAN Rules",

@@ -542,6 +542,7 @@ export default {
 
     const closeModal = () => {
       emitter.emit("closeSnatModal");
+      v$.value.$reset();
       if (modalMode.value === "create") {
         state.interface = "";
         state.tcpIpVersion = "";

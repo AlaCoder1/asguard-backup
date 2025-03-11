@@ -1,4 +1,6 @@
-from backend.nat.utils_system import get_rule_content_in_system, get_rule_handle_in_system
+from backend.nat.models import DNat
+from backend.nat.utils import input_create_dnat
+from backend.nat.utils_system import exist_change_rule_position_in_system, get_rule_content_in_system, get_rule_handle_in_system
 from backend.nat.utils_system import delete_nat_rule_in_system, save_ruleset_nft
 from utils.commands_utils import execute_command_without_arguments
 
@@ -70,3 +72,13 @@ def update_dnat_rule_in_system(iifname, source, destination, protocol, handle_nu
     # Save ruleset in ruleset file
     save_ruleset_nft()
     return new_handle_number, new_rule_content
+
+
+def change_rule_dnat_position_in_system(dnat: DNat, new_positon: int):
+    """Change an ]NAT rule position in system"""
+    next_rule_number = exist_change_rule_position_in_system(DNat, dnat, new_positon)
+    if next_rule_number:
+        delete_dnat_rule_in_system(dnat.rule_number)
+        source, destination = input_create_dnat(dnat)
+        create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol,
+                                   next_rule_number, new_positon)

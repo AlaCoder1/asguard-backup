@@ -98,6 +98,10 @@ export default {
       this.isIpsecnotrunning = !response.data;
       console.log('statusipsec', !this.isIpsecnotrunning)
     });
+
+     let ids = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
+    if (ids) this.activeTab = ids;
+
     setTimeout(() => {
       this.emitter.on("reload-tabs", () => {
         let tab = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
@@ -105,8 +109,7 @@ export default {
         if (tab) this.activeTab = tab;
       });
 
-      let ids = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
-      if (ids) this.activeTab = ids;
+     
 
       this.serverInfo =
         document.getElementById("app").attributes["servers"].value;

@@ -10,8 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from .list_nat import get_list_all_dnat, get_one_dnat
 from .models import DNat
 from .serializers import DNatSerializer
-from .utils import get_next_nat_handle, input_create_dnat
-from .utils_dnat_system import create_dnat_rule_in_system, delete_dnat_rule_in_system, update_dnat_rule_in_system
+from .utils import change_position_rule, get_next_nat_handle, input_create_dnat, save_rules_positions
+from .utils_dnat_system import change_rule_dnat_position_in_system, create_dnat_rule_in_system, delete_dnat_rule_in_system, update_dnat_rule_in_system
 
 from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
@@ -117,9 +117,9 @@ def create_dnat(request):
             data["rule_number"] = int(rule_number)
             data["rule_content"] = rule_content
 
-            data["dnat_position"] = 1
-            for dnat_rule in DNat.objects.all().order_by("-dnat_position"):
-                dnat_rule.dnat_position += 1
+            data["db_position"] = 1
+            for dnat_rule in DNat.objects.all().order_by("-db_position"):
+                dnat_rule.db_position += 1
                 dnat_rule.save()
 
             serializer_dnat = DNatSerializer(data=data)
@@ -151,8 +151,8 @@ def delete_dnat(request, id):
 
             dnat.delete()
             
-            for dnat_rule in DNat.objects.filter(dnat_position__gt=dnat.dnat_position).order_by("dnat_position"):
-                dnat_rule.dnat_position -= 1
+            for dnat_rule in DNat.objects.filter(db_position__gt=dnat.db_position).order_by("db_position"):
+                dnat_rule.db_position -= 1
                 dnat_rule.save()
             return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
 
@@ -264,11 +264,11 @@ def start_dnat(request, id):
 
         # Add the rule in system
         # Find the next activated rule handle to insert the started rule above
-        list_next_dnat = DNat.objects.filter(rule_status=True, dnat_position__gt=dnat.dnat_position)
-        position_insert = 0
+        list_next_dnat = DNat.objects.filter(rule_status=True, db_position__gt=dnat.db_position)
+        position_insert = -1
         prerouting_position = 0
         if len(list_next_dnat) > 0:
-            next_dnat = list_next_dnat.order_by('dnat_position')[0]
+            next_dnat = list_next_dnat.order_by('db_position')[0]
             prerouting_position = next_dnat.prerouting_position - 1
             position_insert = next_dnat.rule_number
         rule_number, _ = create_dnat_rule_in_system(
@@ -328,68 +328,9 @@ def change_dnat_position(request, id):
         data = request.data
         new_position = data["new_position"]
         dnat = DNat.objects.get(id=id)
-        previous_position = dnat.dnat_position
-        
-        # Up or down the rule position
-        up_position = True
-        # Inputs for changing position of the rule to UP
-        # Get list of DNAT between previous and new position (DESC order).
-        list_dnat_in_interval = DNat.objects.filter(dnat_position__gte=new_position, 
-                                                    dnat_position__lt=dnat.dnat_position).order_by("-dnat_position")
-        # Get list of activated DNAT between previous and new position.
-        list_active_dnat_in_interval = DNat.objects.filter(rule_status=True, dnat_position__gte=new_position,
-                                                           dnat_position__lt=dnat.dnat_position)
-        # Position offset
-        position_offset = 1
-        
-        if new_position > previous_position:
-            # Inputs for changing position of the rule to DOWN
-            up_position = False
-            # Get list of DNAT between previous and new position (ASC order).
-            list_dnat_in_interval = DNat.objects.filter(dnat_position__gt=dnat.dnat_position, 
-                                                        dnat_position__lte=new_position).order_by("dnat_position")
-            # Get list of activated DNAT between previous and new position.
-            list_active_dnat_in_interval = DNat.objects.filter(rule_status=True, dnat_position__gt=dnat.dnat_position,
-                                                               dnat_position__lte=new_position)
-            # Position offset
-            position_offset = -1
-        
-        # Change position in system if the rule is activated and there is at least one activated rule in this interval
-        if dnat.rule_status and len(list_active_dnat_in_interval) > 0:
-
-            source, destination = input_create_dnat(dnat)
-            
-            if up_position:
-                next_dnat = list_active_dnat_in_interval.order_by("dnat_position")[0]
-                delete_dnat_rule_in_system(dnat.rule_number)
-                rule_number, _ = create_dnat_rule_in_system(
-                    dnat.interface.ifname, source, destination, dnat.protocol, next_dnat.rule_number, 
-                    next_dnat.prerouting_position-1)
-            else:
-                list_next_dnat = DNat.objects.filter(rule_status=True, dnat_position__gt=new_position)
-                if len(list_next_dnat) > 0:
-                    next_dnat = list_next_dnat.order_by("dnat_position")[0]
-                    delete_dnat_rule_in_system(dnat.rule_number)
-                    rule_number, _ = create_dnat_rule_in_system(
-                        dnat.interface.ifname, source, destination, dnat.protocol, next_dnat.rule_number, 
-                        next_dnat.prerouting_position-2)
-                else:
-                    new_position_in_system = len(DNat.objects.filter(rule_status=True)) - 1
-                    delete_dnat_rule_in_system(dnat.rule_number)
-                    rule_number, _ = create_dnat_rule_in_system(
-                        dnat.interface.ifname, source, destination, dnat.protocol, -1, 
-                        new_position_in_system)
-            dnat.rule_number = int(rule_number)
-            dnat.save()
-        
-        # Update dnat_position
-        dnat.dnat_position = None
-        dnat.save()
-        for dnat_rule in list_dnat_in_interval:
-            dnat_rule.dnat_position += position_offset
-            dnat_rule.save()
-        dnat.dnat_position = new_position
-        dnat.save()
+        change_rule_dnat_position_in_system(dnat, new_position)
+        rules_result = change_position_rule(dnat.pk, new_position, DNat, "db_position")
+        save_rules_positions(rules_result, DNat)
         
         return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
         

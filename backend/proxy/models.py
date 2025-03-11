@@ -10,7 +10,7 @@ class ServerSatus(models.Model):
         db_table = 'squid_conf'
         
 class ProxyRules(models.Model):
-    rule_name = models.CharField(max_length=200, null=True)
+    rule_name = models.CharField(max_length=200, unique=True, null=True)
     type = models.CharField(max_length=20, null = False)
     value = models.CharField(max_length=200, null=True, unique=True)
     status = models.BooleanField(default=False)

@@ -256,7 +256,7 @@ export default {
     const overlayTemplate = ref("");
     const gridOptions = ref({
       pagination: true,
-      paginationPageSize: 9,
+      paginationPageSize: 25,
       rowSelection: "single",
     });
 

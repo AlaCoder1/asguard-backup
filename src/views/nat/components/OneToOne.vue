@@ -60,7 +60,7 @@
               :localeText="paginationLocalization"
             />
           </div>
-          <div class="d-flex justify-end mt-3">
+          <div class="d-flex justify-end mt-3 mb-14">
             <VButton
               rounded
               outlined
@@ -156,8 +156,8 @@ export default {
     });
 
     const gridOptions = ref({
-      pagination: true,
-      paginationPageSize: 5,
+      // pagination: true,
+      // paginationPageSize: 5,
       rowSelection: "single",
     });
     const interface_row = computed(() => {
@@ -207,7 +207,7 @@ export default {
         field: "translation_address",
         autoHeight: true,
         width: 90,
-        minWidth: 50,
+        minWidth: 210,
         flex: 1,
       },
       {
@@ -215,7 +215,7 @@ export default {
         field: "destination_address",
         autoHeight: true,
         width: 90,
-        minWidth: 50,
+        minWidth: 210,
         flex: 1,
       },
       {

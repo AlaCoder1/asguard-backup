@@ -18,7 +18,7 @@ class SNat(models.Model):
     translation_port = models.CharField(max_length=20, default=None, null=True, blank=True)
     description = models.CharField(max_length=1000, default=None, null=True, blank=True)
     postrouting_position = models.IntegerField(default=None, null=True, unique=True) # Rule in system in chain postrouting
-    snat_position = models.IntegerField(default=None, null=True, unique=True) # Rule in database in snat table
+    db_position = models.IntegerField(default=None, null=True, unique=True) # Rule in database in snat table
     rule_number = models.IntegerField(default=None, null=True)
     rule_status = models.BooleanField(default=True, null=True)
     rule_content = models.CharField(max_length=1000, default=None, null=True, blank=True, unique=True, verbose_name=_("Content"))
@@ -34,7 +34,7 @@ class OneToOneNat(models.Model):
     destination_address = models.CharField(max_length=100, default=None, null=True, blank=True)
     description = models.CharField(max_length=1000, default=None, null=True, blank=True)
     postrouting_position = models.IntegerField(default=None, null=True, unique=True) # Rule in system in chain postrouting
-    one_to_one_nat_position = models.IntegerField(default=None, null=True, unique=True) # Rule in database in One To One Nat table
+    db_position = models.IntegerField(default=None, null=True, unique=True) # Rule in database in One To One Nat table
     rule_number = models.IntegerField(default=None, null=True)
     rule_status = models.BooleanField(default=True, null=True)
     rule_content = models.CharField(max_length=1000, default=None, null=True, blank=True, unique=True, verbose_name=_("Content"))
@@ -57,7 +57,7 @@ class DNat(models.Model):
     destination_port = models.CharField(max_length=20, default=None, null=True, blank=True)
     description = models.CharField(max_length=1000, default=None, null=True, blank=True)
     prerouting_position = models.IntegerField(default=None, null=True, unique=True) # Rule in system in chain prerouting
-    dnat_position = models.IntegerField(default=None, null=True, unique=True) # Rule in database in dNat table
+    db_position = models.IntegerField(default=None, null=True, unique=True) # Rule in database in dNat table
     rule_number = models.IntegerField(default=None, null=True)
     rule_status = models.BooleanField(default=True, null=True)
     rule_content = models.CharField(max_length=1000, default=None, null=True, blank=True, unique=True, verbose_name=_("Content"))

@@ -3,20 +3,11 @@
     <!-- <v-dialog v-model="isOpen" persistent width="600">
        -->
     <v-overlay v-model="state.loading">
-      <v-dialog
-        v-model="state.isLoadingDialogue"
-        :scrim="false"
-        persistent
-        width="auto"
-      >
+      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear
-              indeterminate
-              color="white"
-              class="mb-0"
-            ></v-progress-linear>
+            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -25,12 +16,10 @@
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title>
-            <span class="text-h5"
-              >{{
-                mode === "create" ? $t("modal.create") : $t("modal.update")
-              }}
-              {{ $t("agGrid.user") }}</span
-            >
+            <span class="text-h5">{{
+              mode === "create" ? $t("modal.create") : $t("modal.update")
+            }}
+              {{ $t("agGrid.user") }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -38,151 +27,81 @@
                 <!-- User Modal -->
 
                 <v-col cols="12" class="mb-n5">
-                  <v-text-field
-                    :label="`${$t('form.username')} *`"
-                    v-model="state.formData.username"
-                  ></v-text-field>
-                  <span
-                    class="error-feedback"
-                    v-if="v$.formData.username.$error"
-                    >{{ v$.formData.username.$errors[0].$message }}</span
-                  >
+                  <v-text-field :label="`${$t('form.username')} *`" v-model="state.formData.username"></v-text-field>
+                  <span class="error-feedback" v-if="v$.formData.username.$error">{{
+                    v$.formData.username.$errors[0].$message }}</span>
                 </v-col>
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
-                  <v-text-field
-                    :label="`${$t('form.password')} *`"
-                    type="password"
-                    v-model="state.formData.password"
-                  ></v-text-field>
-                  <span
-                    class="error-feedback"
-                    v-if="v$.formData.password.$error"
-                    >{{ v$.formData.password.$errors[0].$message }}</span
-                  >
+                  <v-text-field :label="`${$t('form.password')} *`" type="password"
+                    v-model="state.formData.password"></v-text-field>
+                  <span class="error-feedback" v-if="v$.formData.password.$error">{{
+                    v$.formData.password.$errors[0].$message }}</span>
                 </v-col>
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
-                  <v-text-field
-                    :label="`${$t('form.confirmPassword')} *`"
-                    type="password"
-                    v-model="state.formData.confirm_password"
-                  ></v-text-field>
-                  <span
-                    class="error-feedback"
-                    v-if="v$.formData.confirm_password.$error"
-                    >{{
-                      v$.formData.confirm_password.$errors[0].$message
-                    }}</span
-                  >
+                  <v-text-field :label="`${$t('form.confirmPassword')} *`" type="password"
+                    v-model="state.formData.confirm_password"></v-text-field>
+                  <span class="error-feedback" v-if="v$.formData.confirm_password.$error">{{
+                    v$.formData.confirm_password.$errors[0].$message
+                  }}</span>
                 </v-col>
 
                 <v-col cols="12" class="mb-n5">
-                  <v-text-field
-                    :label="`${$t('form.fullname')} *`"
-                    v-model="state.formData.fullname"
-                  ></v-text-field>
-                  <span
-                    class="error-feedback"
-                    v-if="v$.formData.fullname.$error"
-                    >{{ v$.formData.fullname.$errors[0].$message }}</span
-                  >
+                  <v-text-field :label="`${$t('form.fullname')} *`" v-model="state.formData.fullname"></v-text-field>
+                  <span class="error-feedback" v-if="v$.formData.fullname.$error">{{
+                    v$.formData.fullname.$errors[0].$message }}</span>
                 </v-col>
 
                 <v-col cols="12" class="mb-n5">
-                  <v-text-field
-                    :label="`${$t('form.emailForLdapAuth')} *`"
-                    v-model="state.formData.email"
-                  ></v-text-field>
-                  <span
-                    class="error-feedback"
-                    v-if="v$.formData.email.$error"
-                    >{{ v$.formData.email.$errors[0].$message }}</span
-                  >
+                  <v-text-field :label="`${$t('form.emailForLdapAuth')} *`"
+                    v-model="state.formData.email"></v-text-field>
+                  <span class="error-feedback" v-if="v$.formData.email.$error">{{ v$.formData.email.$errors[0].$message
+                    }}</span>
                 </v-col>
 
                 <v-col cols="12" class="mt-5">
                   <label for="Activate" class="mr-3">{{
                     $t("ldap.ActivateLdap")
-                  }}</label>
-                  <input
-                    type="checkbox"
-                    id="Activate"
-                    v-model="state.formData.activateStatus"
-                  />
+                    }}</label>
+                  <input type="checkbox" id="Activate" v-model="state.formData.activateStatus" />
                 </v-col>
                 <template v-if="state.formData.activateStatus">
                   <v-col cols="12" class="mb-n5">
-                    <v-select
-                      v-model="state.formData.dnValue"
-                      :label="`${$t('form.server')} *`"
-                      item-title="name"
-                      item-value="id"
-                      return-object
-                      :items="state.formData.mapedServer"
-                    ></v-select>
-                    <span
-                      class="error-feedback"
-                      v-if="v$.formData.dnValue.$error"
-                      >{{ v$.formData.dnValue.$errors[0].$message }}</span
-                    >
+                    <v-select v-model="state.formData.dnValue" :label="`${$t('form.server')} *`" item-title="name"
+                      item-value="id" return-object :items="state.formData.mapedServer"></v-select>
+                    <span class="error-feedback" v-if="v$.formData.dnValue.$error">{{
+                      v$.formData.dnValue.$errors[0].$message }}</span>
                   </v-col>
                   <v-col cols="12" class="mb-n5">
-                    <v-text-field
-                      :label="`${$t('form.password')} *`"
-                      v-model="state.formData.passwordDN"
-                      :append-inner-icon="
-                        state.show1 ? 'mdi-eye' : 'mdi-eye-off'
-                      "
-                      prepend-inner-icon="mdi-lock-outline"
-                      :type="state.show1 ? 'text' : 'password'"
-                      @click:append-inner="state.show1 = !state.show1"
-                    ></v-text-field>
-                    <span
-                      class="error-feedback"
-                      v-if="v$.formData.passwordDN.$error"
-                      >{{ v$.formData.passwordDN.$errors[0].$message }}</span
-                    >
+                    <v-text-field :label="`${$t('form.password')} *`" v-model="state.formData.passwordDN"
+                      :append-inner-icon="state.show1 ? 'mdi-eye' : 'mdi-eye-off'
+                        " prepend-inner-icon="mdi-lock-outline" :type="state.show1 ? 'text' : 'password'"
+                      @click:append-inner="state.show1 = !state.show1"></v-text-field>
+                    <span class="error-feedback" v-if="v$.formData.passwordDN.$error">{{
+                      v$.formData.passwordDN.$errors[0].$message }}</span>
                   </v-col>
                 </template>
 
                 <v-col cols="12" class="mb-n5">
-                  <v-autocomplete
-                    :label="`${$t('form.roleUser')} *`"
-                    v-model="state.formData.role"
-                    item-title="name"
-                    item-value="id"
-                    :items="state.userRoles"
-                    return-object
-                  ></v-autocomplete>
+                  <v-autocomplete :label="`${$t('form.roleUser')} *`" v-model="state.formData.role" item-title="name"
+                    item-value="id" :items="state.userRoles" return-object></v-autocomplete>
                   <span class="error-feedback" v-if="v$.formData.role.$error">{{
                     v$.formData.role.$errors[0].$message
-                  }}</span>
+                    }}</span>
                 </v-col>
 
                 <v-col cols="12" class="mb-n5">
-                  <v-autocomplete
-                    v-model="state.formData.groups"
-                    :items="groups"
-                    :label="$t('form.assignToGroup')"
-                    multiple
-                    item-title="groupname"
-                    item-value="id"
-                    clearable
-                    @change="handleGroupChange"
-                    return-object
-                  ></v-autocomplete>
+                  <v-autocomplete v-model="state.formData.groups" :items="groups" :label="$t('form.assignToGroup')"
+                    multiple item-title="groupname" item-value="id" clearable @change="handleGroupChange"
+                    return-object></v-autocomplete>
                 </v-col>
 
                 <v-col cols="12" class="mt-5">
                   <label for="Deactivate User" class="mr-3">{{
                     $t("form.desactivateUser")
-                  }}</label>
-                  <input
-                    type="checkbox"
-                    id="Deactivate User"
-                    v-model="state.formData.deactivateUser"
-                  />
+                    }}</label>
+                  <input type="checkbox" id="Deactivate User" v-model="state.formData.deactivateUser" />
                 </v-col>
                 <!-- User Modal -->
               </v-row>
@@ -193,41 +112,25 @@
             <div class="text-start ml-6 mt-3">
               <span class="text-sm">
                 <span class="text-red text-lg">*</span>
-                {{ $t("errors.oblig") }}</span
-              >
+                {{ $t("errors.oblig") }}</span>
             </div>
             <v-spacer></v-spacer>
 
-            <v-btn
-              color="asguard_primary_light"
-              :rounded="true"
-              @click="closeModal"
-              class="mt-3 btn-add"
-            >
+            <v-btn color="asguard_primary_light" :rounded="true" @click="closeModal" class="mt-3 btn-add">
               <span class="pr-3 pl-3 text-white" style="color: #213e9f">{{
                 $t("buttons.close")
-              }}</span>
+                }}</span>
             </v-btn>
-            <v-btn
-              type="submit"
-              color="asguard_primary_light"
-              :rounded="true"
-              class="mt-3 btn-add"
-            >
+            <v-btn type="submit" color="asguard_primary_light" :rounded="true" class="mt-3 btn-add">
               <span class="text-white pr-3 pl-3">{{
                 mode === "create" ? $t("buttons.create") : $t("buttons.update")
-              }}</span>
+                }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="snackbar"
-      location="bottom right"
-      :color="color"
-    >
+    <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
       {{ textAlert }}
     </v-snackbar>
   </v-row>
@@ -497,17 +400,24 @@ export default {
     },
 
     closeModal() {
+      this.v$.$reset();
+      this.resetForm();
       this.$emit("closeModal");
     },
     resetForm() {
-      (this.state.formData.username = ""),
-        (this.state.formData.password = ""),
-        (this.state.formData.fullname = ""),
-        (this.state.formData.email = ""),
-        (this.state.formData.role = null),
-        (this.state.formData.groups = null),
-        (this.state.formData.deactivateUser = true);
+      this.state.formData.username = "";
+      this.state.formData.password = "";
+      this.state.formData.confirm_password = "";
+      this.state.formData.fullname = "";
+      this.state.formData.email = "";
+      this.state.formData.role = null;
+      this.state.formData.groups = null;
+      this.state.formData.deactivateUser = true;
+      this.state.formData.activateStatus = false,
+      this.state.formData.dnValue = "";
+      this.state.formData.passwordDN = "";
     },
+
     getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -660,6 +570,7 @@ export default {
   font-size: 0.85em;
   display: flex;
 }
+
 .scroller {
   overflow: auto;
 }

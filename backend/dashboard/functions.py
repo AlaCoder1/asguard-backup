@@ -86,7 +86,7 @@ def get_system_infomations():
     cpu_type=' '.join(cpu_type.strip().strip('\n').splitlines())
     ####### data to return
     # list_info_services=add_service_DB()
-    info_object=Services.objects.all()
+    info_object=Services.objects.all().exclude(service_name="strongswan")
     infoeDict = serializers.serialize("json", info_object)
     resRules = json.loads(infoeDict)
     list_info_services=[]

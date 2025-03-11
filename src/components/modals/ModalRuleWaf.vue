@@ -970,12 +970,56 @@ export default {
             (item) => item.type === rowData.type
           );
 
+          const indexValue = state.listActions.findIndex(item => item.type === rowData.type);
+
+          if (indexValue !== -1) {
+            state.listActions[indexValue].value = "";
+          }
+
           if (index !== -1) {
             rowDataWaf.value.splice(index, 1);
             if (gridApi.value) {
               gridApi.value.setRowData(rowDataWaf.value);
             }
+
+            const itemsToCheck = [
+              { type: "deny", value: "", slug: "deny" },
+              { type: "drop", value: "", slug: "drop" },
+              { type: "redirect", value: "", slug: "redirect" },
+              { type: "allow", value: "", slug: "allow" },
+              { type: "block", value: "", slug: "block" },
+            ];
+
+            const exists = itemsToCheck.some(item =>
+              state.actions.some(action =>
+                action.type === item.type &&
+                action.value === item.value &&
+                action.slug === item.slug
+              )
+            );
+
+            if (exists) {
+              state.listActions = state.listActions.filter(item => item.type !== 'chain');
+
+              const existsChainAction = state.actions.some(item =>
+                item.type === "chain"
+              );
+
+              if (existsChainAction) {
+                state.actions = state.actions.filter(item => item.type !== 'chain');
+              }
+            }
+            else {
+              const existsChain = state.listActions.some(item =>
+                item.type === "chain"
+              );
+
+              if (!existsChain) {
+                state.listActions.push({ type: "chain", value: "", slug: "chain" });
+              }
+            }
           }
+
           break;
         default:
           break;

@@ -1,10 +1,10 @@
 import subprocess
 
-from backend.network.validation import HostnameException, InvalidBooleanxception, InvalidIPAddressException, InvalidMacAddressException, InvalidNetmaskException, InvalidSetupIV4Exception, InvalidSpeedDuplexException, MSSException, MTUException, TimeoutException, validate_boolean, validate_dhcp_ipv4, validate_hostname, validate_ip_address, validate_mac_address, validate_mss, validate_mtu, validate_netmask, validate_setup_ipv4, validate_speed_duplex, validate_timeout
+from backend.network.validation import HostnameException, InvalidBooleanxception, InvalidIPAddressException, InvalidMacAddressException, InvalidNetmaskException, InvalidSetupIV4Exception, InvalidSpeedDuplexException, MSSException, MTUException, TimeoutException, validate_boolean, validate_dhcp_ipv4, validate_gw_address, validate_hostname, validate_ip_address, validate_mac_address, validate_mss, validate_mtu, validate_name_interface, validate_netmask, validate_setup_ipv4, validate_speed_duplex, validate_timeout
 from .models import *
 from django.conf import settings
 import time
-def validate_data_input(data):
+def validate_data_input(data,name_interface):
     try:
         setuptype_ip4 = data.get('setuptypeIP4')
         setuptype_ip6 = data.get('setuptypeIP6')
@@ -14,6 +14,7 @@ def validate_data_input(data):
         mssv =  None if data.get('mssv', None) == "" else data.get('mssv', None)
         speed_duplex =  None if data.get('speed_duplex', None) == "" else data.get('speed_duplex', None)
         addmac =  None if data.get('addmac', None) == "" else data.get('addmac', None)
+        validate_name_interface(name_interface)
         validate_mac_address(addmac)
         validate_speed_duplex(speed_duplex)
         validate_setup_ipv4(setuptype_ip4)
@@ -30,7 +31,8 @@ def validate_data_input(data):
                 gateway4 =  None if data['value_setup_Ipv4']['gateway4'].get('value', None) == "" else  data['value_setup_Ipv4']['gateway4'].get('value', None)
                 validate_ip_address(ip_address4)
                 validate_netmask(ip_address4,netmask4)
-                validate_ip_address(gateway4)
+                if gateway4.upper()!="AUTO DETECT":
+                    validate_gw_address(gateway4)
                 
             case "dhcp" :
                 type_dhcp4 = data.get('value_setup_Ipv4')['typeDHCP4']
@@ -39,9 +41,11 @@ def validate_data_input(data):
                 reject =  None if data['value_setup_Ipv4'].get('reject', None) == "" else  data['value_setup_Ipv4'].get('reject', None)
                 hostname =  None if data['value_setup_Ipv4'].get('hostname', None) == "" else  data['value_setup_Ipv4'].get('hostname', None)
                 validate_dhcp_ipv4(type_dhcp4)
-                validate_ip_address(alias_add)
-                validate_netmask(alias_add,alias_mask)
-                validate_dhcp_ipv4(reject)
+                if alias_add is not None :
+                    validate_ip_address(alias_add)
+                    validate_netmask(alias_add,alias_mask)
+                if reject is not None:
+                    validate_ip_address(reject)
                 validate_hostname(hostname)
                 if type_dhcp4.lower()=="advanced":
                     timeout =  None if data['value_setup_Ipv4'].get('timeout', None) == "" else  data['value_setup_Ipv4'].get('timeout', None)
@@ -89,7 +93,7 @@ def update_DB(id,data,model,IP4serializer):
         for field in objectConfig._meta.fields:
             if field.attname not in ["id", "interface_id",'ifname','created_at','updated_at','created_by','updated_by','request_only','prefix_hint','information_only','non_temporary','ipv4_connectivity','prefix_delegation']: 
                 setattr(objectConfig, field.attname, None)
-        setattr(objectConfig, 'updated_by', settings.CurrentUserId)
+        # setattr(objectConfig, 'updated_by', request.user.id)
         serializerIP4Config = IP4serializer(objectConfig,data=data)
     else:
         serializerIP4Config = IP4serializer(data=data)

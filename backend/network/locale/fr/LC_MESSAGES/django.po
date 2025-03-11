@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-17 13:28+0000\n"
+"POT-Creation-Date: 2025-03-10 11:36+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,30 +18,114 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/network/views.py:22
+#: validation.py:12
+msgid "Invalid IP address format"
+msgstr "Format d'adresse IP non valide"
+
+#: validation.py:20
+msgid "Invalid network mask format"
+msgstr "Format de masque réseau non valide"
+
+#: validation.py:26
+msgid "Invalid MAC address format"
+msgstr "Format d'adresse MAC non valide"
+
+#: validation.py:34
+msgid "Invalid speed/duplex configuration"
+msgstr "Configuration de vitesse/duplex non valide"
+
+#: validation.py:42
+msgid "Invalid setup ipv4 configuration"
+msgstr "Configuration IPv4 non valide"
+
+#: validation.py:49
+msgid "Invalid aux"
+msgstr "AUX invalide"
+
+#: validation.py:77
+msgid "Interface does not exist!"
+msgstr "L'interface n'existe pas !"
+
+#: validation.py:83
+msgid "Invalid MAC address format like this XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX"
+msgstr "Format d'adresse MAC non valide comme celui-ci XX:XX:XX:XX:XX:XX ou XX-XX-XX-XX-XX-XX"
+
+#: validation.py:91 validation.py:99
+msgid "Invalid IP address. Format like this x.x.x.x"
+msgstr "Adresse IP non valide. Format comme ceci x.x.x.x"
+
+#: validation.py:102
+msgid "Gateway address does not exist in the Gateway table"
+msgstr "L'adresse de la passerelle n'existe pas dans la table des passerelles"
+
+#: validation.py:116
+msgid "Invalid network mask: "
+msgstr "Masque réseau non valide :"
+
+#: validation.py:126
+msgid "Invalid speed/duplex configuration. Allowed values are: "
+msgstr "Configuration de vitesse/duplex non valide. Les valeurs autorisées sont :"
+
+#: validation.py:134
+msgid "Invalid setup ipv4 configuration. Allowed values are: "
+msgstr "Configuration IPv4 non valide. Les valeurs autorisées sont :"
+
+#: validation.py:141
+msgid "Invalid dhcp ipv4 configuration. Allowed values are: "
+msgstr "Configuration DHCP IPv4 non valide. Les valeurs autorisées sont : "
+
+#: validation.py:148
+msgid "Invalid boolean value: "
+msgstr "Valeur booléenne non valide : "
+
+#: validation.py:156
+msgid "MTU value is outside the allowed range  "
+msgstr "La valeur MTU est en dehors de la plage autorisée "
+
+#: validation.py:164
+msgid "MSS value is too small. Minimum MSS  is 576 bytes."
+msgstr "La valeur MSS est trop petite. La valeur MSS minimale est de 576 octets."
+
+#: validation.py:173
+msgid "Hostname exceeds the maximum length of 253 characters."
+msgstr "Le nom d'hôte dépasse la longueur maximale de 253 caractères."
+
+#: validation.py:179
+msgid "Hostname  is invalid. It must contain only letters, digits, or hyphens, and each label must start and end with a letter or digit."
+msgstr "Le nom d'hôte n'est pas valide. Il doit contenir uniquement des lettres, des chiffres ou des tirets, et chaque libellé doit commencer et se terminer par une lettre ou un chiffre."
+
+#: validation.py:187
+msgid "Timeout must be a number (integer or float)."
+msgstr "Le délai d'expiration doit être un nombre (entier ou flottant)."
+
+#: validation.py:190
+msgid "Timeout value is out of range. It must be between 1 and 300 seconds."
+msgstr "La valeur du délai d'attente est hors limites. Elle doit être comprise entre 1 et 300 secondes"
+
+#: views.py:22
 msgid "Interface"
 msgstr "Interface"
 
-#: backend/network/views.py:23
+#: views.py:23
 msgid "Connection"
 msgstr "Connexion"
 
-#: backend/network/views.py:26
+#: views.py:26
 msgid "is configured"
 msgstr "est configuré"
 
-#: backend/network/views.py:27
+#: views.py:27
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/network/views.py:31
+#: views.py:31
 msgid "does not active"
 msgstr "n'est pas active"
 
-#: backend/network/views.py:32
+#: views.py:32
 msgid "Failed to configure"
 msgstr "Échec de la configuration de l'"
 
-#: backend/network/views.py:33
+#: views.py:33
 msgid "Failed to delete"
 msgstr "Échec de la suppression de l'"

@@ -90,7 +90,7 @@ def get_host_configs():
 
 def get_services():
     list_services = []
-    services = Services.objects.all().exclude(service_name="strongswan")
+    services = Services.objects.all()
     services_dict = serializers.serialize("json", services)
     res = json.loads(services_dict)
     for i in range(0, len(res)):

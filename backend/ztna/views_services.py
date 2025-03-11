@@ -58,7 +58,7 @@ def get_all_services(request):
     """Getting all services from database"""
     try:
         if request.method == 'GET':
-            services = Services.objects.all().exclude(service_name="strongswan")
+            services = Services.objects.all()
             return JsonResponse(list(services.values()), safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)

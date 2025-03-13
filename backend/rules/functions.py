@@ -164,7 +164,8 @@ def get_handle_rule(ifname,type_rule,rule):
       rule_modif=rule_modif.replace("udp","17")
    ##cmd pour obtenir handle number pour supprimer rule 
    rule_modif=rule_modif.replace("port-unreachable","3")
-   rule=f"{rule_modif.strip()} log prefix {rule.split("log prefix")[1].strip()}"
+   if rule.find("log prefix")!=-1:
+      rule=f"{rule_modif.strip()} log prefix {rule.split("log prefix")[1].strip()}" 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
    output,_=run_command(cmd)
@@ -357,3 +358,4 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          status=400
          
       return msg,status
+

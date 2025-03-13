@@ -2,10 +2,9 @@ from django.db import models
 from backend.network.models import Interface
 from django.utils.translation import gettext_lazy as _
 
-
 ###Model inbound rule
 class Rule(models.Model):
-    rule = models.CharField(max_length=200, null=True, unique=False)
+    rule = models.CharField(max_length=10000, null=True, unique=False)
     rule_status = models.BooleanField(default=False)
     type_rule=models.CharField(max_length=200, null=True)
     policy=models.CharField(max_length=200, null=True)
@@ -18,6 +17,7 @@ class Rule(models.Model):
     interface = models.ForeignKey(Interface, on_delete=models.CASCADE, null=True)
     class Meta:
         db_table = 'rule'
-
     def __str__(self):
         return self.rule
+   
+    

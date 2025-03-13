@@ -95,7 +95,6 @@ def validate_gw_address(ip):
     """Validate gw IPv4 and IPv6 addresses and check if it exists in the Gateway table."""
     try:
         ipaddress.ip_address(ip)  
-        print(Gateway.objects.filter(gwaddress=ip).exists())
         if not Gateway.objects.filter(gwaddress=ip).exists():
             raise InvalidIPAddressException(_("Gateway address does not exist in the Gateway table"))
     except ValueError:

@@ -130,7 +130,7 @@
                   </p>
 
                   <v-text-field :label="`${$t('certificat.lifetime')} *`"
-                    v-model="state.formData.lifeTime"></v-text-field>
+                    v-model.number="state.formData.lifeTime"></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.formData.lifeTime.$error">
                     {{ v$.formData.lifeTime.$errors[0].$message }}
                   </p>

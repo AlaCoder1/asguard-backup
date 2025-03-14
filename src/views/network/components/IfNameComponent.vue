@@ -1413,7 +1413,7 @@ export default {
           return;
         }
         if (!this.isValidAddress) {
-          this.messageValidAddress = this.$t("champs.validAddress");
+          this.messageValidAddress = this.$t("errors.formatMustBeLikeAdresseIP");
           return;
         }
         let mappedGateways = this.allStaticGateways.map(

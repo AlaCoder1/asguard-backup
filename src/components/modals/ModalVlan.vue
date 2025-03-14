@@ -30,7 +30,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('typeInterface.VLANTag')"
+                    :label="`${$t('typeInterface.VLANTag')} *`"
                     v-model="state.vlanTag"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.vlanTag.$error">
@@ -348,6 +348,7 @@ export default {
     const rules = computed(() => {
       return {
         vlanTag: {
+          required: helpers.withMessage(error, required),
           isValidVlanTag: helpers.withMessage(
             champInclude,
             helpers.regex(/^[0-9]+$/)

@@ -66,7 +66,7 @@ def get_data_system():
     """ 
     Function to get system data
     """
-    cmd_redirect='sudo journalctl -k -g "___nftables_logs_rule" | grep -v "COMMAND=/usr/bin/journalctl" >> /var/log/nftables/nftables.log'
+    cmd_redirect='sudo journalctl -f -g "___nftables_logs_rule" | grep -v "COMMAND=/usr/bin/journalctl" >> /var/log/nftables/nftables.log'
     output, error = run_command(cmd_redirect)
     if error:
         return error

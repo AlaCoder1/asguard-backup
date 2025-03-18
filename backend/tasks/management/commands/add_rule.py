@@ -42,12 +42,17 @@ class Command(BaseCommand):
             interface_id = Interface.objects.get(ifname=interface)
             return_init_file_nftables = init_file_nftables(interface)
             if return_init_file_nftables:
-                rule=return_rule(interface,policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
                 saddr_db=calculate_subnet_address(source_address)
                 daddr_db=calculate_subnet_address(destination_address)
-                rule_db=return_rule(interface,policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
+                rule=return_rule(interface,policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
+                prefix="___nftables_logs_rule___"+"_".join(rule.split(" "))+"___"
+                prefix=prefix.replace('"', '')
+                rule_mod=" ".join(rule.split(" ")[:-1])
+                policy=rule.split(" ")[-1]
+                rule=f'{rule_mod} log prefix "{prefix}" {policy}'
+                
                 if not Rule.objects.filter(
-                    Q(rule=rule_db) & (
+                    Q(rule=rule) & (
                         (Q(interface_id=interface_id.id) ) &
                         (Q(type_rule=type_rule))
                     )
@@ -55,7 +60,7 @@ class Command(BaseCommand):
                     return_add_rule=add_rule_remote(rule,interface,type_rule)
                     if return_add_rule is True:
                         try:
-                            rule = Rule.objects.create(rule=rule_db, rule_status=True, type_rule=type_rule, policy=policy, rule_description=description, protocol=protocol, saddr=source_address, sport=source_port, daddr=destination_address, dport=destination_port, interface=interface_id)
+                            rule = Rule.objects.create(rule=rule, rule_status=True, type_rule=type_rule, policy=policy, rule_description=description, protocol=protocol, saddr=source_address, sport=source_port, daddr=destination_address, dport=destination_port, interface=interface_id)
                             return "rule added succesffuly"
                         except IntegrityError as e:
                             print("Error occurred:", e)

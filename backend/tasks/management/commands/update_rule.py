@@ -34,7 +34,12 @@ class Command(BaseCommand):
             description = options.get('description')
             description = description.replace("-"," ")
             rule = rule.replace("-"," ")
-            rule = rule.replace(interface,'"'+interface+'"')
+            if rule.find("log prefix")!=-1:
+                rule_mod=rule.split("log prefix")[0]
+                rule_mod=rule_mod.replace(interface,'"'+interface+'"')
+                rule=rule_mod.strip()+" log prefix "+ rule.split("log prefix")[1].strip()
+            else:
+                rule = rule.replace(interface,'"'+interface+'"')
             if source_address.lower() == 'all':
                 source_address = None
             if destination_address.lower() == 'all':
@@ -54,19 +59,24 @@ class Command(BaseCommand):
             # print({"interface":interface})
             # print({"description":description})
             interface_id = Interface.objects.get(ifname=interface)
-            ruleupdate=return_rule(interface,policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
+            saddr_db=calculate_subnet_address(source_address)
+            daddr_db=calculate_subnet_address(destination_address)
+            ruleupdate=return_rule(interface,policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
+            prefix="___nftables_logs_rule___"+"_".join(ruleupdate.split(" "))+"___"
+            prefix=prefix.replace('"', '')
+            rule_mod=" ".join(ruleupdate.split(" ")[:-1])
+            policy=ruleupdate.split(" ")[-1]
+            ruleupdate=f'{rule_mod} log prefix "{prefix}" {policy}'
+            print({"rule":rule})
             handle=get_handle_rule(interface,type_rule,rule)
             if handle is not None:
                 return_delete_rule_remote=delete_rule_remote(interface,type_rule,handle)
                 if return_delete_rule_remote is True:
                     return_add_rule=add_rule_remote(ruleupdate,interface,type_rule)
                     if  return_add_rule is True:
-                        saddr_db=calculate_subnet_address(source_address)
-                        daddr_db=calculate_subnet_address(destination_address)
-                        rule_db_update=return_rule(interface,policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
                         try:
                             rule = Rule.objects.get(rule=rule)
-                            rule.rule = rule_db_update
+                            rule.rule = ruleupdate
                             rule.rule_status=True 
                             rule.policy=policy 
                             rule.rule_description=description 

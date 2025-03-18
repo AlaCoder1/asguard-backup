@@ -70,6 +70,7 @@
     "invalidPassword": "There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
     "passwordConfirmation": "Your password does not match",
     "ChampIncludeOnlyNumbers": "Champs can include only Numbers",
+    "ChampIncludeOnlyNumbersOrFloat": "Field can only include digits or decimal numbers",
     "ChampNoInclude": "Field cannot contain only numbers or spaces or the word 'test'",
     "formatMustBeLikeAdresseIP": "Format must be like adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format must be like: X.X.X.X/XX",
@@ -86,7 +87,12 @@
     "emptyValue": "has an empty value",
     "atLeastemptyValue": "At least one element has an empty Value",
     "noModif": "No Modif For this rule",
-    "invalidChar": "At least one element has an empty host or port, or contains invalid characters"
+    "invalidChar": "At least one element has an empty host or port, or contains invalid characters",
+    "validHostname": "Champ must meet the following conditions:\n- Be between 1 and 253 characters long.\n- Consist of labels separated by dots.\n- Each label must be between 1 and 63 characters long.\n- Contain only letters, digits, and hyphens (-).\n- Cannot start or end with a hyphen.",
+    "validAddmac":"Format Must be like XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX",
+    "validMTU":"MTU doit être entre 576 et 9000",
+    "validMSS":"MSSV must be greater than 576."
+  
   },
 
   "placeholder": {

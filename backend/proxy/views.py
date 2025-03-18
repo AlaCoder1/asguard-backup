@@ -502,10 +502,8 @@ def addRuleSquid(request):
                     server_satus.status_server = True
                     server_satus.save()
                     msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
-                    print({"msg":msg})
-                    return JsonResponse({"msg": "msg"}, status=200)
+                    return JsonResponse({"msg": msg}, status=200)
                 else:
-                    print({"errr":serializerProxyRules.errors})
                     return JsonResponse(serializerProxyRules.errors, status=400 )
             except Exception as e:
                 return JsonResponse({"error": e}, status=400)
@@ -514,10 +512,8 @@ def addRuleSquid(request):
             if (serializerProxyRules.is_valid()):
                 serializerProxyRules.save()
                 msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
-                print({"msgmsg":msg})
                 return JsonResponse({"msg": msg}, status=200)
             else:
-                print({"er":serializerProxyRules.errors})
                 return JsonResponse(serializerProxyRules.errors, status=400 )
 
 @swagger_auto_schema(

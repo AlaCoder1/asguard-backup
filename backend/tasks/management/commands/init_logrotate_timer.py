@@ -11,7 +11,7 @@ class Command(BaseCommand):
 Description=Daily rotation of log files 
 Documentation=man:logrotate(8) man:logrotate.conf(5) 
 [Timer] 
-OnCalendar=hourly 
+OnCalendar=*-*-* *:*:00 
 Persistent=true 
 [Install]
 WantedBy=timers.target 

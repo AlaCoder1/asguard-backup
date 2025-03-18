@@ -502,21 +502,17 @@ def addRuleSquid(request):
                     server_satus.status_server = True
                     server_satus.save()
                     msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
-                    status=200
-                    return JsonResponse({"msg": msg}, status=status)
+                    return JsonResponse({"msg": msg}, status=200)
                 else:
                     return JsonResponse(serializerProxyRules.errors, status=400 )
             except Exception as e:
-                msg = e
-                status=400
-                return JsonResponse({"msg": msg}, status=status)
+                return JsonResponse({"error": e}, status=400)
         else:
             serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
             if (serializerProxyRules.is_valid()):
                 serializerProxyRules.save()
                 msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
-                status=200
-                return JsonResponse({"msg": msg}, status=status)
+                return JsonResponse({"msg": msg}, status=200)
             else:
                 return JsonResponse(serializerProxyRules.errors, status=400 )
 

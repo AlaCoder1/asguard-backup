@@ -5,38 +5,20 @@
     <div style="height: 100%">
       <div style="display: flex; flex-direction: row; height: 100%">
         <div style="overflow: hidden; flex-grow: 1">
-          <ag-grid-vue
-            domLayout="autoHeight"
-            class="ag-theme-alpine mt-3 m-w-80"
-            :columnDefs="columnDefs"
-            :rowData="rowData"
-            :gridOptions="gridOptions"
-            @grid-ready="onGridReady"
-            :localeText="paginationLocalization"
-            :overlayNoRowsTemplate="overlayTemplate"
-          />
+          <ag-grid-vue domLayout="autoHeight" class="ag-theme-alpine mt-3 m-w-80" :columnDefs="columnDefs"
+            :rowData="rowData" :gridOptions="gridOptions" @grid-ready="onGridReady" :localeText="paginationLocalization"
+            :overlayNoRowsTemplate="overlayTemplate" />
         </div>
       </div>
     </div>
 
     <div class="d-flex justify-end mb-15">
-      <v-btn
-        color="asguard_primary_light"
-        :rounded="true"
-        class="mt-3 add-btn-group"
-        @click="openModal"
-      >
+      <v-btn color="asguard_primary_light" :rounded="true" class="mt-3 add-btn-group" @click="openModal">
         <span class="text-white">{{ $t("button.addGroup") }}</span>
       </v-btn>
     </div>
-    <Modal_Group
-      :editRow="rowEdit"
-      :mode="modalMode"
-      :isOpen="isModalOpen"
-      @closeModal="closeModal"
-      :initialData="modalData"
-      @updateModalData="handleModalUpdate"
-    />
+    <Modal_Group :editRow="rowEdit" :mode="modalMode" :isOpen="isModalOpen" :initialData="modalData"
+      @updateModalData="handleModalUpdate" />
     <v-dialog v-model="deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{
@@ -54,12 +36,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="snackbar"
-      location="bottom right"
-      :color="color"
-    >
+    <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
       {{ textAlert }}
     </v-snackbar>
   </div>
@@ -83,6 +60,7 @@ export default {
       required: true,
     },
   },
+  inject: ["emitter"],
   data() {
     return {
       textAlert: "",
@@ -134,6 +112,11 @@ export default {
       />
     </svg></span>`,
     };
+  },
+  mounted() {
+    this.emitter.on("closeGroupModal", () => {
+      this.isModalOpen = false;
+    });
   },
   computed: {
     testGroupe() {
@@ -213,10 +196,11 @@ export default {
       this.modalMode = "create"; // Assuming you want to open the modal in create mode
       this.isModalOpen = true;
     },
-    closeModal() {
-      this.isModalOpen = false;
-      location.reload();
-    },
+    // closeModal() {
+    //   this.isModalOpen = false;
+    //   console.log('close',this.isModalOpen)
+    //   // location.reload();
+    // },
 
     handleModalUpdate(formData) {
       console.log("formDataformDataformDataformData", formData);
@@ -231,7 +215,7 @@ export default {
         this.update(formData, () => {
           console.log(
             "old DataList :" +
-              JSON.stringify(this.DataList[this.selectedRowIndex])
+            JSON.stringify(this.DataList[this.selectedRowIndex])
           );
 
           this.$set(this.DataList, this.selectedRowIndex, {
@@ -483,7 +467,7 @@ export default {
           // Handle any errors that occur during the request
           console.error("Error fetching data:", error);
 
-          
+
         });
     },
     // Fetch APIs

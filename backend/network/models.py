@@ -40,10 +40,12 @@ class GenericConfig(models.Model):
     updated_by = models.IntegerField(null=True)
 
     def save(self, *args, **kwargs):
+        request = kwargs.pop('request', None)  # Extract request if passed
+        current_user = request.user if request and request.user.is_authenticated else None
         if not self.id:
             self.created_at = timezone.now()
-            self.created_by = settings.CurrentUserId
-            self.updated_by = settings.CurrentUserId
+            self.created_by = current_user
+            self.updated_by = current_user
         self.updated_at = timezone.now()
         super(GenericConfig, self).save(*args, **kwargs)
     class Meta:
@@ -88,10 +90,12 @@ class IP4Config(models.Model):
     updated_by = models.IntegerField(null=True)
     
     def save(self, *args, **kwargs):
+        request = kwargs.pop('request', None)  # Extract request if passed
+        current_user = request.user if request and request.user.is_authenticated else None
         if not self.id:
             self.created_at = timezone.now()
-            self.created_by = getattr(settings, 'CurrentUserId', None)
-            self.updated_by = getattr(settings, 'CurrentUserId', None)
+            self.created_by = current_user
+            self.updated_by = current_user
         self.updated_at = timezone.now()
         super(IP4Config, self).save(*args, **kwargs)
     class Meta:
@@ -155,10 +159,12 @@ class IP6Config(models.Model):
     updated_by = models.IntegerField(null=True)
     
     def save(self, *args, **kwargs):
+        request = kwargs.pop('request', None)  # Extract request if passed
+        current_user = request.user if request and request.user.is_authenticated else None
         if not self.id:
             self.created_at = timezone.now()
-            self.created_by = settings.CurrentUserId
-            self.updated_by = settings.CurrentUserId
+            self.created_by = current_user
+            self.updated_by = current_user
         self.updated_at = timezone.now()
         super(IP6Config, self).save(*args, **kwargs)
     class Meta:

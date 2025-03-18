@@ -9,3 +9,8 @@ class RuleSerializer(serializers.ModelSerializer):
                       'policy','protocol','saddr','sport',
                       'daddr','dport','interface'
                       ]
+            
+class FirewallLogsSerializer(serializers.ModelSerializer):
+    class Meta:
+            model = FirewallLog
+            fields ="__all__"

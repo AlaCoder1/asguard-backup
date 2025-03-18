@@ -130,13 +130,15 @@ def get_config_file(ifname):
 def add_rule_remote(rule,ifname,type_rule):
       """function to add rule"""
       ##initialiser les commanndes pour ajouter une règle et l'entregistrer 
+      
       commandes=[
-         "sudo nft add rule inet filter_{} {} {}".format(ifname,type_rule,rule),
+         'sudo nft add rule inet filter_{} {} {} '.format(ifname,type_rule,rule),
          "sudo nft list table inet filter_{} > /etc/rules/{}/nftables.conf".format(ifname,ifname)
          ]
       ###executer ces commandes
       for cmd in commandes:
          _,error=run_command(cmd)
+         # print({"cmd":cmd})
          if error!='': 
             return error
       return True
@@ -145,22 +147,25 @@ def add_rule_remote(rule,ifname,type_rule):
 def get_handle_rule(ifname,type_rule,rule):
    """function to get handle rule"""
    # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
-      
+   rule_modif=rule.split("log prefix")[0]   
+   # print(rule)
    if 'sport' not in rule and 'dport' not in rule:
-      if rule.find('ip protocol')!=-1 and rule.find("type")==-1 :
-         ip_protocol_index = rule.find('ip protocol')
-         reject_with_index = rule.find('reject with')
-         icmp_index = rule.find('icmp', ip_protocol_index)
+      if rule_modif.find('ip protocol')!=-1 and rule_modif.find("type")==-1 :
+         ip_protocol_index = rule_modif.find('ip protocol')
+         reject_with_index = rule_modif.find('reject with')
+         icmp_index = rule_modif.find('icmp', ip_protocol_index)
          if icmp_index != -1 and (reject_with_index == -1 or icmp_index < reject_with_index):
-            rule = rule[:icmp_index] + '1' + rule[icmp_index + len('icmp'):]
+            rule_modif = rule_modif[:icmp_index] + '1' + rule_modif[icmp_index + len('icmp'):]
          # rule = rule.replace("icmp", "1", 1)
-      rule=rule.replace("echo-request","8")
-      rule=rule.replace("echo-reply","0")
-      rule=rule.replace("tcp","6")
-      rule=rule.replace("udp","17")
+     
+      rule_modif=rule_modif.replace("echo-request","8")
+      rule_modif=rule_modif.replace("echo-reply","0")
+      rule_modif=rule_modif.replace("tcp","6")
+      rule_modif=rule_modif.replace("udp","17")
    ##cmd pour obtenir handle number pour supprimer rule 
-   rule=rule.replace("port-unreachable","3")
-   
+   rule_modif=rule_modif.replace("port-unreachable","3")
+   if rule.find("log prefix")!=-1:
+      rule=f"{rule_modif.strip()} log prefix {rule.split("log prefix")[1].strip()}" 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
    output,_=run_command(cmd)
@@ -227,6 +232,12 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
       daddr_db=calculate_subnet_address(daddr)
       #appel la fonction pour retourner rule à ajouter 
       rule=return_rule(ifname,policy,saddr_db,daddr_db,sport,dport,protocol,type_rule)
+      prefix="___nftables_logs_rule___"+"_".join(rule.split(" "))+"___"
+      prefix=prefix.replace('"', '')
+      rule_mod=" ".join(rule.split(" ")[:-1])
+      policy=rule.split(" ")[-1]
+      # print({"prefix":prefix,"rule_mod":rule_mod,"policy":policy})
+      rule=f'{rule_mod} log prefix "{prefix}" {policy}'
       # if not Rule.objects.filter(Q(rule=rule) & ((Q(interface_id=interface_object.pk)& Q(type_rule!=type_rule ) )|(Q(interface_id!=interface_object.pk) & Q(type_rule=type_rule )))).exists():
       if not Rule.objects.filter(
             Q(rule=rule) & (
@@ -246,7 +257,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
                'dport': dport,
                'protocol': protocol,
                'type_rule': type_rule,
-               'rule_description': rule_description
+               'rule_description': rule_description,
                }
             data['interface']=interface_object.id
             #appel la fonction pour ajouter rule dans la base de données 
@@ -259,13 +270,13 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
             if rule_serializer.is_valid():
                rule_instance=rule_serializer.save()
                id_rule=rule_instance.id
-   
                msg = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_CREATING}"
                status=200
             else:
                msg=customize_error_msg(rule_serializer)
                status=400
          else:
+            # print({"error rule ":return_add_rule})
             msg = f"{ERROR_MESSAGES_CREATING} {CONSTANT_RULE}"
             status=400
       else:
@@ -287,6 +298,12 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          daddr_db=calculate_subnet_address(daddr)
          #appel la fonction pour retourner rule à ajouter 
          ruleupdate=return_rule(ifname,policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
+         prefix="___nftables_logs_rule___"+"_".join(ruleupdate.split(" "))+"___"
+         prefix=prefix.replace('"', '')
+         rule_mod=" ".join(ruleupdate.split(" ")[:-1])
+         policy=ruleupdate.split(" ")[-1]
+         # print({"prefix":prefix,"rule_mod":rule_mod,"policy":policy})
+         ruleupdate=f'{rule_mod} log prefix "{prefix}" {policy}'
          handle=get_handle_rule(ifname,type_rules,rule)
          if handle is not None: 
                return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
@@ -341,3 +358,4 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          status=400
          
       return msg,status
+

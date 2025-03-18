@@ -17,7 +17,7 @@ class Command(BaseCommand):
             {"service":"Squid","path":"/var/log/squid/access.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/squid_access"},
             {"service":"Squid","path":"/var/log/squid/store.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/squid_store"},
             {"service":"ZTNA","path":"/root/.ziti/quickstart/Asguard/Asguard.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/ztna"},
-                
+            {"service":"Firewall","path":"/var/log/nftables/nftables.log","time":"","size":"10M","number":60,"file":"/etc/logrotate.d/nftables"},   
             ]
             for rotation in list_rotation:
                 service=rotation['service']

@@ -76,3 +76,6 @@ python manage.py init_logs
 python manage.py init_logrotate_script 
 python manage.py init_logrotate 
 python manage.py init_logrotate_timer
+
+### init cron for logs firewall
+python manage.py init_cron_log_firewall

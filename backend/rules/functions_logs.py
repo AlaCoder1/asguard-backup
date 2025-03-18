@@ -66,12 +66,12 @@ def get_data_system():
     """ 
     Function to get system data
     """
-    cmd_redirect='sudo journalctl -k -g "___nftables_logs_rule">> /var/log/nftables.log'
+    cmd_redirect='sudo journalctl -k -g "___nftables_logs_rule">> /var/log/nftables/nftables.log'
     output, error = run_command(cmd_redirect)
     if error:
         return error
     else:
-        cmd="sudo cat /var/log/nftables.log"
+        cmd="sudo cat /var/log/nftables/nftables.log"
         output, error = run_command(cmd)
         if error:
             return error
@@ -81,7 +81,7 @@ def get_data_system():
                 # print(data)
                 if data:
                     data_csv={
-                        "log":line,
+                        "log":line.strip(),
                         "timestamp":data['timestamp'],
                         "rule": data['rule'],
                         "interfaces":data["IN"],
@@ -107,14 +107,19 @@ def get_data_system():
 
 def save_logs_db(data_csv):
     """function to save data in database"""
+    all_log_db = FirewallLog.objects.all().values('log')
+    for x in all_log_db:
+        if x['log'].strip() not in data_csv:
+            FirewallLog.objects.filter(log=x['log'].strip()).delete()
+            # print("logs deleted ====>",x['log'])
     for data in data_csv:
         if not FirewallLog.objects.filter(log=data['log'].strip()).exists():
             logs_serializer=FirewallLogsSerializer(data=data)
             if logs_serializer.is_valid():
                 logs_serializer.save()
-                print("logs added ===>",data)
+                # print("logs added ===>",data)
             else:
                 print (logs_serializer.errors)
-        else:
-            print("log exist=============>",data['log'])
+        # else:
+        #     print("log exist=============>",data['log'])
     return True

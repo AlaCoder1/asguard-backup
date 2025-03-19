@@ -22,6 +22,7 @@ from backend.managementLogs import consumers_logs
 from backend.openvpn import consumers_logs_vpn
 from backend.openvpn_monitoring import consumers_openvpn
 from backend.proxy import consumers_logs_access, consumers_logs_cache, consumers_logs_store
+from backend.rules import consumers_firewall
 from backend.ztna import consumers_logs_controller, consumers_logs_ztna
 from views.views import *
 from django.conf.urls import handler404
@@ -125,6 +126,8 @@ websocket_urlpatterns = [
       path('ws/logs_squid_store/',consumers_logs_store.LogsStoreConsumer.as_asgi()),
       path('ws/logs_ztna_controller/',consumers_logs_controller.LogsControllerConsumer.as_asgi()),
       path('ws/logs_ztna_router/',consumers_logs_ztna.LogsZTNAConsumer.as_asgi()),
+      path('ws/firewall_log/',consumers_firewall.FirewallConsumer.as_asgi()),
+      
       
       
       

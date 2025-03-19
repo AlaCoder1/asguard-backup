@@ -14,6 +14,7 @@
     "LoginTime": "Temps de connexion",
     "resetPassword": "Réinitialisation du mot de passe"
   },
+  "other":"Autres",
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",
     "send": "Nous avons envoyé un code de vérification à",
@@ -351,7 +352,7 @@
     "parentInterface": "Interface parent",
     "VLANTag": "Tag VLAN",
     "VlanPriority": "Priorité Vlan",
-    "assingInterface": "Interface Assing",
+    "assingInterface": "Interface d’assignation",
     "networkPort": "Port réseau",
     "createNewInterface": "Créer une nouvelle",
     "newInterface": "Nouvelle interface",

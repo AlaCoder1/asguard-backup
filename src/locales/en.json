@@ -14,6 +14,7 @@
     "LoginTime": "Login Time",
     "resetPassword": "Reset Password"
   },
+  "other":"Others",
   "login": {
     "verifyYourAccount": "Verify Your Account",
     "send": "We sent a verification code to",
@@ -354,7 +355,7 @@
     "parentInterface": "Parent Interface",
     "VLANTag": "VLAN Tag",
     "VlanPriority": "Vlan priority",
-    "assingInterface": "Assing Interface",
+    "assingInterface": "Interface Assing",
     "networkPort": "Network port",
     "createNewInterface": "Create new",
     "newInterface": "New interface",

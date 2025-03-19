@@ -822,7 +822,7 @@ def server_dhcp4_page(request):
 
 @login_required(login_url='/')
 def logrotate_page(request):
-    list_service={"WAF":[],"OpenVPN":[],"IDS/IPS":[],"Squid":[]}
+    list_service={"WAF":[],"OpenVPN":[],"IDS/IPS":[],"Squid":[],"Firewall":[]}
     for service in list_service.keys():
         list_logrotate=get_logrotate_data(request,service)
         list_service[service]=list_logrotate

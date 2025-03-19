@@ -6,7 +6,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         try:
            
-            cron="*/5 * * * * /usr/bin/journalctl --vacuum-time=3d; /usr/bin/python3 /asguard/asguard/manage.py save_logs_firewall > /var/log/nftables/cron_nftables.log 2>&1"
+            cron="*/5 * * * * /usr/bin/python /asguard/asguard/manage.py save_logs_firewall > /var/log/nftables/cron_nftables.log 2>&1"
             try:
                 existing_crontab = subprocess.run(["crontab", "-l"], capture_output=True, text=True, check=True)
                 cron_jobs = existing_crontab.stdout.strip().split("\n")

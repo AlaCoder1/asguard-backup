@@ -44,8 +44,8 @@
                 >
 
                 <v-list-item-title
-                  class="float-right justify-end mr-5"
-                  style="margin-top: 15px"
+                  class="float-right  mr-5"
+                  style="margin-top: 13px"
                   v-if="item.subItems.length > 0"
                 >
                   <v-icon v-if="item.subMenuVisible"

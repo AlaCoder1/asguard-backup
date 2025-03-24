@@ -407,7 +407,7 @@ export default defineComponent({
         headerName: description,
         sortable: true,
         width: 90,
-        minWidth: 150,
+        minWidth: 250,
         flex: 1,
       },
       {
@@ -453,7 +453,7 @@ export default defineComponent({
         cellRenderer: formatedLineDaddr,
         autoHeight: true,
         width: 90,
-        minWidth: 150,
+        minWidth: 200,
         flex: 1,
       },
       {
@@ -462,7 +462,7 @@ export default defineComponent({
         cellRenderer: formatedLineDport,
         autoHeight: true,
         width: 90,
-        minWidth: 150,
+        minWidth: 200,
         flex: 1,
       },
       {

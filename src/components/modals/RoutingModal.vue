@@ -28,7 +28,7 @@
                   </p>
                 </v-col>
 
-                <template v-if="state.gateway?.name && state.gateway?.name !== 'Other'">
+                <template v-if="state.gateway?.name && state.gateway?.id !== 0">
                   <v-col cols="12" class="mb-n6">
                     <v-select v-model="state.interfaceGateway" label="Interfaces *" item-title="name" item-value="id"
                       :items="state.listnterfacesGateway" return-object
@@ -38,7 +38,7 @@
                   </p> -->
                   </v-col>
                 </template>
-                <template v-if="state.gateway?.name === 'Other'">
+                <template v-if="state.gateway?.id === 0">
                   <v-col cols="12" class="mb-n6">
                     <v-text-field :label="`${$t('routing.gatewayAddress')} *`"
                       v-model="state.gatewayAddress"></v-text-field>
@@ -80,7 +80,7 @@
               @click="closeModal" class="mt-3 btn-add">
               <span class="text-white pr-3 pl-3">{{
                 $t("buttons.close")
-              }}</span>
+                }}</span>
             </v-btn>
 
             <v-btn large rounded outlined label-color="#213E9F" type="submit" color="indigo-darken-3" variant="flat"
@@ -147,9 +147,10 @@ export default {
         };
       });
 
-      let listGat = [{ id: 0, name: "Other" }];
+      let listGat = [{ id: 0, name: t("other") }];
       var combinedArray = [...gateway, ...listGat];
       state.listGateway = combinedArray;
+  
     });
 
     const getInterface = () => {
@@ -212,7 +213,7 @@ export default {
     watch(
       () => state.gateway,
       (val) => {
-        if (val.name != "Other") {
+        if (val.id != 0) {
           state.gatewayAddress = "";
           state.metric = "";
           state.interface = "";
@@ -283,7 +284,7 @@ export default {
       if (result) {
         let gateway = null;
 
-        if (state.gateway?.name === "Other") {
+        if (state.gateway?.id === 0) {
           gateway = {
             gateway_address: state.gatewayAddress,
             interface: state.interface.id,
@@ -295,7 +296,7 @@ export default {
 
         let payload = {
           destination_address: state.network,
-          gateway_create: state.gateway?.name === "Other" ? true : false,
+          gateway_create: state.gateway?.id === 0 ? true : false,
           gateway: gateway,
           description: state.description,
         };
@@ -402,7 +403,7 @@ export default {
         metric: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.gateway.name === "Other")
+            requiredIf(() => state.gateway.id === 0)
           ),
           isValid: helpers.withMessage(
             champNumberMax,
@@ -422,7 +423,7 @@ export default {
         gatewayAddress: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.gateway?.name === "Other")
+            requiredIf(() => state.gateway?.id === 0)
           ),
           isValidGateway: helpers.withMessage(
             end_address,
@@ -434,7 +435,7 @@ export default {
         interface: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.gateway?.name === "Other")
+            requiredIf(() => state.gateway?.id === 0)
           ),
         },
       };

@@ -53,12 +53,9 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Description *"
+                    label="Description"
                     v-model="state.description"
                   ></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.description.$error">
-                    {{ v$.description.$errors[0].$message }}
-                  </p>
                 </v-col>
               </v-row>
             </v-container>
@@ -360,9 +357,6 @@ export default {
         },
 
         interface: {
-          required: helpers.withMessage(error, required),
-        },
-        description: {
           required: helpers.withMessage(error, required),
         },
       };

@@ -334,8 +334,7 @@ def get_all_interfaces_firewall(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
-            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap","vlan")) and not res[i]['fields']['name_interface'].lower().startswith("vxlan") :
-                list_interface.append(res[i]['fields'])
+            list_interface.append(res[i]['fields'])
         return list_interface    
 
 

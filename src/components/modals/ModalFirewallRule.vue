@@ -26,16 +26,11 @@
             row-height="15"
             class="mt-3"
             v-model="state.formData.rule_description"
-            :label="`${$t('firewall.description')} *`"
+            :label="`${$t('firewall.description')}`"
             variant="outlined"
           ></v-textarea>
 
-          <p
-            class="error-feedback mb-5"
-            v-if="v$.formData.rule_description.$error"
-          >
-            {{ v$.formData.rule_description.$errors[0].$message }}
-          </p>
+         
           <v-select
             :items="protocolList"
             v-model="state.formData.protocol"
@@ -361,10 +356,6 @@ export default {
           protocol: {
             required: helpers.withMessage(error, required),
           },
-          rule_description: {
-            required: helpers.withMessage(error, required),
-          },
-
           sport: {
             requiredIfFuction: helpers.withMessage(
               error,

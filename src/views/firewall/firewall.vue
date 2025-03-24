@@ -139,11 +139,13 @@ export default {
       .replace(/None/g, "null");
     let parsedArray = JSON.parse(validJsonString);
 
-    let filtredInterface = parsedArray.filter(
-      (i) => !i.ifname.startsWith("vlan")
-    );
+    console.log('InterfacesFirewall : ', parsedArray)
 
-    this.interfaces = filtredInterface;
+    // let filtredInterface = parsedArray.filter(
+    //   (i) => !i.ifname.startsWith("vlan")
+    // );
+
+    this.interfaces = parsedArray;
 
     let tab = localStorage.getItem("firewall-tab");
     if (tab) {

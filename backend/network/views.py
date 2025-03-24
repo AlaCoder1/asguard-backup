@@ -258,7 +258,7 @@ def conf(request,name_interface):
                                     aux_gen=update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
                                     aux_inter=update_interface_table(name_interface,data,InterfaceSerializer)     
                                     if aux_ipv4 is True and  aux_ipv6 is True and aux_gen  is True and aux_inter is True and aux_gw_dhcp is True and aux_gw6_dhcp is True:
-                                        if setuptype_ip4.lower()=="static" and not ifname.lower().startswith("vlan") and not name_interface.lower().startswith("vxlan") :
+                                        if setuptype_ip4.lower()=="static":
                                             aux_server=create_dhcpv4_db(id_interface,json_ipv4["ip_address"],json_ipv4["netmask"])
                                         elif setuptype_ip4.lower()=="dhcp":
                                             aux_server=delete_dhcp4_server(id_interface,ifname)

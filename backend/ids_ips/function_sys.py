@@ -105,7 +105,7 @@ def update_config(status_enabled):
         aux_enable="enable"
     else:
         aux_enable="disable"
-    cron_job = "0 * * * * /usr/bin/sudo /usr/bin/suricata-update -q >> /var/log/suricata/logcron.log 2>&1"
+    cron_job = "0 * * * * /usr/bin/sudo /usr/bin/suricata-update -q > /var/log/suricata/logcron.log 2>&1"
     commands = [
     "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action),
     f'(sudo crontab -l 2>/dev/null; sudo echo "{cron_job}") | sudo crontab -',

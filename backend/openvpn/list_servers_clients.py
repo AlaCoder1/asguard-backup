@@ -17,13 +17,17 @@ def get_list_all_server_openvpn():
     server_dict = serializers.serialize("json",server)
     res = json.loads(server_dict)
     for serv in res:
-        certificate = Certificate.objects.get(name=serv['fields']['cert_name'])
         serv.pop('model')
         serv_id = serv['pk']
         serv.pop('pk')
         serv['fields']['id'] = serv_id
         serv['fields']['client_management_password'] = ''
-        serv['fields']['cert_status'] = certificate.activation
+        try:
+            certificate = Certificate.objects.get(name=serv['fields']['cert_name'])
+            cert_status = certificate.activation
+        except Certificate.DoesNotExist:
+            cert_status = False
+        serv['fields']['cert_status'] = cert_status
         # Add the TLS content of the server
         serv['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(serv["fields"]["name"]))
         list_server.append(serv['fields'])
@@ -54,14 +58,18 @@ def get_list_all_client_openvpn():
     client_dict = serializers.serialize("json",client)
     res = json.loads(client_dict)
     for cli in res:
-        certificate = Certificate.objects.get(name=cli['fields']['cert_name'])
         cli.pop('model')
         client_id = cli['pk']
         cli.pop('pk')
         cli['fields']['id'] = client_id
         cli['fields']['proxy_auth_password'] = ''
         cli['fields']['password'] = ''
-        cli['fields']['cert_status'] = certificate.activation
+        try:
+            certificate = Certificate.objects.get(name=cli['fields']['cert_name'])
+            cert_status = certificate.activation
+        except Certificate.DoesNotExist:
+            cert_status = False
+        cli['fields']['cert_status'] = cert_status
         cli['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(cli["fields"]["name"]))
         list_server_remote = list(cli['fields']['server_remote'].split(','))
         cli['fields']['server_remote'] = []

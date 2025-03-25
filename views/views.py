@@ -323,7 +323,7 @@ def get_all_interfaces_version2(request):
             if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")) :
                 list_interface.append(res[i]['fields'])
         return list_interface    
-def get_all_interfaces_firewall(request):
+def get_all_interfaces_suricata(request):
     list_interface = []
     if (request.method == 'GET'):
         interfaces = Interface.objects.all()
@@ -334,7 +334,8 @@ def get_all_interfaces_firewall(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
-            list_interface.append(res[i]['fields'])
+            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")) and not res[i]['fields']['name_interface'].lower().startswith(("vlan", "vxlan")) :
+                list_interface.append(res[i]['fields'])
         return list_interface    
 
 
@@ -539,7 +540,7 @@ def interface_page(request):
 @login_required(login_url='/')
 def firewall_page(request):
     rules=get_all_rules(request)
-    interfaces=get_all_interfaces_firewall(request)
+    interfaces=get_all_interfaces(request)
     last_subscription=list_features_about_last_subscription(request)
     context = {'rules':json.dumps(rules), 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'firewall_page.html',context)
@@ -715,7 +716,7 @@ def suricata(request):
 
     # rules_suricata=get_rules_from_database(request)
     # alerts_suricata=get_alerts_from_database(request)
-    interfaces=get_all_interfaces_firewall(request)
+    interfaces=get_all_interfaces_suricata(request)
     context={"general_config_suricata":general_config_suricata,"all_interfaces":interfaces, 'last_subscription':json.dumps(last_subscription)}
     return render(request, 'ids_ips.html',context)
 

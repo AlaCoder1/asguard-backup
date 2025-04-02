@@ -71,6 +71,10 @@ def get_compr_ratio():
         if (len(subnet_double))!=0:
             for s in subnet_double:
                 ruleset_compr+=[x for x in ruleset_list if is_address_in_subnet(x,s) and x not in ruleset_compr ]
-            ratio=round((len(ruleset_compr)/n)*100,2)
             n_comp=n-len(ruleset_compr)+len(subnet_double)
+            if n!=0:
+                ratio=round(((n-n_comp)/n)*100,2)
+            else:
+                ratio=0
+            
     return ratio,n_comp,n

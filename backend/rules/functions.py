@@ -138,8 +138,8 @@ def add_rule_remote(rule,ifname,type_rule):
       ###executer ces commandes
       for cmd in commandes:
          _,error=run_command(cmd)
-         # print({"cmd":cmd})
          if error!='': 
+            print({"cmd":cmd,"error":error})
             return error
       return True
 
@@ -164,13 +164,14 @@ def get_handle_rule(ifname,type_rule,rule):
       rule_modif=rule_modif.replace("udp","17")
    ##cmd pour obtenir handle number pour supprimer rule 
    rule_modif=rule_modif.replace("port-unreachable","3")
+   rule=rule.replace("port-unreachable","3")
    if rule.find("log prefix")!=-1:
       rule=f"{rule_modif.strip()} log prefix {rule.split("log prefix")[1].strip()}" 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
    output,_=run_command(cmd)
    output = output.split('#')
-   # print(cmd,output)
+   print(cmd,output)
    if len(output)<2:
       return None
    else:
@@ -234,10 +235,14 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
       rule=return_rule(ifname,policy,saddr_db,daddr_db,sport,dport,protocol,type_rule)
       prefix="___nftables_logs_rule___"+"_".join(rule.split(" "))+"___"
       prefix=prefix.replace('"', '')
-      rule_mod=" ".join(rule.split(" ")[:-1])
-      policy=rule.split(" ")[-1]
-      # print({"prefix":prefix,"rule_mod":rule_mod,"policy":policy})
-      rule=f'{rule_mod} log prefix "{prefix}" {policy}'
+      prefix=prefix.replace('-', '')
+      if rule.find("reject with icmp port-unreachable")==-1:
+         rule_mod=" ".join(rule.split(" ")[:-1])
+         policy=rule.split(" ")[-1]
+         rule=f'{rule_mod} log prefix "{prefix}" {policy}'
+      else:
+         rule_mod=rule.split("reject with icmp port-unreachable")[0].strip()
+         rule=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
       # if not Rule.objects.filter(Q(rule=rule) & ((Q(interface_id=interface_object.pk)& Q(type_rule!=type_rule ) )|(Q(interface_id!=interface_object.pk) & Q(type_rule=type_rule )))).exists():
       if not Rule.objects.filter(
             Q(rule=rule) & (
@@ -300,10 +305,15 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          ruleupdate=return_rule(ifname,policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
          prefix="___nftables_logs_rule___"+"_".join(ruleupdate.split(" "))+"___"
          prefix=prefix.replace('"', '')
-         rule_mod=" ".join(ruleupdate.split(" ")[:-1])
-         policy=ruleupdate.split(" ")[-1]
-         # print({"prefix":prefix,"rule_mod":rule_mod,"policy":policy})
-         ruleupdate=f'{rule_mod} log prefix "{prefix}" {policy}'
+         prefix=prefix.replace('-', '')
+         if ruleupdate.find("reject with icmp port-unreachable")==-1:
+            rule_mod=" ".join(ruleupdate.split(" ")[:-1])
+            policy=ruleupdate.split(" ")[-1]
+            ruleupdate=f'{rule_mod} log prefix "{prefix}" {policy}'
+         else:
+            rule_mod=ruleupdate.split("reject with icmp port-unreachable")[0].strip()
+            ruleupdate=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
+      
          handle=get_handle_rule(ifname,type_rules,rule)
          if handle is not None: 
                return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)

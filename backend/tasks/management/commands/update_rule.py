@@ -64,10 +64,14 @@ class Command(BaseCommand):
             ruleupdate=return_rule(interface,policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
             prefix="___nftables_logs_rule___"+"_".join(ruleupdate.split(" "))+"___"
             prefix=prefix.replace('"', '')
-            rule_mod=" ".join(ruleupdate.split(" ")[:-1])
-            policy=ruleupdate.split(" ")[-1]
-            ruleupdate=f'{rule_mod} log prefix "{prefix}" {policy}'
-            print({"rule":rule})
+            prefix=prefix.replace('-', '')
+            if ruleupdate.find("reject with icmp port-unreachable")==-1:
+                rule_mod=" ".join(ruleupdate.split(" ")[:-1])
+                policy=ruleupdate.split(" ")[-1]
+                ruleupdate=f'{rule_mod} log prefix "{prefix}" {policy}'
+            else:
+                rule_mod=ruleupdate.split("reject with icmp port-unreachable")[0].strip()
+                ruleupdate=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
             handle=get_handle_rule(interface,type_rule,rule)
             if handle is not None:
                 return_delete_rule_remote=delete_rule_remote(interface,type_rule,handle)

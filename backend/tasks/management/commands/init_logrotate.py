@@ -11,6 +11,7 @@ class Command(BaseCommand):
             {"service":"WAF","path":"/var/log/modsec_audit.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/waf"},
             {"service":"OpenVPN","path":"/var/log/openvpn/openvpn.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/openvpn"},
             {"service":"IDS/IPS","path":"/var/log/suricata/fast.log" ,"time":"hourly","size":"10M","number":24,"file":"/etc/logrotate.d/suricata_fast"},
+            {"service":"IDS/IPS","path":"/var/log/suricata/eve.json" ,"time":"hourly","size":"10M","number":24,"file":"/etc/logrotate.d/suricata_eve"},
             {"service":"IDS/IPS","path":"/var/log/suricata/stats.log" ,"time":"hourly","size":"10M","number":24,"file":"/etc/logrotate.d/suricata_stats"},
             {"service":"IDS/IPS","path":"/var/log/suricata/suricata.log" ,"time":"hourly","size":"10M","number":24,"file":"/etc/logrotate.d/suricata"},
             {"service":"Squid","path":"/var/log/squid/cache.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/squid_cache"},

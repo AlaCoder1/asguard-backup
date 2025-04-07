@@ -173,7 +173,7 @@ export default {
       {
         headerName: Phase1Proposal,
         cellRenderer: FirstPhaseProposal,
-        minWidth: 300,
+        minWidth: 230,
         suppressSizeToFit: true,
         sortable: true,
         filter: true,
@@ -181,7 +181,7 @@ export default {
       {
         headerName: auth,
         field: "authentication_method",
-        minWidth: 150,
+        minWidth: 220,
         suppressSizeToFit: true,
         sortable: true,
         filter: true,
@@ -189,7 +189,7 @@ export default {
       {
         headerName: localsubnet,
         field: "address_local_network",
-        minWidth: 150,
+        minWidth: 210,
         suppressSizeToFit: true,
         sortable: true,
         filter: true,
@@ -197,7 +197,7 @@ export default {
       {
         headerName: Remotesubnet,
         field: "address_remote_network",
-        minWidth: 150,
+        minWidth: 200,
         suppressSizeToFit: true,
         sortable: true,
         filter: true,

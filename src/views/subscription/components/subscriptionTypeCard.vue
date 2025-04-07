@@ -1,9 +1,20 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
           {{ $t("profil.NoPermission") }}
           <br />
@@ -11,53 +22,98 @@
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
   </v-overlay>
   <v-container>
     <v-row>
-      <v-card class="mx-auto my-12">
-        <v-card-item :style="{ backgroundColor: backgroundColor }" class="text-center white--text payment-item">
+      <v-card class="mx-auto my-12" :style="{ height: height }">
+        <v-card-item
+          :style="{ backgroundColor: backgroundColor }"
+          class="text-center white--text payment-item"
+        >
           <v-card-title class="payment-title text-bold">{{
             title
           }}</v-card-title>
           <v-card-title>ASGUARD</v-card-title>
           <v-spacer></v-spacer>
           <div class="justify-center">
-            <div v-for="item in prices" :key="item.label" style="
+            <div
+              v-for="item in prices"
+              :key="item.label"
+              style="
                 display: flex;
                 align-items: center;
                 justify-content: center;
-              ">
+              "
+            >
               <h5 class="mt-5">{{ item.amount }} €</h5>
               <small class="mt-7"> / {{ item.label }} </small>
             </div>
           </div>
         </v-card-item>
-        <v-card-text class="text-center mt-10 justify-center" style="min-width: 306px">
-          <v-row v-for="service in communservices" :key="service" class="text-center ml-16 mb-1">
+        <v-card-text
+          class="text-center mt-10 justify-center"
+          style="min-width: 306px"
+        >
+          <v-row
+            v-for="service in communservices"
+            :key="service"
+            class="text-center ml-16 mb-1"
+          >
             <v-icon color="blue" v-if="service != ''">
-              <svg width="14" height="22" viewBox="0 0 14 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg
+                width="14"
+                height="22"
+                viewBox="0 0 14 22"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
                 <path
                   d="M9.778 0L6.612 16.67L4.458 11.48L0 13.332L1.142 15.787L2.37 15.227L5.256 21.538H8.956L13.547 0H9.778Z"
-                  fill="#042439" />
+                  fill="#042439"
+                />
               </svg>
             </v-icon>
             <!-- <span class="ml-2">{{ $t(service) }}</span> -->
             <span class="ml-2">{{ service }}</span>
           </v-row>
-          <v-row v-for="service in services" :key="service" class="text-center ml-14 mb-1" style="display: flex">
+          <v-row
+            v-for="service in services"
+            :key="service"
+            class="text-center ml-14 mb-1"
+            style="display: flex"
+          >
             <template v-if="title === 'Premium'">
-              <input type="checkbox" :id="'checkbox_'" :value="service.slug" v-model="selectedServices" />
+              <input
+                type="checkbox"
+                :id="'checkbox_'"
+                :value="service.slug"
+                v-model="selectedServices"
+              />
             </template>
             <v-icon v-if="service != ''">
-              <svg width="14" height="22" viewBox="0 0 14 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg
+                width="14"
+                height="22"
+                viewBox="0 0 14 22"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
                 <path
                   d="M9.778 0L6.612 16.67L4.458 11.48L0 13.332L1.142 15.787L2.37 15.227L5.256 21.538H8.956L13.547 0H9.778Z"
-                  fill="#FFC300" />
+                  fill="#FFC300"
+                />
               </svg>
             </v-icon>
             <span class="ml-2">{{ service.name }}</span>
@@ -68,14 +124,27 @@
           <v-col cols="4"></v-col>
           <v-col>
             <div class="mr-3 mt-3 mb-3 text-center justify-center">
-              <VButton rounded outlined :color="buttonColor" label-color="#ffffff" :label="$t('subscription.byNow')"
-                :isLarge="true" class="ml-2" @click="submitForm" />
+              <VButton
+                rounded
+                outlined
+                :color="buttonColor"
+                label-color="#ffffff"
+                :label="$t('subscription.byNow')"
+                :isLarge="true"
+                class="ml-2"
+                @click="submitForm"
+              />
             </div>
           </v-col>
           <v-col cols="4"></v-col>
         </v-row>
       </v-card>
-      <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+      <v-snackbar
+        :timeout="2000"
+        v-model="state.snackbar"
+        location="bottom right"
+        :color="state.color"
+      >
         {{ state.textAlert }}
       </v-snackbar>
     </v-row>
@@ -100,6 +169,7 @@ export default {
     services: Array,
     communservices: Array,
     backgroundColor: String,
+    height: String,
     buttonColor: String,
   },
 
@@ -201,8 +271,8 @@ export default {
             features: features,
             price: props.prices[0].amount,
           });
-          // window.open(response.data.url, "_blank");
-          location.href = response.data.url;
+          window.open(response.data.url, "_blank");
+          // location.href = response.data.url;
         } catch (error) {
           if (error.response.status === 500) {
             state.snackbar = true;

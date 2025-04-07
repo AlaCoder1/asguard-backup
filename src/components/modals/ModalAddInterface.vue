@@ -422,6 +422,7 @@ export default {
       () => modalMode.value,
       (val) => {
         if (val === "create") {
+          v_interface$.value.$reset();
           state.mode = "create";
           state.interface = "";
           state.bufferSize = "";
@@ -508,6 +509,7 @@ export default {
       state.useNmp = "";
       state.copyModeList = [];
       state.mode = "";
+      v_interface$.value.$reset();
     };
     const error = computed(() => {
       return t("errors.valueRequired");

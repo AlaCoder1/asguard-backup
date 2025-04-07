@@ -87,6 +87,7 @@
                 :communservices="card.communservices"
                 :services="card.services"
                 :backgroundColor="card.backgroundColor"
+                :height="card.height"
                 :buttonColor="card.buttonColor"
               />
             </div>
@@ -172,6 +173,7 @@ export default {
         ],
         services: ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         backgroundColor: "#213E9F",
+        height: "736px",
         buttonColor: "#213E9F",
       },
       {
@@ -205,6 +207,7 @@ export default {
         ],
         backgroundColor: "#FFC300",
         buttonColor: "#FFC300",
+        height: "736px",
       },
       // {
       //   title: premium,

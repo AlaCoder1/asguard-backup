@@ -248,7 +248,7 @@
             :label="$t('buttons.save')"
             :isLarge="true"
             class="ml-2"
-            @click="submitForm"
+            @click="confirmSave"
           />
         </div>
       </v-col>
@@ -293,6 +293,43 @@
       <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
     </span>
   </v-alert>
+
+  <v-dialog v-model="state.SaveConfig" max-width="500px">
+    <v-card>
+      <v-card-title class="headline">
+        {{ $t("firewall.Save_confirm") }}
+      </v-card-title>
+      <v-card-text>{{ $t("firewall.msg_confirm_save") }}</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="cancelSave">{{
+          $t("firewall.cancel")
+        }}</v-btn>
+        <v-btn color="blue darken-1" text @click="submitForm">{{
+          $t("firewall.save")
+        }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="state.deleteDialog" max-width="500px">
+    <v-card>
+      <v-card-title class="headline">{{
+        $t("firewall.delete_confirm")
+      }}</v-card-title>
+      <v-card-text>{{ $t("nat.msg_confirm_delete") }}</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="cancelDelete">{{
+          $t("firewall.cancel")
+        }}</v-btn>
+        <v-btn color="blue darken-1" text @click="confirmDelete">{{
+          $t("firewall.delete")
+        }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <!-- </div> -->
 </template>
 
@@ -334,7 +371,10 @@ export default {
       of: "/",
     });
     const state = reactive({
+      deleteDialog: false,
+      deletedRow: false,
       interId: null,
+      SaveConfig: false,
       profileLists: [
         {
           id: "1",
@@ -663,18 +703,8 @@ export default {
             user !== "default" &&
             last_Subscription.value.includes("IDS/IPS")
           ) {
-            const index = rowDataAF.value.findIndex(
-              (item) => item.id === rowData.id
-            );
-
-            if (index !== -1) {
-              rowDataAF.value.splice(index, 1);
-              if (gridApi.value) {
-                gridApi.value.setRowData(rowDataAF.value);
-              } else {
-                console.error("Grid API.");
-              }
-            }
+            state.deleteDialog = true;
+            state.deletedRow = rowData;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
@@ -920,6 +950,7 @@ export default {
     };
 
     const submitForm = async () => {
+      state.SaveConfig = false;
       const user = user_privilege("Suricata");
       if (
         user &&
@@ -977,6 +1008,7 @@ export default {
               .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
               .then((response) => {
                 if (response.status == 200) {
+                  state.SaveConfig = false;
                   state.loading = false;
                   state.isLoadingDialogue = false;
                   state.snackbar = true;
@@ -1001,6 +1033,7 @@ export default {
                 // }
               })
               .catch((i) => {
+                state.SaveConfig = false;
                 state.loading = false;
                 state.isLoadingDialogue = false;
 
@@ -1015,6 +1048,7 @@ export default {
                 }
               });
           } else {
+            state.SaveConfig = false;
             state.snackbar = true;
             state.color = "error";
             state.textAlert = t("suricata.MinimumOneInter");
@@ -1023,6 +1057,7 @@ export default {
             }, 3000);
           }
         } else {
+          state.SaveConfig = false;
           console.log("v$", v$.value);
           if (rowDataAF.value.length === 0) {
             state.snackbar = true;
@@ -1057,8 +1092,40 @@ export default {
     const v$ = useValidate(rules, state);
     const cancel = () => {};
 
+    const confirmSave = () => {
+      state.SaveConfig = true;
+    };
+
+    const cancelSave = () => {
+      state.SaveConfig = false;
+    };
+
+    const cancelDelete = () => {
+      state.deleteDialog = false;
+    };
+
+    const confirmDelete = () => {
+      const index = rowDataAF.value.findIndex(
+        (item) => item.id === state.deletedRow.id
+      );
+
+      if (index !== -1) {
+        rowDataAF.value.splice(index, 1);
+        state.deleteDialog = false;
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowDataAF.value);
+        } else {
+          console.error("Grid API.");
+        }
+      }
+    };
+
     return {
+      confirmDelete,
+      cancelDelete,
       switchValue,
+      cancelSave,
+      confirmSave,
       cancel,
       close,
       overlayMessage,

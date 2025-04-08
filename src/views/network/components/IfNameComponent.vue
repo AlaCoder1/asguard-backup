@@ -314,7 +314,7 @@
                   <label>IPV4 gateway</label>
                   <small style="color: red">*</small>
                 </v-col>
-                <v-col cols="2" class="mb-n6" align-self="center">
+                <v-col cols="3" class="mb-n6 ml-3 mt-3"  >
                   <v-btn
                     :disabled="is_main"
                     color="#F6F6F6"
@@ -351,12 +351,12 @@
                         />
                       </g>
                     </svg>
-                    <span class="ml-2" style="color: #086eae">{{
+                    <span class="ml-1" style="color: #086eae">{{
                       $t("interface.add")
                     }}</span>
                   </v-btn>
                 </v-col>
-                <v-col cols="6" class="mb-n6">
+                <v-col cols="5" class="mb-n6">
                   <v-select
                     :readonly="is_main"
                     v-model="value_setup_Ipv4.gateway4.value"

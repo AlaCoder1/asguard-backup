@@ -1322,7 +1322,7 @@ export default {
     },
     isValidAddmac() {
       const charRegex =
-        /^(?:[0-9A-Fa-f]{2}([-:]))(?:[0-9A-Fa-f]{2}\1){4}[0-9A-Fa-f]{2}$/;
+        /^(?!([0]{2}[:-]){5}[0]{2}$)([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/;
 
       if (this.addmac && !charRegex.test(this.addmac)) {
         return false;

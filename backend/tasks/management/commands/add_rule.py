@@ -47,10 +47,14 @@ class Command(BaseCommand):
                 rule=return_rule(interface,policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
                 prefix="___nftables_logs_rule___"+"_".join(rule.split(" "))+"___"
                 prefix=prefix.replace('"', '')
-                rule_mod=" ".join(rule.split(" ")[:-1])
-                policy=rule.split(" ")[-1]
-                rule=f'{rule_mod} log prefix "{prefix}" {policy}'
-                
+                prefix=prefix.replace('-', '')
+                if rule.find("reject with icmp port-unreachable")==-1:
+                    rule_mod=" ".join(rule.split(" ")[:-1])
+                    policy=rule.split(" ")[-1]
+                    rule=f'{rule_mod} log prefix "{prefix}" {policy}'
+                else:
+                    rule_mod=rule.split("reject with icmp port-unreachable")[0].strip()
+                    rule=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
                 if not Rule.objects.filter(
                     Q(rule=rule) & (
                         (Q(interface_id=interface_id.id) ) &

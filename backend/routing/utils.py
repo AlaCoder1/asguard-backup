@@ -42,7 +42,8 @@ def create_gateway(gateway):
         
         if serializer_gateway_interface.is_valid():
             serializer_gateway_interface.save()
-            return {"gateway": new_gateway.pk}
+            return {"gateway": new_gateway.pk,
+                    "interface": gateway["interface"]}
         # Remove the last added Gateway if the GatewayInterface data doesn't match
         new_gateway.delete()
         return {"gateway": None,

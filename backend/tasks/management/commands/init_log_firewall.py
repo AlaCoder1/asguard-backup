@@ -14,8 +14,8 @@ class Command(BaseCommand):
             "sudo touch /var/log/nftables/nftables.log",
             "sudo chmod 640 /var/log/nftables/nftables.log",
            f"""sudo bash -c 'sed -i "/module(load=\"imjournal\")/c\\{line_to_add}" /etc/rsyslog.conf || echo "{line_to_add}" >> /etc/rsyslog.conf'""",
-            f"echo '{rsyslog_config}' | sudo tee /etc/rsyslog.d/10-nftables.conf > /dev/null"
-            "sudo systemctl enable --quiet rsyslog  && sudo systemctl restart rsyslog"
+            f"sudo echo '{rsyslog_config}' | sudo tee /etc/rsyslog.d/10-nftables.conf > /dev/null",
+            "sudo systemctl enable rsyslog --quiet  && sudo systemctl restart rsyslog"
 ]
             for cmd in commandes:
                 _,error= run_command(cmd)

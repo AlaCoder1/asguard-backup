@@ -90,7 +90,7 @@
     "noModif": "Rule Non modifiable",
     "invalidChar": "Au moins un élément contient un hôte ou un port vide, ou des caractères invalides.",
     "validHostname": "Le Champ doit respecter les conditions suivantes :\n- Être compris entre 1 et 253 caractères.\n- Être composé de labels séparés par des points.\n- Chaque label doit comporter entre 1 et 63 caractères.\n- Contenir uniquement des lettres, des chiffres et des tirets (-).\n- Ne peut commencer ou se terminer par un tiret.",
-    "validAddmac":"Format doit être comme XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX",
+    "validAddmac":"Format valide : XX:XX:XX:XX:XX:XX ou XX-XX-XX-XX-XX-XX.\nDoit contenir uniquement des caractères hexadécimaux (0-9,a-f)\net ne pas être composé uniquement de zéros.",
     "validMTU":"MTU doit être compris entre 576 et 9000",
     "validMSS":"MSSV doit être supérieur à 576"
   },

@@ -1,15 +1,15 @@
 from backend.nat.contant_variables import PATH_RULESET_NFT
 from backend.nat import utils
 from utils.commands_utils import execute_command_without_arguments, get_current_directory, write_file_from_system
+from utils.errors_utils import CommandExecutionError
 
 
 def get_list_nat_rules_from_system():
     """Get list of nat rules from system: 
     1. postrouting (SNAT and One To One)
     2. prerouting (DNAT)"""
-    ruleset = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
-    list_postrouting_from_system = utils.find_nat_in_ruleset(ruleset.stdout, "postrouting")
-    list_prerouting_from_system = utils.find_nat_in_ruleset(ruleset.stdout, "prerouting")
+    list_postrouting_from_system = extract_list_rule_nat_from_system()
+    list_prerouting_from_system = extract_list_rule_nat_from_system("prerouting")
     return list_postrouting_from_system, list_prerouting_from_system
 
 
@@ -20,37 +20,33 @@ def save_ruleset_nft():
     write_file_from_system(PATH_RULESET_NFT.format(current_dir), ruleset_process.stdout)
 
 
+def add_nat_rule_in_system(command_line):
+    """Execute the command-line to create the rule nat and save it in ruleset nft file"""
+    # Execute the NAT rule in system
+    execute_command_without_arguments(command_line)
+
+    # Save ruleset in ruleset file
+    save_ruleset_nft()
+
+
 def delete_nat_rule_in_system(chain, handle_number):
-    execute_command_without_arguments(["sudo", "nft", "delete", "rule", "nat", chain, "handle", f"{handle_number}"])
+    """Execute the command-line to delete the rule nat and save it in ruleset nft file"""
+    execute_command_without_arguments(
+        ["sudo", "nft", "delete", "rule", "nat", chain, "handle", f"{handle_number}"])
+
+    # Save ruleset in ruleset file
+    save_ruleset_nft()
 
 
 def delete_all_nat_rule_from_system():
     """Getting all nat rule from system and deleting it all"""
     list_postrouting_from_system, list_prerouting_from_system = get_list_nat_rules_from_system()
-    for rule_index in range(len(list_postrouting_from_system)):
-        handle_number = utils.get_rule_handle_with_position(list_postrouting_from_system, rule_index)
+    for postrouting_rule in list_postrouting_from_system:
+        handle_number, _ = utils.get_rule_handle_position_with_content(postrouting_rule, list_postrouting_from_system)
         delete_nat_rule_in_system("postrouting", handle_number)
-    for rule_index in range(len(list_prerouting_from_system)):
-        handle_number = utils.get_rule_handle_with_position(list_prerouting_from_system, rule_index)
+    for prerouting_rule in list_prerouting_from_system:
+        handle_number, _ = utils.get_rule_handle_position_with_content(prerouting_rule, list_prerouting_from_system)
         delete_nat_rule_in_system("prerouting", handle_number)
-
-
-def get_rule_handle_in_system(nat_type="postrouting", rule_position=0):
-    """Return the last rule handle from ruleset"""
-    rule_set = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
-
-    list_nat_rules = utils.find_nat_in_ruleset(rule_set.stdout, nat_type)
-    handle_number = utils.get_rule_handle_with_position(list_nat_rules, rule_position)
-    return handle_number
-
-
-def get_rule_content_in_system(nat_type="postrouting", rule_position=0):
-    """Return the last rule handle from ruleset"""
-    rule_set = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
-
-    list_nat_rules = utils.find_nat_in_ruleset(rule_set.stdout, nat_type)
-    handle_number = utils.get_rule_content_with_position(list_nat_rules, rule_position)
-    return handle_number
 
 
 def exist_change_rule_position_in_system(type_nat, rule_nat, new_position)->int:
@@ -79,3 +75,34 @@ def get_next_active_rule(type_nat, old_position, new_position):
     if len(list_next_rule) > 0:
         return list_next_rule.order_by("db_position").first()
     return False
+
+
+def extract_list_rule_nat_from_system(chain="postrouting"):
+    """Extract from nft the list of nat rules (postrouting or prerouting)"""
+    rule_set = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
+    list_rules = [line.strip() for line in rule_set.stdout.splitlines()]
+    for line_index in range(len(list_rules)):
+        if list_rules[line_index].startswith(f"chain {chain}"):
+            start_snat_line = line_index + 2
+            break
+    for line_snat in range(start_snat_line, len(list_rules)):
+        if list_rules[line_snat].startswith("}"):
+            end_snat_line = line_snat
+            break
+    return list_rules[start_snat_line:end_snat_line]
+
+
+def get_added_nat_rule(previous_list_rule: list[str], new_list_rule: list[str]):
+    """Identifies and returns the newly added rule from the updated list of SNAT postrouting rules."""
+    # Raise an error if no rule was added or if more than one rule was added
+    if len(new_list_rule) - len(previous_list_rule) != 1:
+        raise CommandExecutionError(message="Expected exactly one new rule, but found none or multiple")
+    
+    # Loop until founding the new rule
+    for rule in new_list_rule:
+        if rule not in previous_list_rule:
+            rule_content, rule_handle = rule.split(" # handle ", 1)
+            return rule_content, rule_handle
+    
+    # Raise an error if synchronization with system NAT rules failed
+    raise CommandExecutionError(message="No matching added rule found in system NAT rules")

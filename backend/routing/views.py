@@ -97,6 +97,7 @@ def get_gateway(request, id):
                     'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
                     'gateway_address': Schema(type=TYPE_STRING, example="10.1.15.1", description="format of address"),
                     'metric': Schema(type=TYPE_INTEGER, example=20111)}),
+            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface related to the choosed gateway, only used when gateway_create is False (use an existent gateway)"),
             'description': Schema(type=TYPE_STRING, example="Description of Route", description="description of the route"),
             }
             ))
@@ -118,7 +119,9 @@ def create_routing(request):
             result_gateway = create_gateway(gateway)
             if result_gateway["gateway"]:
                 gateway = result_gateway["gateway"]
+                interface = result_gateway["interface"]
                 data["gateway"] = gateway
+                data["interface"] = interface
             elif result_gateway["error"] == "":
                 return JsonResponse({"error": ERROR_MESSAGES_USED_INTERFACE}, status=400)
             else:
@@ -128,17 +131,15 @@ def create_routing(request):
         if len(Routing.objects.filter(destination_address=data["destination_address"], gateway=gateway)) > 0:
             return JsonResponse({"error": ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY}, status=400)
         
-        # Get the gateway instance
+        # Get the gateway, interface and gateway_interface instance
         gateway_instance = Gateway.objects.get(id=gateway)
-        # Raise an error in the GatewayInterface with this gateway does not exist
-        if len(GatewayInterface.objects.filter(gateway=gateway_instance)) == 0:
-            raise Gateway.DoesNotExist
+        interface_instance = Interface.objects.get(id=data["interface"])
+        gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance, interface=interface_instance)
         
         serializer_routing = RoutingSerializer(data=data)
         if serializer_routing.is_valid():
-            gateway_interface_instance = GatewayInterface.objects.filter(gateway=gateway_instance).first()
             gateway_address = gateway_instance.gwaddress
-            interface_ifname = gateway_interface_instance.interface.ifname
+            interface_ifname = interface_instance.ifname
             routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
                               gateway_interface_instance.metric)
             serializer_routing.save()
@@ -153,8 +154,10 @@ def create_routing(request):
                 gateway = Gateway.objects.get(gwname=gwname, gwaddress=gateway_data["gateway_address"])
                 gateway.delete()
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ROUTE}"}, status=400)
-    except Gateway.DoesNotExist:
+    except (Gateway.DoesNotExist, GatewayInterface.DoesNotExist):
         return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except TypeError:
         # Catching the error when choosing to create a new gateway
         if data.get("gateway_create"):
@@ -174,7 +177,7 @@ def delete_routing(request, id):
         routing = Routing.objects.get(id=id)
         
         gateway_interface_instance = GatewayInterface.objects.filter(gateway=routing.gateway.pk).first()
-        interface_ifname = gateway_interface_instance.interface.ifname
+        interface_ifname = routing.interface.ifname
         routing_in_system("del", routing.destination_address, routing.gateway.gwaddress, interface_ifname, 
                           gateway_interface_instance.metric)
 
@@ -210,6 +213,7 @@ def delete_routing(request, id):
                     'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
                     'gateway_address': Schema(type=TYPE_STRING, example="10.1.15.1", description="format of address"),
                     'metric': Schema(type=TYPE_INTEGER, example=20111)}),
+            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface related to the choosed gateway, only used when gateway_create is False (use an existent gateway)"),
             'description': Schema(type=TYPE_STRING, example="Description of Route", description="description of the route"),
             }
             ))
@@ -241,19 +245,25 @@ def update_routing(request, id):
             result_gateway = create_gateway(gateway)
             if result_gateway["gateway"]:
                 gateway = result_gateway["gateway"]
+                interface = result_gateway["interface"]
                 data["gateway"] = gateway
+                data["interface"] = interface
             elif result_gateway["error"] == "":
                 return JsonResponse({"error": ERROR_MESSAGES_USED_INTERFACE}, status=400)
             else:
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
         
+        # Raise an error message for unique constraints of Network and Gateway
+        if len(Routing.objects.filter(destination_address=data["destination_address"], gateway=gateway).exclude(id=id)) > 0:
+            return JsonResponse({"error": ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY}, status=400)
+        
+        # Get the gateway, interface and gateway_interface instance
         gateway_instance = Gateway.objects.get(id=gateway)
-        # Raise an error in the GatewayInterface with this gateway does not exist
-        if len(GatewayInterface.objects.filter(gateway=gateway_instance)) == 0:
-            raise Gateway.DoesNotExist
-        gateway_interface_instance = GatewayInterface.objects.filter(gateway=gateway_instance).first()
+        interface_instance = Interface.objects.get(id=data["interface"])
+        gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance, interface=interface_instance)
+
         gateway_address = gateway_instance.gwaddress
-        interface_ifname = gateway_interface_instance.interface.ifname
+        interface_ifname = interface_instance.ifname
         routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
                           gateway_interface_instance.metric)
         
@@ -266,7 +276,7 @@ def update_routing(request, id):
         
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ROUTE}"}, status=400)
-    except Gateway.DoesNotExist:
+    except (Gateway.DoesNotExist, GatewayInterface.DoesNotExist):
         return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except Interface.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

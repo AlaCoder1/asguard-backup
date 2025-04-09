@@ -21,7 +21,13 @@
     <v-dialog v-model="isviewModal" :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
           {{ $t("profil.NoPermission") }}
           <br />
@@ -29,19 +35,35 @@
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
   </v-overlay>
   <v-card class="mt-5">
     <v-overlay v-model="loading">
-      <v-dialog v-model="isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -50,7 +72,7 @@
     <v-form @submit.prevent="handleSubmit(onSubmit)">
       <v-row class="fill-height ml-3">
         <v-col cols="12" sm="6">
-          <v-card-title class="title-text">{{
+          <v-card-title class="title-text" style="margin-left: -5px">{{
             $t("interface.basicConfiguration")
           }}</v-card-title>
           <v-divider class="ml-3"></v-divider>
@@ -70,8 +92,10 @@
 
           <div class="px-0 mx-0">
             <v-row class="px-0 mx-0 mt-5">
-              <v-col class="device-style">{{ $t("interface.device")
-                }}<span style="color: red">*</span></v-col>
+              <v-col class="device-style"
+                >{{ $t("interface.device")
+                }}<span style="color: red">*</span></v-col
+              >
             </v-row>
             <v-row class="ml-2 mr-3 mb-n6">
               <v-text-field :model-value="device" readonly></v-text-field>
@@ -85,7 +109,7 @@
               <v-text-field v-model="description"></v-text-field>
             </v-row>
           </div>
-          <v-card-title class="title-text mt-5">{{
+          <v-card-title class="title-text mt-5" style="margin-left: -5px">{{
             $t("interface.genericConfiguration")
           }}</v-card-title>
           <v-divider class="ml-3 mb-5"></v-divider>
@@ -138,10 +162,16 @@
                   </div>
                 </td>
                 <td class="new-style">
-                  <v-select :readonly="is_main" :label="$t('interface.IPV4SetupType')" background-color="#f6f6f6"
-                    v-model="setuptypeip4" :items="items.map((item) => item.value)" class="ml-3"
+                  <v-select
+                    :readonly="is_main"
+                    :label="$t('interface.IPV4SetupType')"
+                    background-color="#f6f6f6"
+                    v-model="setuptypeip4"
+                    :items="items.map((item) => item.value)"
+                    class="ml-3"
                     :rules="[(v) => !!v || $t('interface.IPV4Required')]"
-                    :no-data-text="$t('certificat.certificatlist')"></v-select>
+                    :no-data-text="$t('certificat.certificatlist')"
+                  ></v-select>
                 </td>
               </tr>
               <tr>
@@ -151,14 +181,22 @@
                   </div>
                 </td>
                 <td>
-                  <v-text-field :readonly="is_vxlan_vlan" :label="$t('interface.MACAddress')" class="ml-3"
-                    v-model="addmac"></v-text-field>
+                  <v-text-field
+                    :readonly="is_vxlan_vlan"
+                    :label="$t('interface.MACAddress')"
+                    class="ml-3"
+                    v-model="addmac"
+                  ></v-text-field>
                 </td>
               </tr>
               <tr>
                 <td></td>
                 <td>
-                  <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4" v-if="!isValidAddmac">
+                  <p
+                    style="margin-top: -10px; margin-left: 12px"
+                    class="error-feedback ml-4"
+                    v-if="!isValidAddmac"
+                  >
                     {{ $t("errors.validAddmac") }}
                   </p>
                 </td>
@@ -168,15 +206,23 @@
                   <div class="mt-n4">{{ $t("interface.MTU") }}</div>
                 </td>
                 <td>
-                  <v-text-field :readonly="is_vxlan_vlan" :label="$t('interface.MTU')" class="ml-3"
-                    v-model="mtuv"></v-text-field>
+                  <v-text-field
+                    :readonly="is_vxlan_vlan"
+                    :label="$t('interface.MTU')"
+                    class="ml-3"
+                    v-model="mtuv"
+                  ></v-text-field>
                 </td>
               </tr>
 
               <tr>
                 <td></td>
                 <td>
-                  <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4" v-if="!isValidMTU">
+                  <p
+                    style="margin-top: -10px; margin-left: 12px"
+                    class="error-feedback ml-4"
+                    v-if="!isValidMTU"
+                  >
                     {{ $t("errors.validMTU") }}
                   </p>
                 </td>
@@ -187,15 +233,23 @@
                   <div class="mt-n4">{{ $t("interface.MSS") }}</div>
                 </td>
                 <td>
-                  <v-text-field :readonly="is_vxlan_vlan" :label="$t('interface.MSS')" class="ml-3" v-model="mssv"
-                    ></v-text-field>
+                  <v-text-field
+                    :readonly="is_vxlan_vlan"
+                    :label="$t('interface.MSS')"
+                    class="ml-3"
+                    v-model="mssv"
+                  ></v-text-field>
                 </td>
               </tr>
 
               <tr>
                 <td></td>
                 <td>
-                  <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4" v-if="!isValidMSS">
+                  <p
+                    style="margin-top: -10px; margin-left: 12px"
+                    class="error-feedback ml-4"
+                    v-if="!isValidMSS"
+                  >
                     {{ $t("errors.validMSS") }}
                   </p>
                 </td>
@@ -208,9 +262,14 @@
                   </div>
                 </td>
                 <td>
-                  <v-select :readonly="is_vxlan_vlan" :label="$t('interface.speedAndDuplex')" v-model="speed_duplex"
-                    :items="speedDuplexItems.map((item) => item)" class="ml-3 speed-duplex-style"
-                    :no-data-text="$t('certificat.certificatlist')"></v-select>
+                  <v-select
+                    :readonly="is_vxlan_vlan"
+                    :label="$t('interface.speedAndDuplex')"
+                    v-model="speed_duplex"
+                    :items="speedDuplexItems.map((item) => item)"
+                    class="ml-3 speed-duplex-style"
+                    :no-data-text="$t('certificat.certificatlist')"
+                  ></v-select>
                 </td>
               </tr>
             </tbody>
@@ -218,7 +277,7 @@
         </v-col>
         <v-col cols="12" sm="6">
           <div v-if="setuptypeip4 === 'static'">
-            <v-card-title class="title-text">{{
+            <v-card-title class="title-text" style="margin-left: -5px">{{
               $t("interface.staticIPV4AddressConfiguration")
             }}</v-card-title>
             <v-divider class="ml-3 mr-3"></v-divider>
@@ -229,49 +288,86 @@
                   <small style="color: red">*</small>
                 </v-col>
                 <v-col cols="4" class="mb-n6">
-                  <v-text-field :readonly="is_main" :label="$t('interface.IPV4Address')"
-                    v-model="value_setup_Ipv4.ip_address4" class="ip-address-style" :rules="[
+                  <v-text-field
+                    :readonly="is_main"
+                    :label="$t('interface.IPV4Address')"
+                    v-model="value_setup_Ipv4.ip_address4"
+                    class="ip-address-style"
+                    :rules="[
                       (v) => !!v || $t('interface.IPV4AddressRequired'),
                       () => ipAddressValidation(value_setup_Ipv4.ip_address4),
-                    ]"></v-text-field>
+                    ]"
+                  ></v-text-field>
                 </v-col>
                 <v-col cols="4" class="mb-n6">
-                  <v-select :readonly="is_main" :label="$t('sdwan.prefix')" v-model="value_setup_Ipv4.netmask4"
-                    :items="netmaskItems" class="ml-3 netmask-select-style"
+                  <v-select
+                    :readonly="is_main"
+                    :label="$t('sdwan.prefix')"
+                    v-model="value_setup_Ipv4.netmask4"
+                    :items="netmaskItems"
+                    class="ml-3 netmask-select-style"
                     :rules="[(v) => !!v || $t('interface.netmaskRequired')]"
-                    :no-data-text="$t('certificat.certificatlist')"></v-select>
+                    :no-data-text="$t('certificat.certificatlist')"
+                  ></v-select>
                 </v-col>
                 <v-col align-self="center" cols="3">
                   <label>IPV4 gateway</label>
                   <small style="color: red">*</small>
                 </v-col>
-                <v-col cols="2" class="mb-n6" align-self="center">
-                  <v-btn :disabled="is_main" color="#F6F6F6" class="text-none" variant="flat"
-                    @click="openGatewayDialog">
-                    <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <mask id="mask0_50_190" style="mask-type: luminance" maskUnits="userSpaceOnUse" x="0" y="0"
-                        width="17" height="17">
+                <v-col cols="3" class="mb-n6 ml-3 mt-3"  >
+                  <v-btn
+                    :disabled="is_main"
+                    color="#F6F6F6"
+                    class="text-none"
+                    variant="flat"
+                    @click="openGatewayDialog"
+                  >
+                    <svg
+                      width="17"
+                      height="17"
+                      viewBox="0 0 17 17"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <mask
+                        id="mask0_50_190"
+                        style="mask-type: luminance"
+                        maskUnits="userSpaceOnUse"
+                        x="0"
+                        y="0"
+                        width="17"
+                        height="17"
+                      >
                         <path d="M17 0H0V17H17V0Z" fill="white" />
                       </mask>
                       <g mask="url(#mask0_50_190)">
                         <path
                           d="M8.70871 0.219971C10.3463 0.219971 11.9472 0.705584 13.3088 1.6154C14.6705 2.52522 15.7317 3.81838 16.3584 5.33135C16.9851 6.84432 17.1491 8.50916 16.8296 10.1153C16.5101 11.7215 15.7215 13.1968 14.5636 14.3548C13.4056 15.5128 11.9302 16.3014 10.3241 16.6209C8.7179 16.9404 7.05306 16.7764 5.54009 16.1497C4.02712 15.523 2.73396 14.4617 1.82414 13.1001C0.914324 11.7385 0.428711 10.1376 0.428711 8.49997C0.428976 6.30406 1.30142 4.19816 2.85416 2.64542C4.4069 1.09268 6.5128 0.220236 8.70871 0.219971Z"
-                          fill="#086EAE" />
+                          fill="#086EAE"
+                        />
                         <path
                           d="M13.6689 8.03597C13.7332 8.09478 13.7842 8.16654 13.8187 8.24652C13.8531 8.32651 13.8703 8.41289 13.8689 8.49997C13.8703 8.58779 13.8542 8.675 13.8216 8.75654C13.789 8.83808 13.7405 8.91233 13.6789 8.97497C13.6167 9.04086 13.5412 9.09277 13.4574 9.12725C13.3736 9.16173 13.2835 9.178 13.1929 9.17497H9.36591V12.981C9.36918 13.0709 9.35391 13.1606 9.32105 13.2443C9.28819 13.3281 9.23845 13.4042 9.17491 13.468C9.11435 13.5295 9.04187 13.578 8.96191 13.6105C8.88195 13.643 8.7962 13.6588 8.70991 13.657C8.62268 13.6583 8.53614 13.6412 8.45599 13.6068C8.37585 13.5723 8.30391 13.5212 8.24491 13.457C8.18336 13.3943 8.13487 13.3201 8.10225 13.2385C8.06963 13.157 8.05354 13.0698 8.05491 12.982V9.17697H4.22791C4.04915 9.17414 3.87848 9.10194 3.75197 8.97562C3.62546 8.84929 3.553 8.67873 3.54991 8.49997C3.54829 8.41285 3.5653 8.32639 3.59979 8.24637C3.63428 8.16635 3.68546 8.09462 3.74991 8.03597C3.81266 7.97421 3.88704 7.92552 3.96876 7.89274C4.05047 7.85995 4.13788 7.84371 4.22591 7.84497H8.05491V4.03797C8.04956 3.85273 8.11789 3.67292 8.24491 3.53797C8.30487 3.47498 8.37701 3.42483 8.45694 3.39056C8.53688 3.35629 8.62294 3.33862 8.70991 3.33862C8.79688 3.33862 8.88294 3.35629 8.96288 3.39056C9.04281 3.42483 9.11495 3.47498 9.17491 3.53797C9.3023 3.67276 9.37099 3.85259 9.36591 4.03797V7.84497H13.1929C13.2809 7.84377 13.3683 7.86003 13.45 7.89281C13.5317 7.9256 13.6061 7.97426 13.6689 8.03597Z"
-                          fill="white" />
+                          fill="white"
+                        />
                       </g>
                     </svg>
-                    <span class="ml-2" style="color: #086eae">{{
+                    <span class="ml-1" style="color: #086eae">{{
                       $t("interface.add")
                     }}</span>
                   </v-btn>
                 </v-col>
-                <v-col cols="6" class="mb-n6">
-                  <v-select :readonly="is_main" v-model="value_setup_Ipv4.gateway4.value" :items="allStaticGateways"
-                    item-title="gwaddress" item-value="id" return-object
+                <v-col cols="5" class="mb-n6">
+                  <v-select
+                    :readonly="is_main"
+                    v-model="value_setup_Ipv4.gateway4.value"
+                    :items="allStaticGateways"
+                    item-title="gwaddress"
+                    item-value="id"
+                    return-object
                     :rules="[(v) => !!v || $t('interface.IPV4GatewayRequired')]"
-                    :no-data-text="$t('certificat.certificatlist')" label="Select Item">
+                    :no-data-text="$t('certificat.certificatlist')"
+                    label="Select Item"
+                  >
                     <template v-slot:item="{ props, index, item }">
                       <v-list-item v-bind="props">
                         <template v-slot:prepend>
@@ -279,10 +375,19 @@
                           </v-text-item>
                         </template>
                         <template v-slot:append>
-                          <v-btn v-if="item?.raw?.gwaddress != 'Auto Detect'" icon color="red"
-                            class="mr-3 d-flex align-center text-center" style="width: 26px; height: 26px"
-                            @click.stop="deleteGateway(item?.raw?.id)">
-                            <v-icon style="width: 16px; height: 16px; font-size: 16px" small>mdi-delete</v-icon>
+                          <v-btn
+                            v-if="item?.raw?.gwaddress != 'Auto Detect'"
+                            icon
+                            color="red"
+                            class="mr-3 d-flex align-center text-center"
+                            style="width: 26px; height: 26px"
+                            @click.stop="deleteGateway(item?.raw?.id)"
+                          >
+                            <v-icon
+                              style="width: 16px; height: 16px; font-size: 16px"
+                              small
+                              >mdi-delete</v-icon
+                            >
                           </v-btn>
                         </template>
                       </v-list-item>
@@ -311,41 +416,73 @@
                 <div class="mr-2 ml-2">
                   <v-row class="mt-2">
                     <v-col cols="12">
-                      <v-text-field v-model="value_setup_Ipv4.ip_address4" :label="$t('interface.IPV4Address')"
-                        variant="outlined" readonly></v-text-field>
+                      <v-text-field
+                        v-model="value_setup_Ipv4.ip_address4"
+                        :label="$t('interface.IPV4Address')"
+                        variant="outlined"
+                        readonly
+                      ></v-text-field>
                     </v-col>
                     <v-col align-self="center" cols="4">
-                      <label class="ml-2">{{ $t("interface.IPV4Address") }}</label>
+                      <label class="ml-2">{{
+                        $t("interface.IPV4Address")
+                      }}</label>
                     </v-col>
                     <v-col cols="4" class="mb-n6">
-                      <v-text-field :label="$t('interface.IPV4Address')" v-model="interface.alias_add" />
-
-
+                      <v-text-field
+                        :label="$t('interface.IPV4Address')"
+                        v-model="interface.alias_add"
+                      />
                     </v-col>
                     <v-col cols="4" class="mb-n6">
-                      <v-select :label="$t('sdwan.prefix')" v-model="interface.alias_mask" :items="netmaskItems"
-                        :no-data-text="$t('certificat.certificatlist')" class="ml-3"></v-select>
+                      <v-select
+                        :label="$t('sdwan.prefix')"
+                        v-model="interface.alias_mask"
+                        :items="netmaskItems"
+                        :no-data-text="$t('certificat.certificatlist')"
+                        class="ml-3"
+                      ></v-select>
                     </v-col>
                     <v-col cols="12" class="mb-n6" v-if="!isValidIPV4Address">
-                      <p class="error-feedback  " style="margin-top: -10px; margin-left: 35%; ">
+                      <p
+                        class="error-feedback"
+                        style="margin-top: -10px; margin-left: 35%"
+                      >
                         {{ messageValidIPV4Address }}
                       </p>
                     </v-col>
-                    <v-col cols="12" class="mb-n6"
-                      v-if="isValidIPV4Address && interface.alias_add && !interface.alias_mask">
-                      <p class="error-feedback  " style="margin-top: -10px; margin-left: 70%; ">
-                        {{ $t('errors.valueRequired') }}
+                    <v-col
+                      cols="12"
+                      class="mb-n6"
+                      v-if="
+                        isValidIPV4Address &&
+                        interface.alias_add &&
+                        !interface.alias_mask
+                      "
+                    >
+                      <p
+                        class="error-feedback"
+                        style="margin-top: -10px; margin-left: 70%"
+                      >
+                        {{ $t("errors.valueRequired") }}
                       </p>
                     </v-col>
                     <v-col align-self="center" cols="4">
-                      <label class="ml-2">{{ $t("interface.rejectLeasesFrom") }}</label>
+                      <label class="ml-2">{{
+                        $t("interface.rejectLeasesFrom")
+                      }}</label>
                     </v-col>
                     <v-col cols="8" class="mb-n6">
-                      <v-text-field :label="$t('interface.rejectLeasesFrom')"
-                        v-model="interface.rejectLeases"></v-text-field>
+                      <v-text-field
+                        :label="$t('interface.rejectLeasesFrom')"
+                        v-model="interface.rejectLeases"
+                      ></v-text-field>
                     </v-col>
                     <v-col cols="12" class="mb-n6" v-if="!isValidRejectAddress">
-                      <p class="error-feedback  " style="margin-top: -10px; margin-left: 35%; ">
+                      <p
+                        class="error-feedback"
+                        style="margin-top: -10px; margin-left: 35%"
+                      >
                         {{ messageRejectAddress }}
                       </p>
                     </v-col>
@@ -353,15 +490,20 @@
                       <label class="ml-2">{{ $t("interface.hostname") }}</label>
                     </v-col>
                     <v-col cols="8" class="mb-n6">
-                      <v-text-field :label="$t('interface.hostname')" v-model="interface.hostname"></v-text-field>
+                      <v-text-field
+                        :label="$t('interface.hostname')"
+                        v-model="interface.hostname"
+                      ></v-text-field>
                     </v-col>
 
                     <v-col cols="12" class="mb-n6" v-if="!isValidHostname">
-                      <p class="error-feedback" style="margin-top: -10px; margin-left: 35%; ">
+                      <p
+                        class="error-feedback"
+                        style="margin-top: -10px; margin-left: 35%"
+                      >
                         {{ messageValidHostnameAddress }}
                       </p>
                     </v-col>
-
                   </v-row>
                 </div>
               </v-col>
@@ -371,8 +513,14 @@
               <label class="ml-3">{{
                 $t("interface.advancedParameters")
               }}</label>
-              <input type="checkbox" id="advancedParameters" name="advancedParameters" value="true"
-                v-model="advancedParameters" class="ml-3" />
+              <input
+                type="checkbox"
+                id="advancedParameters"
+                name="advancedParameters"
+                value="true"
+                v-model="advancedParameters"
+                class="ml-3"
+              />
             </v-row>
             <!-- advanced -->
 
@@ -390,16 +538,21 @@
                       }}</span>
                     </td>
                     <td>
-                      <v-text-field :label="$t('interface.timeout')" class="ml-3 mt-1"
-                        v-model="AdvancedConfigDHCPv4.timeout"></v-text-field>
+                      <v-text-field
+                        :label="$t('interface.timeout')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.timeout"
+                      ></v-text-field>
                     </td>
-
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidTimeout">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidTimeout"
+                      >
                         {{ $t("errors.ChampIncludeOnlyNumbersOrFloat") }}
                       </p>
                     </td>
@@ -411,15 +564,21 @@
                       }}</span>
                     </td>
                     <td style="width: 80%">
-                      <v-text-field :label="$t('interface.tryAgain')" class="ml-3 mt-1"
-                        v-model="AdvancedConfigDHCPv4.retry"></v-text-field>
-
+                      <v-text-field
+                        :label="$t('interface.tryAgain')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.retry"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4" v-if="!isValidRetry">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidRetry"
+                      >
                         {{ $t("errors.ChampIncludeOnlyNumbersOrFloat") }}
                       </p>
                     </td>
@@ -431,16 +590,21 @@
                       }}</span>
                     </td>
                     <td style="width: 50%">
-                      <v-text-field :label="$t('interface.selectExpiration')" class="ml-3 mt-1"
-                        v-model="AdvancedConfigDHCPv4.select_timeout"></v-text-field>
-
+                      <v-text-field
+                        :label="$t('interface.selectExpiration')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.select_timeout"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidSelectTimeout">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidSelectTimeout"
+                      >
                         {{ $t("errors.ChampIncludeOnlyNumbersOrFloat") }}
                       </p>
                     </td>
@@ -452,15 +616,21 @@
                       }}</span>
                     </td>
                     <td style="width: 80%">
-                      <v-text-field :label="$t('interface.restart')" class="ml-3 mt-1"
-                        v-model="AdvancedConfigDHCPv4.reboot"></v-text-field>
-
+                      <v-text-field
+                        :label="$t('interface.restart')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.reboot"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4" v-if="!isValidReboot">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidReboot"
+                      >
                         {{ $t("errors.ChampIncludeOnlyNumbersOrFloat") }}
                       </p>
                     </td>
@@ -472,15 +642,21 @@
                       }}</span>
                     </td>
                     <td style="width: 80%">
-                      <v-text-field :label="$t('interface.backoffCutoff')" class="ml-3 mt-1"
-                        v-model="AdvancedConfigDHCPv4.backoff"></v-text-field>
+                      <v-text-field
+                        :label="$t('interface.backoffCutoff')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.backoff"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidBackoff">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidBackoff"
+                      >
                         {{ $t("errors.ChampIncludeOnlyNumbersOrFloat") }}
                       </p>
                     </td>
@@ -492,16 +668,21 @@
                       }}</span>
                     </td>
                     <td style="width: 80%">
-                      <v-text-field :label="$t('interface.initialInterval')" class="ml-3 mt-1"
-                        v-model="AdvancedConfigDHCPv4.initial_interval"></v-text-field>
-
+                      <v-text-field
+                        :label="$t('interface.initialInterval')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.initial_interval"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidInitialInterval">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidInitialInterval"
+                      >
                         {{ $t("errors.ChampIncludeOnlyNumbersOrFloat") }}
                       </p>
                     </td>
@@ -521,16 +702,21 @@
                       }}</span>
                     </td>
                     <td style="width: 70%">
-                      <v-text-field class="ml-3 mt-1" :label="$t('interface.sendOptions')"
-                        v-model="AdvancedConfigDHCPv4.dhcp_client"></v-text-field>
-
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.sendOptions')"
+                        v-model="AdvancedConfigDHCPv4.dhcp_client"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidDhcp_client">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidDhcp_client"
+                      >
                         {{ $t("errors.validAddmac") }}
                       </p>
                     </td>
@@ -542,16 +728,21 @@
                       }}</span>
                     </td>
                     <td style="width: 70%">
-                      <v-text-field class="ml-3 mt-1" :label="$t('interface.sendOptionsLeaseTime')"
-                        v-model="AdvancedConfigDHCPv4.lease_time"></v-text-field>
-
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.sendOptionsLeaseTime')"
+                        v-model="AdvancedConfigDHCPv4.lease_time"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidLease_time">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidLease_time"
+                      >
                         {{ $t("errors.ChampIncludeOnlyNumbersOrFloat") }}
                       </p>
                     </td>
@@ -563,16 +754,21 @@
                       }}</span>
                     </td>
                     <td style="width: 70%">
-                      <v-text-field class="ml-3 mt-1" :label="$t('interface.requestOptions')"
-                        v-model="AdvancedConfigDHCPv4.request"></v-text-field>
-
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.requestOptions')"
+                        v-model="AdvancedConfigDHCPv4.request"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidRequest">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidRequest"
+                      >
                         {{ $t("champs.champletter") }}
                       </p>
                     </td>
@@ -584,16 +780,21 @@
                       }}</span>
                     </td>
                     <td style="width: 70%">
-                      <v-text-field class="ml-3 mt-1" :label="$t('interface.requiredOptions')"
-                        v-model="AdvancedConfigDHCPv4.require"></v-text-field>
-
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.requiredOptions')"
+                        v-model="AdvancedConfigDHCPv4.require"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidRequire">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidRequire"
+                      >
                         {{ $t("champs.champletter") }}
                       </p>
                     </td>
@@ -605,15 +806,21 @@
                       }}</span>
                     </td>
                     <td style="width: 70%">
-                      <v-text-field class="ml-3 mt-1" :label="$t('interface.supersedeDomaineName')"
-                        v-model="AdvancedConfigDHCPv4.domain_name"></v-text-field>
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.supersedeDomaineName')"
+                        v-model="AdvancedConfigDHCPv4.domain_name"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidDomain_name">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidDomain_name"
+                      >
                         {{ $t("errors.validHostname") }}
                       </p>
                     </td>
@@ -625,15 +832,21 @@
                       }}</span>
                     </td>
                     <td style="width: 70%">
-                      <v-text-field class="ml-3 mt-1" :label="$t('interface.prependDomainServer')"
-                        v-model="AdvancedConfigDHCPv4.domain_server"></v-text-field>
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.prependDomainServer')"
+                        v-model="AdvancedConfigDHCPv4.domain_server"
+                      ></v-text-field>
                     </td>
                   </tr>
                   <tr>
                     <td></td>
                     <td>
-                      <p style="margin-top: -10px; margin-left: 12px" class="error-feedback ml-4"
-                        v-if="!isValidDomain_server">
+                      <p
+                        style="margin-top: -10px; margin-left: 12px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidDomain_server"
+                      >
                         {{ $t("errors.formatMustBeLikeAdresseIP") }}
                       </p>
                     </td>
@@ -664,25 +877,63 @@
       <div class="text-start ml-8 mt-10">
         <span class="text-sm">
           <span class="text-red text-lg">*</span>
-          {{ $t("errors.oblig") }}</span>
+          {{ $t("errors.oblig") }}</span
+        >
       </div>
       <v-spacer></v-spacer><v-spacer></v-spacer>
       <div class="text-center">
-        <VButton large rounded outlined color="#FFFF" label-color="#213E9F" :label="$t('interface.cancel')"
-          :isLarge="true" @click="cancel" />
-        <VButton large rounded outlined color="#213E9F" label-color="#ffff" :label="$t('interface.save')"
-          :isLarge="true" type="submit" class="ml-2" />
+        <VButton
+          large
+          rounded
+          outlined
+          color="#FFFF"
+          label-color="#213E9F"
+          :label="$t('interface.cancel')"
+          :isLarge="true"
+          @click="cancel"
+        />
+        <VButton
+          large
+          rounded
+          outlined
+          color="#213E9F"
+          label-color="#ffff"
+          :label="$t('interface.save')"
+          :isLarge="true"
+          type="submit"
+          class="ml-2"
+        />
       </div>
       <br /><br /><br />
-      <v-alert type="success" class="d-flex mt-3" style="align-self: flex-end" elevation="2"
-        icon="mdi-check-circle-outline" border="top" v-if="showAlertGateway" :style="alertStyle">
+      <v-alert
+        type="success"
+        class="d-flex mt-3"
+        style="align-self: flex-end"
+        elevation="2"
+        icon="mdi-check-circle-outline"
+        border="top"
+        v-if="showAlertGateway"
+        :style="alertStyle"
+      >
         {{ message }}
       </v-alert>
-      <v-alert type="success" class="d-flex mt-3" style="align-self: flex-end" elevation="2"
-        icon="mdi-check-circle-outline" border="top" v-if="showAlert" :style="alertStyle">
+      <v-alert
+        type="success"
+        class="d-flex mt-3"
+        style="align-self: flex-end"
+        elevation="2"
+        icon="mdi-check-circle-outline"
+        border="top"
+        v-if="showAlert"
+        :style="alertStyle"
+      >
         {{ message }}
       </v-alert>
-      <v-dialog v-model="showGatewayDialog" max-width="600px" class="gateway-dialog">
+      <v-dialog
+        v-model="showGatewayDialog"
+        max-width="600px"
+        class="gateway-dialog"
+      >
         <v-card class="ml-3 mr-3">
           <v-card-title class="title-text">
             <span class="headline font-weight-bold">
@@ -693,27 +944,48 @@
             <v-form>
               <v-container>
                 <v-row>
-                  <v-text-field :label="`${$t('interface.gatewayName')} *`" v-model="gateway.gwname"></v-text-field>
+                  <v-text-field
+                    :label="`${$t('interface.gatewayName')} *`"
+                    v-model="gateway.gwname"
+                  ></v-text-field>
                 </v-row>
                 <p class="error-feedback mb-5 px-0 mx-0" v-if="!isNameGateway">
                   {{ messageNameGateway }}
                 </p>
                 <v-row>
-                  <v-text-field label="Gateway IPV4 *" clsas="w-100" v-model="gateway.gwaddress"></v-text-field>
+                  <v-text-field
+                    label="Gateway IPV4 *"
+                    clsas="w-100"
+                    v-model="gateway.gwaddress"
+                  ></v-text-field>
                 </v-row>
-                <p class="error-feedback mb-5 px-0 mx-0" v-if="!isGatewayAddress">
+                <p
+                  class="error-feedback mb-5 px-0 mx-0"
+                  v-if="!isGatewayAddress"
+                >
                   {{ messageGatewayAddress }}
                 </p>
                 <p class="error-feedback mb-5 px-0 mx-0" v-if="!isValidAddress">
                   {{ messageValidAddress }}
                 </p>
-                <p class="error-feedback mb-5 px-0 mx-0" v-if="messageExistGateway">
+                <p
+                  class="error-feedback mb-5 px-0 mx-0"
+                  v-if="messageExistGateway"
+                >
                   {{ messageExistGateway }}
                 </p>
                 <v-row>
-                  <v-text-field label="Description" v-model="gateway.description"></v-text-field></v-row>
+                  <v-text-field
+                    label="Description"
+                    v-model="gateway.description"
+                  ></v-text-field
+                ></v-row>
                 <v-row>
-                  <input type="checkbox" disabled v-model="gateway.default_aux" />
+                  <input
+                    type="checkbox"
+                    disabled
+                    v-model="gateway.default_aux"
+                  />
                   <label class="ml-3">{{
                     $t("interface.GatewayDefault")
                   }}</label>
@@ -732,20 +1004,44 @@
           <div class="text-start ml-6 mt-3 mb-8">
             <span class="text-sm">
               <span class="text-red text-lg">*</span>
-              {{ $t("errors.oblig") }}</span>
+              {{ $t("errors.oblig") }}</span
+            >
           </div>
 
           <div class="text-center">
-            <VButton large rounded outlined color="#FFFF" label-color="#213E9F" :label="$t('interface.cancel')"
-              :isLarge="true" @click="cancelGateway" />
-            <VButton large rounded outlined color="#213E9F" label-color="#ffff" :label="$t('interface.save')"
-              :isLarge="true" type="submit" class="ml-2" @click="addGateway" />
+            <VButton
+              large
+              rounded
+              outlined
+              color="#FFFF"
+              label-color="#213E9F"
+              :label="$t('interface.cancel')"
+              :isLarge="true"
+              @click="cancelGateway"
+            />
+            <VButton
+              large
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffff"
+              :label="$t('interface.save')"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
+              @click="addGateway"
+            />
           </div>
           <br />
         </v-card>
       </v-dialog>
     </v-form>
-    <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
       {{ textAlert }}
     </v-snackbar>
   </v-card>
@@ -910,20 +1206,27 @@ export default {
         /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
       // Validate the input value against the regex
-      if (this.interface.rejectLeases && !ipRegex.test(this.interface.rejectLeases)) {
+      if (
+        this.interface.rejectLeases &&
+        !ipRegex.test(this.interface.rejectLeases)
+      ) {
         return false; // Error message for invalid IP address
       }
       return true;
     },
 
     isValidHostname() {
-      const hostnameRegex = /^(?!-)(?!.*-$)([A-Za-z0-9-]{1,63}\.)+[A-Za-z0-9-]{1,63}$/;
+      const hostnameRegex =
+        /^(?!-)(?!.*-$)([A-Za-z0-9-]{1,63}\.)+[A-Za-z0-9-]{1,63}$/;
 
       if (this.interface.hostname && this.interface.hostname.length > 253) {
         return false;
       }
 
-      if (this.interface.hostname && !hostnameRegex.test(this.interface.hostname)) {
+      if (
+        this.interface.hostname &&
+        !hostnameRegex.test(this.interface.hostname)
+      ) {
         return false;
       }
       return true;
@@ -1006,7 +1309,8 @@ export default {
       return true;
     },
     isValidDhcp_client() {
-      const charRegex = /^(?:[0-9A-Fa-f]{2}([-:]))(?:[0-9A-Fa-f]{2}\1){4}[0-9A-Fa-f]{2}$/;
+      const charRegex =
+        /^(?:[0-9A-Fa-f]{2}([-:]))(?:[0-9A-Fa-f]{2}\1){4}[0-9A-Fa-f]{2}$/;
 
       if (
         this.AdvancedConfigDHCPv4.dhcp_client &&
@@ -1017,12 +1321,10 @@ export default {
       return true;
     },
     isValidAddmac() {
-      const charRegex = /^(?:[0-9A-Fa-f]{2}([-:]))(?:[0-9A-Fa-f]{2}\1){4}[0-9A-Fa-f]{2}$/;
+      const charRegex =
+        /^(?!([0]{2}[:-]){5}[0]{2}$)([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/;
 
-      if (
-        this.addmac &&
-        !charRegex.test(this.addmac)
-      ) {
+      if (this.addmac && !charRegex.test(this.addmac)) {
         return false;
       }
       return true;
@@ -1072,8 +1374,9 @@ export default {
       return true;
     },
     isValidDomain_server() {
-      const charRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-      
+      const charRegex =
+        /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
       if (
         this.AdvancedConfigDHCPv4.domain_server &&
         !charRegex.test(this.AdvancedConfigDHCPv4.domain_server)
@@ -1085,10 +1388,7 @@ export default {
     isValidMTU() {
       const charRegex = /^(?:5(?:7[6-9]|[89]\d)|[6-9]\d\d|[1-8]\d{3}|9000)$/;
 
-      if (
-        this.mtuv &&
-        !charRegex.test(this.mtuv)
-      ) {
+      if (this.mtuv && !charRegex.test(this.mtuv)) {
         return false;
       }
       return true;
@@ -1096,10 +1396,7 @@ export default {
     isValidMSS() {
       const charRegex = /^(?:57[7-9]|5[89]\d|[6-9]\d\d|\d{4,})$/;
 
-      if (
-        this.mssv &&
-        !charRegex.test(this.mssv)
-      ) {
+      if (this.mssv && !charRegex.test(this.mssv)) {
         return false;
       }
       return true;
@@ -1221,7 +1518,12 @@ export default {
       if (!this.isValidMSS) return;
       if (!this.isValidAddmac) return;
 
-      if (this.isValidIPV4Address && this.interface.alias_add && !this.interface.alias_mask && this.setuptypeip4 === "dhcp") {
+      if (
+        this.isValidIPV4Address &&
+        this.interface.alias_add &&
+        !this.interface.alias_mask &&
+        this.setuptypeip4 === "dhcp"
+      ) {
         return;
       }
 
@@ -1230,7 +1532,9 @@ export default {
         return;
       }
       if (!this.isValidIPV4Address && this.setuptypeip4 === "dhcp") {
-        this.messageValidIPV4Address = this.$t("errors.formatMustBeLikeAdresseIP");
+        this.messageValidIPV4Address = this.$t(
+          "errors.formatMustBeLikeAdresseIP"
+        );
         return;
       }
       if (!this.isValidRejectAddress && this.setuptypeip4 === "dhcp") {
@@ -1269,8 +1573,8 @@ export default {
           private_aux: this.private_aux,
           bogon_aux: this.bogon_aux,
           addmac: this.addmac,
-          mtuv: this.mtuv,
-          mssv: this.mssv,
+          mtuv: +this.mtuv,
+          mssv: +this.mssv,
           speed_duplex: this.speed_duplex,
           setuptypeIP4: this.setuptypeip4,
           value_setup_Ipv4: {
@@ -1402,7 +1706,9 @@ export default {
           return;
         }
         if (!this.isValidAddress) {
-          this.messageValidAddress = this.$t("errors.formatMustBeLikeAdresseIP");
+          this.messageValidAddress = this.$t(
+            "errors.formatMustBeLikeAdresseIP"
+          );
           return;
         }
         let mappedGateways = this.allStaticGateways.map(

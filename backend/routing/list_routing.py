@@ -1,10 +1,10 @@
 from django.core import serializers
 import json
-
+ 
 from backend.gateway.models import Gateway, GatewayInterface
 from backend.routing.models import Routing
-
-
+ 
+ 
 def get_list_all_routing():
     """Getting all routing from database"""
     list_routing = []
@@ -17,8 +17,8 @@ def get_list_all_routing():
         routing['fields']['gateway_name'] = Routing.objects.get(id=routing_id).gateway.gwname
         list_routing.append(routing['fields'])
     return list_routing
-
-
+ 
+ 
 def get_one_routing(id):
     """Getting routing by id from database"""
     routing = Routing.objects.filter(pk=id)
@@ -28,8 +28,8 @@ def get_one_routing(id):
     res[0]['fields']['id'] = routing_id
     res[0]['fields']['gateway_name'] = Routing.objects.get(id=routing_id).gateway.gwname
     return res[0]['fields']
-
-
+ 
+ 
 def get_list_all_gateway():
     """Getting all gateway from database"""
     list_gateway = []
@@ -40,10 +40,12 @@ def get_list_all_gateway():
         gateway_id = gateway['pk']
         gateway['fields']['id'] = gateway_id
         if len(GatewayInterface.objects.filter(gateway=Gateway.objects.get(id=gateway_id))) > 0:
+            gateway['fields']['interfaces'] = [{"id": gateway.interface.pk,
+                                                "name": gateway.interface.ifname} for gateway in GatewayInterface.objects.filter(gateway=Gateway.objects.get(id=gateway_id))]
             list_gateway.append(gateway['fields'])
     return list_gateway
-
-
+ 
+ 
 def get_one_gateway(id):
     """Getting gateway by id from database"""
     gateway = Gateway.objects.filter(pk=id)
@@ -52,4 +54,7 @@ def get_one_gateway(id):
     gateway_id = res[0]['pk']
     res[0]['fields']['id'] = gateway_id
     if len(GatewayInterface.objects.filter(gateway=Gateway.objects.get(id=gateway_id))) > 0:
+        res[0]['fields']['interfaces'] = [{
+            "id": gateway.interface.pk,
+            "name": gateway.interface.ifname} for gateway in GatewayInterface.objects.filter(gateway=Gateway.objects.get(id=gateway_id))]
         return res[0]['fields']

@@ -246,7 +246,7 @@ EOF""".format('\n'.join(output_service))
         output,error=run_command_with_timeout(setuptypeIP4, cmd, timeout)
         # print({"cmd to execute==>":cmd})
         if output is None and error!="" :
-            print(error)
+            print({"cmd":cmd,"error":error})
             return error
         if cmd.find("sudo dhclient") == -1   and error!="" and (error is not None and not error.startswith("Warning")):
             return error

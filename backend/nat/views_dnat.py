@@ -229,7 +229,7 @@ def update_dnat(request, id):
                 # Update the rule in system
                 rule_number, rule_content = update_dnat_rule_in_system(
                     interface_ifname, source, destination, data["protocol"], dnat.rule_number, 
-                    next_postrouting_handle, dnat.prerouting_position-1)
+                    next_postrouting_handle)
                 data["rule_number"] = int(rule_number)
                 data["rule_content"] = rule_content
 
@@ -266,14 +266,11 @@ def start_dnat(request, id):
         # Find the next activated rule handle to insert the started rule above
         list_next_dnat = DNat.objects.filter(rule_status=True, db_position__gt=dnat.db_position)
         position_insert = -1
-        prerouting_position = 0
         if len(list_next_dnat) > 0:
             next_dnat = list_next_dnat.order_by('db_position')[0]
-            prerouting_position = next_dnat.prerouting_position - 1
             position_insert = next_dnat.rule_number
         rule_number, _ = create_dnat_rule_in_system(
-            dnat.interface.ifname, source, destination, dnat.protocol, position_insert, 
-            prerouting_position)
+            dnat.interface.ifname, source, destination, dnat.protocol, position_insert)
         dnat.rule_number = int(rule_number)
 
         dnat.rule_status = True
@@ -329,7 +326,7 @@ def change_dnat_position(request, id):
         new_position = data["new_position"]
         dnat = DNat.objects.get(id=id)
         change_rule_dnat_position_in_system(dnat, new_position)
-        rules_result = change_position_rule(dnat.pk, new_position, DNat, "db_position")
+        rules_result = change_position_rule(dnat.pk, new_position, DNat)
         save_rules_positions(rules_result, DNat)
         
         return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)

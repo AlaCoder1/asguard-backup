@@ -222,7 +222,7 @@ def conf(request,name_interface):
         data = request.data
         resulltat=validate_data_input(data,name_interface)
         if resulltat is  None:
-            print("hello")
+            # print("hello")
             device_info,ifname,id_interface,aux_main,generic_config_object,uuid = device_name_interface(name_interface)
             if uuid is not None:
                 

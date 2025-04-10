@@ -76,13 +76,22 @@ def validate_name_interface(name_interface):
     if not Interface.objects.filter(name_interface=name_interface).exists():
         raise NAMException(_("Interface does not exist!"))
     return True  
-def validate_mac_address(mac_address):
-    """Validate MAC address format (XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX)"""
-    mac_regex = r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
-    if mac_address is not None and not re.match(mac_regex, mac_address):
-        raise InvalidMacAddressException(_("Invalid MAC address format like this XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX"))
-    return True  
 
+def validate_mac_address(mac_address):
+    """Validate MAC address format (XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX) with additional constraints."""
+    mac_regex = r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
+    if mac_address is not None :
+        if not re.match(mac_regex, mac_address):
+            raise InvalidMacAddressException(_("Invalid MAC address format. Expected format: XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX."))
+        normalized_mac = mac_address.replace('-', ':').lower()
+        if normalized_mac == "00:00:00:00:00:00":
+            raise InvalidMacAddressException(_("Invalid MAC address: cannot use all zeros (00:00:00:00:00:00)."))
+        
+        first_octet = int(normalized_mac.split(':')[0], 16)
+        if (first_octet & 1):
+            raise InvalidMacAddressException(_("Invalid MAC address: multicast addresses are not allowed; the address must be unicast."))
+    
+    return True
 def validate_ip_address(ip):
     """Validate IPv4 and IPv6 addresses."""
     try:
@@ -153,7 +162,7 @@ def validate_mtu(mtu_value):
     """Set the MTU value for a network interface with basic constraints."""
     min_mtu = 576    
     max_mtu = 9000   
-    if mtu_value is not None and (mtu_value < min_mtu or mtu_value > max_mtu):
+    if mtu_value is not None and (int(mtu_value) < min_mtu or int(mtu_value) > max_mtu):
         raise MTUException(_("MTU value is outside the allowed range ")+f"({min_mtu}-{max_mtu} ).")
 
     return True 
@@ -161,7 +170,7 @@ def validate_mtu(mtu_value):
 
 def validate_mss(mtu_value):
     """Calculate the MSS based on the MTU value."""
-    if mtu_value is not None and mtu_value < 576:
+    if mtu_value is not None and int(mtu_value) < 576:
         raise MSSException(_("MSS value is too small. Minimum MSS  is 576 bytes."))
 
     return True

@@ -183,9 +183,9 @@ def update_one_to_one_nat(request, id):
             if one_to_one_nat.rule_status:
                 # Get the rule handle of the next rule (by position)
                 next_postrouting_handle = get_next_nat_handle(one_to_one_nat)
-                rule_number = update_one_to_one_nat_rule_in_system(interface_ifname, data["source_address"], destination,
-                                                                   data["translation_address"], one_to_one_nat.rule_number,
-                                                                   next_postrouting_handle, one_to_one_nat.postrouting_position-1)
+                rule_number = update_one_to_one_nat_rule_in_system(
+                    interface_ifname, data["source_address"], destination, data["translation_address"], 
+                    one_to_one_nat.rule_number, next_postrouting_handle)
                 data["rule_number"] = int(rule_number)
 
                 serializer_one_to_one_nat = OneToOneNatSerializer(one_to_one_nat, data=data)
@@ -222,14 +222,12 @@ def start_one_to_one_nat(request, id):
         list_next_one_to_one_nat = OneToOneNat.objects.filter(rule_status=True,
                                                               db_position__gt=one_to_one_nat.db_position)
         position_insert = 0
-        postrouting_position = 0
         if len(list_next_one_to_one_nat) > 0:
             next_one_to_one_nat = list_next_one_to_one_nat.order_by('db_position')[0]
-            postrouting_position = next_one_to_one_nat.postrouting_position - 1
             position_insert = next_one_to_one_nat.rule_number
         rule_number, _ = create_one_to_one_nat_rule_in_system(
             one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination,
-            one_to_one_nat.translation_address, position_insert, postrouting_position)
+            one_to_one_nat.translation_address, position_insert)
         one_to_one_nat.rule_number = int(rule_number)
 
         one_to_one_nat.rule_status = True
@@ -285,7 +283,7 @@ def change_one_to_one_nat_position(request, id):
         new_position = data["new_position"]
         one_to_one_nat = OneToOneNat.objects.get(id=id)
         change_rule_one_to_one_nat_position_in_system(one_to_one_nat, new_position)
-        rules_result = change_position_rule(one_to_one_nat.pk, new_position, OneToOneNat, "db_position")
+        rules_result = change_position_rule(one_to_one_nat.pk, new_position, OneToOneNat)
         save_rules_positions(rules_result, OneToOneNat)
 
         return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)

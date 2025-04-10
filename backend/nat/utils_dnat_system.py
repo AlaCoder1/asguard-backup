@@ -1,12 +1,70 @@
 from backend.nat.models import DNat
 from backend.nat.utils import input_create_dnat
-from backend.nat.utils_system import exist_change_rule_position_in_system, get_rule_content_in_system, get_rule_handle_in_system
-from backend.nat.utils_system import delete_nat_rule_in_system, save_ruleset_nft
-from utils.commands_utils import execute_command_without_arguments
+from backend.nat.utils_system import add_nat_rule_in_system, delete_nat_rule_in_system, exist_change_rule_position_in_system, extract_list_rule_nat_from_system, get_added_nat_rule
 
 
-def create_dnat_rule_in_system(iifname, source, destination, protocol, next_rule_handle=0, rule_position=0):
+def create_dnat_rule_in_system(iifname, source, destination, protocol, next_rule_handle=0):
     """Create an DNAT rule in system and return the rule handle and content"""
+    # Get the list of existing prerouting rules before adding the new one
+    previous_list_prerouting_rules =  extract_list_rule_nat_from_system("prerouting")
+
+    # Build the DNAT rule command
+    command_dnat = build_command_create_dnat(
+        iifname, source, destination, protocol, next_rule_handle)
+
+    # Create the DNAT rule in system
+    add_nat_rule_in_system(command_dnat)
+
+    # Get the list of existing prerouting rules after adding the new one
+    new_list_prerouting_rules =  extract_list_rule_nat_from_system("prerouting")
+
+    # Get the rule handle and content
+    rule_content, handle_number = get_added_nat_rule(
+        previous_list_prerouting_rules, new_list_prerouting_rules)
+    return handle_number, rule_content
+
+
+def delete_dnat_rule_in_system(handle_number):
+    """Delete an DNAT rule in system"""
+    delete_nat_rule_in_system("prerouting", handle_number)
+
+
+def update_dnat_rule_in_system(iifname, source, destination, protocol, handle_number, next_rule_handle):
+    """Update an DNAT rule in system and return the new rule handle and content"""
+    # Delete the DNAT rule in system with previous params
+    delete_nat_rule_in_system("prerouting", handle_number)
+    
+    # Get the list of existing prerouting rules after deleting the DNAT rule
+    previous_list_prerouting_rules =  extract_list_rule_nat_from_system("prerouting")
+
+    # Build the DNAT rule command
+    command_dnat = build_command_create_dnat(
+        iifname, source, destination, protocol, next_rule_handle)
+
+    # Create the DNAT rule in system with new params
+    add_nat_rule_in_system(command_dnat)
+
+    # Get the list of existing prerouting rules after adding the DNAT rule in system with new params
+    new_list_prerouting_rules =  extract_list_rule_nat_from_system("prerouting")
+    
+    # Get the rule handle and content
+    new_rule_content, new_handle_number = get_added_nat_rule(
+        previous_list_prerouting_rules, new_list_prerouting_rules)
+    return new_handle_number, new_rule_content
+
+
+def change_rule_dnat_position_in_system(dnat: DNat, new_positon: int):
+    """Change a DNAT rule position in system"""
+    next_rule_number = exist_change_rule_position_in_system(DNat, dnat, new_positon)
+    if next_rule_number:
+        delete_dnat_rule_in_system(dnat.rule_number)
+        source, destination = input_create_dnat(dnat)
+        create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol,
+                                   next_rule_number)
+
+
+def build_command_create_dnat(iifname, source, destination, protocol, next_rule_handle):
+    """Builds the command-line string used to create an DNAT rule."""
     # Set the basics of rule command
     command_dnat = ["sudo", "nft", "insert", "rule", "nat", "prerouting", "iifname", iifname]
     # Update the command to insert the rule in a specific position
@@ -41,44 +99,5 @@ def create_dnat_rule_in_system(iifname, source, destination, protocol, next_rule
                          outgoing_ip_address, forwarding_port]
     for command in added_fields_rule:
         command_dnat.extend(command)
-
-    # Create the DNAT rule in system
-    execute_command_without_arguments(command_dnat)
-
-    # Save ruleset in ruleset file
-    save_ruleset_nft()
-
-    # Get the rule handle
-    handle_number = get_rule_handle_in_system("prerouting", rule_position)
-    rule_content = get_rule_content_in_system("prerouting", rule_position)
-    return handle_number, rule_content
-
-
-def delete_dnat_rule_in_system(handle_number):
-    """Delete an DNAT rule in system"""
-    delete_nat_rule_in_system("prerouting", handle_number)
-
-    # Save ruleset in ruleset file
-    save_ruleset_nft()
-
-
-def update_dnat_rule_in_system(iifname, source, destination, protocol, handle_number, next_rule_handle, 
-                               rule_position):
-    """Update an DNAT rule in system and return the new rule handle and content"""
-    delete_nat_rule_in_system("prerouting", handle_number)
-    new_handle_number, new_rule_content = create_dnat_rule_in_system(
-        iifname, source, destination, protocol, next_rule_handle, rule_position)
-
-    # Save ruleset in ruleset file
-    save_ruleset_nft()
-    return new_handle_number, new_rule_content
-
-
-def change_rule_dnat_position_in_system(dnat: DNat, new_positon: int):
-    """Change an ]NAT rule position in system"""
-    next_rule_number = exist_change_rule_position_in_system(DNat, dnat, new_positon)
-    if next_rule_number:
-        delete_dnat_rule_in_system(dnat.rule_number)
-        source, destination = input_create_dnat(dnat)
-        create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol,
-                                   next_rule_number, new_positon)
+    
+    return command_dnat

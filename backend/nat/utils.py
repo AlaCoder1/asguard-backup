@@ -1,72 +1,54 @@
 from backend.nat.models import DNat, OneToOneNat, SNat
 from backend.nat import utils_system
-from django.core import serializers
-import json
 
 
-def save_rules_positions(rules_result:list, nat_type):
+def save_rules_positions(rules_result: list, nat_type: SNat | OneToOneNat | DNat):
     """
     function to update rules positions in database
     """
     nat_type.objects.update(db_position=None)
     for rule in rules_result:
         nat_object = nat_type.objects.get(id=rule['id'])
-        nat_object.db_position = rule["db_position"]
+        nat_object.db_position = rule["pos"]
         nat_object.save()
 
 
-def change_position_rule(id_rule: int, new_position: int, nat_type: SNat | OneToOneNat | DNat) -> list:
-    """
-    This function changes the position of a rule in the list.
-    If the new position is greater than the old position, it moves the rules to the top.
-    If the new position is smaller than the old position, it moves the rules to the bottom.
-    """
-    all_rules_object = nat_type.objects.all().order_by("db_position")
-    all_rules = [{"id": rule.pk, "db_position": rule.db_position} for rule in all_rules_object]
-    all_rules_position = [rule["db_position"] for rule in all_rules]
-    input_rule_update = {"id": id_rule, "db_position": new_position}
-    old_position = nat_type.objects.get(id=id_rule).db_position
-    result_list = []
-    if old_position and new_position:
-        if (old_position < new_position):
-            result_list = permut_from_top(old_position, new_position, all_rules_position, input_rule_update,
-                                          "db_position", all_rules)
-        elif (old_position > new_position):
-            result_list = permut_to_top(old_position, new_position, all_rules_position, input_rule_update,
-                                        "db_position", all_rules)
-    return result_list
+def change_position_rule(rule_id: int, new_position: int, nat_type: SNat | OneToOneNat | DNat) -> list:
+    """Change the position of a NAT rule and reorder the list of the NAT rules by changing the db_position field"""
+    list_nat_db = nat_type.objects.all().order_by("db_position")
+    list_nat_dict = [{"id": rule.pk, "pos": rule.db_position} for rule in list_nat_db]
+    new_list_nat_dict = move_rule(list_nat_dict, rule_id, new_position)
+    save_rules_positions(new_list_nat_dict, nat_type)
 
 
-def permut_from_top(old_position:int, new_position:int, all_rules_position:list,
-                    input_rule_update:dict, position_type:str, all_rules:list[dict] )->list:
-    """
-    This function takes the old and new position of a rule and returns a list of rules
-    that should be in the top of the list before the update.
-    """
-    result_list = []
-    modified_rules = all_rules[all_rules_position.index(old_position)+1: all_rules_position.index(new_position)+1]
-    for i in modified_rules:
-        i[position_type] = i[position_type]-1
-    result_list = all_rules[0:all_rules_position.index(old_position)] + modified_rules
-    result_list.append(input_rule_update)
-    result_list += all_rules[all_rules_position.index(new_position)+1:]
-    return result_list
+def move_rule(list_rule: list, rule_id: int, new_pos: int):
+    """Move a rule with a specific ID to a new position in a list of rules.
+    Each rule is represented as a dictionary with "id" and "pos" keys.
+    The function reorders the list so that the rule with the given ID
+    is moved to the specified position, and updates the "pos" values
+    of all rules to maintain a consistent sequence starting from 1."""
+    # Ensure the list is sorted by position
+    list_rule.sort(key=lambda r: r["pos"])
 
+    # Find the rule to move
+    rule_to_move = next((r for r in list_rule if r["id"] == rule_id), None)
+    if not rule_to_move:
+        raise ValueError(f"Rule with id={rule_id} not found.")
 
-def permut_to_top(old_position:int, new_position:int, all_rules_position:list,
-                  input_rule_update:dict, position_type:str, all_rules:list[dict])->list:
-    """
-    This function takes the old and new position of a rule and returns a list of rules
-    that should be in the top of the list after the update.
-    """
-    result_list = []
-    modified_rules = all_rules[all_rules_position.index(new_position): all_rules_position.index(old_position)]
-    for i in modified_rules:
-        i[position_type] += 1
-    result_list += all_rules[0: all_rules_position.index(new_position)]
-    result_list.append(input_rule_update)
-    result_list += modified_rules+all_rules[all_rules_position.index(old_position)+1:]
-    return result_list
+    # Remove the rule to move
+    list_rule.remove(rule_to_move)
+
+    # Adjust new position bounds
+    new_pos = max(1, min(new_pos, len(list_rule) + 1))
+
+    # Insert the rule at the new position
+    list_rule.insert(new_pos - 1, rule_to_move)
+
+    # Reassign positions
+    for i, rule in enumerate(list_rule, start=1):
+        rule["pos"] = i
+
+    return list_rule
 
 
 def get_rule_handle_position_with_content(rule_content: str, list_nat_rules: list[str]):

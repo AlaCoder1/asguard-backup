@@ -15,28 +15,25 @@ def save_rules_positions(rules_result:list, nat_type):
         nat_object.save()
 
 
-def change_position_rule(id_rule:int, new_position:int, nat_type, position_type:str)->list:
+def change_position_rule(id_rule: int, new_position: int, nat_type: SNat | OneToOneNat | DNat) -> list:
     """
     This function changes the position of a rule in the list.
     If the new position is greater than the old position, it moves the rules to the top.
     If the new position is smaller than the old position, it moves the rules to the bottom.
-    
     """
-    all_rules_object=nat_type.objects.all().order_by(position_type)
-    data_rules= json.loads(serializers.serialize("json", all_rules_object))
-    all_rules=[{"id":rule['pk'],position_type:rule['fields'][position_type] } for rule in data_rules]
-    all_rules_position=[rule[position_type] for rule in all_rules]
-    input_rule_update={"id":id_rule,position_type:new_position}
-    new_position=input_rule_update[position_type]
-    old_position=next((rule for rule in all_rules if rule["id"] == input_rule_update["id"]), None)[position_type]
+    all_rules_object = nat_type.objects.all().order_by("db_position")
+    all_rules = [{"id": rule.pk, "db_position": rule.db_position} for rule in all_rules_object]
+    all_rules_position = [rule["db_position"] for rule in all_rules]
+    input_rule_update = {"id": id_rule, "db_position": new_position}
+    old_position = nat_type.objects.get(id=id_rule).db_position
     result_list = []
     if old_position and new_position:
-        if (old_position<new_position):
-            result_list=permut_from_top(old_position,new_position,all_rules_position,input_rule_update,
-                                        position_type,all_rules)
-        elif (old_position>new_position):
-            result_list=permut_to_top(old_position,new_position,all_rules_position,input_rule_update,
-                                    position_type,all_rules)
+        if (old_position < new_position):
+            result_list = permut_from_top(old_position, new_position, all_rules_position, input_rule_update,
+                                          "db_position", all_rules)
+        elif (old_position > new_position):
+            result_list = permut_to_top(old_position, new_position, all_rules_position, input_rule_update,
+                                        "db_position", all_rules)
     return result_list
 
 
@@ -46,13 +43,13 @@ def permut_from_top(old_position:int, new_position:int, all_rules_position:list,
     This function takes the old and new position of a rule and returns a list of rules
     that should be in the top of the list before the update.
     """
-    result_list=[]
-    modified_rules=all_rules[all_rules_position.index(old_position)+1:all_rules_position.index(new_position)+1]
+    result_list = []
+    modified_rules = all_rules[all_rules_position.index(old_position)+1: all_rules_position.index(new_position)+1]
     for i in modified_rules:
-        i[position_type]=i[position_type]-1
-    result_list=all_rules[0:all_rules_position.index(old_position)]+modified_rules
+        i[position_type] = i[position_type]-1
+    result_list = all_rules[0:all_rules_position.index(old_position)] + modified_rules
     result_list.append(input_rule_update)
-    result_list+=all_rules[all_rules_position.index(new_position)+1:]
+    result_list += all_rules[all_rules_position.index(new_position)+1:]
     return result_list
 
 
@@ -62,30 +59,14 @@ def permut_to_top(old_position:int, new_position:int, all_rules_position:list,
     This function takes the old and new position of a rule and returns a list of rules
     that should be in the top of the list after the update.
     """
-    result_list=[]
-    modified_rules=all_rules[all_rules_position.index(new_position):all_rules_position.index(old_position)]
+    result_list = []
+    modified_rules = all_rules[all_rules_position.index(new_position): all_rules_position.index(old_position)]
     for i in modified_rules:
-        i[position_type]=i[position_type]+1
-    result_list+=all_rules[0:all_rules_position.index(new_position)]
+        i[position_type] += 1
+    result_list += all_rules[0: all_rules_position.index(new_position)]
     result_list.append(input_rule_update)
-    result_list+=modified_rules+all_rules[all_rules_position.index(old_position)+1:]
+    result_list += modified_rules+all_rules[all_rules_position.index(old_position)+1:]
     return result_list
-
-
-def get_rule_handle_with_position(list_nat_rules:list[str], position):
-    """Get a list of nat rules and rule position and return it's handle"""
-    
-    rule_line = list_nat_rules[position]
-    handle_number = rule_line[rule_line.find("# handle "):].replace("# handle ", "")
-    return handle_number
-
-
-def get_rule_content_with_position(list_nat_rules:list[str], position):
-    """Get a nat rule position and a list of all nat rules and return it's content"""
-    
-    rule_line = list_nat_rules[position]
-    handle_number = rule_line[:rule_line.find(" # handle ")]
-    return handle_number
 
 
 def get_rule_handle_position_with_content(rule_content: str, list_nat_rules: list[str]):
@@ -93,7 +74,7 @@ def get_rule_handle_position_with_content(rule_content: str, list_nat_rules: lis
     If the rule doesn't exist in table nat in system then the function return False"""
     for rule_index, rule in enumerate(list_nat_rules):
         if f"{rule} # handle ".find(rule_content) > -1:
-            rule_handle = rule.replace(f"{rule_content} # handle ", "")
+            rule_handle = rule.split(" # handle ", 1)[1]
             return rule_handle, rule_index
     return False
 
@@ -106,21 +87,8 @@ def synchronize_rule_database(nat_rule=None, rule_handle=None, rule_position=Non
     if rule_type == "postrouting":
         nat_rule.postrouting_position = rule_position
     else:
-        nat_rule.pretrouting_position = rule_position
+        nat_rule.prerouting_position = rule_position
     nat_rule.save()
-
-
-def save_handle_from_system_to_database(list_routing_from_db, list_routing_from_system):
-    """Take the list of routing from system (postrouting or prerouting) 
-    and save each rule handle in database"""
-    # Loop through the list of NAT (SNAT, OneToOne or DNAT) rules reversibly, 
-    # get the last rule handle and 
-    # remove it from the list 
-    for rule_index in range(len(list_routing_from_system)):
-        handle_number = get_rule_handle_with_position(list_routing_from_system, rule_index)
-        # Save the rule handle in database
-        list_routing_from_db[rule_index].rule_number = handle_number
-        list_routing_from_db[rule_index].save()
 
 
 def synchronize_nat_rules():
@@ -185,20 +153,6 @@ def deactivate_all_rules():
     DNat.objects.filter(rule_status=True).update(rule_status=False, 
                                                  prerouting_position=None, 
                                                  rule_number=None)
-
-
-def find_nat_in_ruleset(rule_set:str, chain="postrouting"):
-    """Return list of NAT rules with it's type: SNAT, OneToOne or DNAT"""
-    list_rules = [line.strip() for line in rule_set.splitlines()]
-    for line_index in range(len(list_rules)):
-        if list_rules[line_index].startswith(f"chain {chain}"):
-            start_snat_line = line_index + 2
-            break
-    for line_snat in range(start_snat_line, len(list_rules)):
-        if list_rules[line_snat].startswith("}"):
-            end_snat_line = line_snat
-            break
-    return list_rules[start_snat_line:end_snat_line]
 
 
 def get_next_nat_handle(rule_nat, chain="postrouting"):

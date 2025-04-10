@@ -1,13 +1,76 @@
 from backend.nat.models import SNat
 from backend.nat.utils import input_create_snat
-from backend.nat.utils_system import exist_change_rule_position_in_system, get_rule_content_in_system
-from backend.nat.utils_system import delete_nat_rule_in_system, get_rule_handle_in_system, save_ruleset_nft
-from utils.commands_utils import execute_command_without_arguments
+from backend.nat.utils_system import add_nat_rule_in_system, delete_nat_rule_in_system, exist_change_rule_position_in_system, extract_list_rule_nat_from_system, get_added_nat_rule
 
 
-def create_snat_rule_in_system(oifname, source, destination, protocol, masking, next_rule_handle=0, 
-                               rule_position=0):
+def create_snat_rule_in_system(oifname, source, destination, protocol, masking, next_rule_handle=0):
     """Create an SNAT rule in system and return the rule handle and content"""
+    # Get the list of existing postrouting rules before adding the new one
+    previous_list_postrouting_rules =  extract_list_rule_nat_from_system()
+
+    # Build the SNAT rule command
+    command_snat = build_command_create_snat(
+        oifname, source, destination, protocol, masking, next_rule_handle)
+
+    # Create the SNAT rule in system
+    add_nat_rule_in_system(command_snat)
+
+    # Get the list of existing postrouting rules after adding the new one
+    new_list_postrouting_rules =  extract_list_rule_nat_from_system()
+
+    # Get the rule handle and content
+    rule_content, handle_number = get_added_nat_rule(
+        previous_list_postrouting_rules, new_list_postrouting_rules)
+    return handle_number, rule_content
+
+
+def delete_snat_rule_in_system(handle_number):
+    """Delete an SNAT rule in system"""
+    delete_nat_rule_in_system("postrouting", handle_number)
+
+
+def update_snat_rule_in_system(oifname, source, destination, protocol, masking, handle_number, 
+                               next_rule_handle):
+    """Update an SNAT rule in system and return the new rule handle and content"""
+    # Delete the SNAT rule in system with previous params
+    delete_nat_rule_in_system("postrouting", handle_number)
+    
+    # Get the list of existing postrouting rules after deleting the SNAT rule
+    previous_list_postrouting_rules =  extract_list_rule_nat_from_system()
+
+    # Build the SNAT rule command
+    command_snat = build_command_create_snat(
+        oifname, source, destination, protocol, masking, next_rule_handle)
+
+    # Create the SNAT rule in system with new params
+    add_nat_rule_in_system(command_snat)
+
+    # Get the list of existing postrouting rules after adding the SNAT rule in system with new params
+    new_list_postrouting_rules =  extract_list_rule_nat_from_system()
+
+    # Get the rule handle and content
+    new_rule_content, new_handle_number = get_added_nat_rule(
+        previous_list_postrouting_rules, new_list_postrouting_rules)
+    
+    return new_handle_number, new_rule_content
+
+
+def change_rule_snat_position_in_system(snat: SNat, new_positon: int):
+    """Change an SNAT rule position in system"""
+    next_rule_number = exist_change_rule_position_in_system(SNat, snat, new_positon)
+    if next_rule_number:
+        delete_snat_rule_in_system(snat.rule_number)
+        source, destination, masking = input_create_snat(
+                snat.source_address, snat.source_port, 
+                snat.destination_address, snat.destination_port,
+                snat.snat_type, snat.translation_address_from, snat.translation_address_to, 
+                snat.translation_port)
+        create_snat_rule_in_system(snat.interface.ifname, source, destination, snat.protocol, masking,
+                                   next_rule_number)
+
+
+def build_command_create_snat(oifname, source, destination, protocol, masking, next_rule_handle):
+    """Builds the command-line string used to create an SNAT rule."""
     # Set the basics of rule command
     # Command to create a rule in first position
     command_snat = ["sudo", "nft", "insert", "rule", "nat", "postrouting", "oifname", oifname]
@@ -41,49 +104,5 @@ def create_snat_rule_in_system(oifname, source, destination, protocol, masking, 
                          masking]
     for command in added_fields_rule:
         command_snat.extend(command)
-
-    # Create the SNAT rule in system
-    execute_command_without_arguments(command_snat)
-
-    # Save ruleset in ruleset file
-    save_ruleset_nft()
-
-    # Get the rule handle
-    handle_number = get_rule_handle_in_system("postrouting", rule_position)
-    rule_content = get_rule_content_in_system("postrouting", rule_position)
-    return handle_number, rule_content
-
-
-def delete_snat_rule_in_system(handle_number):
-    """Delete an SNAT rule in system"""
-    execute_command_without_arguments(
-        ["sudo", "nft", "delete", "rule", "nat", "postrouting", "handle", f"{handle_number}"])
-
-    # Save ruleset in ruleset file
-    save_ruleset_nft()
-
-
-def update_snat_rule_in_system(oifname, source, destination, protocol, masking, handle_number, 
-                               next_rule_handle, rule_position):
-    """Update an SNAT rule in system and return the new rule handle and content"""
-    delete_nat_rule_in_system("postrouting", handle_number)
-    new_handle_number, new_content_number = create_snat_rule_in_system(
-        oifname, source, destination, protocol, masking, next_rule_handle, rule_position)
-
-    # Save ruleset in ruleset file
-    save_ruleset_nft()
-    return new_handle_number, new_content_number
-
-
-def change_rule_snat_position_in_system(snat: SNat, new_positon: int):
-    """Change an SNAT rule position in system"""
-    next_rule_number = exist_change_rule_position_in_system(SNat, snat, new_positon)
-    if next_rule_number:
-        delete_snat_rule_in_system(snat.rule_number)
-        source, destination, masking = input_create_snat(
-                snat.source_address, snat.source_port, 
-                snat.destination_address, snat.destination_port,
-                snat.snat_type, snat.translation_address_from, snat.translation_address_to, 
-                snat.translation_port)
-        create_snat_rule_in_system(snat.interface.ifname, source, destination, snat.protocol, masking, 
-                                next_rule_number, new_positon)
+    
+    return command_snat

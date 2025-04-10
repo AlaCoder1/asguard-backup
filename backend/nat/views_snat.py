@@ -98,14 +98,17 @@ def create_snat(request):
             interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
             # create the input for creating SNAT rule
-            source, destination, masking = input_create_snat(
-                data["source_address"], data["source_port"], data["destination_address"], 
-                data["destination_port"], data["snat_type"])
-            if data["snat_type"] == "Static":
+            if data["snat_type"] == "MASQ":
+                source, destination, masking = input_create_snat(
+                    data["source_address"], data["source_port"], data["destination_address"], 
+                    data["destination_port"], data["snat_type"])
+            elif data["snat_type"] == "Static":
                 source, destination, masking = input_create_snat(
                     data["source_address"], data["source_port"], data["destination_address"], 
                     data["destination_port"], data["snat_type"], data["translation_address_from"], 
                     data["translation_address_to"], data["translation_port"])
+            else:
+                return JsonResponse({"error": "Data error"}, status=400)
 
             # Add the rule in system and get the rule handle and content
             rule_number, rule_content = create_snat_rule_in_system(interface_ifname, source, destination, data["protocol"], masking)
@@ -204,14 +207,17 @@ def update_snat(request, id):
         interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
         # create the input for creating SNAT rule
-        source, destination, masking = input_create_snat(
-            data["source_address"], data["source_port"], data["destination_address"], 
-            data["destination_port"], data["snat_type"])
+        if data["snat_type"] == "MASQ":
+            source, destination, masking = input_create_snat(
+                data["source_address"], data["source_port"], data["destination_address"], 
+                data["destination_port"], data["snat_type"])
         if data["snat_type"] == "Static":
             source, destination, masking = input_create_snat(
                 data["source_address"], data["source_port"], data["destination_address"], 
                 data["destination_port"], data["snat_type"], data["translation_address_from"], 
                 data["translation_address_to"], data["translation_port"])
+        else:
+            return JsonResponse({"error": "Data error"}, status=400)
         
         if data["snat_type"] != "Static":
             snat.translation_address_from = None
@@ -226,7 +232,7 @@ def update_snat(request, id):
                 # Update the rule in system
                 rule_number, rule_content = update_snat_rule_in_system(
                     interface_ifname, source, destination, data["protocol"], masking, snat.rule_number,
-                    next_postrouting_handle, snat.postrouting_position-1)
+                    next_postrouting_handle)
 
                 data["rule_number"] = int(rule_number)
                 data["rule_content"] = rule_content
@@ -270,14 +276,11 @@ def start_snat(request, id):
         # Find the next activated rule handle to insert the started rule above
         list_next_snat = SNat.objects.filter(rule_status=True, db_position__gt=snat.db_position)
         position_insert = -1
-        postrouting_position = 0
         if len(list_next_snat) > 0:
             next_snat = list_next_snat.order_by('db_position')[0]
-            postrouting_position = next_snat.postrouting_position - 1
             position_insert = next_snat.rule_number
         rule_number, _ = create_snat_rule_in_system(
-            snat.interface.ifname, source, destination, snat.protocol, masking, position_insert,
-            postrouting_position)
+            snat.interface.ifname, source, destination, snat.protocol, masking, position_insert)
         snat.rule_number = int(rule_number)
 
         snat.rule_status = True
@@ -334,7 +337,7 @@ def change_snat_position(request, id):
         new_position = data["new_position"]
         snat = SNat.objects.get(id=id)
         change_rule_snat_position_in_system(snat, new_position)
-        rules_result = change_position_rule(snat.pk, new_position, SNat, "db_position")
+        rules_result = change_position_rule(snat.pk, new_position, SNat)
         save_rules_positions(rules_result, SNat)
 
         return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)

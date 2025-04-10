@@ -10,6 +10,8 @@ class Command(BaseCommand):
 & stop"""
 
             commandes = [
+            "sudo mkdir -p /var/spool/rsyslog",
+            "sudo chmod 755 /var/spool/rsyslog",
             "sudo mkdir -p /etc/rsyslog.d /var/log/nftables",
             "sudo touch /var/log/nftables/nftables.log",
             "sudo chmod 640 /var/log/nftables/nftables.log",

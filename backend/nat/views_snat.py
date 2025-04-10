@@ -211,7 +211,7 @@ def update_snat(request, id):
             source, destination, masking = input_create_snat(
                 data["source_address"], data["source_port"], data["destination_address"], 
                 data["destination_port"], data["snat_type"])
-        if data["snat_type"] == "Static":
+        elif data["snat_type"] == "Static":
             source, destination, masking = input_create_snat(
                 data["source_address"], data["source_port"], data["destination_address"], 
                 data["destination_port"], data["snat_type"], data["translation_address_from"], 

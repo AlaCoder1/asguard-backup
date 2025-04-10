@@ -81,7 +81,7 @@ def validate_mac_address(mac_address):
     """Validate MAC address format (XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX) with additional constraints."""
     mac_regex = r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
     if mac_address is not None :
-        if re.match(mac_regex, mac_address):
+        if not re.match(mac_regex, mac_address):
             raise InvalidMacAddressException(_("Invalid MAC address format. Expected format: XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX."))
         normalized_mac = mac_address.replace('-', ':').lower()
         if normalized_mac == "00:00:00:00:00:00":

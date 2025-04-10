@@ -326,7 +326,7 @@ def change_dnat_position(request, id):
         new_position = data["new_position"]
         dnat = DNat.objects.get(id=id)
         change_rule_dnat_position_in_system(dnat, new_position)
-        rules_result = change_position_rule(dnat.pk, new_position, DNat, "db_position")
+        rules_result = change_position_rule(dnat.pk, new_position, DNat)
         save_rules_positions(rules_result, DNat)
         
         return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)

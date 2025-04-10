@@ -337,8 +337,7 @@ def change_snat_position(request, id):
         new_position = data["new_position"]
         snat = SNat.objects.get(id=id)
         change_rule_snat_position_in_system(snat, new_position)
-        rules_result = change_position_rule(snat.pk, new_position, SNat)
-        save_rules_positions(rules_result, SNat)
+        change_position_rule(snat.pk, new_position, SNat)
 
         return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
     except CommandExecutionError:

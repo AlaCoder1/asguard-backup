@@ -1,11 +1,14 @@
 <template>
   <div class="mt-2 mr-5 d-flex justify-end cursor-pointer">
-    <span @click="openModal" style=" cursor:pointer ;font-size: 30px; color: #213e9f"
-      class="mdi mdi-help-circle-outline cursor-pointer"></span>
+    <span
+      @click="openModal"
+      style="cursor: pointer; font-size: 30px; color: #213e9f"
+      class="mdi mdi-help-circle-outline cursor-pointer"
+    ></span>
   </div>
   <div>
     <v-row justify="center">
-      <v-dialog v-model="state.openModal" persistent width="800">
+      <v-dialog v-model="state.openModal" width="800">
         <form ref="myForm" @submit.prevent="submitForm" class="scroller">
           <v-card>
             <v-card-title> </v-card-title>
@@ -13,9 +16,16 @@
               <v-container>
                 <div class="d-flex justify-space-between align-center mb-2">
                   <span class="headline text-black"> </span>
-                  <span class="mdi mdi-close cursor-pointer text-black" @click="state.openModal = false"></span>
+                  <span
+                    style="font-size: 24px"
+                    class="mdi mdi-close cursor-pointer text-black"
+                    @click="state.openModal = false"
+                  ></span>
                 </div>
-                <div v-if="help === 'subscription'" style="display: flex; justify-content: center">
+                <div
+                  v-if="help === 'subscription'"
+                  style="display: flex; justify-content: center"
+                >
                   <subscription />
                 </div>
                 <div v-if="help === 'users'">
@@ -114,9 +124,19 @@
             <v-card-actions class="mt-3 actionBtn">
               <v-spacer></v-spacer>
 
-              <v-btn color="indigo-darken-3" :rounded="true" large outlined label-color="#213E9F" variant="flat"
-                class="mt-3 btn-add" text @click="state.openModal = false"> <span class="pr-3 pl-3">{{
-                  $t("buttons.close") }}</span></v-btn>
+              <v-btn
+                color="indigo-darken-3"
+                :rounded="true"
+                large
+                outlined
+                label-color="#213E9F"
+                variant="flat"
+                class="mt-3 btn-add"
+                text
+                @click="state.openModal = false"
+              >
+                <span class="pr-3 pl-3">{{ $t("buttons.close") }}</span></v-btn
+              >
             </v-card-actions>
           </v-card>
         </form>

@@ -8,7 +8,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from backend.dashboard.models import MonitoringData
 from backend.dashboard.serializers import MonitoringDataSerializer
 from channels.db import database_sync_to_async
-
+import psutil
 logger = logging.getLogger(__name__) 
 class DashboardConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -47,13 +47,8 @@ class DashboardConsumer(AsyncWebsocketConsumer):
        
     async def start_data_loop_global_chart(self):
         while True:
-            # Execute the command to monitor CPU and memory usage
-            command = "sudo top -bn1 | grep \"%Cpu(s)\" | awk '{print $2}' && free | awk '/Mem/{printf \"%.2f\", $4/$2*100}'"
-            completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
-            output = completed_process.stdout.splitlines()
-            # print({"output":output})
-            # Parse the output
-            cpu_percentage, memory_percentage = map(float, output)
+            cpu_percentage = psutil.cpu_percent(interval=1)
+            memory_percentage = psutil.virtual_memory().percent
             # Get the current timestamp
             current_time = time.strftime("%Y-%m-%d %H:%M:%S")
             # Convert the formatted timestamp to a Unix timestamp

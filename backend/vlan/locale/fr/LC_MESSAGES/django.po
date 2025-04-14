@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-05 16:41+0000\n"
+"POT-Creation-Date: 2025-03-11 11:02+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,42 +18,58 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/vlan/functions.py:8 backend/vlan/views.py:15
+#: functions.py:10 views.py:15
 msgid "Configuration VLAN"
 msgstr "Configuration VLAN"
 
-#: backend/vlan/functions.py:11 backend/vlan/views.py:19
+#: functions.py:13 views.py:19
 msgid "Saved"
 msgstr "Sauvegardé"
 
-#: backend/vlan/models.py:18
+#: models.py:18
 msgid "tag"
 msgstr "tag"
 
-#: backend/vlan/models.py:22
+#: models.py:22
 msgid "priority"
 msgstr "priorité"
 
-#: backend/vlan/models.py:23
+#: models.py:23
 msgid "description"
 msgstr "description"
 
-#: backend/vlan/views.py:16
+#: validation.py:24
+msgid "Parent Interface does not exist!"
+msgstr "Interface parent n'existe pas"
+
+#: validation.py:31
+msgid "VLAN ID must be an integer."
+msgstr "L'ID VLAN doit être un entier."
+
+#: validation.py:33
+msgid "VLAN ID must be between "
+msgstr "L'ID VLAN doit être compris entre "
+
+#: validation.py:52
+msgid "Invalid VLAN priority. Allowed values are: "
+msgstr "Priorité VLAN non valide. Les valeurs autorisées sont : "
+
+#: views.py:16
 msgid "Interface VLAN"
 msgstr "Interface VLAN"
 
-#: backend/vlan/views.py:20
+#: views.py:20
 msgid "is created"
 msgstr "est créé"
 
-#: backend/vlan/views.py:21
+#: views.py:21
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/vlan/views.py:25
+#: views.py:25
 msgid "Already exist"
 msgstr "Existe déjà"
 
-#: backend/vlan/views.py:26
+#: views.py:26
 msgid "does not exist"
 msgstr "n'existe pas"

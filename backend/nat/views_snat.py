@@ -211,7 +211,7 @@ def update_snat(request, id):
             source, destination, masking = input_create_snat(
                 data["source_address"], data["source_port"], data["destination_address"], 
                 data["destination_port"], data["snat_type"])
-        if data["snat_type"] == "Static":
+        elif data["snat_type"] == "Static":
             source, destination, masking = input_create_snat(
                 data["source_address"], data["source_port"], data["destination_address"], 
                 data["destination_port"], data["snat_type"], data["translation_address_from"], 
@@ -337,8 +337,7 @@ def change_snat_position(request, id):
         new_position = data["new_position"]
         snat = SNat.objects.get(id=id)
         change_rule_snat_position_in_system(snat, new_position)
-        rules_result = change_position_rule(snat.pk, new_position, SNat)
-        save_rules_positions(rules_result, SNat)
+        change_position_rule(snat.pk, new_position, SNat)
 
         return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
     except CommandExecutionError:

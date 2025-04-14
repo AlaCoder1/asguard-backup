@@ -3,6 +3,8 @@ from backend.network.models import Interface
 from backend.network.serializers import InterfaceSerializer
 from django.utils.translation import gettext_lazy as _
 
+from backend.vlan.validation import InvalidParentInterError, InvalidVLANPriorityError, InvalidVLANTagError, validate_id_interface, validate_vlan_priority, validate_vlan_tag
+
 
 #Constants
 CONSTANT_VLAN_CONFIG = _('Configuration VLAN')
@@ -10,7 +12,15 @@ CONSTANT_VLAN_CONFIG = _('Configuration VLAN')
 #Success messages
 SUCCESS_MESSAGES_SAVED = _("Saved")
 
-
+def validate_input_date(data):
+    """validate input data"""
+    try:
+        validate_id_interface(int(data["parent_interface"]))
+        validate_vlan_tag(int(data["vlan_tag"]))
+        validate_vlan_priority(data['vlan_priority'])
+        
+    except(InvalidVLANTagError,InvalidVLANPriorityError,InvalidParentInterError) as e:
+        return str(e)
 def execute_cmd(command):
     """function to excecute system commands"""
     command = "sudo " + command

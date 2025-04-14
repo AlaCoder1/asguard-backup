@@ -17,7 +17,15 @@ class Command(BaseCommand):
             rule = rule.replace('-',' ')
             type_rule = options.get('type_rule')
             interface = options.get('interface')
-            rule = rule.replace(interface,'"'+interface+'"')
+            if rule.find("log prefix")!=-1:
+                rule_mod=rule.split("log prefix")[0]
+                rule_mod=rule_mod.replace(interface,'"'+interface+'"')
+                rule_log=rule.split("log prefix")[1].strip()
+                rule_log_msg='"'+'___'.join(rule_log.split("___")[:-1])+'___"'
+                rule=rule_mod.strip()+' log prefix '+rule_log_msg+rule_log.split("___")[-1]
+            else:
+                rule = rule.replace(interface,'"'+interface+'"')
+            
             try:
                 handle=get_handle_rule(interface,type_rule,rule)
                 if handle is not None:

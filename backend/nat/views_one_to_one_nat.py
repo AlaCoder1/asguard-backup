@@ -283,8 +283,7 @@ def change_one_to_one_nat_position(request, id):
         new_position = data["new_position"]
         one_to_one_nat = OneToOneNat.objects.get(id=id)
         change_rule_one_to_one_nat_position_in_system(one_to_one_nat, new_position)
-        rules_result = change_position_rule(one_to_one_nat.pk, new_position, OneToOneNat)
-        save_rules_positions(rules_result, OneToOneNat)
+        change_position_rule(one_to_one_nat.pk, new_position, OneToOneNat)
 
         return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
 

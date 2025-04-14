@@ -37,6 +37,7 @@ if [ "\$LOG_FILE" == "/var/log/suricata/fast.log" ]; then
     python /asguard/asguard/manage.py init_alerts_suricata_cron 
     systemctl restart suricata
 fi
+systemctl restart rsyslog
 """
             script_path = "/usr/local/bin/logrotate-script.sh"       
             aux_script = init_script_bash(script, script_path)

@@ -1935,6 +1935,9 @@ def readFromFile(request):
                 
     return JsonResponse({"content": content}, status=200)  
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import Schema, TYPE_STRING, TYPE_OBJECT, TYPE_ARRAY, TYPE_BOOLEAN
+
 @swagger_auto_schema(
     method='POST',
     operation_summary="Change Status of Elements in Squid ACL File",
@@ -1972,8 +1975,8 @@ def readFromFile(request):
                 }
             ),
             example=[
-                {"url": "123found.com", "comment": False},
-                {"url": "123freeavatars.com", "comment": True}
+                {"url": "7search.com", "comment": False},
+                {"url": "82o9v830.com", "comment": True}
             ]
         ),
     }
@@ -2001,6 +2004,7 @@ def readFromFile(request):
         ),
     }
 )
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def changeStausElementsInGroup(request):
@@ -2047,17 +2051,19 @@ def changeStausElementsInGroup(request):
         file_path = '/etc/squid/acl/'+data['file_name']+'.acl'
         with open(file_path, 'r') as file:
             lines = file.readlines()
-        print({"lines":list(lines)})
+            
         for update in list_elements:
-            target_url, uncomment = update
-            if target_url+'\n' in list(lines):
+            target_url = update["url"]
+            comment = update["comment"]
+            if target_url+'\n' in list(lines) or '#'+target_url+'\n' in list(lines):
                 for i, line in enumerate(lines):
                     if line.lstrip('#').split('\n')[0] == target_url:
-                    # if target_url in line:
-                        if uncomment == False:
-                            lines[i] = line.lstrip('#')
-                        else:
+                        if comment == True and line.startswith("#") == True:
+                            pass
+                        elif comment == True and line.startswith("#") == False:
                             lines[i] = '#' + line
+                        elif comment == False:
+                            lines[i] = line.lstrip('#')
             else:
                 return JsonResponse({"error": "target_url does not exist"}, status=404)
         with open(file_path, 'w') as file:

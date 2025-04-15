@@ -37,7 +37,9 @@ class Command(BaseCommand):
             if rule.find("log prefix")!=-1:
                 rule_mod=rule.split("log prefix")[0]
                 rule_mod=rule_mod.replace(interface,'"'+interface+'"')
-                rule=rule_mod.strip()+" log prefix "+ rule.split("log prefix")[1].strip()
+                rule_log=rule.split("log prefix")[1].strip()
+                rule_log_msg='"'+'___'.join(rule_log.split("___")[:-1])+'___"'
+                rule=rule_mod.strip()+' log prefix '+rule_log_msg+rule_log.split("___")[-1]
             else:
                 rule = rule.replace(interface,'"'+interface+'"')
             if source_address.lower() == 'all':

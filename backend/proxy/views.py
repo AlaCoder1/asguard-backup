@@ -2047,17 +2047,19 @@ def changeStausElementsInGroup(request):
         file_path = '/etc/squid/acl/'+data['file_name']+'.acl'
         with open(file_path, 'r') as file:
             lines = file.readlines()
-
+        print({"lines":list(lines)})
         for update in list_elements:
             target_url, uncomment = update
-            for i, line in enumerate(lines):
-                if line.lstrip('#').split('\n')[0] == target_url:
-                # if target_url in line:
-                    if uncomment == False:
-                        lines[i] = line.lstrip('#')
-                    else:
-                        lines[i] = '#' + line
-
+            if target_url+'\n' in list(lines):
+                for i, line in enumerate(lines):
+                    if line.lstrip('#').split('\n')[0] == target_url:
+                    # if target_url in line:
+                        if uncomment == False:
+                            lines[i] = line.lstrip('#')
+                        else:
+                            lines[i] = '#' + line
+            else:
+                return JsonResponse({"error": "target_url does not exist"}, status=404)
         with open(file_path, 'w') as file:
             file.writelines(lines)
         server_satus = ServerSatus.objects.get(id=1)

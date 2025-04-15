@@ -101,9 +101,6 @@
                   :rowData="rowDataServices.value"
                   :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
-                  :pagination="true"
-                  :paginationPageSize="4"
-                  :localeText="paginationLocalization"
                   @grid-ready="onGridReady"
                 />
               </v-col>
@@ -123,9 +120,6 @@
                   @grid-ready="onGridReady"
                   :alwaysShowHorizontalScroll="false"
                   :alwaysShowVerticalScroll="false"
-                  :pagination="true"
-                  :paginationPageSize="3"
-                  :localeText="paginationLocalization"
                   :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
                 />
@@ -144,9 +138,6 @@
                   @grid-ready="onGridReady"
                   :alwaysShowHorizontalScroll="false"
                   :alwaysShowVerticalScroll="false"
-                  :pagination="true"
-                  :paginationPageSize="3"
-                  :localeText="paginationLocalization"
                   :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
                 />

@@ -89,8 +89,11 @@ def create_snat(request):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["source_address"], data["destination_address"], data["translation_address_from"], data["translation_address_to"] = fix_ipv4_address(
-            [data["source_address"], data["destination_address"], data["translation_address_from"], data["translation_address_to"]])
+        data["source_address"], data["destination_address"] = fix_ipv4_address(
+            [data["source_address"], data["destination_address"]])
+        if data["snat_type"] == "Static":
+            data["translation_address_from"], data["translation_address_to"] = fix_ipv4_address(
+                [data["translation_address_from"], data["translation_address_to"]])
 
         serializer_snat = SNatSerializer(data=data)
         if serializer_snat.is_valid():
@@ -199,8 +202,11 @@ def update_snat(request, id):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["source_address"], data["destination_address"], data["translation_address_from"], data["translation_address_to"] = fix_ipv4_address(
-            [data["source_address"], data["destination_address"], data["translation_address_from"], data["translation_address_to"]])
+        data["source_address"], data["destination_address"] = fix_ipv4_address(
+            [data["source_address"], data["destination_address"]])
+        if data["snat_type"] == "Static":
+            data["translation_address_from"], data["translation_address_to"] = fix_ipv4_address(
+                [data["translation_address_from"], data["translation_address_to"]])
 
         snat = SNat.objects.get(id=id)
 

@@ -12,7 +12,7 @@
           <v-window-item v-for="tab in tabs" :key="tab.id" value="General">
             <v-card>
               <v-card-text>
-                <helpModal />
+                <helpModal help="settings" />
 
                 <generalParams />
               </v-card-text>

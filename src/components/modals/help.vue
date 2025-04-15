@@ -118,6 +118,9 @@
                 <div v-if="help === 'ztnaPolicies'">
                   <policies />
                 </div>
+                <div v-if="help === 'settings'">
+                  <settings />
+                </div>
               </v-container>
             </v-card-text>
 
@@ -178,6 +181,7 @@ import configurations from "@/views/help/ztna/configurations.vue";
 import services from "@/views/help/ztna/services.vue";
 import relays from "@/views/help/ztna/relays.vue";
 import policies from "@/views/help/ztna/policies.vue";
+import settings from "@/views/help/settings.vue";
 
 export default {
   components: {
@@ -212,6 +216,7 @@ export default {
     wafalerts,
     wafApplications,
     sdwan,
+    settings,
   },
   props: {
     help: {

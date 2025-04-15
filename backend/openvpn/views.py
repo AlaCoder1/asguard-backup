@@ -286,7 +286,7 @@ def create_server_openvpn(request):
         
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
     
-    except CommandExecutionError as err:
+    except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_OPENVPN_SERVER}"}, status=400)
     except Interface.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

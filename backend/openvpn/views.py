@@ -94,7 +94,7 @@ def get_server_openvpn(request, id):
         'server_mode': Schema(type=TYPE_OBJECT, required=['mode'], 
                               properties={
                                   'mode': Schema(type=TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
-        'protocol': Schema(type=TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
+        'protocol': Schema(type=TYPE_STRING, enum=["udp4", "udp6", "tcp4", "tcp6"]),
         'device_mode': Schema(type=TYPE_STRING, enum=["tun", "tap"]),
         'interface': Schema(type=TYPE_STRING, example="WAN", description="Interface name like LAN or WAN or Any"),
         'local_port': Schema(type=TYPE_STRING, example="1111", description="port number with 4 digits"),
@@ -160,9 +160,8 @@ def create_server_openvpn(request):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["ipv4_tunnel_network"] = fix_ipv4_address(data["ipv4_tunnel_network"])
-        data["ipv4_local_network"] = fix_ipv4_address(data["ipv4_local_network"])
-        data["ipv4_remote_network"] = fix_ipv4_address(data["ipv4_remote_network"])
+        data["ipv4_tunnel_network"], data["ipv4_local_network"], data["ipv4_remote_network"] = fix_ipv4_address(
+            [data["ipv4_tunnel_network"], data["ipv4_local_network"], data["ipv4_remote_network"]])
 
         name = data.get('name', '')
         description = data.get('description', '')
@@ -341,7 +340,7 @@ def delete_server_openvpn(request, id):
         'server_mode': Schema(type=TYPE_OBJECT, required=['mode'], 
                               properties={
                                   'mode': Schema(type=TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
-        'protocol': Schema(type=TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
+        'protocol': Schema(type=TYPE_STRING, enum=["udp4", "udp6", "tcp4", "tcp6"]),
         'device_mode': Schema(type=TYPE_STRING, enum=["tun", "tap"]),
         'interface': Schema(type=TYPE_STRING, example="WAN", description="Interface name like LAN or WAN or Any"),
         'local_port': Schema(type=TYPE_STRING, example="1111", description="port number with 4 digits"),
@@ -408,9 +407,8 @@ def update_server_openvpn(request, id):
         # parse the incoming information
         data = request.data
         # Apply correction for ipv4 addresses
-        data["ipv4_tunnel_network"] = fix_ipv4_address(data["ipv4_tunnel_network"])
-        data["ipv4_local_network"] = fix_ipv4_address(data["ipv4_local_network"])
-        data["ipv4_remote_network"] = fix_ipv4_address(data["ipv4_remote_network"])
+        data["ipv4_tunnel_network"], data["ipv4_local_network"], data["ipv4_remote_network"] = fix_ipv4_address(
+            [data["ipv4_tunnel_network"], data["ipv4_local_network"], data["ipv4_remote_network"]])
 
         server = ServerOpenvpn.objects.get(id=id)
         previous_name = server.name
@@ -622,7 +620,7 @@ def get_client_openvpn(request, id):
         'description': Schema(type=TYPE_STRING, example="Description client openvpn"),
         'server_mode': Schema(type=TYPE_OBJECT, required=['mode'], 
                               properties={'mode': Schema(type=TYPE_STRING, enum=["peer_to_peer"])}),
-        'protocol': Schema(type=TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
+        'protocol': Schema(type=TYPE_STRING, enum=["udp4", "udp6", "tcp4", "tcp6"]),
         'device_mode': Schema(type=TYPE_STRING, enum=["tun", "tap"]),
         'resolv_retry': Schema(type=TYPE_BOOLEAN, default=False),
         'proxy_host': Schema(type=TYPE_STRING, example="10.1.12.249", description="address of poxy like 10.1.12.249"),
@@ -669,8 +667,8 @@ def create_client_openvpn(request):
         # parse the incoming information
         data = request.data
         # Apply correction for ipv4 addresses
-        data["ipv4_tunnel_network"] = fix_ipv4_address(data["ipv4_tunnel_network"])
-        data["ipv4_remote_network"] = fix_ipv4_address(data["ipv4_remote_network"])
+        data["ipv4_tunnel_network"], data["ipv4_remote_network"] = fix_ipv4_address(
+            [data["ipv4_tunnel_network"], data["ipv4_remote_network"]])
 
         name = data.get('name', '')
         description = data.get('description', '')
@@ -800,7 +798,7 @@ def delete_client_openvpn(request, id):
         'description': Schema(type=TYPE_STRING, example="Description client openvpn"),
         'server_mode': Schema(type=TYPE_OBJECT, required=['mode'], 
                               properties={'mode': Schema(type=TYPE_STRING, enum=["peer_to_peer"])}),
-        'protocol': Schema(type=TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
+        'protocol': Schema(type=TYPE_STRING, enum=["udp4", "udp6", "tcp4", "tcp6"]),
         'device_mode': Schema(type=TYPE_STRING, enum=["tun", "tap"]),
         'resolv_retry': Schema(type=TYPE_BOOLEAN, default=False),
         'proxy_host': Schema(type=TYPE_STRING, example="10.1.12.249", description="address of poxy like 10.1.12.249"),
@@ -846,8 +844,8 @@ def update_client_openvpn(request, id):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["ipv4_tunnel_network"] = fix_ipv4_address(data["ipv4_tunnel_network"])
-        data["ipv4_remote_network"] = fix_ipv4_address(data["ipv4_remote_network"])
+        data["ipv4_tunnel_network"], data["ipv4_remote_network"] = fix_ipv4_address(
+            [data["ipv4_tunnel_network"], data["ipv4_remote_network"]])
 
         client = ClientOpenvpn.objects.get(id=id)
         previous_name = client.name

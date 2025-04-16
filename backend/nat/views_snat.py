@@ -6,9 +6,9 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from backend.nat.models import OneToOneNat, SNat
+from backend.nat.models import SNat
 from backend.nat.serializers import SNatSerializer
-from backend.nat.utils import change_position_rule, get_next_nat_handle, input_create_snat, save_rules_positions
+from backend.nat.utils import change_position_rule, get_next_nat_handle, input_create_snat
 from backend.nat.list_nat import get_list_all_snat, get_one_snat
 from backend.nat.utils_snat_system import change_rule_snat_position_in_system, create_snat_rule_in_system, delete_snat_rule_in_system, update_snat_rule_in_system
 from backend.network.models import Interface
@@ -70,15 +70,15 @@ def get_snat(request, id):
             'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
             'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
             'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"], description="required when choosing Static"),
-            'source_address': Schema(type=TYPE_STRING, enum="10.1.12.0/24", description="format of address/mask or blank for Any"),
-            'source_port': Schema(type=TYPE_STRING, enum="80"),
-            'destination_address': Schema(type=TYPE_STRING, enum="192.168.30.0/24", description="format of address/mask or blank for Any"),
-            'destination_port': Schema(type=TYPE_STRING, enum="443"),
+            'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
+            'source_port': Schema(type=TYPE_STRING, example="80"),
+            'destination_address': Schema(type=TYPE_STRING, example="192.168.30.0/24", description="format of address/mask or blank for Any"),
+            'destination_port': Schema(type=TYPE_STRING, example="443"),
             'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
-            'translation_address_from': Schema(type=TYPE_STRING, enum="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
-            'translation_address_to': Schema(type=TYPE_STRING, enum="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
-            'translation_port': Schema(type=TYPE_STRING, enum="100", description="Optional when choosing Static"),
-            'description': Schema(type=TYPE_STRING, enum="Description of SNAT", description="description of SNAT rule"),
+            'translation_address_from': Schema(type=TYPE_STRING, example="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
+            'translation_address_to': Schema(type=TYPE_STRING, example="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
+            'translation_port': Schema(type=TYPE_STRING, example="100", description="Optional when choosing Static"),
+            'description': Schema(type=TYPE_STRING, example="Description of SNAT", description="description of SNAT rule"),
             }
             ))
 @api_view(['POST'])
@@ -89,8 +89,11 @@ def create_snat(request):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["source_address"] = fix_ipv4_address(data["source_address"])
-        data["destination_address"] = fix_ipv4_address(data["destination_address"])
+        data["source_address"], data["destination_address"] = fix_ipv4_address(
+            [data["source_address"], data["destination_address"]])
+        if data["snat_type"] == "Static":
+            data["translation_address_from"], data["translation_address_to"] = fix_ipv4_address(
+                [data["translation_address_from"], data["translation_address_to"]])
 
         serializer_snat = SNatSerializer(data=data)
         if serializer_snat.is_valid():
@@ -180,15 +183,15 @@ def delete_snat(request, id):
             'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
             'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
             'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"], description="required when choosing Static"),
-            'source_address': Schema(type=TYPE_STRING, enum="10.1.12.0/24", description="format of address/mask or blank for Any"),
-            'source_port': Schema(type=TYPE_STRING, enum="80"),
-            'destination_address': Schema(type=TYPE_STRING, enum="192.168.30.0/24", description="format of address/mask or blank for Any"),
-            'destination_port': Schema(type=TYPE_STRING, enum="443"),
+            'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
+            'source_port': Schema(type=TYPE_STRING, example="80"),
+            'destination_address': Schema(type=TYPE_STRING, example="192.168.30.0/24", description="format of address/mask or blank for Any"),
+            'destination_port': Schema(type=TYPE_STRING, example="443"),
             'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
-            'translation_address_from': Schema(type=TYPE_STRING, enum="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
-            'translation_address_to': Schema(type=TYPE_STRING, enum="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
-            'translation_port': Schema(type=TYPE_STRING, enum="100", description="Optional when choosing Static"),
-            'description': Schema(type=TYPE_STRING, enum="Description of SNAT", description="description of SNAT rule"),
+            'translation_address_from': Schema(type=TYPE_STRING, example="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
+            'translation_address_to': Schema(type=TYPE_STRING, example="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
+            'translation_port': Schema(type=TYPE_STRING, example="100", description="Optional when choosing Static"),
+            'description': Schema(type=TYPE_STRING, example="Description of SNAT", description="description of SNAT rule"),
             }
             ))
 @api_view(['PUT'])
@@ -199,8 +202,11 @@ def update_snat(request, id):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["source_address"] = fix_ipv4_address(data["source_address"])
-        data["destination_address"] = fix_ipv4_address(data["destination_address"])
+        data["source_address"], data["destination_address"] = fix_ipv4_address(
+            [data["source_address"], data["destination_address"]])
+        if data["snat_type"] == "Static":
+            data["translation_address_from"], data["translation_address_to"] = fix_ipv4_address(
+                [data["translation_address_from"], data["translation_address_to"]])
 
         snat = SNat.objects.get(id=id)
 

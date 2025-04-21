@@ -7,15 +7,19 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 
+from backend.nat.utils_dnat import check_payload
+
+from .utils_dnat import input_create_dnat
+
 from .list_nat import get_list_all_dnat, get_one_dnat
 from .models import DNat
 from .serializers import DNatSerializer
-from .utils import change_position_rule, get_next_nat_handle, input_create_dnat
+from .utils import change_position_rule, get_next_nat_handle
 from .utils_dnat_system import change_rule_dnat_position_in_system, create_dnat_rule_in_system, delete_dnat_rule_in_system, update_dnat_rule_in_system
 
 from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
-from utils.utils_functions import fix_ipv4_address
+from utils.utils_address import fix_ipv4_address
 
 
 # Constants
@@ -36,6 +40,7 @@ ERROR_MESSAGES_STARTING = _("System error in starting")
 ERROR_MESSAGES_STOPING = _("System error in stoping")
 ERROR_MESSAGES_CHANGING = _("System error in changing")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -90,6 +95,9 @@ def create_dnat(request):
     """Creating a new DNAT rule and adding it to the database"""
     try:
         data = request.data
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
         data["source_address"], data["external_address"], data["internal_address"] = fix_ipv4_address(
             [data["source_address"], data["external_address"], data["internal_address"]])
@@ -196,6 +204,9 @@ def update_dnat(request, id):
     """Updating a DNAT rule"""
     try:
         data = request.data
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
         data["source_address"], data["external_address"], data["internal_address"] = fix_ipv4_address(
             [data["source_address"], data["external_address"], data["internal_address"]])

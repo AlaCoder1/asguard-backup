@@ -1,4 +1,35 @@
-from ipaddress import IPv4Interface, ip_address, ip_network
+from ipaddress import AddressValueError, IPv4Address, IPv4Interface, NetmaskValueError, ip_address, ip_network
+
+
+def is_valid_ipv4_with_mask(ip: str):
+    """
+    Validates whether the given string is a valid IPv4 address with a subnet mask.
+    An address is considered valid if it is in the format 'x.x.x.x/mask' 
+    and can be parsed as an IPv4 interface.
+    """
+    try:
+        if ip != "":
+            if len(ip.split("/")) == 1:
+                return False
+            IPv4Interface(ip)
+        return True
+    except (AddressValueError, NetmaskValueError) as err:
+        print(err)
+        return False
+
+
+def is_valid_ipv4_without_mask(ip: str):
+    """
+    Validates whether the given string is a valid IPv4 address without a subnet mask.
+    An address is considered valid if it is in the format 'x.x.x.x' 
+    and can be parsed as an IPv4 Address.
+    """
+    try:
+        if ip != "":
+            IPv4Address(ip)
+        return True
+    except AddressValueError:
+        return False
 
 
 def fix_ipv4_address(list_ipv4_address: list[str]):

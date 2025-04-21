@@ -685,7 +685,6 @@ def get_generale_info(request):
     command = "cat "+squid_conf_path
     stdout, stderr = run_command(command)
     resultat=stdout.split('\n')
-    print({"resultat":resultat})
     for line in resultat:
         line = line.strip()
         if line.startswith('http_port'):

@@ -8,12 +8,13 @@ from rest_framework.permissions import IsAuthenticated
 
 from backend.nat.models import SNat
 from backend.nat.serializers import SNatSerializer
-from backend.nat.utils import change_position_rule, get_next_nat_handle, input_create_snat
+from backend.nat.utils import change_position_rule, get_next_nat_handle
 from backend.nat.list_nat import get_list_all_snat, get_one_snat
+from backend.nat.utils_snat import check_payload, input_create_snat
 from backend.nat.utils_snat_system import change_rule_snat_position_in_system, create_snat_rule_in_system, delete_snat_rule_in_system, update_snat_rule_in_system
 from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
-from utils.utils_functions import fix_ipv4_address
+from utils.utils_address import fix_ipv4_address
 
 
 # Constants
@@ -34,6 +35,7 @@ ERROR_MESSAGES_STARTING = _("System error in starting")
 ERROR_MESSAGES_STOPING = _("System error in stoping")
 ERROR_MESSAGES_CHANGING = _("System error in changing")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
@@ -88,6 +90,9 @@ def create_snat(request):
     """Creating a new SNAT rule and adding it to the database"""
     try:
         data = request.data
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
         data["source_address"], data["destination_address"] = fix_ipv4_address(
             [data["source_address"], data["destination_address"]])
@@ -201,6 +206,9 @@ def update_snat(request, id):
     """Updating an SNAT rule"""
     try:
         data = request.data
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
         data["source_address"], data["destination_address"] = fix_ipv4_address(
             [data["source_address"], data["destination_address"]])

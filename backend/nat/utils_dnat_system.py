@@ -1,5 +1,5 @@
 from backend.nat.models import DNat
-from backend.nat.utils import input_create_dnat
+from backend.nat.utils_dnat import input_create_dnat
 from backend.nat.utils_system import add_nat_rule_in_system, delete_nat_rule_in_system, exist_change_rule_position_in_system, extract_list_rule_nat_from_system, get_added_nat_rule
 
 

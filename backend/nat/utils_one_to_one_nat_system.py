@@ -1,5 +1,5 @@
 from backend.nat.models import OneToOneNat
-from backend.nat.utils import input_create_one_to_one_nat
+from backend.nat.utils_one_to_one_nat import input_create_one_to_one_nat
 from backend.nat.utils_system import add_nat_rule_in_system, delete_nat_rule_in_system, exist_change_rule_position_in_system, extract_list_rule_nat_from_system, get_added_nat_rule
 
 

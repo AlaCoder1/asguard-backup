@@ -27,6 +27,7 @@ urlpatterns = [
     path('changeStausGroup', views.changeStausGroup, name='changeStausGroup'), 
     path('readFromFile', views.readFromFile, name='readFromFile'), 
     path('changeStausElementsInGroup', views.changeStausElementsInGroup, name='changeStausElementsInGroup'), 
+    path('allACLFilesWithStatusOfAllElements', views.allACLFilesWithStatusOfAllElements, name='allACLFilesWithStatusOfAllElements'), 
 
     path('restart', views.restart, name='restart'), 
     path('start', views.start, name='start'), 

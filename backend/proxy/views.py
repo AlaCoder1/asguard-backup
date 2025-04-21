@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 from django.db import IntegrityError
@@ -2369,3 +2370,110 @@ def file_selected(status, type):
         else:
             file_path = '/etc/squid/allowed_subnet_by_auth.acl'
     return file_path
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Lister les fichiers ACL Squid avec leur contenu et statut",
+    operation_description=(
+        "Cette API permet de récupérer le contenu de tous les fichiers ACL situés dans `/etc/squid/acl/` "
+        "(à l'exception de `README.md`). Chaque ligne est analysée pour déterminer si elle est commentée ou non. "
+        "Les fichiers sont retournés avec leurs lignes respectives et un booléen indiquant leur statut : "
+        "`True` pour les lignes actives, `False` pour les lignes commentées."
+    ),
+    responses={
+        200: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                'resultat': Schema(
+                    type=TYPE_OBJECT,
+                    additional_properties=Schema(
+                        type=TYPE_ARRAY,
+                        items=Schema(
+                            type=TYPE_ARRAY,
+                            items=[
+                                Schema(type=TYPE_STRING, description="Contenu de la ligne"),
+                                Schema(type=TYPE_BOOLEAN, description="Statut de la ligne : True = active, False = commentée")
+                            ],
+                            description="Liste des lignes du fichier avec statut"
+                        ),
+                    ),
+                    description="Dictionnaire de fichiers avec le contenu et le statut de chaque ligne."
+                )
+            }
+        ),
+        400: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                'msg': Schema(
+                    type=TYPE_STRING,
+                    description="Message d'erreur si un fichier est manquant ou une autre erreur s'est produite.",
+                    example="File not found: /etc/squid/acl/somefile.acl"
+                )
+            }
+        )
+    }
+)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def allACLFilesWithStatusOfAllElements(request):
+    """
+    Lit le contenu de tous les fichiers de configuration ACL de Squid et renvoie les lignes avec leur statut (commentée ou active).
+
+    Cette fonction parcourt tous les fichiers situés dans le dossier `/etc/squid/acl/` (sauf `README.md`), lit leur contenu, 
+    et retourne pour chacun d'eux les lignes avec une indication si elles sont actives (non commentées) ou commentées 
+    (commençant par le caractère `#`). Chaque ligne est associée à un booléen :
+    - `True` pour les lignes actives
+    - `False` pour les lignes commentées
+
+    Args:
+        request: Objet de requête HTTP (non utilisé ici mais requis pour une vue Django).
+
+    Returns:
+        JsonResponse: Une réponse JSON contenant un dictionnaire où chaque clé est un nom de fichier, et la valeur est une liste de lignes :
+            - Chaque ligne est une liste contenant le texte de la ligne et un booléen.
+            - Si un fichier est introuvable, un message d'erreur 400 est retourné.
+            - En cas d'exception, une réponse JSON avec message d'erreur générique est retournée.
+
+    Exemple:
+        Si un fichier `/etc/squid/acl/example.acl` contient :
+            # Autoriser l'accès
+            Interdire l'accès
+
+        La réponse JSON sera :
+            {
+                "resultat": {
+                    "example.acl": [
+                        ["Autoriser l'accès", False],
+                        ["Interdire l'accès", True]
+                    ]
+                }
+            }
+
+    Raises:
+        FileNotFoundError: Si un fichier est introuvable pendant la lecture.
+        Exception: Pour toute autre erreur non gérée.
+    """
+    folder_path = "/etc/squid/acl/"
+    files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f != "README.md"]
+    resultat = {}
+    try:
+        for file in files:
+            content = []
+            with open(os.path.join(folder_path, file), 'r') as f:  # <-- avoid reusing 'file'
+                for line in f:
+                    if line.startswith('#'):
+                        content.append([line.lstrip('#').split('\n')[0], False])
+                    else:
+                        content.append([line.strip(), True])
+            resultat[file] = content
+    except FileNotFoundError:
+        return JsonResponse({"msg":f"{CONSTANT_PATH} {folder_path+file} {ERROR_MESSAGES_INEXISTANT}"},status=400 )
+    except Exception as e:
+        return JsonResponse({"msg":f"{ERROR_MESSAGES_OCCURRED}{e}"},status=400 )
+                
+    return JsonResponse(
+        {"resultat": resultat},
+        status=200,
+        safe=False,
+        json_dumps_params={'ensure_ascii': False, 'indent': 2} 
+    )

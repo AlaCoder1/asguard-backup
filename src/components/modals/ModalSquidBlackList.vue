@@ -243,7 +243,10 @@ export default {
       const result = await v$.value.$validate();
       if (result) {
         const changeFormArray = state.formData.urlList.map(
-          ({ url, status }) => [url, status]
+          ({ url, status }) => ({
+            url: url,
+            comment: status // If `status === true` means uncommented, `comment` should be false
+          })
         );
 
         let payload = {

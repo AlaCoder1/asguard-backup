@@ -201,7 +201,7 @@ def create_sdwan_rule(request):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["source_address"] = fix_ipv4_address(data["source_address"])
+        data["source_address"]= fix_ipv4_address([data["source_address"]])
 
         data["table_id"] = search_routing_table_id()
         if data["algorythme_type"] == "failover":

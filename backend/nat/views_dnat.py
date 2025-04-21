@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from .list_nat import get_list_all_dnat, get_one_dnat
 from .models import DNat
 from .serializers import DNatSerializer
-from .utils import change_position_rule, get_next_nat_handle, input_create_dnat, save_rules_positions
+from .utils import change_position_rule, get_next_nat_handle, input_create_dnat
 from .utils_dnat_system import change_rule_dnat_position_in_system, create_dnat_rule_in_system, delete_dnat_rule_in_system, update_dnat_rule_in_system
 
 from backend.network.models import Interface
@@ -91,7 +91,8 @@ def create_dnat(request):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["source_address"] = fix_ipv4_address(data["source_address"])
+        data["source_address"], data["external_address"], data["internal_address"] = fix_ipv4_address(
+            [data["source_address"], data["external_address"], data["internal_address"]])
         
         serializer_dnat = DNatSerializer(data=data)
         if serializer_dnat.is_valid():
@@ -196,7 +197,8 @@ def update_dnat(request, id):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["source_address"] = fix_ipv4_address(data["source_address"])
+        data["source_address"], data["external_address"], data["internal_address"] = fix_ipv4_address(
+            [data["source_address"], data["external_address"], data["internal_address"]])
         
         dnat = DNat.objects.get(id=id)
 

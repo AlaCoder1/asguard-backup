@@ -1,16 +1,34 @@
 from ipaddress import IPv4Interface, ip_address, ip_network
 
 
-def fix_ipv4_address(ipv4_address: str):
-    """Function that take an ipv4 address in format of x.x.x.x 
-    and return it in correct format. 
-    In example 10.1.1.85/24 will be returned as 10.1.1.0/24"""
-    if ipv4_address != "":
-        network_address = str(IPv4Interface(ipv4_address).network.network_address)
-        network_mask = ipv4_address.split("/")
-        network_mask = network_mask[1]
-        ipv4_address = f"{network_address}/{network_mask}"
-    return ipv4_address
+def fix_ipv4_address(list_ipv4_address: list[str]):
+    """
+    Takes a list of IPv4 addresses in the format 'x.x.x.x/mask', removes leading zeros from each octet, 
+    and adjusts each address to its correct network address based on the subnet mask.
+
+    Example:
+        Input: ["10.01.01.85/24", "192.168.000.100/16", "192.168.000.100"]
+        Output: ["10.1.1.0/24", "192.168.0.0/16", "192.168.0.100"]
+    """
+    adjust_list_ipv4_address = []
+    for ipv4_address in list_ipv4_address:
+        if ipv4_address != "":
+            # Seperate network address from subnet mask if it exists
+            ipv4_address_list = ipv4_address.split("/")
+            ipv4_address = ipv4_address_list[0]
+            # Removing leading zeros
+            ipv4_address = '.'.join(str(int(octet)) for octet in ipv4_address.split('.'))
+            # Get the subnet mask
+            if len(ipv4_address_list) == 2:
+                network_mask = ipv4_address_list[1]
+                ipv4_address = f"{ipv4_address}/{network_mask}"
+            # Fix the IPv4 address
+            ipv4_address = str(IPv4Interface(ipv4_address).network.network_address)
+            # Return the IPv4 address with its subnet mask if exist
+            if len(ipv4_address_list) == 2:
+                ipv4_address = f"{ipv4_address}/{network_mask}"
+        adjust_list_ipv4_address.append(ipv4_address)
+    return adjust_list_ipv4_address
 
 
 def is_same_subnet(ip: str, subnet: str):

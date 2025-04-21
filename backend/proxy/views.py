@@ -455,66 +455,69 @@ def addRuleSquid(request):
     if (request.method == 'POST'):
         data = request.data
         write_in_file = True
-        if data['allow_by_auth'] == False:
-            if data['type'] == "ip":
-                file_path = '/etc/squid/blocked_ip.acl'
-            elif data['type'] == "domain":
-                if data['time_from'] != '':
-                # if time_from != '' or time_to !='':
-                    squid_path = '/etc/squid/squid.conf'
-                    name_rule = 'block_'+data['value']
-                    time_block_rule = 'time_'+name_rule
-                    line1='acl '+name_rule+' url_regex '+data['value']+'\n'
-                    add_line_after_pattern(squid_path,'acl localnet src fe80::/10',line1)
-                    line2='acl '+time_block_rule+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
-                    # line1='acl '+data['value']+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
-                    add_line_after_pattern(squid_path,line1,line2)
-                    line3='\nhttp_access deny '+name_rule+' '+time_block_rule+'\n'
-                    add_line_after_pattern(squid_path,line2,line3)
-                    write_in_file = False
-                    # line+='acl time_block time '+data['days']+' '+data['time_from']+'-'+data['time_to']
-                    # add_line_after_pattern(file_path,'acl localnet src fe80::/10',line)
-                    # enable_by_time()
+        if data['type'] not in ['ip','domain','subnet']:
+            return JsonResponse({"error": 'type must be ip, domain or subnet'}, status=400)
+        else:
+            if data['allow_by_auth'] == False:
+                if data['type'] == "ip":
+                    file_path = '/etc/squid/blocked_ip.acl'
+                elif data['type'] == "domain":
+                    if data['time_from'] != '':
+                    # if time_from != '' or time_to !='':
+                        squid_path = '/etc/squid/squid.conf'
+                        name_rule = 'block_'+data['value']
+                        time_block_rule = 'time_'+name_rule
+                        line1='acl '+name_rule+' url_regex '+data['value']+'\n'
+                        add_line_after_pattern(squid_path,'acl localnet src fe80::/10',line1)
+                        line2='acl '+time_block_rule+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
+                        # line1='acl '+data['value']+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
+                        add_line_after_pattern(squid_path,line1,line2)
+                        line3='\nhttp_access deny '+name_rule+' '+time_block_rule+'\n'
+                        add_line_after_pattern(squid_path,line2,line3)
+                        write_in_file = False
+                        # line+='acl time_block time '+data['days']+' '+data['time_from']+'-'+data['time_to']
+                        # add_line_after_pattern(file_path,'acl localnet src fe80::/10',line)
+                        # enable_by_time()
+                    else:
+                        file_path = '/etc/squid/blocked_domain.acl'
                 else:
-                    file_path = '/etc/squid/blocked_domain.acl'
+                    file_path = '/etc/squid/blocked_subnet.acl'
             else:
-                file_path = '/etc/squid/blocked_subnet.acl'
-        else:
-            if data['type'] == "ip":
-                file_path = '/etc/squid/allowed_ip_by_auth.acl'
-            elif data['type'] == "domain":
-                file_path = '/etc/squid/allowed_domain_by_auth.acl'
+                if data['type'] == "ip":
+                    file_path = '/etc/squid/allowed_ip_by_auth.acl'
+                elif data['type'] == "domain":
+                    file_path = '/etc/squid/allowed_domain_by_auth.acl'
+                else:
+                    file_path = '/etc/squid/allowed_subnet_by_auth.acl'
+            # file_path = file_selected(data['allow_by_auth'],data['type'])
+            if  data['status'] == False:
+                value = '#'+data['value']
             else:
-                file_path = '/etc/squid/allowed_subnet_by_auth.acl'
-        # file_path = file_selected(data['allow_by_auth'],data['type'])
-        if  data['status'] == False:
-            value = '#'+data['value']
-        else:
-            value = data['value']
-        if write_in_file == True:
-            try:
-                with open(file_path, 'a') as file:
-                    file.write(value + '\n')
-                serializerProxyRules = ProxyRulesSerializer(data=data)
+                value = data['value']
+            if write_in_file == True:
+                try:
+                    with open(file_path, 'a') as file:
+                        file.write(value + '\n')
+                    serializerProxyRules = ProxyRulesSerializer(data=data)
+                    if (serializerProxyRules.is_valid()):
+                        serializerProxyRules.save()
+                        server_satus = ServerSatus.objects.get(id=1)
+                        server_satus.status_server = True
+                        server_satus.save()
+                        msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
+                        return JsonResponse({"msg": msg}, status=200)
+                    else:
+                        return JsonResponse(serializerProxyRules.errors, status=400 )
+                except Exception as e:
+                    return JsonResponse({"error": e}, status=400)
+            else:
+                serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
                 if (serializerProxyRules.is_valid()):
                     serializerProxyRules.save()
-                    server_satus = ServerSatus.objects.get(id=1)
-                    server_satus.status_server = True
-                    server_satus.save()
                     msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
                     return JsonResponse({"msg": msg}, status=200)
                 else:
                     return JsonResponse(serializerProxyRules.errors, status=400 )
-            except Exception as e:
-                return JsonResponse({"error": e}, status=400)
-        else:
-            serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
-            if (serializerProxyRules.is_valid()):
-                serializerProxyRules.save()
-                msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
-                return JsonResponse({"msg": msg}, status=200)
-            else:
-                return JsonResponse(serializerProxyRules.errors, status=400 )
 
 @swagger_auto_schema(
     method='DELETE',
@@ -1932,6 +1935,9 @@ def readFromFile(request):
                 
     return JsonResponse({"content": content}, status=200)  
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import Schema, TYPE_STRING, TYPE_OBJECT, TYPE_ARRAY, TYPE_BOOLEAN
+
 @swagger_auto_schema(
     method='POST',
     operation_summary="Change Status of Elements in Squid ACL File",
@@ -1969,8 +1975,8 @@ def readFromFile(request):
                 }
             ),
             example=[
-                {"url": "123found.com", "comment": False},
-                {"url": "123freeavatars.com", "comment": True}
+                {"url": "7search.com", "comment": False},
+                {"url": "82o9v830.com", "comment": True}
             ]
         ),
     }
@@ -1998,6 +2004,7 @@ def readFromFile(request):
         ),
     }
 )
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def changeStausElementsInGroup(request):
@@ -2038,26 +2045,33 @@ def changeStausElementsInGroup(request):
 
     data = request.data
     list_elements = data['list_elements']
-    file_path = '/etc/squid/acl/'+data['file_name']+'.acl'
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-
-    for update in list_elements:
-        target_url, uncomment = update
-        for i, line in enumerate(lines):
-            if line.lstrip('#').split('\n')[0] == target_url:
-            # if target_url in line:
-                if uncomment == False:
-                    lines[i] = line.lstrip('#')
-                else:
-                    lines[i] = '#' + line
-
-    with open(file_path, 'w') as file:
-        file.writelines(lines)
-    server_satus = ServerSatus.objects.get(id=1)
-    server_satus.status_server = True
-    server_satus.save() 
-    return JsonResponse({"msg": f"{CONSTANT_STATUS} {SUCCESS_MESSAGES_CHANGE_STATUS}"}, status=200)
+    if data['file_name'] not in ['ads','adult','astrology','audio_video','bitcoin','cryptojacking','dating','ddos','download','drugs','games','jobsearch','social_network','sports','violence']:
+        return JsonResponse({"error": "file_name does not exist"}, status=404)
+    else:
+        file_path = '/etc/squid/acl/'+data['file_name']+'.acl'
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            
+        for update in list_elements:
+            target_url = update["url"]
+            comment = update["comment"]
+            if target_url+'\n' in list(lines) or '#'+target_url+'\n' in list(lines):
+                for i, line in enumerate(lines):
+                    if line.lstrip('#').split('\n')[0] == target_url:
+                        if comment == True and line.startswith("#") == True:
+                            pass
+                        elif comment == True and line.startswith("#") == False:
+                            lines[i] = '#' + line
+                        elif comment == False:
+                            lines[i] = line.lstrip('#')
+            else:
+                return JsonResponse({"error": "target_url does not exist"}, status=404)
+        with open(file_path, 'w') as file:
+            file.writelines(lines)
+        server_satus = ServerSatus.objects.get(id=1)
+        server_satus.status_server = True
+        server_satus.save() 
+        return JsonResponse({"msg": f"{CONSTANT_STATUS} {SUCCESS_MESSAGES_CHANGE_STATUS}"}, status=200)
 
 def changeStausElement(target_url, uncomment, file_path):
     """

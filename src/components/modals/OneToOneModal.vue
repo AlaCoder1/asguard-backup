@@ -354,10 +354,10 @@ export default {
     const checkDuplication = computed(() => {
       const { sourceAddress, translationAddress, destinationAddress } = state;
 
-      if (!sourceAddress || !translationAddress) {
+      if ((!sourceAddress || !translationAddress) && !destinationAddress) {
         return false;
       }
-
+      
       return (
         sourceAddress === translationAddress ||
         sourceAddress === destinationAddress ||

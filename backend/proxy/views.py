@@ -2394,10 +2394,23 @@ def file_selected(status, type):
                                 Schema(type=TYPE_STRING, description="Contenu de la ligne"),
                                 Schema(type=TYPE_BOOLEAN, description="Statut de la ligne : True = active, False = commentée")
                             ],
-                            description="Liste des lignes du fichier avec statut"
+                            description="Liste des lignes du fichier avec statut",
+                            example = [
+                                ["example.com", True]
+                            ]
                         ),
                     ),
                     description="Dictionnaire de fichiers avec le contenu et le statut de chaque ligne."
+                )
+            }
+        ),
+        404: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                'msg': Schema(
+                    type=TYPE_STRING,
+                    description="Message d'erreur si un fichier est manquant ou une autre erreur s'est produite.",
+                    example="File not found: /etc/squid/acl/somefile.acl"
                 )
             }
         ),
@@ -2406,8 +2419,18 @@ def file_selected(status, type):
             properties={
                 'msg': Schema(
                     type=TYPE_STRING,
-                    description="Message d'erreur si un fichier est manquant ou une autre erreur s'est produite.",
+                    description="Invalid pagination parameters. page and page_size must be integers",
                     example="File not found: /etc/squid/acl/somefile.acl"
+                )
+            }
+        ),
+        404: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                'msg': Schema(
+                    type=TYPE_STRING,
+                    description="No ACL files found in the specified directory.",
+                    example="No ACL files found in the specified directory."
                 )
             }
         )
@@ -2417,30 +2440,58 @@ def file_selected(status, type):
 @authentication_classes([SessionAuthentication])
 def allACLFilesWithStatusOfAllElements(request):
     """
-    Lit le contenu de tous les fichiers de configuration ACL de Squid et renvoie les lignes avec leur statut (commentée ou active).
+    Lit le contenu de tous les fichiers de configuration ACL de Squid et renvoie les lignes avec leur statut (commentée ou active) avec pagination.
 
-    Cette fonction parcourt tous les fichiers situés dans le dossier `/etc/squid/acl/` (sauf `README.md`), lit leur contenu, 
-    et retourne pour chacun d'eux les lignes avec une indication si elles sont actives (non commentées) ou commentées 
+    Cette fonction parcourt tous les fichiers situés dans le dossier `/etc/squid/acl/` (sauf `README.md`), lit leur contenu,
+    et retourne pour chacun d'eux les lignes avec une indication si elles sont actives (non commentées) ou commentées
     (commençant par le caractère `#`). Chaque ligne est associée à un booléen :
     - `True` pour les lignes actives
     - `False` pour les lignes commentées
 
+    La réponse est paginée pour gérer les gros volumes de données. Les lignes vides sont ignorées.
+
     Args:
-        request: Objet de requête HTTP (non utilisé ici mais requis pour une vue Django).
+        request: Objet de requête HTTP pouvant contenir les paramètres suivants :
+            - page (int, optionnel): Numéro de page à retourner (défaut: 1)
+            - page_size (int, optionnel): Nombre de lignes par page (défaut: 100)
+            - filename (str, optionnel): Filtre pour ne retourner que les fichiers contenant cette chaîne
 
     Returns:
-        JsonResponse: Une réponse JSON contenant un dictionnaire où chaque clé est un nom de fichier, et la valeur est une liste de lignes :
-            - Chaque ligne est une liste contenant le texte de la ligne et un booléen.
-            - Si un fichier est introuvable, un message d'erreur 400 est retourné.
-            - En cas d'exception, une réponse JSON avec message d'erreur générique est retournée.
+        JsonResponse: Une réponse JSON contenant :
+            - page: Numéro de page actuelle
+            - page_size: Nombre d'éléments par page
+            - total_files: Nombre total de fichiers disponibles
+            - files: Liste complète des noms de fichiers
+            - total_lines: Nombre total de lignes dans tous les fichiers
+            - files_on_page: Nombre de fichiers ayant du contenu sur cette page
+            - resultat: Dictionnaire où chaque clé est un nom de fichier, et la valeur est une liste de lignes :
+                * Chaque ligne est une liste contenant le texte de la ligne et un booléen
+                * Seules les lignes de la page demandée sont incluses
+
+            En cas d'erreur :
+            - Si les paramètres de pagination sont invalides : code 400
+            - Si aucun fichier n'est trouvé : code 404
+            - Si un dossier est introuvable : code 400
+            - Pour les autres exceptions : code 500
 
     Exemple:
+        Requête :
+            GET /proxy/allACLFilesWithStatusOfAllElements?page=204
+
         Si un fichier `/etc/squid/acl/example.acl` contient :
             # Autoriser l'accès
             Interdire l'accès
+            # Autre commentaire
+            Une autre ligne
 
-        La réponse JSON sera :
+        Réponse JSON :
             {
+                "page": 1,
+                "page_size": 2,
+                "total_files": 1,
+                "files": ["example.acl"],
+                "total_lines": 4,
+                "files_on_page": 1,
                 "resultat": {
                     "example.acl": [
                         ["Autoriser l'accès", False],
@@ -2450,30 +2501,90 @@ def allACLFilesWithStatusOfAllElements(request):
             }
 
     Raises:
-        FileNotFoundError: Si un fichier est introuvable pendant la lecture.
-        Exception: Pour toute autre erreur non gérée.
+        FileNotFoundError: Si le dossier `/etc/squid/acl/` est introuvable
+        ValueError: Si les paramètres de pagination ne sont pas des entiers valides
+        Exception: Pour toute autre erreur non gérée
     """
     folder_path = "/etc/squid/acl/"
-    files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f != "README.md"]
-    resultat = {}
+    
+    # Get and validate pagination parameters
     try:
-        for file in files:
-            content = []
-            with open(os.path.join(folder_path, file), 'r') as f:  # <-- avoid reusing 'file'
-                for line in f:
-                    if line.startswith('#'):
-                        content.append([line.lstrip('#').split('\n')[0], False])
-                    else:
-                        content.append([line.strip(), True])
-            resultat[file] = content
+        page = max(1, int(request.GET.get('page', 1)))
+        page_size = min(500, max(1, int(request.GET.get('page_size', 100))))  # Limit to 500 max
+    except ValueError:
+        return JsonResponse(
+            {"msg": "Paramètres de pagination invalides. page et page_size doivent être des entiers."},
+            status=400
+        )
+
+    filename_filter = request.GET.get('filename')
+
+    try:
+        # Get all ACL files
+        all_files = [
+            f for f in os.listdir(folder_path) 
+            if os.path.isfile(os.path.join(folder_path, f)) and f != "README.md"
+        ]
+
+        if filename_filter:
+            all_files = [f for f in all_files if filename_filter in f]
+
+        if not all_files:
+            return JsonResponse(
+                {"msg": "Aucun fichier ACL trouvé dans le répertoire spécifié."},
+                status=404
+            )
+
+        # Read all files and collect all lines with their status
+        all_lines = []
+        for file in all_files:
+            try:
+                with open(os.path.join(folder_path, file), 'r') as f:
+                    for line in f:
+                        stripped_line = line.strip()
+                        if not stripped_line:
+                            continue
+                        all_lines.append({
+                            'file': file,
+                            'content': stripped_line.lstrip('#') if line.startswith('#') else stripped_line,
+                            'active': not line.startswith('#')
+                        })
+            except (FileNotFoundError, UnicodeDecodeError):
+                continue
+
+        # Apply pagination
+        total_lines = len(all_lines)
+        total_pages = max(1, (total_lines + page_size - 1) // page_size)
+        page = min(page, total_pages)
+
+        start = (page - 1) * page_size
+        end = start + page_size
+        paginated_lines = all_lines[start:end]
+
+        # Group results by file
+        resultat = {}
+        for line in paginated_lines:
+            if line['file'] not in resultat:
+                resultat[line['file']] = []
+            resultat[line['file']].append([line['content'], line['active']])
+
+        return JsonResponse({
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+            "total_files": len(all_files),
+            "total_lines": total_lines,
+            "files": all_files,
+            "resultat": resultat
+        }, safe=False)
+
     except FileNotFoundError:
-        return JsonResponse({"msg":f"{CONSTANT_PATH} {folder_path+file} {ERROR_MESSAGES_INEXISTANT}"},status=400 )
+        return JsonResponse(
+            {"msg": f"Le répertoire {folder_path} n'existe pas."},
+            status=404
+        )
     except Exception as e:
-        return JsonResponse({"msg":f"{ERROR_MESSAGES_OCCURRED}{e}"},status=400 )
-                
-    return JsonResponse(
-        {"resultat": resultat},
-        status=200,
-        safe=False,
-        json_dumps_params={'ensure_ascii': False, 'indent': 2} 
-    )
+        return JsonResponse(
+            {"msg": f"Une erreur s'est produite: {str(e)}"},
+            status=500
+        )

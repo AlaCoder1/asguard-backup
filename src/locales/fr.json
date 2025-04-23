@@ -62,6 +62,7 @@
   },
 
   "errors": {
+    "duplicated":"Les adresses des champs source, traduction et destination doivent être toutes différentes.",
     "endAddress": "Format doit correspondre à l'adresse IP : X.X.X.X (dernier octet ne doit pas être 0 ou 255)",
     "port": "Port doit se terminer par 443",
     "oblig": "Champs obligatoires",

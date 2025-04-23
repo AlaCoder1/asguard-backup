@@ -124,7 +124,11 @@
               </v-row>
             </v-container>
           </v-card-text>
-
+          <div v-if="checkDuplication">
+            <p style="margin-left: 39px" class="error-feedback">
+              {{ $t("errors.duplicated") }}
+            </p>
+          </div>
           <v-card-actions class="mt-3 actionBtn">
             <div class="text-start ml-6 mt-3">
               <span class="text-sm">
@@ -159,6 +163,7 @@
               :rounded="true"
               variant="flat"
               class="mt-3 btn-add"
+              :disabled="checkDuplication"
             >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
                 {{ $t("buttons.create") }}</span
@@ -214,8 +219,8 @@ export default {
     const numberList = ref(Array.from({ length: 33 }, (_, i) => i));
 
     const state = reactive({
-      //list
-      isCombo: ["Lan", "Wan"],
+      isCombo: ["Lan", "Wan"], //list
+
       //
       id: null,
       interface: "",
@@ -226,6 +231,7 @@ export default {
       destinationAddressPrefix: "",
       translationPrefix: "",
       description: "",
+      error_duplication: "",
     });
 
     onMounted(() => {
@@ -345,10 +351,27 @@ export default {
       }
     };
 
+    const checkDuplication = computed(() => {
+      const { sourceAddress, translationAddress, destinationAddress } = state;
+
+      if ((!sourceAddress || !translationAddress) && !destinationAddress) {
+        return false;
+      }
+      
+      return (
+        sourceAddress === translationAddress ||
+        sourceAddress === destinationAddress ||
+        translationAddress === destinationAddress
+      );
+    });
+
     const submitForm = async () => {
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      if (checkDuplication.value) return;
+
       if (result) {
         let payload = {
           interface: state.interface.id,
@@ -481,6 +504,7 @@ export default {
       emitter,
       submitForm,
       closeModal,
+      checkDuplication,
     };
   },
 };

@@ -6,14 +6,15 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from backend.nat.models import OneToOneNat, SNat
+from backend.nat.models import OneToOneNat
 from backend.nat.serializers import OneToOneNatSerializer
-from backend.nat.utils import change_position_rule, get_next_nat_handle, input_create_one_to_one_nat, save_rules_positions
+from backend.nat.utils import change_position_rule, get_next_nat_handle
 from backend.nat.list_nat import get_list_all_one_to_one_nat, get_one_one_to_one_nat
+from backend.nat.utils_one_to_one_nat import check_payload, input_create_one_to_one_nat
 from backend.nat.utils_one_to_one_nat_system import change_rule_one_to_one_nat_position_in_system, create_one_to_one_nat_rule_in_system, delete_one_to_one_nat_rule_in_system, update_one_to_one_nat_rule_in_system
 from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
-from utils.utils_functions import fix_ipv4_address
+from utils.utils_address import fix_ipv4_address
 
 
 # Constants
@@ -34,6 +35,7 @@ ERROR_MESSAGES_STARTING = _("System error in starting")
 ERROR_MESSAGES_STOPING = _("System error in stoping")
 ERROR_MESSAGES_CHANGING = _("System error in changing")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
@@ -78,10 +80,12 @@ def create_one_to_one_nat(request):
     """Creating a new OneToOneNat rule and adding it to the database"""
     try:
         data = request.data
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
-        data["source_address"] = fix_ipv4_address(data["source_address"])
-        data["translation_address"] = fix_ipv4_address(data["translation_address"])
-        data["destination_address"] = fix_ipv4_address(data["destination_address"])
+        data["source_address"], data["destination_address"], data["translation_address"] = fix_ipv4_address(
+            [data["source_address"], data["destination_address"], data["translation_address"]])
 
         serializer_one_to_one_nat = OneToOneNatSerializer(data=data)
         if serializer_one_to_one_nat.is_valid():
@@ -163,10 +167,12 @@ def update_one_to_one_nat(request, id):
     """Updating an OneToOneNat rule"""
     try:
         data = request.data
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
-        data["source_address"] = fix_ipv4_address(data["source_address"])
-        data["translation_address"] = fix_ipv4_address(data["translation_address"])
-        data["destination_address"] = fix_ipv4_address(data["destination_address"])
+        data["source_address"], data["destination_address"], data["translation_address"] = fix_ipv4_address(
+            [data["source_address"], data["destination_address"], data["translation_address"]])
 
         one_to_one_nat = OneToOneNat.objects.get(id=id)
 

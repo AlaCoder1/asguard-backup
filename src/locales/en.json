@@ -14,7 +14,7 @@
     "LoginTime": "Login Time",
     "resetPassword": "Reset Password"
   },
-  "other":"Others",
+  "other": "Others",
   "login": {
     "verifyYourAccount": "Verify Your Account",
     "send": "We sent a verification code to",
@@ -62,9 +62,10 @@
   },
 
   "errors": {
-    "endAddress":"Format must match IP address: X.X.X.X (last byte must not be 0 or 255)",
-    "port":"Port must end with 443",
-    "oblig":"Fields required",
+    "duplicated": "The source, translation, and destination fields must each contain a different address.",
+    "endAddress": "Format must match IP address: X.X.X.X (last byte must not be 0 or 255)",
+    "port": "Port must end with 443",
+    "oblig": "Fields required",
     "format_address": "Format must be like : example.com",
     "errorServer": "Internal Server Error. Please try again later",
     "valueRequired": "Value is required",
@@ -90,10 +91,9 @@
     "noModif": "No Modif For this rule",
     "invalidChar": "At least one element has an empty host or port, or contains invalid characters",
     "validHostname": "Champ must meet the following conditions:\n- Be between 1 and 253 characters long.\n- Consist of labels separated by dots.\n- Each label must be between 1 and 63 characters long.\n- Contain only letters, digits, and hyphens (-).\n- Cannot start or end with a hyphen.",
-    "validAddmac":"Valid format : XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX.\nMust contain only hexadecimal characters (0-9,a-f)\nand cannot consist of all zeros.",
-    "validMTU":"MTU doit être entre 576 et 9000",
-    "validMSS":"MSSV must be greater than 576."
-  
+    "validAddmac": "Valid format : XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX.\nMust contain only hexadecimal characters (0-9,a-f)\nand cannot consist of all zeros.",
+    "validMTU": "MTU doit être entre 576 et 9000",
+    "validMSS": "MSSV must be greater than 576."
   },
 
   "placeholder": {
@@ -375,8 +375,8 @@
     "staticRouting": "Static Routing",
     "network": "Network",
     "createRoute": "Create new",
-    "gatewayAddress":"Gateway Address",
-    "parentInterface":"Parent Interface"
+    "gatewayAddress": "Gateway Address",
+    "parentInterface": "Parent Interface"
   },
   "subscription": {
     "chooseYourPlan": "Choose your plan!",
@@ -666,36 +666,36 @@
     "servicesPolicies": "Services Policies",
     "ZTNAStatus": "ZTNA is not running, please start service",
     "osType": "OS Type",
-    "enterValue":"You must enter a value",
-    "nameExist":"The name already exists",
-    "validName":"Please enter a valid name",
-    "enterTime":"Please enter the time",
-    "timeformat":"Invalid time format",
-    "timeCheck":"Time should be after the current time",
-    "enterDate":"Please enter a date",
-    "dateformat":"Invalid date format",
-    "dateCheck":"Date should be after today",
-    "holeNumber":"Only whole numbers are allowed",
-    "validAddress":"Please enter a valid address",
-    "missingFields":"Check missing or invalid fields",
-    "identityCreated":"Identity created successfully",
-    "identityUpdated":"Identity updated successfully",
-    "configUpdated":"Configuration updated successfully",
-    "configCreated":"Configuration created successfully",
-    "EnrollCreated":"Enrollment created successfully",
-    "serviceUpdated":"Service updated successfully",
-    "serviceCreated":"Service created successfully",
-    "routerUpdated":"Relay updated successfully",
-    "routerCreated":"Relay created successfully",
-    "routerpolCreated":"Relay policy created successfully",
-    "routerpolUpdated":"Relay policy updated successfully",
-    "servicepolCreated":"Service policy created successfully",
-    "servicepolUpdated":"Service policy updated successfully",
-    "servicerouterpolCreated":"Service relay policy created successfully",
-    "servicerouterpolUpdated":"Service relay policy updated successfully",
-    "ztnadate":"Date",
-    "ztnatime":"Time",
-    "namerelay":"Relay name must follow the format: relay_name.relay"
+    "enterValue": "You must enter a value",
+    "nameExist": "The name already exists",
+    "validName": "Please enter a valid name",
+    "enterTime": "Please enter the time",
+    "timeformat": "Invalid time format",
+    "timeCheck": "Time should be after the current time",
+    "enterDate": "Please enter a date",
+    "dateformat": "Invalid date format",
+    "dateCheck": "Date should be after today",
+    "holeNumber": "Only whole numbers are allowed",
+    "validAddress": "Please enter a valid address",
+    "missingFields": "Check missing or invalid fields",
+    "identityCreated": "Identity created successfully",
+    "identityUpdated": "Identity updated successfully",
+    "configUpdated": "Configuration updated successfully",
+    "configCreated": "Configuration created successfully",
+    "EnrollCreated": "Enrollment created successfully",
+    "serviceUpdated": "Service updated successfully",
+    "serviceCreated": "Service created successfully",
+    "routerUpdated": "Relay updated successfully",
+    "routerCreated": "Relay created successfully",
+    "routerpolCreated": "Relay policy created successfully",
+    "routerpolUpdated": "Relay policy updated successfully",
+    "servicepolCreated": "Service policy created successfully",
+    "servicepolUpdated": "Service policy updated successfully",
+    "servicerouterpolCreated": "Service relay policy created successfully",
+    "servicerouterpolUpdated": "Service relay policy updated successfully",
+    "ztnadate": "Date",
+    "ztnatime": "Time",
+    "namerelay": "Relay name must follow the format: relay_name.relay"
   },
 
   "titleAgGrid": {
@@ -719,7 +719,6 @@
     "create": "Create",
     "update": "Update",
     "group": "group"
-
   },
 
   "PageGeneral": {

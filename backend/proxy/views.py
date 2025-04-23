@@ -14,6 +14,7 @@ from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TY
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.authentication import SessionAuthentication
 from django.utils.translation import gettext_lazy as _
+from drf_yasg import openapi
 # Create your views here.
 
 # Constants
@@ -1936,8 +1937,7 @@ def readFromFile(request):
                 
     return JsonResponse({"content": content}, status=200)  
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Schema, TYPE_STRING, TYPE_OBJECT, TYPE_ARRAY, TYPE_BOOLEAN
+
 
 @swagger_auto_schema(
     method='POST',
@@ -2371,6 +2371,8 @@ def file_selected(status, type):
             file_path = '/etc/squid/allowed_subnet_by_auth.acl'
     return file_path
 
+
+
 @swagger_auto_schema(
     method='get',
     operation_summary="Lister les fichiers ACL Squid avec leur contenu et statut",
@@ -2380,6 +2382,11 @@ def file_selected(status, type):
         "Les fichiers sont retournés avec leurs lignes respectives et un booléen indiquant leur statut : "
         "`True` pour les lignes actives, `False` pour les lignes commentées."
     ),
+    manual_parameters=[
+        openapi.Parameter('page', openapi.IN_QUERY, description="Numéro de page (défaut 1)", type=openapi.TYPE_INTEGER),
+        openapi.Parameter('page_size', openapi.IN_QUERY, description="Nombre de lignes par page (défaut 100, max 500)", type=openapi.TYPE_INTEGER),
+        openapi.Parameter('filename', openapi.IN_QUERY, description="Filtre par nom de fichier (partiel)", type=openapi.TYPE_STRING),
+    ],
     responses={
         200: Schema(
             type=TYPE_OBJECT,
@@ -2394,46 +2401,27 @@ def file_selected(status, type):
                                 Schema(type=TYPE_STRING, description="Contenu de la ligne"),
                                 Schema(type=TYPE_BOOLEAN, description="Statut de la ligne : True = active, False = commentée")
                             ],
-                            description="Liste des lignes du fichier avec statut",
-                            example = [
-                                ["example.com", True]
-                            ]
                         ),
                     ),
-                    description="Dictionnaire de fichiers avec le contenu et le statut de chaque ligne."
+                    description="Dictionnaire de fichiers avec le contenu et le statut de chaque ligne.",
+                    example={
+                "page": 1,
+                "page_size": 2,
+                "total_files": 1,
+                "files": ["example.acl"],
+                "total_lines": 4,
+                "files_on_page": 1,
+                "resultat": {
+                    "example.acl": [
+                        ["Autoriser l'accès", False],
+                        ["Interdire l'accès", True]
+                    ]
+                }
+            }
                 )
             }
         ),
-        404: Schema(
-            type=TYPE_OBJECT,
-            properties={
-                'msg': Schema(
-                    type=TYPE_STRING,
-                    description="Message d'erreur si un fichier est manquant ou une autre erreur s'est produite.",
-                    example="File not found: /etc/squid/acl/somefile.acl"
-                )
-            }
-        ),
-        400: Schema(
-            type=TYPE_OBJECT,
-            properties={
-                'msg': Schema(
-                    type=TYPE_STRING,
-                    description="Invalid pagination parameters. page and page_size must be integers",
-                    example="File not found: /etc/squid/acl/somefile.acl"
-                )
-            }
-        ),
-        404: Schema(
-            type=TYPE_OBJECT,
-            properties={
-                'msg': Schema(
-                    type=TYPE_STRING,
-                    description="No ACL files found in the specified directory.",
-                    example="No ACL files found in the specified directory."
-                )
-            }
-        )
+        # Keep your other responses
     }
 )
 @api_view(['GET'])

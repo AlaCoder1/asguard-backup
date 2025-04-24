@@ -2388,7 +2388,7 @@ def file_selected(status, type):
     "- **page_size** *(entier, optionnel)* : Nombre de lignes à afficher par page. La valeur par défaut est `100`, "
     "et la valeur maximale autorisée est `500`. Ce paramètre permet de limiter ou d'étendre la quantité de données retournées à chaque appel.\n"
     "- **filename** *(chaîne, optionnel)* : Filtre les fichiers à analyser en fonction d'une correspondance partielle sur leur nom. "
-    "Par exemple, passer `ban` retournera tous les fichiers contenant `ban` dans leur nom (`banlist.txt`, `banned_ips.acl`, etc.)."
+    "Par exemple, affiché le contenu d’un fichier spécifique, tels que `ads.acl`, etc."
     ),
     manual_parameters = [
     openapi.Parameter(

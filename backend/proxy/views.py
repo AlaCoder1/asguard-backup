@@ -2375,17 +2375,57 @@ def file_selected(status, type):
 @swagger_auto_schema(
     method='get',
     operation_summary="Lister les fichiers ACL Squid avec leur contenu et statut",
-    operation_description=(
-        "Cette API permet de récupérer le contenu de tous les fichiers ACL situés dans `/etc/squid/acl/` "
-        "(à l'exception de `README.md`). Chaque ligne est analysée pour déterminer si elle est commentée ou non. "
-        "Les fichiers sont retournés avec leurs lignes respectives et un booléen indiquant leur statut : "
-        "`True` pour les lignes actives, `False` pour les lignes commentées."
+    operation_description = (
+    "Cette API permet de récupérer le contenu de tous les fichiers ACL situés dans `/etc/squid/acl/` "
+    "(à l'exception de `README.md`). Chaque ligne de chaque fichier est analysée pour déterminer si elle est "
+    "commentée (commençant par un `#`) ou active. Les résultats retournent la structure de chaque fichier avec ses "
+    "lignes respectives, accompagnées d'un booléen indiquant leur statut : `True` pour les lignes actives, "
+    "`False` pour les lignes commentées.\n\n"
+
+    "### Paramètres disponibles :\n"
+    "- **page** *(entier, optionnel)* : Numéro de la page à retourner. Par défaut, la première page est affichée (`1`). "
+    "Ce paramètre est utile pour naviguer à travers un grand nombre de lignes retournées.\n"
+    "- **page_size** *(entier, optionnel)* : Nombre de lignes à afficher par page. La valeur par défaut est `100`, "
+    "et la valeur maximale autorisée est `500`. Ce paramètre permet de limiter ou d'étendre la quantité de données retournées à chaque appel.\n"
+    "- **filename** *(chaîne, optionnel)* : Filtre les fichiers à analyser en fonction d'une correspondance partielle sur leur nom. "
+    "Par exemple, passer `ban` retournera tous les fichiers contenant `ban` dans leur nom (`banlist.txt`, `banned_ips.acl`, etc.)."
     ),
-    manual_parameters=[
-        openapi.Parameter('page', openapi.IN_QUERY, description="Numéro de page (défaut 1)", type=openapi.TYPE_INTEGER),
-        openapi.Parameter('page_size', openapi.IN_QUERY, description="Nombre de lignes par page (défaut 100, max 500)", type=openapi.TYPE_INTEGER),
-        openapi.Parameter('filename', openapi.IN_QUERY, description="Filtre par nom de fichier (partiel)", type=openapi.TYPE_STRING),
-    ],
+    manual_parameters = [
+    openapi.Parameter(
+        'page',
+        openapi.IN_QUERY,
+        description=(
+            "Numéro de page à afficher dans les résultats paginés.\n"
+            "- Utilisé pour naviguer entre différentes pages de résultats.\n"
+            "- Par défaut, la première page (`1`) est retournée si ce paramètre n'est pas spécifié.\n"
+            "- Doit être un entier supérieur ou égal à `1`."
+        ),
+        type=openapi.TYPE_INTEGER
+    ),
+    openapi.Parameter(
+        'page_size',
+        openapi.IN_QUERY,
+        description=(
+            "Nombre de lignes à afficher par page.\n"
+            "- Ce paramètre contrôle la quantité de données retournée dans une page de résultats.\n"
+            "- Valeur par défaut : `100` lignes par page.\n"
+            "- La valeur maximale autorisée est `500`. Si une valeur supérieure est fournie, elle sera automatiquement réduite à `500`.\n"
+            "- Doit être un entier positif."
+        ),
+        type=openapi.TYPE_INTEGER
+    ),
+    openapi.Parameter(
+        'filename',
+        openapi.IN_QUERY,
+        description=(
+            "Filtre les fichiers ACL en fonction d'une correspondance partielle dans le nom du fichier.\n"
+            "- Ce paramètre permet de limiter la recherche à certains fichiers spécifiques.\n"
+            "- Par exemple, affiché le contenu d’un fichier spécifique, tels que `ads.acl`, etc.\n"
+        ),
+        type=openapi.TYPE_STRING
+    ),
+],
+
     responses={
         200: Schema(
             type=TYPE_OBJECT,

@@ -80,7 +80,6 @@ def getGroup(request, id):
 #@permission_classes([IsAuthenticated])
 def createGroup(request):
     """Create a group"""
-    msg = ''
     if (request.method == 'POST'):
         data = request.data
         groupname = data['groupname']
@@ -92,15 +91,13 @@ def createGroup(request):
                 serializer = GroupSerializer(data=data)
                 if (serializer.is_valid()):
                     serializer.save()
-                    msg = f"{groupname} {SUCCESS_MESSAGES_CREATING}"
-                    return JsonResponse({"msg": msg}, status=201)
+                    return JsonResponse({"msg": f"{groupname} {SUCCESS_MESSAGES_CREATING}"}, status=201)
                 return JsonResponse(serializer.errors, status=400)
             else:
-                msg = stderr
+                return JsonResponse({"msg": stderr}, status=400)
         else:
-            msg =f"{CONSTANT_GROUPE_NAME} {ERROR_MESSAGES_INVALID}"
-            return JsonResponse({"msg": msg}, status=201)
-    return JsonResponse({"msg": msg}, status=201)
+            return JsonResponse({"msg": f"{CONSTANT_GROUPE_NAME} {ERROR_MESSAGES_INVALID}"}, status=400)
+    
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Deleted', 400: 'Bad Request'}, 

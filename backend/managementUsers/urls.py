@@ -5,10 +5,10 @@ from . import views
 urlpatterns = [
     path('getAllUsers', views.get_all_users, name="getAllUsers"),
     path('getRoles', views.get_all_roles, name="getRoles"),
+    path('getUser/<int:id>', views.get_user, name="getUser"),
     path('createRole', views.create_role, name="createRole"),
     path('modifyRole/<int:id>', views.modify_role, name="modifyRole"),
     path('deleteRole/<int:id>', views.delete_role, name="deleteRole"),
-    path('getUser/<int:id>', views.get_user, name="getUser"),
     path('createUser', views.create_user, name="createUser"),
     path('deleteUser/<int:id>', views.delete_user, name="deleteUser"),
     path('modifyUser/<int:id>', views.modify_user, name="modifyUser"),

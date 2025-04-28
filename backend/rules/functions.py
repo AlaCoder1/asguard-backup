@@ -139,7 +139,7 @@ def add_rule_remote(rule,ifname,type_rule):
       for cmd in commandes:
          _,error=run_command(cmd)
          if error!='': 
-            print({"cmd":cmd,"error":error})
+            # print({"cmd":cmd,"error":error})
             return error
       return True
 
@@ -171,7 +171,7 @@ def get_handle_rule(ifname,type_rule,rule):
    ##executer cette commande
    output,_=run_command(cmd)
    output = output.split('#')
-   print(cmd,output)
+   # print(cmd,output)
    if len(output)<2:
       return None
    else:

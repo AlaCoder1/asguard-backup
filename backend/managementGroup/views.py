@@ -12,9 +12,11 @@ from django.core import serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
+from django.core.exceptions import ObjectDoesNotExist
 # Constants
 CONSTANT_GROUPE_NAME= _('Groupe name')
 CONSTANT_GROUPE_DESCRIPTION= _('Groupe description')
+GROUP_WITH_ID= _('Group with id')
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -23,8 +25,8 @@ SUCCESS_MESSAGES_UPDATING = _("is updated")
 # Error messages
 ERROR_MESSAGES_INVALID = _("Invalid")
 ERROR_MESSAGES_EXISTANT = _("Already exist")
-
-
+INVALID_METHOD = _("Invalid method")
+DOES_NOT_EXIST = _("does not exist")
 
 @swagger_auto_schema(
     method='get',
@@ -69,7 +71,21 @@ def getGroup(request, id):
 @swagger_auto_schema(
     method='post',
     operation_description="Create a new group",
-    request_body=GroupSerializer,
+        request_body=Schema(
+        type=TYPE_OBJECT,
+        properties={
+            'groupname': Schema(
+                type=TYPE_STRING,
+                description="The name of the group.",
+                example="my_group"
+            ),
+            'description': Schema(
+                type=TYPE_STRING,
+                description="The description of the group.",
+                example="description"
+            ),
+        }
+    ),
     responses={
         201: openapi.Response("Group created", GroupSerializer()),
         400: "Validation Error"
@@ -110,7 +126,12 @@ def deleteGroup(request, id):
     """Delete a group"""
     msg = ''
     if (request.method == 'DELETE'):
-        group = Group.objects.get(id=id)
+        try:
+            group = Group.objects.get(id=id)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": f"{GROUP_WITH_ID} {id} {DOES_NOT_EXIST}"},status=400)
+        except ValueError:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
         _, stderr = delete_group(group.groupname)
         if stderr == "":
             group.delete()
@@ -118,7 +139,8 @@ def deleteGroup(request, id):
         else:
             msg = stderr
         return JsonResponse({"msg": msg})
-
+    else:
+        return JsonResponse({"error": INVALID_METHOD},status=400)
 @swagger_auto_schema(
     method='PUT',
     operation_summary="Change Group Name and Description",
@@ -153,9 +175,13 @@ def deleteGroup(request, id):
 @permission_classes([IsAuthenticated])
 def changeGroupname(request, id):
     """Change groupname in database"""
-    msg = ''
     if (request.method == 'PUT'):
-        group = Group.objects.get(id=id)
+        try:
+            group = Group.objects.get(id=id)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": f"{GROUP_WITH_ID} {id} {DOES_NOT_EXIST}"},status=400)
+        except ValueError:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
         groupDict = group.__dict__
         data = request.data
         oldgroupname = groupDict['groupname']
@@ -166,18 +192,16 @@ def changeGroupname(request, id):
             if oldgroupname == Newgroupname:
                 group.description = description
                 group.save()
-                msg = f"{CONSTANT_GROUPE_DESCRIPTION} {SUCCESS_MESSAGES_UPDATING}"
-                return JsonResponse({"msg": msg})
+                return JsonResponse({"msg": f"{CONSTANT_GROUPE_DESCRIPTION} {SUCCESS_MESSAGES_UPDATING}"},status=200)
             elif group_exists(Newgroupname):
-                msg = f"{Newgroupname} {ERROR_MESSAGES_EXISTANT}"
-                return JsonResponse({"msg": msg})
+                return JsonResponse({"error": f"{Newgroupname} {ERROR_MESSAGES_EXISTANT}"}, status=400)
             else:
                 change_groupname(oldgroupname, Newgroupname)
-                msg = f"{CONSTANT_GROUPE_NAME} {SUCCESS_MESSAGES_UPDATING}"
                 group.groupname = Newgroupname
                 group.description = description
                 group.save()
-                return JsonResponse({"msg": msg})
+                return JsonResponse({"msg": f"{CONSTANT_GROUPE_NAME} {SUCCESS_MESSAGES_UPDATING}"},status=200)
         else:
-            msg =f"{ERROR_MESSAGES_INVALID} {Newgroupname}"
-            return JsonResponse({"msg": msg})
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {Newgroupname}"},status=400)
+    else:
+        return JsonResponse({"error": INVALID_METHOD},status=400)

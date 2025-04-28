@@ -15,7 +15,7 @@ from backend.openvpn.constant_variables import PATH_SERVER_STATIC
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn, get_list_all_server_openvpn, get_one_client_openvpn, get_one_server_openvpn
 from utils.commands_utils import read_file_from_system
 from utils.errors_utils import CommandExecutionError
-from utils.utils_functions import fix_ipv4_address
+from utils.utils_address import fix_ipv4_address
 from .servers_status import change_status_server_openvpn
 from .models import ServerOpenvpn, ClientOpenvpn
 from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer

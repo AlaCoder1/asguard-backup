@@ -1,7 +1,7 @@
 from backend.gateway.models import Gateway, GatewayInterface
 from backend.gateway.serializers import GatewayInterfaceSerializer, GatewaySerializer
 from backend.network.models import IP4Config, Interface
-from utils.utils_functions import is_same_subnet
+from utils.utils_address import is_same_subnet
 
 
 def create_gateway(gateway):

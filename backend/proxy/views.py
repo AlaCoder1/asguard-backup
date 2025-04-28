@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 from django.db import IntegrityError
@@ -13,6 +14,7 @@ from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TY
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.authentication import SessionAuthentication
 from django.utils.translation import gettext_lazy as _
+from drf_yasg import openapi
 # Create your views here.
 
 # Constants
@@ -685,7 +687,6 @@ def get_generale_info(request):
     command = "cat "+squid_conf_path
     stdout, stderr = run_command(command)
     resultat=stdout.split('\n')
-    print({"resultat":resultat})
     for line in resultat:
         line = line.strip()
         if line.startswith('http_port'):
@@ -1935,8 +1936,7 @@ def readFromFile(request):
                 
     return JsonResponse({"content": content}, status=200)  
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Schema, TYPE_STRING, TYPE_OBJECT, TYPE_ARRAY, TYPE_BOOLEAN
+
 
 @swagger_auto_schema(
     method='POST',
@@ -2369,3 +2369,249 @@ def file_selected(status, type):
         else:
             file_path = '/etc/squid/allowed_subnet_by_auth.acl'
     return file_path
+
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Lister les fichiers ACL Squid avec leur contenu et statut",
+    operation_description = (
+    "Cette API permet de récupérer le contenu de tous les fichiers ACL situés dans `/etc/squid/acl/` "
+    "(à l'exception de `README.md`). Chaque ligne de chaque fichier est analysée pour déterminer si elle est "
+    "commentée (commençant par un `#`) ou active. Les résultats retournent la structure de chaque fichier avec ses "
+    "lignes respectives, accompagnées d'un booléen indiquant leur statut : `True` pour les lignes actives, "
+    "`False` pour les lignes commentées.\n\n"
+
+    "### Paramètres disponibles :\n"
+    "- **page** *(entier, optionnel)* : Numéro de la page à retourner. Par défaut, la première page est affichée (`1`). "
+    "Ce paramètre est utile pour naviguer à travers un grand nombre de lignes retournées.\n"
+    "- **page_size** *(entier, optionnel)* : Nombre de lignes à afficher par page. La valeur par défaut est `100`, "
+    "et la valeur maximale autorisée est `500`. Ce paramètre permet de limiter ou d'étendre la quantité de données retournées à chaque appel.\n"
+    "- **filename** *(chaîne, optionnel)* : Filtre les fichiers à analyser en fonction d'une correspondance partielle sur leur nom. "
+    "Par exemple, affiché le contenu d’un fichier spécifique, tels que `ads.acl`, etc."
+    ),
+    manual_parameters = [
+    openapi.Parameter(
+        'page',
+        openapi.IN_QUERY,
+        description=(
+            "Numéro de page à afficher dans les résultats paginés.\n"
+            "- Utilisé pour naviguer entre différentes pages de résultats.\n"
+            "- Par défaut, la première page (`1`) est retournée si ce paramètre n'est pas spécifié.\n"
+            "- Doit être un entier supérieur ou égal à `1`."
+        ),
+        type=openapi.TYPE_INTEGER
+    ),
+    openapi.Parameter(
+        'page_size',
+        openapi.IN_QUERY,
+        description=(
+            "Nombre de lignes à afficher par page.\n"
+            "- Ce paramètre contrôle la quantité de données retournée dans une page de résultats.\n"
+            "- Valeur par défaut : `100` lignes par page.\n"
+            "- La valeur maximale autorisée est `500`. Si une valeur supérieure est fournie, elle sera automatiquement réduite à `500`.\n"
+            "- Doit être un entier positif."
+        ),
+        type=openapi.TYPE_INTEGER
+    ),
+    openapi.Parameter(
+        'filename',
+        openapi.IN_QUERY,
+        description=(
+            "Filtre les fichiers ACL en fonction d'une correspondance partielle dans le nom du fichier.\n"
+            "- Ce paramètre permet de limiter la recherche à certains fichiers spécifiques.\n"
+            "- Par exemple, affiché le contenu d’un fichier spécifique, tels que `ads.acl`, etc.\n"
+        ),
+        type=openapi.TYPE_STRING
+    ),
+],
+
+    responses={
+        200: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                'resultat': Schema(
+                    type=TYPE_OBJECT,
+                    additional_properties=Schema(
+                        type=TYPE_ARRAY,
+                        items=Schema(
+                            type=TYPE_ARRAY,
+                            items=[
+                                Schema(type=TYPE_STRING, description="Contenu de la ligne"),
+                                Schema(type=TYPE_BOOLEAN, description="Statut de la ligne : True = active, False = commentée")
+                            ],
+                        ),
+                    ),
+                    description="Dictionnaire de fichiers avec le contenu et le statut de chaque ligne.",
+                    example={
+                "page": 1,
+                "page_size": 2,
+                "total_files": 1,
+                "files": ["example.acl"],
+                "total_lines": 4,
+                "files_on_page": 1,
+                "resultat": {
+                    "example.acl": [
+                        ["Autoriser l'accès", False],
+                        ["Interdire l'accès", True]
+                    ]
+                }
+            }
+                )
+            }
+        ),
+        # Keep your other responses
+    }
+)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def allACLFilesWithStatusOfAllElements(request):
+    """
+    Lit le contenu de tous les fichiers de configuration ACL de Squid et renvoie les lignes avec leur statut (commentée ou active) avec pagination.
+
+    Cette fonction parcourt tous les fichiers situés dans le dossier `/etc/squid/acl/` (sauf `README.md`), lit leur contenu,
+    et retourne pour chacun d'eux les lignes avec une indication si elles sont actives (non commentées) ou commentées
+    (commençant par le caractère `#`). Chaque ligne est associée à un booléen :
+    - `True` pour les lignes actives
+    - `False` pour les lignes commentées
+
+    La réponse est paginée pour gérer les gros volumes de données. Les lignes vides sont ignorées.
+
+    Args:
+        request: Objet de requête HTTP pouvant contenir les paramètres suivants :
+            - page (int, optionnel): Numéro de page à retourner (défaut: 1)
+            - page_size (int, optionnel): Nombre de lignes par page (défaut: 100)
+            - filename (str, optionnel): Filtre pour ne retourner que les fichiers contenant cette chaîne
+
+    Returns:
+        JsonResponse: Une réponse JSON contenant :
+            - page: Numéro de page actuelle
+            - page_size: Nombre d'éléments par page
+            - total_files: Nombre total de fichiers disponibles
+            - files: Liste complète des noms de fichiers
+            - total_lines: Nombre total de lignes dans tous les fichiers
+            - files_on_page: Nombre de fichiers ayant du contenu sur cette page
+            - resultat: Dictionnaire où chaque clé est un nom de fichier, et la valeur est une liste de lignes :
+                * Chaque ligne est une liste contenant le texte de la ligne et un booléen
+                * Seules les lignes de la page demandée sont incluses
+
+            En cas d'erreur :
+            - Si les paramètres de pagination sont invalides : code 400
+            - Si aucun fichier n'est trouvé : code 404
+            - Si un dossier est introuvable : code 400
+            - Pour les autres exceptions : code 500
+
+    Exemple:
+        Requête :
+            GET /proxy/allACLFilesWithStatusOfAllElements?page=204
+
+        Si un fichier `/etc/squid/acl/example.acl` contient :
+            # Autoriser l'accès
+            Interdire l'accès
+            # Autre commentaire
+            Une autre ligne
+
+        Réponse JSON :
+            {
+                "page": 1,
+                "page_size": 2,
+                "total_files": 1,
+                "files": ["example.acl"],
+                "total_lines": 4,
+                "files_on_page": 1,
+                "resultat": {
+                    "example.acl": [
+                        ["Autoriser l'accès", False],
+                        ["Interdire l'accès", True]
+                    ]
+                }
+            }
+
+    Raises:
+        FileNotFoundError: Si le dossier `/etc/squid/acl/` est introuvable
+        ValueError: Si les paramètres de pagination ne sont pas des entiers valides
+        Exception: Pour toute autre erreur non gérée
+    """
+    folder_path = "/etc/squid/acl/"
+    
+    # Get and validate pagination parameters
+    try:
+        page = max(1, int(request.GET.get('page', 1)))
+        page_size = min(500, max(1, int(request.GET.get('page_size', 100))))  # Limit to 500 max
+    except ValueError:
+        return JsonResponse(
+            {"msg": "Paramètres de pagination invalides. page et page_size doivent être des entiers."},
+            status=400
+        )
+
+    filename_filter = request.GET.get('filename')
+
+    try:
+        # Get all ACL files
+        all_files = [
+            f for f in os.listdir(folder_path) 
+            if os.path.isfile(os.path.join(folder_path, f)) and f != "README.md"
+        ]
+
+        if filename_filter:
+            all_files = [f for f in all_files if filename_filter in f]
+
+        if not all_files:
+            return JsonResponse(
+                {"msg": "Aucun fichier ACL trouvé dans le répertoire spécifié."},
+                status=404
+            )
+
+        # Read all files and collect all lines with their status
+        all_lines = []
+        for file in all_files:
+            try:
+                with open(os.path.join(folder_path, file), 'r') as f:
+                    for line in f:
+                        stripped_line = line.strip()
+                        if not stripped_line:
+                            continue
+                        all_lines.append({
+                            'file': file,
+                            'content': stripped_line.lstrip('#') if line.startswith('#') else stripped_line,
+                            'active': not line.startswith('#')
+                        })
+            except (FileNotFoundError, UnicodeDecodeError):
+                continue
+
+        # Apply pagination
+        total_lines = len(all_lines)
+        total_pages = max(1, (total_lines + page_size - 1) // page_size)
+        page = min(page, total_pages)
+
+        start = (page - 1) * page_size
+        end = start + page_size
+        paginated_lines = all_lines[start:end]
+
+        # Group results by file
+        resultat = {}
+        for line in paginated_lines:
+            if line['file'] not in resultat:
+                resultat[line['file']] = []
+            resultat[line['file']].append([line['content'], line['active']])
+
+        return JsonResponse({
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+            "total_files": len(all_files),
+            "total_lines": total_lines,
+            "files": all_files,
+            "resultat": resultat
+        }, safe=False)
+
+    except FileNotFoundError:
+        return JsonResponse(
+            {"msg": f"Le répertoire {folder_path} n'existe pas."},
+            status=404
+        )
+    except Exception as e:
+        return JsonResponse(
+            {"msg": f"Une erreur s'est produite: {str(e)}"},
+            status=500
+        )

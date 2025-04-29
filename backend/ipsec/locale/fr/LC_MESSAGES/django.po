@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-06 16:43+0000\n"
+"POT-Creation-Date: 2025-04-29 14:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,65 +23,81 @@ msgid "tunnel name"
 msgstr "nom du tunnel"
 
 #: backend/ipsec/views.py:23
+msgid "IPsec Service"
+msgstr "Service IPsec"
+
+#: backend/ipsec/views.py:24
 msgid "IPsec configuration"
 msgstr "Configuration IPsec"
 
-#: backend/ipsec/views.py:24
+#: backend/ipsec/views.py:25
 msgid "IPv4 config"
 msgstr "IPv4 config"
 
-#: backend/ipsec/views.py:25
+#: backend/ipsec/views.py:26
 msgid "interface"
 msgstr "interface"
 
-#: backend/ipsec/views.py:26
+#: backend/ipsec/views.py:27
 msgid "Certificate Authority"
 msgstr "Certificat d'authorité"
 
-#: backend/ipsec/views.py:27
+#: backend/ipsec/views.py:28
 msgid "Certificate"
 msgstr "Certificat"
 
-#: backend/ipsec/views.py:28
+#: backend/ipsec/views.py:29
 msgid "Public Key"
 msgstr "Clé Public"
 
-#: backend/ipsec/views.py:30
+#: backend/ipsec/views.py:31
 msgid "is created"
 msgstr "est créé"
 
-#: backend/ipsec/views.py:31
+#: backend/ipsec/views.py:32
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/ipsec/views.py:32
+#: backend/ipsec/views.py:33
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/ipsec/views.py:33
+#: backend/ipsec/views.py:34
 msgid "is enabled"
 msgstr "est activé"
 
-#: backend/ipsec/views.py:34
+#: backend/ipsec/views.py:35
 msgid "is disabled"
 msgstr "est desactivé"
 
-#: backend/ipsec/views.py:35
+#: backend/ipsec/views.py:36
+msgid "is started"
+msgstr "est démarré"
+
+#: backend/ipsec/views.py:37
+msgid "is stoped"
+msgstr "est arrêté"
+
+#: backend/ipsec/views.py:38
 msgid "is up"
 msgstr "est monté"
 
-#: backend/ipsec/views.py:37
+#: backend/ipsec/views.py:40
 msgid "System error in creating"
 msgstr "Erreur système lors de la création de"
 
-#: backend/ipsec/views.py:38
+#: backend/ipsec/views.py:41
 msgid "System error in deleting"
 msgstr "Erreur système lors de la suppression de"
 
-#: backend/ipsec/views.py:39
+#: backend/ipsec/views.py:42
 msgid "System error in up ipsec"
 msgstr "Erreur système lors de up IPsec"
 
-#: backend/ipsec/views.py:40
+#: backend/ipsec/views.py:43
 msgid "does not exist"
 msgstr "n'existe pas"
+
+#: backend/ipsec/views.py:44
+msgid "Invalid data"
+msgstr "Données invalides"

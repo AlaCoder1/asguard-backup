@@ -66,10 +66,13 @@ TYPE = _("Type")
 NOT_FOUND = _("not found")
 GROUP_WITH_ID= _('Group with id')
 GROUP_NOT_MATCHING = _('No group found matching the username')
+ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
+
 def is_valid_email(email):
     # Simple regex for validating an email
     email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     return re.match(email_regex, email) is not None
+
 
 @swagger_auto_schema('GET', responses={200: 'List of all users', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF Users",
@@ -1258,7 +1261,6 @@ def get_profile_language(request, id):
     ),
     responses={200: "Language updated successfully", 400: "Bad Request"},
 )
-
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -1312,6 +1314,8 @@ def change_language(request, id):
     try:
         data = request.data
         profile = Profile.objects.get(user=User.objects.get(id=id))
+        if data.get("language", "") not in ["en", "fr"]:
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         serializer_profile = ProfileSerializer(profile, data=data, partial=True)
         if serializer_profile.is_valid():
             # Change language of rule waf description

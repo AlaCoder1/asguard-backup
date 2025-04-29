@@ -66,7 +66,9 @@ def get_cert_auth(request, id):
     """Getting a Certificates Authority by id from database"""
     if (request.method == 'GET'):
         cert = get_one_cert_auth(id)
-        return JsonResponse(cert, safe=False)
+        if cert:
+            return JsonResponse(cert, safe=False)
+        return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema(
@@ -290,7 +292,9 @@ def get_certificate(request, id):
     """Getting a Certificate by id from database"""
     if (request.method == 'GET'):
         cert = get_one_certificate(id)
-        return JsonResponse(cert, safe=False)
+        if cert:
+            return JsonResponse(cert, safe=False)
+        return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema(

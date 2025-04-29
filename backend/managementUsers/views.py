@@ -52,6 +52,7 @@ ERROR_MESSAGES_EXISTANT = _("already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
 ERROR_MESSAGES_CONNECTION = _("System error in connecting to directory server")
+ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
 
 @swagger_auto_schema('GET', responses={200: 'List of all users', 400: 'Bad Request'}, 
@@ -106,6 +107,8 @@ def get_all_users(request):
             res[i]['fields'].pop('password')
             res[i]['fields']['id'] = user_id
             list_users.append(res[i]['fields'])
+    return JsonResponse(list_users, safe=False)
+
 
 @swagger_auto_schema('GET', responses={200: 'List of all roles', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF roles",
@@ -1121,7 +1124,6 @@ def get_profile_language(request, id):
     ),
     responses={200: "Language updated successfully", 400: "Bad Request"},
 )
-
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -1175,6 +1177,8 @@ def change_language(request, id):
     try:
         data = request.data
         profile = Profile.objects.get(user=User.objects.get(id=id))
+        if data.get("language", "") not in ["en", "fr"]:
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         serializer_profile = ProfileSerializer(profile, data=data, partial=True)
         if serializer_profile.is_valid():
             # Change language of rule waf description

@@ -3,6 +3,13 @@ from utils.commands_utils import execute_command_without_arguments
 from utils.errors_utils import CommandExecutionError
 
 
+def check_payload_change_status(data: dict):
+    """Check the payload fileds for change ipsec status API"""
+    if data["status"] in ["start", "stop"]:
+        return True
+    return False
+
+
 def reorganize_file(config:str):
     """Reorganize file by removing unused empty lines"""
     while config.find("\n\n\n") > -1:

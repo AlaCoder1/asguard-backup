@@ -7,7 +7,6 @@ from backend.ipsec.utils_secrets import comment_line_in_secrets_file, create_lin
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_KEY
 from backend.managementKeypairs.models import PublicKey
 from utils.commands_utils import execute_command_without_arguments
-from utils.constant_variables import SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP
 
 
 def install_server_ipsec_in_system(conn_config, authentication, interface_address, remote_gateway):
@@ -103,6 +102,3 @@ def change_status_ipsec_in_system(status="start"):
         for server in list_enable_server:
             up_ipsec_conn(server.conn_name)
             time.sleep(1)
-        return SUCCESS_MESSAGES_START.format("IPsec", "")
-    
-    return SUCCESS_MESSAGES_STOP.format("IPsec", "")

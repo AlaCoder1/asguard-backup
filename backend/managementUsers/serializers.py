@@ -21,11 +21,9 @@ class UserSerializerPost(serializers.ModelSerializer):
     group = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Group.objects.all())
     role = serializers.PrimaryKeyRelatedField(queryset=Roles.objects.all())
-    # permission=serializers.PrimaryKeyRelatedField(many=True,queryset=Permission.objects.all())
     organisation = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
     class Meta:
         model = User
-        # fields =  ('username', 'password','fullname', 'email','role', 'uid', 'group','permission')
         fields = ('username', 'password', 'fullname',
                   'email', 'role', 'uid','organisation', 'group','is_active','id_server','dn_user')
         write_only_fields = ('password')

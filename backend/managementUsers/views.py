@@ -24,9 +24,12 @@ from django.conf import settings
 from rest_framework import status
 from backend.waf.models import RulesWaf
 from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
-
+from django.core.exceptions import ObjectDoesNotExist
+import re
 # Constants
 CONSTANT_USER = _("User")
+CONSTANT_ROLE = _("Role")
+CONSTANT_FUNCTIONALITY = _("functionality")
 CONSTANT_USERNAME = _("username")
 CONSTANT_PASSWORD = _("password")
 CONSTANT_PERMISSION = _("permission")
@@ -52,7 +55,23 @@ ERROR_MESSAGES_EXISTANT = _("already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
 ERROR_MESSAGES_CONNECTION = _("System error in connecting to directory server")
+INVALID_METHOD = _("Invalid method")
+INVALID_EMAIL_FORMAT = _("Invalid email format")
+USER_WITH_ID= _('User with id')
+ROLE_WITH_ID= _('Role with id')
+AD_SERVER_WITH_ID= _('AD Server with id')
+DOES_NOT_EXIST = _("does not exist")
+ERROR_MESSAGES_INVALID = _("Invalid")
+TYPE = _("Type")
+NOT_FOUND = _("not found")
+GROUP_WITH_ID= _('Group with id')
+GROUP_NOT_MATCHING = _('No group found matching the username')
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
+
+def is_valid_email(email):
+    # Simple regex for validating an email
+    email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(email_regex, email) is not None
 
 
 @swagger_auto_schema('GET', responses={200: 'List of all users', 400: 'Bad Request'}, 
@@ -107,9 +126,10 @@ def get_all_users(request):
             res[i]['fields'].pop('password')
             res[i]['fields']['id'] = user_id
             list_users.append(res[i]['fields'])
-    return JsonResponse(list_users, safe=False)
-
-
+        return JsonResponse(list_users, safe=False,status=200)
+    else:
+        return JsonResponse({"msg": INVALID_METHOD}, status=400)
+    
 @swagger_auto_schema('GET', responses={200: 'List of all roles', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF roles",
                      operation_description="API TO GET LIST OF roles")
@@ -160,8 +180,9 @@ def get_all_roles(request):
             res[i]['fields']['id'] = role_id
             list_roles.append(res[i]['fields'])
         
-        return JsonResponse({"list_roles":list_roles})
-
+        return JsonResponse({"list_roles":list_roles},status=200)
+    else:
+        return JsonResponse({"msg": INVALID_METHOD}, status=400)
 @swagger_auto_schema(
     method='post',
     operation_summary="Create Role API",
@@ -170,7 +191,12 @@ def get_all_roles(request):
         type=TYPE_OBJECT,
         required=["role_name"],
         properties={
-            "role_name": Schema(type=TYPE_STRING, example="Admin"),
+            "name": Schema(type=TYPE_STRING, example="Admin"),
+            'fonctionalities': Schema(
+                type=TYPE_STRING,  
+                description="The functionalities of the role, serialized as a JSON array of strings.",
+                example="['sdwan', 'ztna', 'proxy']"  
+            )
         },
     ),
     responses={200: 'Create Role successfully', 400: 'Bad Request'}, 
@@ -214,12 +240,39 @@ def create_role(request):
     """
     if (request.method == 'POST'):
         data = request.data
+        data['name'] = data['name'].strip().lower()
+        if type(data['fonctionalities']) != str:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {TYPE}"}, status=400)
+
+        # List of valid functionalities
+        valid_functionalities = ["ipsec", "openvpn", "suricata", "proxy", "sdwan", "waf", "ztna"]
+
+        # Get the string with single quotes
+        fonctionalities_str = data.get('fonctionalities', '').strip()
+
+        # Replace single quotes with double quotes for JSON format
+        fonctionalities_str = fonctionalities_str.replace("'", '"')
+
+        # Parse the string to a list
+        fonctionalities_list = json.loads(fonctionalities_str)
+
+        # Capitalize the first character of each functionality
+        fonctionalities_list = [f.strip().capitalize() for f in fonctionalities_list]
+
+        # Check if any element in the list is a valid functionality
+        if not any(f.lower() in valid_functionalities for f in fonctionalities_list):
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_FUNCTIONALITY}"}, status=400)
+
+        # Update the data with the capitalized functionality list
+        data['fonctionalities'] = str(fonctionalities_list)
         serializer = RoleSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
+            return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_CREATING}"}, status=200) 
         else:
-            return JsonResponse({'msg': serializer.error_messages}, status=400) 
-        return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_CREATING}"}, status=200) 
+            return JsonResponse({'errors': serializer.errors}, status=400) 
+    else:
+        return JsonResponse({"msg": INVALID_METHOD}, status=400)
 
 @swagger_auto_schema(
     method='put',
@@ -228,7 +281,11 @@ def create_role(request):
         type=TYPE_OBJECT,
         properties={
             'name': Schema(type=TYPE_STRING, description="Updated name of the role"),
-            'description': Schema(type=TYPE_STRING, description="Updated description of the role")
+            'fonctionalities': Schema(
+                type=TYPE_STRING,  
+                description="The functionalities of the role, serialized as a JSON array of strings.",
+                example="['sdwan', 'ztna', 'proxy']"  
+            )
         },
         required=['name', 'description']
     ),
@@ -273,15 +330,46 @@ def modify_role(request,id):
         - `SUCCESS_MESSAGES_UPDATING`: A constant for the success message.
     """
     if (request.method == 'PUT'):
-        role = Roles.objects.get(id=id)
+        try:
+            role = Roles.objects.get(id=id)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": f"{ROLE_WITH_ID} {id} {DOES_NOT_EXIST}"},status=400)
+        except ValueError:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
+        
         data = request.data
+        if type(data['fonctionalities']) != str:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {TYPE}"}, status=400)
+
+        # List of valid functionalities
+        valid_functionalities = ["ipsec", "openvpn", "suricata", "proxy", "sdwan", "waf", "ztna"]
+
+        # Get the string with single quotes
+        fonctionalities_str = data.get('fonctionalities', '').strip()
+
+        # Replace single quotes with double quotes for JSON format
+        fonctionalities_str = fonctionalities_str.replace("'", '"')
+
+        # Parse the string to a list
+        fonctionalities_list = json.loads(fonctionalities_str)
+
+        # Capitalize the first character of each functionality
+        fonctionalities_list = [f.strip().capitalize() for f in fonctionalities_list]
+
+        # Check if every element in the list is a valid functionality
+        if not all(f.lower() in valid_functionalities for f in fonctionalities_list):
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_FUNCTIONALITY}"}, status=400)
+
+        # Update the data with the capitalized functionality list
+        data['fonctionalities'] = str(fonctionalities_list)
         serializer = RoleSerializer(role,data=data)
         if serializer.is_valid():
             serializer.save()
         else:
-            return JsonResponse({'msg': serializer.error_messages}, status=400) 
+            return JsonResponse({'msg': serializer.errors}, status=400) 
         return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_UPDATING}"}, status=200) 
-
+    else:
+        return JsonResponse({"msg": INVALID_METHOD}, status=400)
 @swagger_auto_schema(
     method='delete',
     operation_description="Delete an existing role from the database.",
@@ -325,7 +413,10 @@ def delete_role(request, id):
         - `CONSTANT_ROLE`: A constant representing the role in the success message.
         - `SUCCESS_MESSAGES_DELETING`: A constant for the success message.
     """
-    role = Roles.objects.get(id=id)
+    try:
+        role = Roles.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": f"{ROLE_WITH_ID} {id} {DOES_NOT_EXIST}"},status=400)
     
     # Check if any users are linked to this role
     users_with_role = User.objects.filter(role=role)
@@ -379,7 +470,12 @@ def get_user(request, id):
         - `serializers.serialize`: A method used to serialize model instances into JSON format.
     """
     if (request.method == 'GET'):
-        user = User.objects.filter(id=id)
+        try:
+            user = User.objects.filter(id=id)
+            if not user.exists():
+                return JsonResponse({"error": f"{USER_WITH_ID} {id} {DOES_NOT_EXIST}"}, status=400)
+        except ValueError:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"}, status=400)
         user_dict = serializers.serialize("json", user)
         res_user = json.loads(user_dict)
         res_user[0]['fields']['id'] = res_user[0]['pk']
@@ -391,8 +487,9 @@ def get_user(request, id):
         res_profile[0]['fields']['id'] = res_profile[0]['pk']
         profile_json = res_profile[0]['fields']
         user_json['profile']=profile_json
-        return JsonResponse(user_json)
-
+        return JsonResponse(user_json,status=200)
+    else:
+        return JsonResponse({"msg": INVALID_METHOD}, status=400)
 
 @swagger_auto_schema(
     method='post',
@@ -403,6 +500,8 @@ def get_user(request, id):
         properties={
             'username': Schema(type=TYPE_STRING, description="The username of the user"),
             'password': Schema(type=TYPE_STRING, description="Password for the user"),
+            'fullname': Schema(type=TYPE_STRING, description="fullname for the user"),
+            'role': Schema(type=TYPE_INTEGER, description="Role of the user"),
             'email': Schema(type=TYPE_STRING, description="Email address of the user"),
             'password_ad': Schema(type=TYPE_STRING, description="Password for Active Directory (if applicable)"),
             'id_server': Schema(type=TYPE_INTEGER, description="ID of the AD server (if applicable)"),
@@ -467,13 +566,21 @@ def create_user(request):
         data = request.data
         username = data['username']
         password = data['password']
+        email = data['email']
+        if not is_valid_email(email):
+            return JsonResponse({"error": f"{INVALID_EMAIL_FORMAT}"}, status=400) 
         organisation = Organization.objects.get(id=1)
         data['organisation'] = organisation.id
         email = data['email']
         
         if data['password_ad'] != "":
             id_server = data['id_server']
-            ad_server = ADServer.objects.get(id=id_server)
+            try:
+                ad_server = ADServer.objects.get(id=id_server)
+            except ObjectDoesNotExist:
+                return JsonResponse({"error": f"{AD_SERVER_WITH_ID} {id_server} {DOES_NOT_EXIST}"},status=400)
+            except ValueError:
+                return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id_server}"},status=400)
             if ad_server:
                 try:
                     is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
@@ -517,6 +624,7 @@ def create_user(request):
         if User.objects.filter(email=email).exists():
             return JsonResponse({"msg": f"Email {ERROR_MESSAGES_EXISTANT}"}, status=400)
         else:
+            data['id_server']= None
             if valid_input(username) and valid_password(password):
                 # Execute the command on the remote machine
                 error_useradd, stdout_password, stderr_password  = add_user(username, password)
@@ -525,7 +633,7 @@ def create_user(request):
                     # add_mail_spool(username)
                     if email_founded:
                         msg = f"{username} {SUCCESS_MESSAGES_CREATING} {CONSTANT_METHOD_ADD_USER_EMAIL_SERVER}"
-                        data['id_server_id']= ad_server.id
+                        # data['id_server_id']= ad_server.id
                     else:
                         msg = f"{username} {SUCCESS_MESSAGES_CREATING} {CONSTANT_METHOD_ADD_USER_EMAIL_SYSTEM}"
                     uid = get_uid_user()
@@ -535,6 +643,12 @@ def create_user(request):
                     if 'group' in data:
                         groups = data['group']
                         for i in range(0, len(groups)):
+                            try:
+                                group = Group.objects.get(id=groups[i])
+                            except ObjectDoesNotExist:
+                                return JsonResponse({"error": f"{GROUP_WITH_ID} {i} {DOES_NOT_EXIST}"},status=400)
+                            except ValueError:
+                                return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {i}"},status=400)
                             add_user_group(getGroupNameById(groups[i]), username)
                         serializer_user = UserSerializerPost(data=data)
                         gid = getUidGroup()
@@ -553,11 +667,11 @@ def create_user(request):
                                 # Provide a Json Response with the data that was saved
                                 return JsonResponse({"msg": msg}, status=201)
                             # Provide a Json Response with the necessary error information
-                            error_message_group = next(iter(serializer_group.errors.values()))[0]
-                            return JsonResponse({"msg":error_message_group}, status=400)
+                            # error_message_group = next(iter(serializer_group.errors.values()))[0]
+                            return JsonResponse({"error":serializer_group.errors}, status=400)
                         # Provide a Json Response with the necessary error information
-                        error_message = next(iter(serializer_user.errors.values()))[0]
-                        return JsonResponse({"msg":error_message}, status=400)
+                        # error_message = next(iter(serializer_user.errors.values()))[0]
+                        return JsonResponse({"error":serializer_user.errors}, status=400)
                     else:
                        
                         serializer_user = UserSerializerPostWithoutGroupAndPermission(data=data)
@@ -635,8 +749,17 @@ def delete_user(request, id):
         - Success: {"msg": "username successfully deleted."}
         - Failure: {"error": "Error deleting user."}
     """
-    user = User.objects.get(id=id)
-    group = Group.objects.filter(groupname=user.username)
+    try:
+        user = User.objects.get(id=id)
+    except User.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_USER} {NOT_FOUND}"}, status=400)
+        # raise ValidationError(f"{CONSTANT_USER} {NOT_FOUND}")
+
+    if not Group.objects.filter(groupname=user.username).exists():
+        return JsonResponse({"error": f"{GROUP_NOT_MATCHING} '{user.username}"}, status=400)
+        # raise ValidationError(f"{GROUP_NOT_MATCHING} '{user.username}'.")
+    else:
+        group = Group.objects.filter(groupname=user.username)
     # # Execute the command on the remote machine
     _, stderr = delete_user_in_system(user.username)
     _, stderr_dir = delete_directory(user.username)
@@ -725,6 +848,9 @@ def modify_user(request, id):
         - Failure: {"msg": "Error updating username."}
     """
     if (request.method == 'PUT'):
+        if not User.objects.filter(id=id).exists():
+            return JsonResponse({'error': f"{CONSTANT_USER} {NOT_FOUND}"}, status=400)
+            # raise ValidationError(f"{CONSTANT_USER} {NOT_FOUND}")
         user_by_id = User.objects.filter(id=id)
         user_dict = serializers.serialize("json", user_by_id)
         res = json.loads(user_dict)
@@ -738,6 +864,10 @@ def modify_user(request, id):
         data = request.data
         newusername = data['username']
         newfullname = data['fullname']
+        if not Roles.objects.filter(id=data['role']).exists():
+            return JsonResponse({'error': f"{CONSTANT_ROLE} {NOT_FOUND}"}, status=400)
+        if not is_valid_email(data['email']):
+            return JsonResponse({"error": f"{INVALID_EMAIL_FORMAT}"}, status=400) 
         data['dn_user'] = None
         email_founded=False
         if data['password_ad'] != "":
@@ -813,7 +943,13 @@ def modify_user(request, id):
                 for k in restest_by_group:
                     delete_user_group(k['fields']['groupname'], newusername)
                 for m in data['group']:
-                    gg = Group.objects.get(id=m)
+                    try:
+                        gg = Group.objects.get(id=m)
+                    except ObjectDoesNotExist:
+                        return JsonResponse({"error": f"{GROUP_WITH_ID} {m} {DOES_NOT_EXIST}"},status=400)
+                    except ValueError:
+                        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {m}"},status=400)
+                    # gg = Group.objects.get(id=m)
                     add_user_group(gg.groupname, newusername)
                 user_object.group.set(user_json['group'])
             user_object.save()
@@ -821,7 +957,8 @@ def modify_user(request, id):
             msg = f"{ERROR_MESSAGES_UPDATING} {CONSTANT_USERNAME}"
         
         return JsonResponse({"data": data, "msg": msg})
-
+    else:
+        return JsonResponse({"erorr": INVALID_METHOD}, status=400)
 
 @swagger_auto_schema(
     method='put',
@@ -1047,21 +1184,21 @@ def change_password(request):
         - `make_password(new_password)` securely hashes the new password before saving it.
     """
     if (request.method == 'PUT'):
-            user = request.user
-            data = request.data
-            current_password = data['current_password']
-            new_password = data['new_password']
-            confirm_password = data['confirm_password']
-            if new_password == confirm_password and check_password(current_password, user.password):
-                _, stderr = reset_password (user.username,new_password )
-                # check if password change was successful
-                if stderr == "":
-                    user.password = make_password(new_password)
-                    user.is_verified = True
-                    user.save()
-                    return JsonResponse({"msg": f"{CONSTANT_PASSWORD} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+        user = request.user
+        data = request.data
+        current_password = data['current_password']
+        new_password = data['new_password']
+        confirm_password = data['confirm_password']
+        if new_password == confirm_password and check_password(current_password, user.password):
+            _, stderr = reset_password (user.username,new_password )
+            # check if password change was successful
+            if stderr == "":
+                user.password = make_password(new_password)
+                user.is_verified = True
+                user.save()
+                return JsonResponse({"msg": f"{CONSTANT_PASSWORD} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
 
-            return JsonResponse({"msg": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"}, status=400)
+        return JsonResponse({"msg": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"}, status=400)
 
 @swagger_auto_schema(
     method='get',

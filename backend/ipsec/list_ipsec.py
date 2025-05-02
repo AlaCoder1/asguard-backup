@@ -32,11 +32,15 @@ def get_list_all_server_ipsec():
             config['fields']['encryption_algorithm_ph2'] = list(config['fields']['encryption_algorithm_ph2'].split(','))
         config['fields']['hash_algorithm_ph2'] = list(config['fields']['hash_algorithm_ph2'].split(','))
         list_ipsec.append(config['fields'])
-    return json.dumps(list_ipsec)
+    return list_ipsec
     
 
 def get_one_server_ipsec(id):
     """Getting server by id from database"""
+    try:
+        ServerIPsec.objects.get(pk=id)
+    except ServerIPsec.DoesNotExist:
+        return False
     server_ipsec = ServerIPsec.objects.filter(pk=id)
     server_ipsec_dict = serializers.serialize("json", server_ipsec)
     res = json.loads(server_ipsec_dict)

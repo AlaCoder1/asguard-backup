@@ -50,7 +50,8 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_ipsec_status(request):
-    """Getting IPsec status"""
+    """Getting IPsec status from system. This API return the status of IPsec in boolean field: 
+    True means IPsec is started and False means IPsec is stoped"""
     if (request.method == 'GET'):
         ipsec_status = get_status_ipsec()
         return JsonResponse(ipsec_status, safe=False)
@@ -77,7 +78,9 @@ def get_server_ipsec(request, id):
     """Getting server by id from database"""
     if (request.method == 'GET'):
         server_ipsec = get_one_server_ipsec(id)
-        return JsonResponse(server_ipsec, safe=False)
+        if server_ipsec:
+            return JsonResponse(server_ipsec, safe=False)
+        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema(

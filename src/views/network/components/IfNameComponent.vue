@@ -1573,8 +1573,8 @@ export default {
           private_aux: this.private_aux,
           bogon_aux: this.bogon_aux,
           addmac: this.addmac,
-          mtuv: +this.mtuv,
-          mssv: +this.mssv,
+          mtuv: this.mtuv ? +this.mtuv : null ,
+          mssv: this.mssv ? +this.mssv : null,
           speed_duplex: this.speed_duplex,
           setuptypeIP4: this.setuptypeip4,
           value_setup_Ipv4: {

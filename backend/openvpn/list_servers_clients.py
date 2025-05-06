@@ -36,6 +36,10 @@ def get_list_all_server_openvpn():
 
 def get_one_server_openvpn(id):
     """Getting server by id from database"""
+    try:
+        ServerOpenvpn.objects.get(pk=id)
+    except ServerOpenvpn.DoesNotExist:
+        return False
     server_openvpn = ServerOpenvpn.objects.filter(pk=id)
     server_openvpn_dict = serializers.serialize("json", server_openvpn)
     res = json.loads(server_openvpn_dict)
@@ -44,8 +48,12 @@ def get_one_server_openvpn(id):
     res[0].pop('pk')
     res[0]['fields']['id'] = serv_id
     res[0]['fields']['client_management_password'] = ''
-    certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
-    res[0]['fields']['cert_status'] = certificate.activation
+    try:
+        certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
+        cert_status = certificate.activation
+    except Certificate.DoesNotExist:
+        cert_status = False
+    res[0]['fields']['cert_status'] = cert_status
     # Add the TLS content of the server
     res[0]['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(res[0]["fields"]["name"]))
     return res[0]['fields']
@@ -82,6 +90,10 @@ def get_list_all_client_openvpn():
 
 def get_one_client_openvpn(id):
     """Getting client by id from database"""
+    try:
+        ClientOpenvpn.objects.get(pk=id)
+    except ClientOpenvpn.DoesNotExist:
+        return False
     client_openvpn = ClientOpenvpn.objects.filter(pk=id)
     client_openvpn = serializers.serialize("json", client_openvpn)
     res = json.loads(client_openvpn)
@@ -91,8 +103,12 @@ def get_one_client_openvpn(id):
     res[0]['fields']['id'] = client_id
     res[0]['fields']['proxy_auth_password'] = ''
     res[0]['fields']['password'] = ''
-    certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
-    res[0]['fields']['cert_status'] = certificate.activation
+    try:
+        certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
+        cert_status = certificate.activation
+    except Certificate.DoesNotExist:
+        cert_status = False
+    res[0]['fields']['cert_status'] = cert_status
     res[0]['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(res[0]["fields"]["name"]))
     list_server_remote = list(res[0]['fields']['server_remote'].split(','))
     res[0]['fields']['server_remote'] = []

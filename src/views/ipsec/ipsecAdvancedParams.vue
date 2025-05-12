@@ -41,7 +41,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            Please Wait...
+            {{ $t("sdwan.pleaseWait") }}
             <v-progress-linear
               indeterminate
               color="white"

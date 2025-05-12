@@ -560,7 +560,7 @@ def ipsec_page(request):
     public_key =get_list_all_public_key()
     status = get_status_ipsec()
     last_subscription=list_features_about_last_subscription(request)
-    context = {'servers': servers, 'publicKey': public_key, 'status': status, 'last_subscription':json.dumps(last_subscription)}
+    context = {'servers': json.dumps(servers), 'publicKey': public_key, 'status': status, 'last_subscription':json.dumps(last_subscription)}
     return render(request, 'ipsec_page.html', context)
 
 

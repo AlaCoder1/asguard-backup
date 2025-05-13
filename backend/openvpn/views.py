@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated
 
 from backend.network.models import IP4Config, Interface
+from backend.dashboard.models import Services
 from backend.openvpn.constant_variables import PATH_SERVER_STATIC
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn, get_list_all_server_openvpn, get_one_client_openvpn, get_one_server_openvpn
 from utils.commands_utils import read_file_from_system
@@ -284,6 +285,10 @@ def create_server_openvpn(request):
 
             # Add the server to the database
             serializer_server.save()
+
+            # Add the server to the list of services
+            Services.objects.create(service_name=f"server_{name}", description=f"Server OpenVPN {name}")
+
             return JsonResponse({"msg": f"{name} {SUCCESS_MESSAGES_CREATING}"}, status=201)
         
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
@@ -318,11 +323,17 @@ def delete_server_openvpn(request, id):
 
         # delete from database
         server.delete()
-        return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+
+        # Remove the server from the list of services
+        Services.objects.get(service_name=f"server_{server.name}").delete()
+
+        return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_DELETING}"}, status=200)
     except ProtectedError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_OPENVPN_SERVER}, {CONSTANT_USED_ITEM} {CONSTANT_OPENVPN_CLIENT}"}, status=400)
     except ServerOpenvpn.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except Services.DoesNotExist:
+        return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_DELETING}"}, status=200)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_OPENVPN_SERVER}"}, status=400)
 
@@ -511,6 +522,13 @@ def update_server_openvpn(request, id):
 
             #updating the server in database
             serializer_server.save()
+
+            # Update the server in the list of services
+            service = Services.objects.get(service_name=f"server_{previous_name}")
+            service.service_name = f"server_{server.name}"
+            service.description = f"Server OpenVPN with name {server.name}"
+            service.save()
+
             return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
         
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
@@ -520,6 +538,10 @@ def update_server_openvpn(request, id):
         return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except IP4Config.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except Services.DoesNotExist:
+        # Add the server to the list of services
+        Services.objects.create(service_name=f"server_{server.name}", description=f"Server OpenVPN with name {server.name}")
+        return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_OPENVPN_SERVER}"}, status=400)
 

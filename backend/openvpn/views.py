@@ -287,7 +287,7 @@ def create_server_openvpn(request):
             serializer_server.save()
 
             # Add the server to the list of services
-            Services.objects.create(service_name=f"server_{name}", description=f"Server OpenVPN {name}")
+            Services.objects.create(service_name=f"openvpn-server@server_{name}", description=f"Server OpenVPN {name}")
 
             return JsonResponse({"msg": f"{name} {SUCCESS_MESSAGES_CREATING}"}, status=201)
         
@@ -325,7 +325,7 @@ def delete_server_openvpn(request, id):
         server.delete()
 
         # Remove the server from the list of services
-        Services.objects.get(service_name=f"server_{server.name}").delete()
+        Services.objects.get(service_name=f"openvpn-server@server_{server.name}").delete()
 
         return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_DELETING}"}, status=200)
     except ProtectedError:
@@ -524,8 +524,8 @@ def update_server_openvpn(request, id):
             serializer_server.save()
 
             # Update the server in the list of services
-            service = Services.objects.get(service_name=f"server_{previous_name}")
-            service.service_name = f"server_{server.name}"
+            service = Services.objects.get(service_name=f"openvpn-server@server_{previous_name}")
+            service.service_name = f"openvpn-server@server_{server.name}"
             service.description = f"Server OpenVPN with name {server.name}"
             service.save()
 
@@ -540,7 +540,7 @@ def update_server_openvpn(request, id):
         return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except Services.DoesNotExist:
         # Add the server to the list of services
-        Services.objects.create(service_name=f"server_{server.name}", description=f"Server OpenVPN with name {server.name}")
+        Services.objects.create(service_name=f"openvpn-server@server_{server.name}", description=f"Server OpenVPN with name {server.name}")
         return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_OPENVPN_SERVER}"}, status=400)

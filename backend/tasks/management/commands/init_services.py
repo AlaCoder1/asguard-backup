@@ -11,7 +11,7 @@ class Command(BaseCommand):
         try:
             list_info_services=[]
             list_service=[
-            'sshd','suricata','squid','nftables','NetworkManager','Asguard-Networking'
+            'sshd','suricata','squid'
             ]
             for s in list_service:
                 output,_=run_command("sudo systemctl list-unit-files --type service | awk '{print $1}'")

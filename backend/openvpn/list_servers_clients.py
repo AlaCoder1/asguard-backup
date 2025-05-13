@@ -6,6 +6,7 @@ from backend.openvpn.constant_variables import PATH_CLIENT_STATIC, PATH_SERVER_S
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 from backend.openvpn.servers_status import synchronize_server_openvpn
 from utils.commands_utils import read_file_from_system
+from utils.errors_utils import CommandExecutionError
 
 
 def get_list_all_server_openvpn():
@@ -29,7 +30,10 @@ def get_list_all_server_openvpn():
             cert_status = False
         serv['fields']['cert_status'] = cert_status
         # Add the TLS content of the server
-        serv['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(serv["fields"]["name"]))
+        try:
+            serv['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(serv["fields"]["name"]))
+        except CommandExecutionError:
+            serv['fields']['tls_key'] = ""
         list_server.append(serv['fields'])
     return list_server
 
@@ -55,7 +59,10 @@ def get_one_server_openvpn(id):
         cert_status = False
     res[0]['fields']['cert_status'] = cert_status
     # Add the TLS content of the server
-    res[0]['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(res[0]["fields"]["name"]))
+    try:
+        res[0]['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(res[0]["fields"]["name"]))
+    except CommandExecutionError:
+        res[0]['fields']['tls_key'] = ""
     return res[0]['fields']
 
 
@@ -78,7 +85,10 @@ def get_list_all_client_openvpn():
         except Certificate.DoesNotExist:
             cert_status = False
         cli['fields']['cert_status'] = cert_status
-        cli['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(cli["fields"]["name"]))
+        try:
+            cli['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(cli["fields"]["name"]))
+        except CommandExecutionError:
+            cli['fields']['tls_key'] = ""
         list_server_remote = list(cli['fields']['server_remote'].split(','))
         cli['fields']['server_remote'] = []
         for server in list_server_remote:
@@ -109,7 +119,10 @@ def get_one_client_openvpn(id):
     except Certificate.DoesNotExist:
         cert_status = False
     res[0]['fields']['cert_status'] = cert_status
-    res[0]['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(res[0]["fields"]["name"]))
+    try:
+        res[0]['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(res[0]["fields"]["name"]))
+    except CommandExecutionError:
+        res[0]['fields']['tls_key'] = ""
     list_server_remote = list(res[0]['fields']['server_remote'].split(','))
     res[0]['fields']['server_remote'] = []
     for server in list_server_remote:

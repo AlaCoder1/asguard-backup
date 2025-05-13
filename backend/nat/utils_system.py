@@ -15,9 +15,8 @@ def get_list_nat_rules_from_system():
 
 def save_ruleset_nft():
     """Save all ruleset in ruleset.nft file. This backup makes it easy to restore the configuration after a system reboot"""
-    current_dir = get_current_directory()
     ruleset_process = execute_command_without_arguments(["sudo", "nft", "list", "table", "nat"])
-    write_file_from_system(PATH_RULESET_NFT.format(current_dir), ruleset_process.stdout)
+    write_file_from_system(PATH_RULESET_NFT, ruleset_process.stdout)
 
 
 def add_nat_rule_in_system(command_line):

@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING
 
-from backend.ipsec.utils import json_to_str_server_ipsec, up_ipsec_conn
+from backend.ipsec.utils import check_payload_change_status, json_to_str_server_ipsec, up_ipsec_conn
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec, get_status_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
 from backend.ipsec.server_ipsec import change_status_conn, change_status_ipsec_in_system, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
@@ -20,6 +20,7 @@ from .models import ServerIPsec
 
 
 # Constants
+CONSTANT_IPSEC_SERVICE = _("IPsec Service")
 CONSTANT_IPSEC_CONFIGURATION = _("IPsec configuration")
 CONSTANT_IPV4_CONFIG = _("IPv4 config")
 CONSTANT_INTERFACE = _("interface")
@@ -32,12 +33,15 @@ SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
 SUCCESS_MESSAGES_ENABLED = _("is enabled")
 SUCCESS_MESSAGES_DISABLED = _("is disabled")
+SUCCESS_MESSAGES_START = _("is started")
+SUCCESS_MESSAGES_STOP = _("is stoped")
 SUCCESS_MESSAGES_UP = _("is up")
 # Error messages
 ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UP_CONFIG = _("System error in up ipsec")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -46,7 +50,8 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_ipsec_status(request):
-    """Getting IPsec status"""
+    """Getting IPsec status from system. This API return the status of IPsec in boolean field: 
+    True means IPsec is started and False means IPsec is stoped"""
     if (request.method == 'GET'):
         ipsec_status = get_status_ipsec()
         return JsonResponse(ipsec_status, safe=False)
@@ -73,7 +78,9 @@ def get_server_ipsec(request, id):
     """Getting server by id from database"""
     if (request.method == 'GET'):
         server_ipsec = get_one_server_ipsec(id)
-        return JsonResponse(server_ipsec, safe=False)
+        if server_ipsec:
+            return JsonResponse(server_ipsec, safe=False)
+        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema(
@@ -604,20 +611,31 @@ def status_server_ipsec(request, id):
         return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO STOP OR START IPSEC",)
+@swagger_auto_schema(
+        'POST', responses={200: 'Created', 400: 'Bad Request'},
+        operation_summary="API TO STOP OR START IPSEC",
+        request_body=Schema(
+            type=TYPE_OBJECT, required=['status'],
+            properties={'status': Schema(type=TYPE_STRING, enum=['start', 'stop'])}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def status_ipsec(request):
     """Change status of a server config from system and then from database"""
     try:
-            data = request.data
-            status = data.get("status", "")
+        data = request.data
+        
+        # Check data validity
+        if not check_payload_change_status(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
 
-            status_ipsec = change_status_ipsec_in_system(status)
-            
-            return JsonResponse({"msg": status_ipsec})
+        status = data.get("status", "")
+
+        change_status_ipsec_in_system(status)
+        
+        if status == "start":
+            return JsonResponse({"msg": f"{CONSTANT_IPSEC_SERVICE} {SUCCESS_MESSAGES_START}"}, status=200)
+        return JsonResponse({"msg": f"{CONSTANT_IPSEC_SERVICE} {SUCCESS_MESSAGES_STOP}"}, status=200)
         
     except ServerIPsec.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

@@ -73,6 +73,7 @@ from django.core import serializers
 from collections import defaultdict
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 from rest_framework.permissions import IsAuthenticated
+from django.core.exceptions import ObjectDoesNotExist
 # Create your views here.
 
 
@@ -90,7 +91,11 @@ SUCCESS_MESSAGES_UPDATING = _("is updated")
 # Error messages
 ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
-
+TIMEZONE_WITH_ID = _('Timezone with id')
+ERROR_MESSAGES_INVALID = _("Invalid")
+ERROR_MESSAGES_EXISTANT = _("Already exist")
+INVALID_METHOD = _("Invalid method")
+DOES_NOT_EXIST = _("does not exist")
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
@@ -711,9 +716,19 @@ def createSystem(request):
     None
     """
     msg = ''
+    
+    
     if (request.method == 'POST'):
         # parse the incoming information
         data = request.data
+        try:
+            time_zone = Timezone.objects.get(id=data['time_zone'])
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": f"{TIMEZONE_WITH_ID} {data['time_zone']} {DOES_NOT_EXIST}"},status=400)
+        except ValueError:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
+        if data['language'] not in ['en', 'fr']:
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} language: {data['language']}"},status=400)
         # instanciate with the serializer
         serializerSystem = SystemSerializer(data=data)
         # check if the sent information is okay

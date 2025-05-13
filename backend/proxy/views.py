@@ -15,6 +15,7 @@ from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.authentication import SessionAuthentication
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
+from django.core.exceptions import ObjectDoesNotExist
 # Create your views here.
 
 # Constants
@@ -31,7 +32,8 @@ CONSTANT_CRON_JOB = _("Cron job")
 CONSTANT_USER = _("User")
 CONSTANT_STATUS = _("Status")
 CONSTANT_RULE = _("Rule")
-
+PROXY_WITH_ID= _('Proxy with id')
+USER_WITH_ID= _('User with id')
 
 # Success messages
 SUCCESS_MESSAGES_UNBLOCKED= _("is Unblocked")
@@ -54,13 +56,19 @@ ERROR_MESSAGES_NOTFOUND_INPATH = _("Not Found in")
 ERROR_MESSAGES_SAVING_INSTANCE = _("Error in saving instance")
 ERROR_MESSAGES_SAVING_USER = _("Error in adding user")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
-
+INVALID_EMAIL_FORMAT = _("Invalid email format")
+INVALID_PORT = _("Invalid port format")
+DOES_NOT_EXIST = _("does not exist")
+ERROR_MESSAGES_INVALID = _("Invalid")
 
 ########################################
 ################ proxy ################
 ########################################
 
-
+def is_valid_email(email):
+    # Simple regex for validating an email
+    email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(email_regex, email) is not None
 
 
 def run_command(command):
@@ -264,7 +272,7 @@ def allRuleSquid(request):
         res[i].pop('pk')
         res[i]['fields']['id'] = id
         list_proxyRules.append(res[i]['fields'])
-    return JsonResponse({"data":list_proxyRules})
+    return JsonResponse({"list_proxyRules":list_proxyRules})
 
 
 def add_line_after_pattern(file_path, pattern, new_line):
@@ -457,69 +465,66 @@ def addRuleSquid(request):
     if (request.method == 'POST'):
         data = request.data
         write_in_file = True
-        if data['type'] not in ['ip','domain','subnet']:
-            return JsonResponse({"error": 'type must be ip, domain or subnet'}, status=400)
+        if data['allow_by_auth'] == False:
+            if data['type'] == "ip":
+                file_path = '/etc/squid/blocked_ip.acl'
+            elif data['type'] == "domain":
+                if data['time_from'] != '':
+                # if time_from != '' or time_to !='':
+                    squid_path = '/etc/squid/squid.conf'
+                    name_rule = 'block_'+data['value']
+                    time_block_rule = 'time_'+name_rule
+                    line1='acl '+name_rule+' url_regex '+data['value']+'\n'
+                    add_line_after_pattern(squid_path,'acl localnet src fe80::/10',line1)
+                    line2='acl '+time_block_rule+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
+                    # line1='acl '+data['value']+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
+                    add_line_after_pattern(squid_path,line1,line2)
+                    line3='\nhttp_access deny '+name_rule+' '+time_block_rule+'\n'
+                    add_line_after_pattern(squid_path,line2,line3)
+                    write_in_file = False
+                    # line+='acl time_block time '+data['days']+' '+data['time_from']+'-'+data['time_to']
+                    # add_line_after_pattern(file_path,'acl localnet src fe80::/10',line)
+                    # enable_by_time()
+                else:
+                    file_path = '/etc/squid/blocked_domain.acl'
+            else:
+                file_path = '/etc/squid/blocked_subnet.acl'
         else:
-            if data['allow_by_auth'] == False:
-                if data['type'] == "ip":
-                    file_path = '/etc/squid/blocked_ip.acl'
-                elif data['type'] == "domain":
-                    if data['time_from'] != '':
-                    # if time_from != '' or time_to !='':
-                        squid_path = '/etc/squid/squid.conf'
-                        name_rule = 'block_'+data['value']
-                        time_block_rule = 'time_'+name_rule
-                        line1='acl '+name_rule+' url_regex '+data['value']+'\n'
-                        add_line_after_pattern(squid_path,'acl localnet src fe80::/10',line1)
-                        line2='acl '+time_block_rule+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
-                        # line1='acl '+data['value']+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
-                        add_line_after_pattern(squid_path,line1,line2)
-                        line3='\nhttp_access deny '+name_rule+' '+time_block_rule+'\n'
-                        add_line_after_pattern(squid_path,line2,line3)
-                        write_in_file = False
-                        # line+='acl time_block time '+data['days']+' '+data['time_from']+'-'+data['time_to']
-                        # add_line_after_pattern(file_path,'acl localnet src fe80::/10',line)
-                        # enable_by_time()
-                    else:
-                        file_path = '/etc/squid/blocked_domain.acl'
-                else:
-                    file_path = '/etc/squid/blocked_subnet.acl'
+            if data['type'] == "ip":
+                file_path = '/etc/squid/allowed_ip_by_auth.acl'
+            elif data['type'] == "domain":
+                file_path = '/etc/squid/allowed_domain_by_auth.acl'
             else:
-                if data['type'] == "ip":
-                    file_path = '/etc/squid/allowed_ip_by_auth.acl'
-                elif data['type'] == "domain":
-                    file_path = '/etc/squid/allowed_domain_by_auth.acl'
-                else:
-                    file_path = '/etc/squid/allowed_subnet_by_auth.acl'
-            # file_path = file_selected(data['allow_by_auth'],data['type'])
-            if  data['status'] == False:
-                value = '#'+data['value']
-            else:
-                value = data['value']
-            if write_in_file == True:
-                try:
-                    with open(file_path, 'a') as file:
-                        file.write(value + '\n')
-                    serializerProxyRules = ProxyRulesSerializer(data=data)
-                    if (serializerProxyRules.is_valid()):
-                        serializerProxyRules.save()
-                        server_satus = ServerSatus.objects.get(id=1)
-                        server_satus.status_server = True
-                        server_satus.save()
-                        msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
-                        return JsonResponse({"msg": msg}, status=200)
-                    else:
-                        return JsonResponse(serializerProxyRules.errors, status=400 )
-                except Exception as e:
-                    return JsonResponse({"error": e}, status=400)
-            else:
-                serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
+                file_path = '/etc/squid/allowed_subnet_by_auth.acl'
+        # file_path = file_selected(data['allow_by_auth'],data['type'])
+        if  data['status'] == False:
+            value = '#'+data['value']
+        else:
+            value = data['value']
+        if write_in_file == True:
+            try:
+                with open(file_path, 'a') as file:
+                    file.write(value + '\n')
+                serializerProxyRules = ProxyRulesSerializer(data=data)
                 if (serializerProxyRules.is_valid()):
                     serializerProxyRules.save()
+                    server_satus = ServerSatus.objects.get(id=1)
+                    server_satus.status_server = True
+                    server_satus.save()
                     msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
                     return JsonResponse({"msg": msg}, status=200)
                 else:
                     return JsonResponse(serializerProxyRules.errors, status=400 )
+            except Exception as e:
+                return JsonResponse({"error": str(e)}, status=400)
+        else:
+            serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
+            if (serializerProxyRules.is_valid()):
+                serializerProxyRules.save()
+                msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
+                return JsonResponse({"msg": msg}, status=200)
+            else:
+                return JsonResponse(serializerProxyRules.errors, status=400 )
 
 @swagger_auto_schema(
     method='DELETE',
@@ -564,7 +569,12 @@ def deleteRuleSquid(request,id):
     - Problèmes liés à l'accès ou l'écriture dans les fichiers système.
     """
     msg=''
-    data = ProxyRules.objects.get(id=id)
+    try:
+        data = ProxyRules.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": f"{PROXY_WITH_ID} {id} {DOES_NOT_EXIST}"},status=400)
+    except ValueError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
     if data.allow_by_auth == False:
         if data.type == "ip":
             file_path = '/etc/squid/blocked_ip.acl'
@@ -578,7 +588,7 @@ def deleteRuleSquid(request,id):
                     server_satus = ServerSatus.objects.get(id=1)
                     server_satus.status_server = True
                     server_satus.save()
-                    msg = f"{data.type} {CONSTANT_ADDRESS} {data.value} {SUCCESS_MESSAGES_UNBLOCKED}"
+                    msg = f"{data.type} {CONSTANT_ADDRESS} {data.value} {SUCCESS_MESSAGES_DELETING}"
                     status =200
                     return JsonResponse({"msg": msg}, status=status)
                 else:
@@ -611,7 +621,7 @@ def deleteRuleSquid(request,id):
     stdout, stderr = run_command(command)
     if(stderr == ""):
         data.delete()
-        msg = f"{data.type} {CONSTANT_ADDRESS} {data.value} {SUCCESS_MESSAGES_UNBLOCKED}"
+        msg = f"{data.type} {CONSTANT_ADDRESS} {data.value} {SUCCESS_MESSAGES_DELETING}"
         status =200
     else:
         msg =stderr
@@ -776,21 +786,27 @@ def update_generale_info(request):
         le port d'écoute de Squid est mis à jour dans la configuration et le statut du serveur est marqué comme actif.
     """
     data = request.data
-    squid_conf_path = '/etc/squid/squid.conf'
-    with open(squid_conf_path, 'r') as f:
-        lines = f.readlines()
+    port = int(data.get('port'))
+    if 1 <= port <= 65535:
+        squid_conf_path = '/etc/squid/squid.conf'
+        with open(squid_conf_path, 'r') as f:
+            lines = f.readlines()
 
-    for i, line in enumerate(lines):
-        if line.strip().startswith('http_port'):
-            lines[i] = 'http_port '+ data['port']+'\n'
-            break
-        
-    with open(squid_conf_path, 'w') as f:
-        f.writelines(lines)
-    server_satus = ServerSatus.objects.get(id=1)
-    server_satus.status_server = True
-    server_satus.save() 
-    return JsonResponse({"msg":f"{CONSTANT_PORT} {SUCCESS_MESSAGES_UPDATING}"},status=200)
+        for i, line in enumerate(lines):
+            if line.strip().startswith('http_port'):
+                lines[i] = 'http_port '+ data['port']+'\n'
+                break
+            
+        with open(squid_conf_path, 'w') as f:
+            f.writelines(lines)
+        server_satus = ServerSatus.objects.get(id=1)
+        server_satus.status_server = True
+        server_satus.save() 
+        return JsonResponse({"msg":f"{CONSTANT_PORT} {SUCCESS_MESSAGES_UPDATING}"},status=200)
+    else:
+        return JsonResponse({"error":f"{INVALID_PORT}"},status=400)
+
+    
 
 @swagger_auto_schema(
     method='POST',
@@ -1488,6 +1504,8 @@ def add_user_squid(request):
     username_squid = data.get('username')
     password_squid = data.get('password')
     email_squid = data.get('email')
+    if not is_valid_email(email_squid):
+            return JsonResponse({"error": f"{INVALID_EMAIL_FORMAT}"}, status=400) 
     try:
         subprocess.run(['htpasswd', '-b', squid_conf_path, username_squid, password_squid], check=True)
         try:
@@ -1503,16 +1521,16 @@ def add_user_squid(request):
         except IntegrityError as e:
             msg = f"{ERROR_MESSAGES_SAVING_INSTANCE}: {e}"
             status=400 
-            return JsonResponse({"msg": msg}, status=status)
+            return JsonResponse({"error": msg}, status=status)
         except Exception as e:
             msg = (f"{ERROR_MESSAGES_OCCURRED}: {e}")
             status=400 
-            return JsonResponse({"msg": msg}, status=status)
+            return JsonResponse({"error": msg}, status=status)
         ### to add only one user every time in file
         # subprocess.run(['htpasswd', '-b', '-c', squid_conf_path, username_squid, password_squid], check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error adding user: {e}")
-        return JsonResponse({"msg": f"{ERROR_MESSAGES_SAVING_USER}: {e}"}, status=400 )
+        return JsonResponse({"error": f"{ERROR_MESSAGES_SAVING_USER}: {e}"}, status=400 )
 
 @swagger_auto_schema(
     method='DELETE',
@@ -1570,7 +1588,12 @@ def delete_user_squid(request, id):
         Exception: Si une erreur survient lors de l'exécution des commandes ou de la suppression de l'utilisateur.
     """
 
-    user = ProxyUser.objects.get(id=id)
+    try:
+            user = ProxyUser.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": f"{USER_WITH_ID} {id} {DOES_NOT_EXIST}"},status=400)
+    except ValueError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
     file_path = '/etc/squid/squid_passwd'
     new_content = []
     command = "cat " + file_path
@@ -2297,8 +2320,12 @@ def updateStatusRule(request, id):
         ProxyRules.DoesNotExist: Si l'ID de la règle proxy n'existe pas dans la base de données.
         Exception: Si une erreur se produit lors de la modification des fichiers ACL ou de la mise à jour de la règle dans la base de données.
     """
-
-    proxy_rule = ProxyRules.objects.get(id=id)
+    try:
+        proxy_rule = ProxyRules.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": f"{PROXY_WITH_ID} {id} {DOES_NOT_EXIST}"},status=400)
+    except ValueError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
     data = request.data
     # if proxy_rule.allow_by_auth == False:
     #     if proxy_rule.type == "ip":

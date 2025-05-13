@@ -12,7 +12,7 @@ class Identities(models.Model):
     is_admin = models.BooleanField(default=False)
     date_creation = models.DateTimeField()
     date_expiration = models.DateTimeField(null=True, blank=True)
-    token = models.CharField(max_length=1000, null=True, blank=True)
+    token = models.CharField(max_length=10000, null=True, blank=True)
     os=models.CharField(max_length=50, null=True, blank=True)
     class Meta:
         db_table = 'identities'

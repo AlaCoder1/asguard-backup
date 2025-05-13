@@ -52,12 +52,17 @@ def add_service_DB():
         status_enabled=False
         # if s+'.service' in list_all_services:
         status_install=True
-        aux_enabled,error=run_command("sudo systemctl is-enabled {}".format(s))
-        if aux_enabled.strip()=="enabled":
-            status_enabled=True
-        aux_started,error=run_command("sudo systemctl is-active  {}".format(s))
-        if aux_started.strip()=="active":
-            status_started=True
+        if s!="ipsec":
+            aux_enabled,error=run_command("sudo systemctl is-enabled {}".format(s))
+            if aux_enabled.strip()=="enabled":
+                status_enabled=True
+            aux_started,error=run_command("sudo systemctl is-active  {}".format(s))
+            if aux_started.strip()=="active":
+                status_started=True
+        else:
+            aux_started,error=run_command("sudo ipsec status")
+            if aux_started.strip()!="":
+                status_started=True        
         service={
             "service_name":s,
             "description":"Service {}".format(s),

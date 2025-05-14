@@ -427,6 +427,10 @@ export default {
     ]);
     const dhKeyList = ref([
       {
+        name: "14 (2048 bits)",
+        slug: "14:2048",
+      },
+      {
         name: "15 (3072 bits)",
         slug: "15:3072",
       },
@@ -1297,6 +1301,7 @@ export default {
         name: "off",
         slug: "off",
       },
+      { name: "14 (2048 bits)", slug: "14:2048" },
       { name: "15 (3072 bits)", slug: "15:3072" },
       { name: "16 (4096 bits)", slug: "16:4096" },
       { name: "17 (6144 bits)", slug: "17:6144" },

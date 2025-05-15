@@ -517,12 +517,12 @@ def interface_page(request):
     config={}
     all_static_gateways={}
     for interface in interfaces:
-        if get_uuid_v2(interface['ifname']) is None:
-            int_delete=Interface.objects.get(ifname=interface['ifname'])
-            delete_inactive_conn()
-            int_delete.delete()
-            interfaces.remove(interface)
-        else:
+        # if get_uuid_v2(interface['ifname']) is None:
+        #     int_delete=Interface.objects.get(ifname=interface['ifname'])
+        #     delete_inactive_conn()
+        #     int_delete.delete()
+        #     interfaces.remove(interface)
+        # else:
             ipv4_config=get_informations_by_interface(request, interface['name_interface'])
             config[interface['name_interface']]=ipv4_config
     all_static_gateways_ipv4=get_all_static_gateways(request,ipv4_gw=True)

@@ -18,7 +18,11 @@ def run_command(command):
 ###
 
 def service_action(service, status):
-    output,error=run_command("sudo systemctl {} {}".format(status,service))
+    if service!="ipsec":
+        cmd=f"sudo systemctl {status} {service}"
+    else:
+        cmd=f"sudo ipsec {status}"
+    output,error=run_command(cmd)
     if error!="":
         return error
     return True

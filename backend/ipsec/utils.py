@@ -27,7 +27,7 @@ def set_encryption_algorithm_config(encryption_algorithm):
 def set_key_group_config(key_group:str):
     """Set the DH key group (phase1) or PFS Key group (phase2) for the config file. key group can be 20:384 or 28:256 ..."""
     dh_byte = list(key_group.split(":"))
-    if int(dh_byte[0]) in range(15, 19):
+    if int(dh_byte[0]) in range(14, 19):
         return f"modp{dh_byte[1]}"
     elif int(dh_byte[0]) in range(19, 22):
         return f"ecp{dh_byte[1]}"

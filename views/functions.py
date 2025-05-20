@@ -51,12 +51,12 @@ def get_vlan_interface(request):
                 "name_interface":res[i]['fields']['name_interface'],
                 "network_port":f"VLAN {vlan_tag} on {ifname_parent}"
             }
-            if get_uuid_v2(res[i]['fields']['ifname']) is None:
-                int_delete=Interface.objects.get(ifname=res[i]['fields']['ifname'])
-                delete_inactive_conn()
-                int_delete.delete()
-            else:
-                list_vlan_interface.append(data)
+            # if get_uuid_v2(res[i]['fields']['ifname']) is None:
+            #     int_delete=Interface.objects.get(ifname=res[i]['fields']['ifname'])
+            #     delete_inactive_conn()
+            #     int_delete.delete()
+            # else:
+            list_vlan_interface.append(data)
     return list_vlan_interface
 
 def get_all_server_dhcp4(request):
@@ -111,13 +111,13 @@ def get_vxlan_interface(request):
                 "name_interface":res[i]['fields']['name_interface'],
                 "network_port":f"VXLAN {vxlan_tag} on {ifname_parent}"
             }
-            print({"ifname":res[i]['fields']['ifname'],"uuid":get_uuid_v2(res[i]['fields']['ifname'])})
-            if get_uuid_v2(res[i]['fields']['ifname']) is None:
-                int_delete=Interface.objects.get(ifname=res[i]['fields']['ifname'])
-                delete_inactive_conn()
-                int_delete.delete()
-            else:
-                list_vlan_interface.append(data)
+            # print({"ifname":res[i]['fields']['ifname'],"uuid":get_uuid_v2(res[i]['fields']['ifname'])})
+            # if get_uuid_v2(res[i]['fields']['ifname']) is None:
+            #     int_delete=Interface.objects.get(ifname=res[i]['fields']['ifname'])
+            #     delete_inactive_conn()
+            #     int_delete.delete()
+            # else:
+            list_vlan_interface.append(data)
     return list_vlan_interface
 
 

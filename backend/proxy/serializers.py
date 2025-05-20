@@ -11,7 +11,7 @@ class ProxyRulesSerializer(serializers.ModelSerializer):
     rule_name = serializers.CharField(max_length=255)
     allow_by_auth = serializers.BooleanField()
     type = serializers.ChoiceField(choices=['ip', 'domain','subnet'])  
-    value = serializers.IPAddressField(protocol='IPv4')  
+    value = serializers.CharField(max_length=255)  
     status = serializers.BooleanField()
     
     class Meta:
@@ -22,7 +22,7 @@ class ProxyRulesByTimeSerializer(serializers.ModelSerializer):
     rule_name = serializers.CharField(max_length=255)
     allow_by_auth = serializers.BooleanField()
     type = serializers.ChoiceField(choices=['ip', 'domain','subnet']) 
-    value = serializers.IPAddressField(protocol='IPv4')  
+    value = serializers.CharField(max_length=255)  
     status = serializers.BooleanField()
     time_from = serializers.TimeField(format='%H:%M', input_formats=['%H:%M'])
     time_to = serializers.TimeField(format='%H:%M', input_formats=['%H:%M'])

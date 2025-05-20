@@ -517,12 +517,12 @@ def interface_page(request):
     config={}
     all_static_gateways={}
     for interface in interfaces:
-        if get_uuid_v2(interface['ifname']) is None:
-            int_delete=Interface.objects.get(ifname=interface['ifname'])
-            delete_inactive_conn()
-            int_delete.delete()
-            interfaces.remove(interface)
-        else:
+        # if get_uuid_v2(interface['ifname']) is None:
+        #     int_delete=Interface.objects.get(ifname=interface['ifname'])
+        #     delete_inactive_conn()
+        #     int_delete.delete()
+        #     interfaces.remove(interface)
+        # else:
             ipv4_config=get_informations_by_interface(request, interface['name_interface'])
             config[interface['name_interface']]=ipv4_config
     all_static_gateways_ipv4=get_all_static_gateways(request,ipv4_gw=True)
@@ -560,7 +560,7 @@ def ipsec_page(request):
     public_key =get_list_all_public_key()
     status = get_status_ipsec()
     last_subscription=list_features_about_last_subscription(request)
-    context = {'servers': servers, 'publicKey': public_key, 'status': status, 'last_subscription':json.dumps(last_subscription)}
+    context = {'servers': json.dumps(servers), 'publicKey': public_key, 'status': status, 'last_subscription':json.dumps(last_subscription)}
     return render(request, 'ipsec_page.html', context)
 
 

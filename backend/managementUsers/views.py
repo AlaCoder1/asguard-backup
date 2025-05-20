@@ -498,11 +498,11 @@ def get_user(request, id):
         type=TYPE_OBJECT,
         required=['username', 'password', 'email'],
         properties={
-            'username': Schema(type=TYPE_STRING, description="The username of the user"),
-            'password': Schema(type=TYPE_STRING, description="Password for the user"),
-            'fullname': Schema(type=TYPE_STRING, description="fullname for the user"),
+            'username': Schema(type=TYPE_STRING, description="The username of the user",example="testuser"),
+            'password': Schema(type=TYPE_STRING, description="Password for the user",example="Password@@123456789@@"),
+            'fullname': Schema(type=TYPE_STRING, description="fullname for the user",example="testuser"),
             'role': Schema(type=TYPE_INTEGER, description="Role of the user"),
-            'email': Schema(type=TYPE_STRING, description="Email address of the user"),
+            'email': Schema(type=TYPE_STRING, description="Email address of the user",example="testuser@email.com"),
             'password_ad': Schema(type=TYPE_STRING, description="Password for Active Directory (if applicable)"),
             'id_server': Schema(type=TYPE_INTEGER, description="ID of the AD server (if applicable)"),
             'group': Schema(
@@ -779,9 +779,9 @@ def delete_user(request, id):
         type=TYPE_OBJECT,
         required=['username', 'email', 'role'],
         properties={
-            'username': Schema(type=TYPE_STRING, description="New username for the user"),
-            'fullname': Schema(type=TYPE_STRING, description="Full name of the user"),
-            'email': Schema(type=TYPE_STRING, description="New email address"),
+            'username': Schema(type=TYPE_STRING, description="New username for the user",example="usertest"),
+            'fullname': Schema(type=TYPE_STRING, description="Full name of the user",example="UserTest"),
+            'email': Schema(type=TYPE_STRING, description="New email address",example="usertest@email.com"),
             'role': Schema(type=TYPE_INTEGER, description="Role ID associated with the user"),
             'password_ad': Schema(type=TYPE_STRING, description="Password for Active Directory authentication (if applicable)"),
             'id_server': Schema(type=TYPE_INTEGER, description="ID of the Active Directory server (if applicable)"),
@@ -967,10 +967,10 @@ def modify_user(request, id):
         type=TYPE_OBJECT,
         required=['username'],
         properties={
-            'username': Schema(type=TYPE_STRING, description="New username"),
-            'email': Schema(type=TYPE_STRING, description="User's email"),
-            'phone_number': Schema(type=TYPE_STRING, description="User's phone number"),
-            'photo': Schema(type=TYPE_STRING, description="Profile picture file")
+            'username': Schema(type=TYPE_STRING, description="New username",example="newusername"),
+            'email': Schema(type=TYPE_STRING, description="User's email",example="newusername@email.com"),
+            'phone_number': Schema(type=TYPE_STRING, description="User's phone number",example="123456789"),
+            'photo': Schema(type=TYPE_STRING, description="Profile picture file",example="profile.jpg"),
         }
     ),
     responses={200: "Profile updated successfully", 400: "Bad Request"},
@@ -1090,8 +1090,8 @@ def update_profile(request, id):
     request_body=Schema(
         type=TYPE_OBJECT,
         properties={
-            'new_password': Schema(type=TYPE_STRING, description="The new password to set for the user"),
-            'confirm_password': Schema(type=TYPE_STRING, description="Confirmation of the new password"),
+            'new_password': Schema(type=TYPE_STRING, description="The new password to set for the user",example="newpassword"),
+            'confirm_password': Schema(type=TYPE_STRING, description="Confirmation of the new password",example="newpassword"),
         }
     ),
     responses={200: "Password reset successfully by admin", 400: "Bad Request"},
@@ -1148,9 +1148,9 @@ def reset_password_by_admin(request, id):
     request_body=Schema(
         type=TYPE_OBJECT,
         properties={
-            'current_password': Schema(type=TYPE_STRING, description="The current password of the user"),
-            'new_password': Schema(type=TYPE_STRING, description="The new password to set for the user"),
-            'confirm_password': Schema(type=TYPE_STRING, description="Confirmation of the new password"),
+            'current_password': Schema(type=TYPE_STRING, description="The current password of the user",example="currentpassword"),
+            'new_password': Schema(type=TYPE_STRING, description="The new password to set for the user",example="newpassword"),
+            'confirm_password': Schema(type=TYPE_STRING, description="Confirmation of the new password",example="newpassword"),
         }
     ),
     responses={200: "Password updated successfully", 400: "Bad Request"},

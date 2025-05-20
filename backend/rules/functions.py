@@ -171,7 +171,7 @@ def get_handle_rule(ifname,type_rule,rule):
    ##executer cette commande
    output,_=run_command(cmd)
    output = output.split('#')
-   print(cmd,output)
+   # print(cmd,output)
    if len(output)<2:
       return None
    else:

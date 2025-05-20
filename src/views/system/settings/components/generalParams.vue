@@ -41,9 +41,7 @@
             density="compact"
             v-model="state.domain"
           ></v-text-field>
-          <p class="error-feedback mb-5" v-if="v$.domain.$errors.length">
-            {{ v$.domain.$errors?.[0].$message }}
-          </p>
+       
           <v-select
             :label="$t('settings.Timezone')"
             density="compact"
@@ -479,13 +477,7 @@ export default {
     });
     const rules = computed(() => {
       return {
-        domain: {
-          required: helpers.withMessage(error, required),
-          isValidDomain: helpers.withMessage(
-            Formatdomain,
-            helpers.regex(/\.com$/)
-          ),
-        },
+    
       };
     });
 

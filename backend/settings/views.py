@@ -96,6 +96,7 @@ ERROR_MESSAGES_INVALID = _("Invalid")
 ERROR_MESSAGES_EXISTANT = _("Already exist")
 INVALID_METHOD = _("Invalid method")
 DOES_NOT_EXIST = _("does not exist")
+ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
@@ -758,7 +759,7 @@ def get_language(request):
         method='PUT', 
         responses={200: 'Created', 400: 'Bad Request'}, 
         operation_summary="API TO UPDATE SYSTEM LANGUAGE",
-        request_body=Schema(type=TYPE_OBJECT, required=['language'], properties={'language': Schema(type=TYPE_STRING)}))
+        request_body=Schema(type=TYPE_OBJECT, required=['language'], properties={'language': Schema(type=TYPE_STRING, enum=["en", "fr"])}))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -774,10 +775,12 @@ def change_language(request, id):
                 for rule in RulesWaf.objects.filter(created=False):
                     rule.description = rule.description_english
                     rule.save()
-            else:
+            elif data.get("language", "") == "fr":
                 for rule in RulesWaf.objects.filter(created=False):
                     rule.description = rule.description_french
                     rule.save()
+            else:
+                return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
 
             serializer_system.save()
             return JsonResponse({"msg":f"{CONSTANT_LANGUAGE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)

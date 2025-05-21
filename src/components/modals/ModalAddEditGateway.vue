@@ -26,7 +26,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.gateway"
-                    :label="`${$t('openvpn.Gateway')} *`"
+                    :label="`${$t('openvpn.Gateway')}`"
                     density="compact"
                     item-title="address"
                     item-value="id"
@@ -36,12 +36,6 @@
                     :no-data-text="$t('certificat.certificatlist')"
                   >
                   </v-select>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.gateway.$errors.length"
-                  >
-                    {{ v$.gateway.$errors?.[0].$message }}
-                  </p>
                 </v-col>
                 <v-container class="mx-0 pt-1" v-if="state.gateway">
                   <v-radio-group
@@ -306,14 +300,6 @@ export default {
 
             helpers.regex(
               /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
-            )
-          ),
-        },
-        gateway: {
-          requiredIfFuction: helpers.withMessage(
-            error,
-            requiredIf(
-              () => modalMode.value === "edit" || modalMode.value === "create"
             )
           ),
         },

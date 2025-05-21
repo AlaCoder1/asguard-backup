@@ -18,7 +18,11 @@ def run_command(command):
 ###
 
 def service_action(service, status):
-    output,error=run_command("sudo systemctl {} {}".format(status,service))
+    if service!="ipsec":
+        cmd=f"sudo systemctl {status} {service}"
+    else:
+        cmd=f"sudo ipsec {status}"
+    output,error=run_command(cmd)
     if error!="":
         return error
     return True
@@ -42,22 +46,27 @@ def add_sevice_DB(data):
 def add_service_DB():
     list_info_services=[]
     list_service=[
-    'sshd','dhclient@','suricata','squid','nftables','NetworkManager','openvpn','ipsec','clamv','Asguard-Networking'
+    'sshd','suricata','squid','ipsec'
     ]
     for s in list_service:
-        output,error=run_command("sudo systemctl list-unit-files --type service | awk '{print $1}'")
-        list_all_services=output.splitlines()
+        # output,error=run_command("sudo systemctl list-unit-files --type service | awk '{print $1}'")
+        # list_all_services=output.splitlines()
         status_install=False
         status_started=False
         status_enabled=False
-        if s+'.service' in list_all_services:
-            status_install=True
+        # if s+'.service' in list_all_services:
+        status_install=True
+        if s!="ipsec":
             aux_enabled,error=run_command("sudo systemctl is-enabled {}".format(s))
             if aux_enabled.strip()=="enabled":
                 status_enabled=True
             aux_started,error=run_command("sudo systemctl is-active  {}".format(s))
             if aux_started.strip()=="active":
                 status_started=True
+        else:
+            aux_started,error=run_command("sudo ipsec status")
+            if aux_started.strip()!="":
+                status_started=True        
         service={
             "service_name":s,
             "description":"Service {}".format(s),

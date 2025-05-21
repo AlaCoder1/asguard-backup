@@ -837,6 +837,25 @@ export default {
       return t("errors.ChampIncludeOnlyNumbers");
     });
 
+    const isValidSpecificSourceTo = helpers.withMessage(
+      "Entrez un nombre ou une plage valide (ex: 100-200)",
+      helpers.withParams({ type: "isValidSpecificSourceTo" }, (value) => {
+        if (!value) return true;
+
+        const match = value.match(/^([1-9]\d*)(?:-([1-9]\d*))?$/);
+        if (!match) return false;
+
+        const start = parseInt(match[1], 10);
+        const end = match[2] ? parseInt(match[2], 10) : null;
+
+        if (end !== null) {
+          return start < end;
+        }
+
+        return true;
+      })
+    );
+
     const rules = computed(() => {
       return {
         interface: { required: helpers.withMessage(error, required) },
@@ -946,16 +965,24 @@ export default {
         },
 
         specificPort: {
-          isValidSpecificSourceTo: helpers.withMessage(
-            onlynumbers,
-
-            helpers.regex(/^[0-9]+$/)
-          ),
+          isValidSpecificSourceTo,
           requiredIfFuction: helpers.withMessage(
             error,
             requiredIf(() => state.port.slug === "other")
           ),
         },
+
+        // specificPort: {
+        //   isValidSpecificSourceTo: helpers.withMessage(
+        //     onlynumbers,
+
+        //     helpers.regex(/^([1-9]\d*)(-([1-9]\d*))?$/)
+        //   ),
+        //   requiredIfFuction: helpers.withMessage(
+        //     error,
+        //     requiredIf(() => state.port.slug === "other")
+        //   ),
+        // },
       };
     });
 

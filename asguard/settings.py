@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 import mimetypes
+import warnings
+warnings.filterwarnings("ignore")
 mimetypes.add_type("text/css", ".css", True)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

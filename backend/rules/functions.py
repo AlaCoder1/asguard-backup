@@ -58,10 +58,10 @@ def init_file_nftables(ifname):
 {} 
 EOF""".format(ifname,rules),
 "sudo nft add table inet filter_{} ".format(ifname),
-"sudo nft add chain inet filter_{} inbound {{ type filter hook input priority 0 \; }}".format(ifname),
-"sudo nft add chain inet filter_{} outbound {{ type filter hook output priority 0 \; }}".format(ifname),
-"sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}".format(ifname),
-"sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} inbound {{ type filter hook forward priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} outbound {{ type filter hook forward priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} cellular {{ type filter hook forward priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook forward priority 0 \; }}".format(ifname),
 'sudo nft list table inet filter_{} > /etc/rules/{}/nftables.conf'.format(ifname,ifname),
 "grep -q '{}' /etc/nftables.conf || echo '{}' | sudo tee -a /etc/nftables.conf".format(include_rules,include_rules)
 ]

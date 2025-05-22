@@ -469,8 +469,8 @@ export default {
       return t("champs.champNumberMax");
     });
 
-     const formatMustBeLikeAdresse = computed(() => {
-      return t("errors.formatMustBeLikeAdresse");
+    const formatMustBeLikeAdresse = computed(() => {
+      return t("errors.formatMustTwo");
     });
 
     const rules = computed(() => {
@@ -480,7 +480,7 @@ export default {
           isValidlNetwork: helpers.withMessage(
             formatMustBeLikeAdresse,
             helpers.regex(
-              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[0-2]))$/
+              /^((25[0-5]|2[0-4][0-9]|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4][0-9]|1\d{2}|[1-9]?\d)(\/([1-9]|[12][0-9]|3[0-2]))?$/
             )
           ),
         },

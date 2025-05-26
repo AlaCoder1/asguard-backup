@@ -22,6 +22,10 @@ def input_create_snat(source_address, source_port, destination_address, destinat
 
 def check_payload(data: dict):
     """Check the payload fileds"""
+    # Check the validity of SNat type
+    if data["snat_type"] not in ["MASQ", "Static"]:
+        return False
+
     # Check the validity of the ipv4 addresses
     list_ipv4_address = [data["source_address"], data["destination_address"]]
     for ipv4_address in list_ipv4_address:
@@ -34,7 +38,7 @@ def check_payload(data: dict):
             if not is_valid_ipv4_without_mask(ipv4_address):
                 return False
     # Check if the source and destination addresses are differents
-    if len({data["source_address"], data["destination_address"]}) != 2:
+    if data["source_address"] != "" and len({data["source_address"], data["destination_address"]}) != 2:
         return False
     # Check if the translation addresses from and to are differents in static mode
     if data["snat_type"] == "Static":

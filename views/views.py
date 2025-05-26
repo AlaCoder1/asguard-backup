@@ -841,7 +841,7 @@ def double_masque(request):
 def get_generale_settings(request,id):
     """get information system from database"""
     if (request.method == 'GET'):
-        system_object = System.objects.get(id=id)
+        system_object = System.objects.all().first()
         time_zone = Timezone.objects.get(name = system_object.time_zone.name)
         system_dict = {
             "hostname":system_object.hostname,

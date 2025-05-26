@@ -85,16 +85,16 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
       policy="reject with icmp port-unreachable"
    if type_rule=='inbound' :
       if protocol.upper() != "ALL":
-         rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
+         rule = f'ip saddr {saddr} ip daddr {daddr} {protocol} sport {sport} {protocol} dport {dport} {policy}'
       else:
-         rule='iifname "{}" ip saddr {} ip daddr {} {}'.format(ifname,saddr,daddr,policy)
+         rule = f'ip saddr {saddr} ip daddr {daddr} {policy}'
          
     ##cas outbound
    elif type_rule=='outbound' :
       if protocol.upper() != "ALL":
-         rule='oifname "{}" ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(ifname,daddr,saddr,protocol,sport,protocol,dport,policy)
+         rule = f'ip daddr {daddr} ip saddr {saddr} {protocol} sport {sport} {protocol} dport {dport} {policy}'
       else:
-         rule='oifname "{}" ip daddr {} ip saddr {} {}'.format(ifname,daddr,saddr,policy)
+         rule = f'ip daddr {daddr} ip saddr {saddr} {policy}'
          
    #####cas saddr is None
    if saddr is None:
@@ -113,7 +113,7 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
       rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
    ############ 
    if sport is None and dport is None and not protocol.startswith("icmp type") and protocol.upper()!="ALL" :
-      rule=rule[:rule.find(policy)]+"ip protocol {} ".format(protocol)+rule[rule.find(policy):]
+      rule=rule[:rule.find(policy)]+" ip protocol {} ".format(protocol)+rule[rule.find(policy):]
    return rule
 
 

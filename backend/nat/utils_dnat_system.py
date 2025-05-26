@@ -66,7 +66,7 @@ def change_rule_dnat_position_in_system(dnat: DNat, new_positon: int):
 def build_command_create_dnat(iifname, source, destination, protocol, next_rule_handle):
     """Builds the command-line string used to create an DNAT rule."""
     # Set the basics of rule command
-    command_dnat = ["sudo", "nft", "insert", "rule", "nat", "prerouting", "iifname", iifname]
+    command_dnat = ["sudo", "nft", "insert", "rule", "nat", "prerouting"]
     # Update the command to insert the rule in a specific position
     if next_rule_handle > 0:
         command_dnat.insert(6, "position")
@@ -76,12 +76,15 @@ def build_command_create_dnat(iifname, source, destination, protocol, next_rule_
         command_dnat[2] = "add"
 
     # Set the address and port for source and destination if the user don't choose Any
+    iifname_command = []
     ip_addr_source = []
     tcp_source = []
     ip_addr_destination = []
     tcp_destination = []
     ip_protocol = []
     forwarding_port = []
+    if iifname:
+        iifname_command = ["oifname", iifname]
     if source != "any":
         ip_addr_source = ["ip", "saddr", source["address"]]
         if source['port']:
@@ -95,7 +98,8 @@ def build_command_create_dnat(iifname, source, destination, protocol, next_rule_
     outgoing_ip_address = ["dnat", "ip", "to", destination["internal_address"]]
 
     # Complete the DNAT rule command
-    added_fields_rule = [ip_addr_source, ip_addr_destination, tcp_source,tcp_destination, ip_protocol,
+    added_fields_rule = [iifname_command, ip_addr_source, ip_addr_destination, 
+                         tcp_source,tcp_destination, ip_protocol,
                          outgoing_ip_address, forwarding_port]
     for command in added_fields_rule:
         command_dnat.extend(command)

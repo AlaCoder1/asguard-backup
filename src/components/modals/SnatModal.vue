@@ -24,16 +24,17 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    :label="`${$t('nat.interface')} *`"
+                    :label="`${$t('nat.interface')}`"
                     :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
                     :items="state.mapedInterface"
                     return-object
+                    clearable
                   ></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.interface.$error">
+                  <!-- <p class="error-feedback mb-5" v-if="v$.interface.$error">
                     {{ v$.interface.$errors[0].$message }}
-                  </p>
+                  </p> -->
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
@@ -569,7 +570,7 @@ export default {
       const result = await v$.value.$validate();
       if (result) {
         let payload = {
-          interface: state.interface.id,
+          interface:state.interface ? state.interface.id : null,
           tcp_ip: state.tcpIpVersion?.slug ?? "",
           protocol: state.protocol?.slug ?? "",
           source_address: state.sourceAddress
@@ -669,7 +670,7 @@ export default {
 
     const rules = computed(() => {
       return {
-        interface: { required: helpers.withMessage(error, required) },
+        // interface: { required: helpers.withMessage(error, required) },
         translationAddressFrom: {
           requiredIfFuction: helpers.withMessage(
             error,

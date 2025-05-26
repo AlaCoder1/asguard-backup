@@ -35,6 +35,6 @@ def check_payload(data: dict):
         if not is_valid_ipv4_without_mask(ipv4_address):
             return False
     # Check if the source, external and internal addresses are differents
-    if len({data["source_address"], data["external_address"], data["internal_address"]}) != 3:
+    if (data["source_address"] != "" or data["external_address"] != "" or data["internal_address"] != "") and len({data["source_address"], data["external_address"], data["internal_address"]}) != 3:
         return False
     return True

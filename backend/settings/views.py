@@ -148,7 +148,7 @@ def generale_settings(request,id):
     """
     msg = ''
     if (request.method == 'PUT'):
-        system_object = System.objects.get(id=id)
+        system_object = System.objects.all().first()
         # network = Network.objects.get(id=id)
         
         data = request.data
@@ -247,7 +247,7 @@ def get_generale_settings(request,id):
         If the timezone associated with the system object cannot be found.
     """
     if (request.method == 'GET'):
-        system_object = System.objects.get(id=id)
+        system_object = System.objects.all().first()
         time_zone = Timezone.objects.get(name = system_object.time_zone.name)
         system_dict = {
             "hostname":system_object.hostname,
@@ -681,7 +681,7 @@ def getServerReseau(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
-def createSystem(request):
+def create_system(request):
     """
     Creates a new system entry in the database based on incoming data.
 
@@ -730,6 +730,10 @@ def createSystem(request):
             return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
         if data['language'] not in ['en', 'fr']:
             return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} language: {data['language']}"},status=400)
+        
+        # Remove lines from System table
+        System.objects.all().delete()
+        
         # instanciate with the serializer
         serializerSystem = SystemSerializer(data=data)
         # check if the sent information is okay
@@ -751,7 +755,7 @@ def createSystem(request):
 @permission_classes([AllowAny])
 def get_language(request):
     """Getting System language"""
-    system = System.objects.get()
+    system = System.objects.all().first()
     return JsonResponse({"language": system.language})
 
 
@@ -764,10 +768,10 @@ def get_language(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_language(request, id):
-    """Update profile language"""
+    """Update System language"""
     try:
         data = request.data
-        system = System.objects.get()
+        system = System.objects.all().first()
         serializer_system = SystemSerializer(system, data=data, partial=True)
         if serializer_system.is_valid():
             # Change language of rule waf description

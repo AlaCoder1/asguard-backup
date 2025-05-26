@@ -367,7 +367,7 @@ export default {
         if (state.gateway?.id === 0) {
           gateway = {
             gateway_address: state.gatewayAddress,
-            interface: state.interface.id,
+            interface: state.interface ? state.interface.id : null,
             metric: state.metric,
           };
         } else {

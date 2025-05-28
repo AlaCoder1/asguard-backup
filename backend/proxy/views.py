@@ -358,6 +358,7 @@ def enable_by_time():
             'rule_name': Schema(
                 type=TYPE_STRING,
                 description="The rule name.",
+                example="rule1"
             ),
             'allow_by_auth': Schema(
                 type=TYPE_BOOLEAN,

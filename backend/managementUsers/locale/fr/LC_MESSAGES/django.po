@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-02 15:43+0000\n"
+"POT-Creation-Date: 2025-05-28 15:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,163 +18,165 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/managementUsers/models.py:62 backend/managementUsers/views.py:33
+#: backend/managementUsers/models.py:62 backend/managementUsers/views.py:38
 msgid "username"
 msgstr "nom d'utilisateur"
 
-#: backend/managementUsers/views.py:30
+#: backend/managementUsers/views.py:33
 msgid "User"
 msgstr "Utilisateur"
 
-#: backend/managementUsers/views.py:31
+#: backend/managementUsers/views.py:34
 msgid "Role"
 msgstr "Rôle"
 
-#: backend/managementUsers/views.py:32
+#: backend/managementUsers/views.py:35
+#, fuzzy
+#| msgid "AD Server with id"
+msgid "AD Server"
+msgstr "Serveur AD"
+
+#: backend/managementUsers/views.py:36
+msgid "Group"
+msgstr "Groupe"
+
+#: backend/managementUsers/views.py:37
 msgid "functionality"
 msgstr "fonctionnalié"
 
-#: backend/managementUsers/views.py:34
+#: backend/managementUsers/views.py:39
 msgid "password"
 msgstr "mot de passe"
 
-#: backend/managementUsers/views.py:35
+#: backend/managementUsers/views.py:40
+#, fuzzy
+#| msgid "Invalid password"
+msgid "email format"
+msgstr "Format de l'email"
+
+#: backend/managementUsers/views.py:41
 msgid "permission"
 msgstr "permission"
 
-#: backend/managementUsers/views.py:36
+#: backend/managementUsers/views.py:42
 msgid "groupname"
 msgstr "nom du group"
 
-#: backend/managementUsers/views.py:37
-msgid "role"
-msgstr "rôle"
-
-#: backend/managementUsers/views.py:38
+#: backend/managementUsers/views.py:43
 msgid "directory server"
 msgstr "serveur d'annuaire"
 
-#: backend/managementUsers/views.py:39
+#: backend/managementUsers/views.py:44
+msgid "data"
+msgstr "données"
+
+#: backend/managementUsers/views.py:45
+msgid "Type"
+msgstr "Type"
+
+#: backend/managementUsers/views.py:46
 msgid "with their email in directory server"
 msgstr "avec son email dans le serveur d'annuaire"
 
-#: backend/managementUsers/views.py:40
+#: backend/managementUsers/views.py:47
 msgid "with simple System email"
 msgstr "avec simple email de system"
 
-#: backend/managementUsers/views.py:41
+#: backend/managementUsers/views.py:48
 msgid "or"
 msgstr "ou"
 
-#: backend/managementUsers/views.py:42
+#: backend/managementUsers/views.py:49
 msgid "and"
 msgstr "et"
 
-#: backend/managementUsers/views.py:43
+#: backend/managementUsers/views.py:50
 msgid "Language"
 msgstr "Langue"
 
-#: backend/managementUsers/views.py:44
-msgid "Directory Server unreachable"
-msgstr "Serveur d'annuaire inaccessible"
-
-#: backend/managementUsers/views.py:45
-msgid "You can't delete this role. It is used by other users"
-msgstr ""
-"Vous ne pouvez pas supprimer ce rôle. Il est utilisé par d'autres "
-"utilisateurs"
-
-#: backend/managementUsers/views.py:47
+#: backend/managementUsers/views.py:52
 msgid "is created"
 msgstr "est créé"
 
-#: backend/managementUsers/views.py:48
+#: backend/managementUsers/views.py:53
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/managementUsers/views.py:49
+#: backend/managementUsers/views.py:54
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/managementUsers/views.py:51
+#: backend/managementUsers/views.py:56
 msgid "System error in creating"
 msgstr "Erreur système lors de la création de"
 
-#: backend/managementUsers/views.py:52
+#: backend/managementUsers/views.py:57
 msgid "System error in deleting"
 msgstr "Erreur système lors de la suppression de"
 
-#: backend/managementUsers/views.py:53
+#: backend/managementUsers/views.py:58
 msgid "System error in updating"
 msgstr "Erreur système lors de la modification de"
 
-#: backend/managementUsers/views.py:54
+#: backend/managementUsers/views.py:59
 msgid "already exist"
 msgstr "existe déjà"
 
-#: backend/managementUsers/views.py:55 backend/managementUsers/views.py:63
+#: backend/managementUsers/views.py:60
 msgid "does not exist"
 msgstr "n'existe pas"
 
-#: backend/managementUsers/views.py:56
-msgid "Invalid password"
-msgstr "Mot de passe invalide"
-
-#: backend/managementUsers/views.py:57
+#: backend/managementUsers/views.py:61
 msgid "System error in connecting to directory server"
 msgstr "Erreur système lors de la connection au ser d'annuaire"
 
-#: backend/managementUsers/views.py:58
-#, fuzzy
-#| msgid "Invalid password"
-msgid "Invalid method"
-msgstr "Méthode invalide"
-
-#: backend/managementUsers/views.py:59
-#, fuzzy
-#| msgid "Invalid password"
-msgid "Invalid email format"
-msgstr "Format de l'email invalide"
-
-#: backend/managementUsers/views.py:60
-msgid "User with id"
-msgstr "Utilisateur avec id"
-
-#: backend/managementUsers/views.py:61
-msgid "Role with id"
-msgstr "Rôle avec id"
-
 #: backend/managementUsers/views.py:62
-msgid "AD Server with id"
-msgstr "Serveur AD avec id"
-
-#: backend/managementUsers/views.py:64
 #, fuzzy
 #| msgid "Invalid password"
 msgid "Invalid"
 msgstr "Invalide"
 
+#: backend/managementUsers/views.py:63
+msgid "Directory Server unreachable"
+msgstr "Serveur d'annuaire inaccessible"
+
+#: backend/managementUsers/views.py:64
+msgid "You can't delete this role. It is used by other users"
+msgstr ""
+"Vous ne pouvez pas supprimer ce rôle. Il est utilisé par d'autres "
+"utilisateurs"
+
 #: backend/managementUsers/views.py:65
-msgid "Type"
-msgstr "Type"
-
-#: backend/managementUsers/views.py:66
-msgid "not found"
-msgstr "n'existe pas"
-
-#: backend/managementUsers/views.py:67
-msgid "Group with id"
-msgstr "Groupe avec id"
-
-#: backend/managementUsers/views.py:68
 msgid "No group found matching the username"
 msgstr "Aucun groupe correspondant au nom d'utilisateur n'a été trouvé"
 
-#: backend/managementUsers/views.py:69
+#~ msgid "role"
+#~ msgstr "rôle"
+
+#~ msgid "Invalid password"
+#~ msgstr "Mot de passe invalide"
+
 #, fuzzy
-#| msgid "Invalid password"
-msgid "Invalid data"
-msgstr "Données invalides"
+#~| msgid "Invalid password"
+#~ msgid "Invalid method"
+#~ msgstr "Méthode invalide"
+
+#~ msgid "User with id"
+#~ msgstr "Utilisateur avec id"
+
+#~ msgid "Role with id"
+#~ msgstr "Rôle avec id"
+
+#~ msgid "not found"
+#~ msgstr "n'existe pas"
+
+#~ msgid "Group with id"
+#~ msgstr "Groupe avec id"
+
+#, fuzzy
+#~| msgid "Invalid password"
+#~ msgid "Invalid data"
+#~ msgstr "Données invalides"
 
 #~ msgid "name"
 #~ msgstr "nom"

@@ -79,7 +79,7 @@ class Relays(models.Model):
     traversal = models.BooleanField(default=False)
     online = models.BooleanField(default=False)
     verified = models.BooleanField(default=False)
-    token = models.CharField(max_length=1000, unique=True, null=True, blank=True)
+    token = models.CharField(max_length=10000, unique=True, null=True, blank=True)
     date_creation = models.DateTimeField()
     description = models.CharField(max_length=800, null=True, blank=True)
     class Meta:

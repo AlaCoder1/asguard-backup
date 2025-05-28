@@ -222,7 +222,7 @@ def calculate_subnet_address(addr_prefix):
    
    
 ###
-def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object):
+def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object,position):
    """function to add rule in system and database"""
    msg=''
    id_rule=None
@@ -254,6 +254,10 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
          ).exists():
       #appel la fonction pour ajouter rule dans le système
          return_add_rule=add_rule_remote(rule,ifname,type_rule)
+         # position=get_handle_rule(ifname,type_rule,rule)
+         # position=int(position.strip('handle').strip()) if position is not None else None
+         print({"position":position})
+         
          if return_add_rule is True:
             data = {
                'policy': policy,
@@ -264,6 +268,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
                'protocol': protocol,
                'type_rule': type_rule,
                'rule_description': rule_description,
+               'position':position,
                }
             data['interface']=interface_object.id
             #appel la fonction pour ajouter rule dans la base de données 
@@ -294,7 +299,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
    return msg,status,id_rule
 
 ##
-def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description):
+def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description,position):
       if (id is not None and Rule.objects.filter(id=id).exists()):
          rules_object = Rule.objects.get(id=id)
          rule=rules_object.rule
@@ -330,6 +335,8 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
             ).exists():
                # if return_delete_rule_remote is True:
                   return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
+                  # position=get_handle_rule(ifname,type_rules,rule)
+                  # position=int(position.strip('handle').strip()) if position is not None else None
                   if  return_add_rule is True:
                         data = {
                         "id":id,
@@ -339,7 +346,9 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
                         'sport': sport,
                         'dport': dport,
                         'protocol': protocol,
-                        'rule_description': rule_description
+                        'rule_description': rule_description,
+                        'position':position,
+                        
                         }
                         
                         #appel la fonction pour update rule dans la base de données 

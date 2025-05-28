@@ -88,6 +88,7 @@ def delete_rule(request,id):
         items=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
+                
                 'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Rule ID (optional for new rules)',example=1),
                 'policy': openapi.Schema(
                     type=openapi.TYPE_STRING, 
@@ -110,6 +111,7 @@ def delete_rule(request,id):
                     default="inbound"
                     ),
                 'rule_description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the rule',example="test rule inbound"),
+                'position':openapi.Schema(type=openapi.TYPE_INTEGER, description='Rule position',example=1)
             },
             required=['policy', 'type_rule'], 
            
@@ -169,12 +171,14 @@ def save_rules(request,name_interface):
         sport = None if data.get('sport', None) == "ALL" else data.get('sport', None)
         dport = None if data.get('dport', None) == "ALL" else data.get('dport', None)
         protocol = None if data.get('protocol', None) == "ALL" else data.get('protocol', None)
+        position = data.get('position', None) 
+        print({"position":position})
         type_rule = data.get('type_rule', None)
         rule_description= None if data.get('rule_description', None) == "" else data.get('rule_description', None)
         if id_rule is None:
-            msg,status,id_rule=add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object)
+            msg,status,id_rule=add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object,position)
         else:
-            msg,status=update_rule_db(id_rule,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description)
+            msg,status=update_rule_db(id_rule,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description,position)
         responses.append({"id":id_rule,"msg":msg,"status":status})
     return JsonResponse({"response": responses},status=status)  
      

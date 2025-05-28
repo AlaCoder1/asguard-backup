@@ -226,7 +226,7 @@ def get_all_rules(request):
         interface_dict = serializers.serialize("json", allinterfaces)
         res_interface = json.loads(interface_dict)
         ########## get all types 
-        rules= Rule.objects.all()
+        rules= Rule.objects.all().order_by('position')
         rule_dict = serializers.serialize("json", rules)
         res_rules = json.loads(rule_dict)
         for j in range(len(res_rules)):
@@ -236,7 +236,7 @@ def get_all_rules(request):
           rules_type = {}
           # rules= Rule.objects.get(interface=id_interface)
           for elem in list(set(set_type)): 
-            rules= Rule.objects.filter(interface=id_interface,type_rule=elem)
+            rules= Rule.objects.filter(interface=id_interface,type_rule=elem).order_by('position')
             rule_dict = serializers.serialize("json", rules)
             res = json.loads(rule_dict)
             list_rules=[]
@@ -244,6 +244,7 @@ def get_all_rules(request):
                 interface_dict=[]
                 res[i].pop('model')
                 id = res[i]['pk']
+                print({"id":id,"position":res[i]['fields']['position']})
                 res[i].pop('pk')
                 res[i]['fields']['id'] = id
                 res[i]['fields'].pop("interface")

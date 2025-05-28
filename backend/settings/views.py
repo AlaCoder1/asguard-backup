@@ -99,17 +99,32 @@ DOES_NOT_EXIST = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
+@swagger_auto_schema('PUT', responses={200: 'Updated', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
                      request_body=Schema(type=TYPE_OBJECT,  required=['hostname', 'domain', 'timezone', 'dns_servers'],
-                                                 properties={'hostname': Schema(type=TYPE_STRING),
-                                                             'domain': Schema(type=TYPE_STRING),
-                                                             'timezone': Schema(type=TYPE_STRING),
+                                                 properties={'hostname': Schema(type=TYPE_STRING,example="asurad"),
+                                                             'domain': Schema(type=TYPE_STRING,example="asurad.com"),
+                                                             'timezone': Schema(type=TYPE_STRING,example="Africa/Addis_Ababa"),
                                                              'dns_servers': Schema(type=TYPE_OBJECT,
-                                                                                properties={'dns_server': Schema(type=TYPE_STRING),
-                                                                                            'gateway': Schema(type=TYPE_STRING),
-                                                                                            'interface_id': Schema(type=TYPE_INTEGER),
-                                                                                            'metric': Schema(type=TYPE_INTEGER)}),
-                                                             }))
+                                                                                properties={'dns_server': Schema(type=TYPE_STRING,example="1.1.1.2"),
+                                                                                            'gateway': Schema(type=TYPE_STRING,example="10.1.12.1"),
+                                                                                            'interface_id': Schema(type=TYPE_INTEGER,example=1),
+                                                                                            'metric': Schema(type=TYPE_INTEGER,example=20014)}),
+                                                             },example={
+            "hostname": "asurad",
+            "domain": "asguad.com",
+            "timezone": "Africa/Addis_Ababa",
+            "dns_servers": [{
+                "dns_server": "1.1.1.2",
+                "gateway": "10.1.12.1",
+                "interface_id": 3,
+                "metric": 20014
+            }, {
+                "dns_server": "1.1.1.5",
+                "gateway": "192.168.189.172",
+                "interface_id": 5,
+                "metric": 20014
+            }]
+        }))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def generale_settings(request,id):
@@ -162,13 +177,26 @@ def generale_settings(request,id):
             system_object.save()
             # if "dns_servers" in data:
             for i in data['dns_servers']:
-                add_dns_servers(i['dns_server'])
-                if i['gateway'] != "" and i['interface_id'] != "":
-                    gateway = Gateway.objects.get(gwaddress = i['gateway'])
-                    interface = Interface.objects.get(id = i['interface_id'])
-                # gateway_interface = GatewayInterface.objects.get(gateway_id = gateway.pk)
-                
-                    resultat,error = add_gateway_to_dns_servers(i['dns_server'],gateway.gwaddress,interface.ifname,i['metric'])
+                print({"i"  : i})
+                dns_server = i['dns_server']       
+                gateway = i['gateway']            
+                interface_id = i['interface_id']   
+                metric = i['metric']  
+                add_dns_servers(dns_server)
+                if gateway != "" and interface_id != "":
+                    try:
+                        gateway = Gateway.objects.get(gwaddress = gateway)
+                    except Gateway.DoesNotExist:
+                        return JsonResponse({"error": f"Gateway with {gateway} does not exist"}, status=404)
+                    except ValueError:
+                        return JsonResponse({"error": f"Invalid gateway: {gateway}"}, status=404)
+                    try:
+                        interface = Interface.objects.get(id=interface_id)
+                    except Interface.DoesNotExist:
+                        return JsonResponse({"error": f"Interface with ID {interface_id} does not exist"}, status=404)
+                    except ValueError:
+                        return JsonResponse({"error": f"Invalid interface ID: {interface_id}"}, status=404)
+                    resultat,error = add_gateway_to_dns_servers(dns_server,gateway.gwaddress,interface.ifname,metric)
             # network.server_dns = data['dns_servers']
             # network.save()
             # data['dns_servers'][0]['name_interface'] = interface.name_interface
@@ -660,7 +688,22 @@ def getServerReseau(request, id):
 
 @swagger_auto_schema(
     method='POST',
-    request_body=SystemSerializer,
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        properties={
+            'hostname': Schema(type=TYPE_STRING, example="example-host"),
+            'domaine': Schema(type=TYPE_STRING, example="example.com"),
+            'time_zone': Schema(
+                type=TYPE_INTEGER,
+                example=1
+            ),
+            'language': Schema(
+                type=TYPE_STRING,
+                enum=['en', 'fr'],
+                example="en"
+            ),
+        }
+    ),
     responses={
         201: Schema(
             type=TYPE_OBJECT,
@@ -717,8 +760,6 @@ def create_system(request):
     None
     """
     msg = ''
-    
-    
     if (request.method == 'POST'):
         # parse the incoming information
         data = request.data
@@ -731,20 +772,23 @@ def create_system(request):
         if data['language'] not in ['en', 'fr']:
             return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} language: {data['language']}"},status=400)
         
-        # Remove lines from System table
-        System.objects.all().delete()
+        # Check if a system already exists
+        existing_system = System.objects.first()  # Assuming you only want one system
         
-        # instanciate with the serializer
-        serializerSystem = SystemSerializer(data=data)
-        # check if the sent information is okay
-        if (serializerSystem.is_valid()):
+        if existing_system:
+            # Update existing system
+            serializerSystem = SystemSerializer(existing_system, data=data, partial=True)
+            msg = f"{CONSTANT_SYSTEM} {SUCCESS_MESSAGES_UPDATING}"
+        else:
+            # Create new system
+            serializerSystem = SystemSerializer(data=data)
             msg = f"{CONSTANT_SYSTEM} {SUCCESS_MESSAGES_CREATING}"
-                # if okay, save it on the database
+        
+        if serializerSystem.is_valid():
             serializerSystem.save()
-                # provide a Json Response with the data that was saved
-            return JsonResponse({"msg": msg}, status=201)
-        # provide a Json Response with the necessary error information
-        return JsonResponse(SystemSerializer.errors, status=400)
+            return JsonResponse({"msg": msg}, status=200 if existing_system else 201)
+        
+        return JsonResponse(serializerSystem.errors, status=400)
 
 
 

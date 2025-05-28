@@ -20,6 +20,7 @@ from utils.utils_address import fix_ipv4_address
 # Constants
 CONSTANT_SNAT_RULE = _("SNAT rule")
 CONSTANT_SNAT_RULE_POSITION = _("SNAT rule position")
+CONSTANT_INTERFACE = _("interface")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -43,7 +44,7 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_all_snat(request):
+def get_all_snat(_):
     """Getting all snat from database"""
     list_snat = []
     list_snat = get_list_all_snat()
@@ -55,7 +56,7 @@ def get_all_snat(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_snat(request, id):
+def get_snat(_, id):
     """Getting snat by id from database"""
     snat = get_one_snat(id)
     return JsonResponse(snat, safe=False)
@@ -66,8 +67,8 @@ def get_snat(request, id):
     operation_summary="API TO CREATE AN SNAT RULE", 
     request_body=Schema(
         type=TYPE_OBJECT, required=[
-            'interface', 'source_address', 'source_port', 'destination_address',
-            'destination_port', 'snat_type'],
+            'source_address', 'source_port', 'destination_address', 'destination_port', 
+            'snat_type'],
         properties={
             'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
             'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
@@ -102,21 +103,20 @@ def create_snat(request):
 
         serializer_snat = SNatSerializer(data=data)
         if serializer_snat.is_valid():
-
-            interface_ifname = Interface.objects.get(id=data["interface"]).ifname
+            interface_ifname = None
+            if data["interface"]:
+                interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
             # create the input for creating SNAT rule
             if data["snat_type"] == "MASQ":
                 source, destination, masking = input_create_snat(
                     data["source_address"], data["source_port"], data["destination_address"], 
                     data["destination_port"], data["snat_type"])
-            elif data["snat_type"] == "Static":
+            else:
                 source, destination, masking = input_create_snat(
                     data["source_address"], data["source_port"], data["destination_address"], 
                     data["destination_port"], data["snat_type"], data["translation_address_from"], 
                     data["translation_address_to"], data["translation_port"])
-            else:
-                return JsonResponse({"error": "Data error"}, status=400)
 
             # Add the rule in system and get the rule handle and content
             rule_number, rule_content = create_snat_rule_in_system(interface_ifname, source, destination, data["protocol"], masking)
@@ -144,6 +144,8 @@ def create_snat(request):
 
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SNAT_RULE}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'},
@@ -151,7 +153,7 @@ def create_snat(request):
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_snat(request, id):
+def delete_snat(_, id):
     """Deleting an snat from database"""
     try:
         snat = SNat.objects.get(id=id)
@@ -182,8 +184,8 @@ def delete_snat(request, id):
     operation_summary="API TO CREATE AN SNAT RULE", 
     request_body=Schema(
         type=TYPE_OBJECT, required=[
-            'interface', 'source_address', 'source_port', 'destination_address',
-            'destination_port', 'snat_type'],
+            'source_address', 'source_port', 'destination_address', 'destination_port', 
+            'snat_type'],
         properties={
             'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
             'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
@@ -205,6 +207,7 @@ def delete_snat(request, id):
 def update_snat(request, id):
     """Updating an SNAT rule"""
     try:
+        snat = SNat.objects.get(id=id)
         data = request.data
         # Check data validity
         if not check_payload(data):
@@ -216,22 +219,16 @@ def update_snat(request, id):
             data["translation_address_from"], data["translation_address_to"] = fix_ipv4_address(
                 [data["translation_address_from"], data["translation_address_to"]])
 
-        snat = SNat.objects.get(id=id)
-
-        interface_ifname = Interface.objects.get(id=data["interface"]).ifname
-
         # create the input for creating SNAT rule
         if data["snat_type"] == "MASQ":
             source, destination, masking = input_create_snat(
                 data["source_address"], data["source_port"], data["destination_address"], 
                 data["destination_port"], data["snat_type"])
-        elif data["snat_type"] == "Static":
+        else:
             source, destination, masking = input_create_snat(
                 data["source_address"], data["source_port"], data["destination_address"], 
                 data["destination_port"], data["snat_type"], data["translation_address_from"], 
                 data["translation_address_to"], data["translation_port"])
-        else:
-            return JsonResponse({"error": "Data error"}, status=400)
         
         if data["snat_type"] != "Static":
             snat.translation_address_from = None
@@ -239,6 +236,9 @@ def update_snat(request, id):
             snat.translation_port = None
         serializer_snat = SNatSerializer(snat, data=data)
         if serializer_snat.is_valid():
+            interface_ifname = None
+            if data["interface"]:
+                interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
             if snat.rule_status:
                 # Get the rule handle of the next rule (by position)
@@ -267,7 +267,9 @@ def update_snat(request, id):
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SNAT_RULE}"}, status=400)
     except SNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
@@ -275,7 +277,7 @@ def update_snat(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def start_snat(request, id):
+def start_snat(_, id):
     """Start an SNAT rule. Change rule_status to True to add the rule to the nft table"""
     try:
         snat = SNat.objects.get(id=id)
@@ -305,7 +307,7 @@ def start_snat(request, id):
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SNAT_RULE}"}, status=400)
     except SNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
@@ -313,7 +315,7 @@ def start_snat(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def stop_snat(request, id):
+def stop_snat(_, id):
     """Stop an SNAT rule. By changing rule_status to False, the while loop of the script will be breaked"""
     try:
         snat = SNat.objects.get(id=id)

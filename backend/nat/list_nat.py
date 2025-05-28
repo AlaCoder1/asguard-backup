@@ -22,7 +22,8 @@ def get_list_all_snat():
         snat_id = snat['pk']
         snat['fields']['id'] = snat_id
         snat['fields'].pop("rule_content")
-        snat['fields']['interface_name'] = SNat.objects.get(id=snat_id).interface.name_interface
+        if SNat.objects.get(id=snat_id).interface:
+            snat['fields']['interface_name'] = SNat.objects.get(id=snat_id).interface.name_interface
         list_snat.append(snat['fields'])
     return list_snat
 
@@ -35,7 +36,8 @@ def get_one_snat(id):
     snat_id = res[0]['pk']
     res[0]['fields']['id'] = snat_id
     res[0]['fields'].pop("rule_content")
-    res[0]['fields']['interface_name'] = SNat.objects.get(id=snat_id).interface.name_interface
+    if SNat.objects.get(id=snat_id).interface:
+        res[0]['fields']['interface_name'] = SNat.objects.get(id=snat_id).interface.name_interface
     return res[0]['fields']
 
 
@@ -51,7 +53,8 @@ def get_list_all_one_to_one_nat():
         one_to_one_nat_id = one_to_one_nat['pk']
         one_to_one_nat['fields']['id'] = one_to_one_nat_id
         one_to_one_nat['fields'].pop("rule_content")
-        one_to_one_nat['fields']['interface_name'] = OneToOneNat.objects.get(id=one_to_one_nat_id).interface.name_interface
+        if OneToOneNat.objects.get(id=one_to_one_nat_id).interface:
+            one_to_one_nat['fields']['interface_name'] = OneToOneNat.objects.get(id=one_to_one_nat_id).interface.name_interface
         list_one_to_one_nat.append(one_to_one_nat['fields'])
     return list_one_to_one_nat
 
@@ -64,7 +67,8 @@ def get_one_one_to_one_nat(id):
     one_to_one_nat_id = res[0]['pk']
     res[0]['fields']['id'] = one_to_one_nat_id
     res[0]['fields'].pop("rule_content")
-    res[0]['fields']['interface_name'] = OneToOneNat.objects.get(id=one_to_one_nat_id).interface.name_interface
+    if OneToOneNat.objects.get(id=one_to_one_nat_id).interface:
+        res[0]['fields']['interface_name'] = OneToOneNat.objects.get(id=one_to_one_nat_id).interface.name_interface
     return res[0]['fields']
 
 
@@ -80,7 +84,8 @@ def get_list_all_dnat():
         dnat_id = dnat['pk']
         dnat['fields']['id'] = dnat_id
         dnat['fields'].pop("rule_content")
-        dnat['fields']['interface_name'] = DNat.objects.get(id=dnat_id).interface.name_interface
+        if DNat.objects.get(id=dnat_id).interface:
+            dnat['fields']['interface_name'] = DNat.objects.get(id=dnat_id).interface.name_interface
         list_dnat.append(dnat['fields'])
     return list_dnat
 
@@ -93,5 +98,6 @@ def get_one_dnat(id):
     dnat_id = res[0]['pk']
     res[0]['fields']['id'] = dnat_id
     res[0]['fields'].pop("rule_content")
-    res[0]['fields']['interface_name'] = DNat.objects.get(id=dnat_id).interface.name_interface
+    if DNat.objects.get(id=dnat_id).interface:
+        res[0]['fields']['interface_name'] = DNat.objects.get(id=dnat_id).interface.name_interface
     return res[0]['fields']

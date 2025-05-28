@@ -58,10 +58,10 @@ def init_file_nftables(ifname):
 {} 
 EOF""".format(ifname,rules),
 "sudo nft add table inet filter_{} ".format(ifname),
-"sudo nft add chain inet filter_{} inbound {{ type filter hook input priority 0 \; }}".format(ifname),
-"sudo nft add chain inet filter_{} outbound {{ type filter hook output priority 0 \; }}".format(ifname),
-"sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}".format(ifname),
-"sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} inbound {{ type filter hook forward priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} outbound {{ type filter hook forward priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} cellular {{ type filter hook forward priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook forward priority 0 \; }}".format(ifname),
 'sudo nft list table inet filter_{} > /etc/rules/{}/nftables.conf'.format(ifname,ifname),
 "grep -q '{}' /etc/nftables.conf || echo '{}' | sudo tee -a /etc/nftables.conf".format(include_rules,include_rules)
 ]
@@ -85,16 +85,16 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
       policy="reject with icmp port-unreachable"
    if type_rule=='inbound' :
       if protocol.upper() != "ALL":
-         rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
+         rule = f'ip saddr {saddr} ip daddr {daddr} {protocol} sport {sport} {protocol} dport {dport} {policy}'
       else:
-         rule='iifname "{}" ip saddr {} ip daddr {} {}'.format(ifname,saddr,daddr,policy)
+         rule = f'ip saddr {saddr} ip daddr {daddr} {policy}'
          
     ##cas outbound
    elif type_rule=='outbound' :
       if protocol.upper() != "ALL":
-         rule='oifname "{}" ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(ifname,daddr,saddr,protocol,sport,protocol,dport,policy)
+         rule = f'ip daddr {daddr} ip saddr {saddr} {protocol} sport {sport} {protocol} dport {dport} {policy}'
       else:
-         rule='oifname "{}" ip daddr {} ip saddr {} {}'.format(ifname,daddr,saddr,policy)
+         rule = f'ip daddr {daddr} ip saddr {saddr} {policy}'
          
    #####cas saddr is None
    if saddr is None:
@@ -113,7 +113,7 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
       rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
    ############ 
    if sport is None and dport is None and not protocol.startswith("icmp type") and protocol.upper()!="ALL" :
-      rule=rule[:rule.find(policy)]+"ip protocol {} ".format(protocol)+rule[rule.find(policy):]
+      rule=rule[:rule.find(policy)]+" ip protocol {} ".format(protocol)+rule[rule.find(policy):]
    return rule
 
 
@@ -139,7 +139,7 @@ def add_rule_remote(rule,ifname,type_rule):
       for cmd in commandes:
          _,error=run_command(cmd)
          if error!='': 
-            print({"cmd":cmd,"error":error})
+            # print({"cmd":cmd,"error":error})
             return error
       return True
 
@@ -171,7 +171,7 @@ def get_handle_rule(ifname,type_rule,rule):
    ##executer cette commande
    output,_=run_command(cmd)
    output = output.split('#')
-   print(cmd,output)
+   # print(cmd,output)
    if len(output)<2:
       return None
    else:
@@ -236,6 +236,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
       prefix="___nftables_logs_rule___"+"_".join(rule.split(" "))+"___"
       prefix=prefix.replace('"', '')
       prefix=prefix.replace('-', '')
+      prefix=prefix.replace("reject_with_icmp_portunreachable","reject")
       if rule.find("reject with icmp port-unreachable")==-1:
          rule_mod=" ".join(rule.split(" ")[:-1])
          policy=rule.split(" ")[-1]
@@ -306,6 +307,8 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          prefix="___nftables_logs_rule___"+"_".join(ruleupdate.split(" "))+"___"
          prefix=prefix.replace('"', '')
          prefix=prefix.replace('-', '')
+         prefix=prefix.replace("reject_with_icmp_portunreachable","reject")
+         
          if ruleupdate.find("reject with icmp port-unreachable")==-1:
             rule_mod=" ".join(ruleupdate.split(" ")[:-1])
             policy=ruleupdate.split(" ")[-1]

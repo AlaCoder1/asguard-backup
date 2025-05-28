@@ -172,7 +172,7 @@ export default {
           } else {
             state.snackbar = true;
             state.color = "red";
-            // state.textAlert = i.response.data.error;
+            state.textAlert = i.response.data.error;
           }
         });
     }

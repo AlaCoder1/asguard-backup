@@ -367,7 +367,7 @@ export default {
         if (state.gateway?.id === 0) {
           gateway = {
             gateway_address: state.gatewayAddress,
-            interface: state.interface.id,
+            interface: state.interface ? state.interface.id : null,
             metric: state.metric,
           };
         } else {
@@ -469,14 +469,18 @@ export default {
       return t("champs.champNumberMax");
     });
 
+    const formatMustBeLikeAdresse = computed(() => {
+      return t("errors.formatMustTwo");
+    });
+
     const rules = computed(() => {
       return {
         network: {
           required: helpers.withMessage(error, required),
           isValidlNetwork: helpers.withMessage(
-            addressForma,
+            formatMustBeLikeAdresse,
             helpers.regex(
-              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+              /^((25[0-5]|2[0-4][0-9]|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4][0-9]|1\d{2}|[1-9]?\d)(\/([1-9]|[12][0-9]|3[0-2]))?$/
             )
           ),
         },

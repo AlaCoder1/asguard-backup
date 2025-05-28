@@ -20,6 +20,7 @@ from utils.utils_address import fix_ipv4_address
 # Constants
 CONSTANT_ONE_TO_ONE_NAT_RULE = _("OneToOneNat rule")
 CONSTANT_ONE_TO_ONE_NAT_RULE_POSITION = _("OneToOneNat rule position")
+CONSTANT_INTERFACE = _("interface")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -43,7 +44,7 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_all_one_to_one_nat(request):
+def get_all_one_to_one_nat(_):
     """Getting all one_to_one_nat from database"""
     list_one_to_one_nat = []
     list_one_to_one_nat = get_list_all_one_to_one_nat()
@@ -55,7 +56,7 @@ def get_all_one_to_one_nat(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_one_to_one_nat(request, id):
+def get_one_to_one_nat(_, id):
     """Getting one_to_one_nat by id from database"""
     one_to_one_nat = get_one_one_to_one_nat(id)
     return JsonResponse(one_to_one_nat, safe=False)
@@ -65,7 +66,7 @@ def get_one_to_one_nat(request, id):
     'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE A OneToOneNat RULE", 
     request_body=Schema(
-        type=TYPE_OBJECT, required=['interface', 'source_address', 'translation_address', 'destination_address'],
+        type=TYPE_OBJECT, required=['source_address', 'translation_address', 'destination_address'],
         properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
                     'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
                     'destination_address': Schema(type=TYPE_STRING, example="51.51.51.0/24", description="format of address/mask or blank for Any"),
@@ -89,8 +90,9 @@ def create_one_to_one_nat(request):
 
         serializer_one_to_one_nat = OneToOneNatSerializer(data=data)
         if serializer_one_to_one_nat.is_valid():
-
-            interface_ifname = Interface.objects.get(id=data["interface"]).ifname
+            interface_ifname = None
+            if data["interface"]:
+                interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
             destination = input_create_one_to_one_nat(data["destination_address"])
 
@@ -116,6 +118,8 @@ def create_one_to_one_nat(request):
 
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ONE_TO_ONE_NAT_RULE}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'},
@@ -179,7 +183,9 @@ def update_one_to_one_nat(request, id):
         serializer_one_to_one_nat = OneToOneNatSerializer(one_to_one_nat, data=data)
         if serializer_one_to_one_nat.is_valid():
 
-            interface_ifname = Interface.objects.get(id=data["interface"]).ifname
+            interface_ifname = None
+            if data["interface"]:
+                interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
             destination = "any"
             if data["destination_address"] != "":
@@ -189,10 +195,11 @@ def update_one_to_one_nat(request, id):
             if one_to_one_nat.rule_status:
                 # Get the rule handle of the next rule (by position)
                 next_postrouting_handle = get_next_nat_handle(one_to_one_nat)
-                rule_number = update_one_to_one_nat_rule_in_system(
+                rule_number, rule_content = update_one_to_one_nat_rule_in_system(
                     interface_ifname, data["source_address"], destination, data["translation_address"], 
                     one_to_one_nat.rule_number, next_postrouting_handle)
                 data["rule_number"] = int(rule_number)
+                data["rule_content"] = rule_content
 
                 serializer_one_to_one_nat = OneToOneNatSerializer(one_to_one_nat, data=data)
                 if serializer_one_to_one_nat.is_valid():
@@ -209,6 +216,10 @@ def update_one_to_one_nat(request, id):
 
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ONE_TO_ONE_NAT_RULE}"}, status=400)
+    except OneToOneNat.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},

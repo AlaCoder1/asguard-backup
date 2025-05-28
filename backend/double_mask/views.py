@@ -9,9 +9,13 @@ from drf_yasg import openapi
 from rest_framework.authentication import SessionAuthentication
 from django.http import JsonResponse
 from .functions import get_compr_ratio, get_nft_ip_addresses, is_address_in_subnet, run_command
+
+
 CONSTANT_DOUBLE=_("Double Mask")
 SUCCESS_MESSAGES_ACTIVE=_("is activated.")
 SUCCESS_MESSAGES_DEACTIVE=_("is deactivated.")
+
+
 @swagger_auto_schema(
     method='PUT',
     operation_summary="API to activate double mask.",
@@ -21,7 +25,6 @@ SUCCESS_MESSAGES_DEACTIVE=_("is deactivated.")
         400: "An error occurred while activating Double Mask."
     }
 )
-
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def activate_double_mask(request):
@@ -41,17 +44,10 @@ def activate_double_mask(request):
             if double_mask_ser.is_valid():
                
                 double_mask_ser.save()
-                message=f"{CONSTANT_DOUBLE} {SUCCESS_MESSAGES_ACTIVE}"
-                status=200
-            else:
-                message=str(next(iter(double_mask_ser.errors.values()))[0]).strip('.')+"!"
-                status=400
-        else:
-            message=_("An error occurred while activating Double Mask.")
-            status=400
-        
-        
-    return JsonResponse({"msg": message},status=status)
+                return JsonResponse({"msg": f"{CONSTANT_DOUBLE} {SUCCESS_MESSAGES_ACTIVE}"}, status=200)
+            return JsonResponse({"error": str(next(iter(double_mask_ser.errors.values()))[0]).strip('.')+"!"}, status=400)
+        return JsonResponse({"error": _("An error occurred while activating Double Mask.")}, status=400)
+
 
 @swagger_auto_schema(
     method='PUT', 
@@ -92,6 +88,7 @@ def deactivate_double_mask(request):
             status=400
     return JsonResponse({"msg": message},status=status)
 
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_double_mask(request):
@@ -121,10 +118,3 @@ def get_double_mask(request):
             double_mask_object=DoubleMask(active=active)
             double_mask_object.save()
     return JsonResponse({"msg": {"active":active,"ratio":ratio,"n_actuel":n_comp,"n_init":n}},status=200)
-    
-    
-
-                    
-            
-            
-        

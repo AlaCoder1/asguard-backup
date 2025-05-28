@@ -17,16 +17,14 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    :label="`${$t('nat.interface')} *`"
+                    :label="`${$t('nat.interface')}`"
                     :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
+                    clearable
                     :items="state.mapedInterface"
                     return-object
                   ></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.interface.$error">
-                    {{ v$.interface.$errors[0].$message }}
-                  </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
@@ -722,8 +720,8 @@ export default {
       const result = await v$.value.$validate();
       if (result) {
         let payload = {
-          interface: state.interface.id,
-          tcp_ip: state.tcpIpVersion?.slug ?? "",
+          interface: state.interface ? state.interface.id : null,
+          tcp_ip: state.tcpIpVersion ? state.tcpIpVersion?.slug : "",
           protocol: state.protocol?.slug ?? "",
 
           source_address: state.sourceAddress
@@ -837,9 +835,28 @@ export default {
       return t("errors.ChampIncludeOnlyNumbers");
     });
 
+    const isValidSpecificSourceTo = helpers.withMessage(
+      "Entrez un nombre ou une plage valide (ex: 100-200)",
+      helpers.withParams({ type: "isValidSpecificSourceTo" }, (value) => {
+        if (!value) return true;
+
+        const match = value.match(/^([1-9]\d*)(?:-([1-9]\d*))?$/);
+        if (!match) return false;
+
+        const start = parseInt(match[1], 10);
+        const end = match[2] ? parseInt(match[2], 10) : null;
+
+        if (end !== null) {
+          return start < end;
+        }
+
+        return true;
+      })
+    );
+
     const rules = computed(() => {
       return {
-        interface: { required: helpers.withMessage(error, required) },
+        // interface: { required: helpers.withMessage(error, required) },
 
         sourceAddress: {
           isValidSourceAddress: helpers.withMessage(
@@ -946,16 +963,24 @@ export default {
         },
 
         specificPort: {
-          isValidSpecificSourceTo: helpers.withMessage(
-            onlynumbers,
-
-            helpers.regex(/^[0-9]+$/)
-          ),
+          isValidSpecificSourceTo,
           requiredIfFuction: helpers.withMessage(
             error,
             requiredIf(() => state.port.slug === "other")
           ),
         },
+
+        // specificPort: {
+        //   isValidSpecificSourceTo: helpers.withMessage(
+        //     onlynumbers,
+
+        //     helpers.regex(/^([1-9]\d*)(-([1-9]\d*))?$/)
+        //   ),
+        //   requiredIfFuction: helpers.withMessage(
+        //     error,
+        //     requiredIf(() => state.port.slug === "other")
+        //   ),
+        // },
       };
     });
 

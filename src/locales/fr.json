@@ -76,6 +76,7 @@
     "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces ou le mot 'test'",
     "formatMustBeLikeAdresseIP": "Format doit correspondre à l'adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format doit correspondre à l'adresse : X.X.X.X/XX",
+    "formatMustTwo": "Format doit correspondre à l'adresse : X.X.X.X ou X.X.X.X/XX",
     "subnetNotAccepted": "Le masque de sous-réseau 32 n'est pas accepté. Le format doit être le suivant : X.X.X.X/XX",
     "minimumOneRange": "Minimum Une Plage",
     "Formatdomain": "Le format doit être comme exemple.com",

@@ -25,24 +25,29 @@ from rest_framework import status
 from backend.waf.models import RulesWaf
 from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
 from django.core.exceptions import ObjectDoesNotExist
-import re
+
+from utils.utils_email import is_valid_email
+
+
 # Constants
 CONSTANT_USER = _("User")
 CONSTANT_ROLE = _("Role")
+CONSTANT_AD_SERVER= _("AD Server")
+CONSTANT_GROUP= _("Group")
 CONSTANT_FUNCTIONALITY = _("functionality")
 CONSTANT_USERNAME = _("username")
 CONSTANT_PASSWORD = _("password")
+CONSTANT_EMAIL_FORMAT = _("email format")
 CONSTANT_PERMISSION = _("permission")
 CONSTANT_GROUPNAME = _("groupname")
-CONSTANT_ROLE = _("role")
 CONSTANT_DIRECTORY_SERVER = _("directory server")
+CONSTANT_DATA = _("data")
+CONSTANT_TYPE = _("Type")
 CONSTANT_METHOD_ADD_USER_EMAIL_SERVER = _("with their email in directory server")
 CONSTANT_METHOD_ADD_USER_EMAIL_SYSTEM = _("with simple System email")
 CONSTANT_OR = _("or")
 CONSTANT_AND = _("and")
 CONSTANT_LANGUAGE = _('Language')
-CONSTANT_LDAP_UNREACHABLE=_("Directory Server unreachable")
-CONSTANT_DELETE_ROLE=_("You can't delete this role. It is used by other users")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -53,25 +58,11 @@ ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_EXISTANT = _("already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
-ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
 ERROR_MESSAGES_CONNECTION = _("System error in connecting to directory server")
-INVALID_METHOD = _("Invalid method")
-INVALID_EMAIL_FORMAT = _("Invalid email format")
-USER_WITH_ID= _('User with id')
-ROLE_WITH_ID= _('Role with id')
-AD_SERVER_WITH_ID= _('AD Server with id')
-DOES_NOT_EXIST = _("does not exist")
 ERROR_MESSAGES_INVALID = _("Invalid")
-TYPE = _("Type")
-NOT_FOUND = _("not found")
-GROUP_WITH_ID= _('Group with id')
-GROUP_NOT_MATCHING = _('No group found matching the username')
-ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
-
-def is_valid_email(email):
-    # Simple regex for validating an email
-    email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-    return re.match(email_regex, email) is not None
+ERROR_MESSAGES_LDAP_UNREACHABLE = _("Directory Server unreachable")
+ERROR_MESSAGES_DELETE_ROLE = _("You can't delete this role. It is used by other users")
+ERROR_MESSAGES_GROUP_NOT_MATCHING = _('No group found matching the username')
 
 
 @swagger_auto_schema('GET', responses={200: 'List of all users', 400: 'Bad Request'}, 
@@ -115,20 +106,17 @@ def get_all_users(request):
     """
     """Get all users from database"""
     list_users = []
-    if (request.method == 'GET'):
-        users = User.objects.all()
-        user_dict = serializers.serialize("json", users)
-        res = json.loads(user_dict)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            user_id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields'].pop('password')
-            res[i]['fields']['id'] = user_id
-            list_users.append(res[i]['fields'])
-        return JsonResponse(list_users, safe=False,status=200)
-    else:
-        return JsonResponse({"msg": INVALID_METHOD}, status=400)
+    users = User.objects.all()
+    user_dict = serializers.serialize("json", users)
+    res = json.loads(user_dict)
+    for i in range(0, len(res)):
+        res[i].pop('model')
+        user_id = res[i]['pk']
+        res[i].pop('pk')
+        res[i]['fields'].pop('password')
+        res[i]['fields']['id'] = user_id
+        list_users.append(res[i]['fields'])
+    return JsonResponse(list_users, safe=False,status=200)
     
 @swagger_auto_schema('GET', responses={200: 'List of all roles', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF roles",
@@ -169,20 +157,19 @@ def get_all_roles(request):
         - The `pk` and `model` fields are explicitly removed as they are not needed in the response.
     """
     list_roles = []
-    if (request.method == 'GET'):
-        roles = Roles.objects.all()
-        role_dict = serializers.serialize("json", roles)
-        res = json.loads(role_dict)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            role_id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = role_id
-            list_roles.append(res[i]['fields'])
-        
-        return JsonResponse({"list_roles":list_roles},status=200)
-    else:
-        return JsonResponse({"msg": INVALID_METHOD}, status=400)
+    roles = Roles.objects.all()
+    role_dict = serializers.serialize("json", roles)
+    res = json.loads(role_dict)
+    for i in range(0, len(res)):
+        res[i].pop('model')
+        role_id = res[i]['pk']
+        res[i].pop('pk')
+        res[i]['fields']['id'] = role_id
+        list_roles.append(res[i]['fields'])
+    
+    return JsonResponse({"list_roles":list_roles},status=200)
+
+
 @swagger_auto_schema(
     method='post',
     operation_summary="Create Role API",
@@ -238,41 +225,38 @@ def create_role(request):
         - `CONSTANT_ROLE`: A constant representing the role in the success message.
         - `SUCCESS_MESSAGES_CREATING`: A constant for the success message.
     """
-    if (request.method == 'POST'):
-        data = request.data
-        data['name'] = data['name'].strip().lower()
-        if type(data['fonctionalities']) != str:
-            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {TYPE}"}, status=400)
+    data = request.data
+    data['name'] = data['name'].strip().lower()
+    if type(data['fonctionalities']) is not str:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_TYPE}"}, status=400)
 
-        # List of valid functionalities
-        valid_functionalities = ["ipsec", "openvpn", "suricata", "proxy", "sdwan", "waf", "ztna"]
+    # List of valid functionalities
+    valid_functionalities = ["ipsec", "openvpn", "suricata", "proxy", "sdwan", "waf", "ztna"]
 
-        # Get the string with single quotes
-        fonctionalities_str = data.get('fonctionalities', '').strip()
+    # Get the string with single quotes
+    fonctionalities_str = data.get('fonctionalities', '').strip()
 
-        # Replace single quotes with double quotes for JSON format
-        fonctionalities_str = fonctionalities_str.replace("'", '"')
+    # Replace single quotes with double quotes for JSON format
+    fonctionalities_str = fonctionalities_str.replace("'", '"')
 
-        # Parse the string to a list
-        fonctionalities_list = json.loads(fonctionalities_str)
+    # Parse the string to a list
+    fonctionalities_list = json.loads(fonctionalities_str)
 
-        # Capitalize the first character of each functionality
-        fonctionalities_list = [f.strip().capitalize() for f in fonctionalities_list]
+    # Capitalize the first character of each functionality
+    fonctionalities_list = [f.strip().capitalize() for f in fonctionalities_list]
 
-        # Check if any element in the list is a valid functionality
-        if not any(f.lower() in valid_functionalities for f in fonctionalities_list):
-            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_FUNCTIONALITY}"}, status=400)
+    # Check if any element in the list is a valid functionality
+    if not any(f.lower() in valid_functionalities for f in fonctionalities_list):
+        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_FUNCTIONALITY}"}, status=400)
 
-        # Update the data with the capitalized functionality list
-        data['fonctionalities'] = str(fonctionalities_list)
-        serializer = RoleSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_CREATING}"}, status=200) 
-        else:
-            return JsonResponse({'errors': serializer.errors}, status=400) 
-    else:
-        return JsonResponse({"msg": INVALID_METHOD}, status=400)
+    # Update the data with the capitalized functionality list
+    data['fonctionalities'] = str(fonctionalities_list)
+    serializer = RoleSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_CREATING}"}, status=200) 
+    return JsonResponse({'errors': serializer.errors}, status=400)
+
 
 @swagger_auto_schema(
     method='put',
@@ -329,47 +313,44 @@ def modify_role(request,id):
         - `CONSTANT_ROLE`: A constant representing the role in the success message.
         - `SUCCESS_MESSAGES_UPDATING`: A constant for the success message.
     """
-    if (request.method == 'PUT'):
-        try:
-            role = Roles.objects.get(id=id)
-        except ObjectDoesNotExist:
-            return JsonResponse({"error": f"{ROLE_WITH_ID} {id} {DOES_NOT_EXIST}"},status=400)
-        except ValueError:
-            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
-        
-        data = request.data
-        if type(data['fonctionalities']) != str:
-            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {TYPE}"}, status=400)
+    try:
+        role = Roles.objects.get(id=id)
+    except Roles.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_ROLE} {ERROR_MESSAGES_INEXISTANT}"},status=400)
+    
+    data = request.data
+    if type(data['fonctionalities']) is not str:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_TYPE}"}, status=400)
 
-        # List of valid functionalities
-        valid_functionalities = ["ipsec", "openvpn", "suricata", "proxy", "sdwan", "waf", "ztna"]
+    # List of valid functionalities
+    valid_functionalities = ["ipsec", "openvpn", "suricata", "proxy", "sdwan", "waf", "ztna"]
 
-        # Get the string with single quotes
-        fonctionalities_str = data.get('fonctionalities', '').strip()
+    # Get the string with single quotes
+    fonctionalities_str = data.get('fonctionalities', '').strip()
 
-        # Replace single quotes with double quotes for JSON format
-        fonctionalities_str = fonctionalities_str.replace("'", '"')
+    # Replace single quotes with double quotes for JSON format
+    fonctionalities_str = fonctionalities_str.replace("'", '"')
 
-        # Parse the string to a list
-        fonctionalities_list = json.loads(fonctionalities_str)
+    # Parse the string to a list
+    fonctionalities_list = json.loads(fonctionalities_str)
 
-        # Capitalize the first character of each functionality
-        fonctionalities_list = [f.strip().capitalize() for f in fonctionalities_list]
+    # Capitalize the first character of each functionality
+    fonctionalities_list = [f.strip().capitalize() for f in fonctionalities_list]
 
-        # Check if every element in the list is a valid functionality
-        if not all(f.lower() in valid_functionalities for f in fonctionalities_list):
-            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_FUNCTIONALITY}"}, status=400)
+    # Check if every element in the list is a valid functionality
+    if not all(f.lower() in valid_functionalities for f in fonctionalities_list):
+        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_FUNCTIONALITY}"}, status=400)
 
-        # Update the data with the capitalized functionality list
-        data['fonctionalities'] = str(fonctionalities_list)
-        serializer = RoleSerializer(role,data=data)
-        if serializer.is_valid():
-            serializer.save()
-        else:
-            return JsonResponse({'msg': serializer.errors}, status=400) 
-        return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_UPDATING}"}, status=200) 
-    else:
-        return JsonResponse({"msg": INVALID_METHOD}, status=400)
+    # Update the data with the capitalized functionality list
+    data['fonctionalities'] = str(fonctionalities_list)
+    serializer = RoleSerializer(role, data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({'msg': serializer.errors}, status=400) 
+    
+
+
 @swagger_auto_schema(
     method='delete',
     operation_description="Delete an existing role from the database.",
@@ -415,14 +396,14 @@ def delete_role(request, id):
     """
     try:
         role = Roles.objects.get(id=id)
-    except ObjectDoesNotExist:
-        return JsonResponse({"error": f"{ROLE_WITH_ID} {id} {DOES_NOT_EXIST}"},status=400)
+    except Roles.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_ROLE} {ERROR_MESSAGES_INEXISTANT}"},status=400)
     
     # Check if any users are linked to this role
     users_with_role = User.objects.filter(role=role)
     if users_with_role.exists():
         # If the role is in use, return an error message with the usernames
-        return JsonResponse({"error": f"{CONSTANT_DELETE_ROLE}"}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETE_ROLE}"}, status=400)
     
     # If no users are using the role, proceed with deletion
     role.delete()
@@ -469,27 +450,23 @@ def get_user(request, id):
         - `Profile`: The model representing user profiles.
         - `serializers.serialize`: A method used to serialize model instances into JSON format.
     """
-    if (request.method == 'GET'):
-        try:
-            user = User.objects.filter(id=id)
-            if not user.exists():
-                return JsonResponse({"error": f"{USER_WITH_ID} {id} {DOES_NOT_EXIST}"}, status=400)
-        except ValueError:
-            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"}, status=400)
-        user_dict = serializers.serialize("json", user)
-        res_user = json.loads(user_dict)
-        res_user[0]['fields']['id'] = res_user[0]['pk']
-        user_json = res_user[0]['fields']
-        
-        profile=Profile.objects.filter(user_id=id)
-        profile_user=serializers.serialize("json", profile)
-        res_profile = json.loads(profile_user)
-        res_profile[0]['fields']['id'] = res_profile[0]['pk']
-        profile_json = res_profile[0]['fields']
-        user_json['profile']=profile_json
-        return JsonResponse(user_json,status=200)
-    else:
-        return JsonResponse({"msg": INVALID_METHOD}, status=400)
+    try:
+        user = User.objects.filter(id=id)
+    except User.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    user_dict = serializers.serialize("json", user)
+    res_user = json.loads(user_dict)
+    res_user[0]['fields']['id'] = res_user[0]['pk']
+    user_json = res_user[0]['fields']
+    
+    profile=Profile.objects.filter(user_id=id)
+    profile_user=serializers.serialize("json", profile)
+    res_profile = json.loads(profile_user)
+    res_profile[0]['fields']['id'] = res_profile[0]['pk']
+    profile_json = res_profile[0]['fields']
+    user_json['profile']=profile_json
+    return JsonResponse(user_json,status=200)
+
 
 @swagger_auto_schema(
     method='post',
@@ -568,7 +545,7 @@ def create_user(request):
         password = data['password']
         email = data['email']
         if not is_valid_email(email):
-            return JsonResponse({"error": f"{INVALID_EMAIL_FORMAT}"}, status=400) 
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_EMAIL_FORMAT}"}, status=400) 
         organisation = Organization.objects.get(id=1)
         data['organisation'] = organisation.id
         email = data['email']
@@ -577,10 +554,8 @@ def create_user(request):
             id_server = data['id_server']
             try:
                 ad_server = ADServer.objects.get(id=id_server)
-            except ObjectDoesNotExist:
-                return JsonResponse({"error": f"{AD_SERVER_WITH_ID} {id_server} {DOES_NOT_EXIST}"},status=400)
-            except ValueError:
-                return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id_server}"},status=400)
+            except ADServer.DoesNotExist:
+                return JsonResponse({"error": f"{CONSTANT_AD_SERVER} {ERROR_MESSAGES_INEXISTANT}"},status=400)
             if ad_server:
                 try:
                     is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
@@ -612,10 +587,10 @@ def create_user(request):
                             return JsonResponse({'msg': f"{email} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
                         ldap_conn.unbind()
                     else:
-                        return JsonResponse({'msg': ERROR_MESSAGES_INVALID_PASSWORD}, status=400)   
+                        return JsonResponse({'msg': f"{ERROR_MESSAGES_INVALID} {CONSTANT_PASSWORD}"}, status=400)   
                     
                 except ldap.SERVER_DOWN:
-                    return JsonResponse({'msg': f"{CONSTANT_LDAP_UNREACHABLE}"}, status=400)
+                    return JsonResponse({'msg': f"{ERROR_MESSAGES_LDAP_UNREACHABLE}"}, status=400)
                 except ldap.LDAPError:
                     return JsonResponse({'msg': f"{ERROR_MESSAGES_CONNECTION}"}, status=400)
             else:
@@ -627,13 +602,12 @@ def create_user(request):
             data['id_server']= None
             if valid_input(username) and valid_password(password):
                 # Execute the command on the remote machine
-                error_useradd, stdout_password, stderr_password  = add_user(username, password)
+                error_useradd, _, _  = add_user(username, password)
                 # Convert the stderr stream to a string
                 if error_useradd == '':
                     # add_mail_spool(username)
                     if email_founded:
                         msg = f"{username} {SUCCESS_MESSAGES_CREATING} {CONSTANT_METHOD_ADD_USER_EMAIL_SERVER}"
-                        # data['id_server_id']= ad_server.id
                     else:
                         msg = f"{username} {SUCCESS_MESSAGES_CREATING} {CONSTANT_METHOD_ADD_USER_EMAIL_SYSTEM}"
                     uid = get_uid_user()
@@ -642,14 +616,12 @@ def create_user(request):
                     # data['role_id'] = 
                     if 'group' in data:
                         groups = data['group']
-                        for i in range(0, len(groups)):
+                        for group in groups:
                             try:
-                                group = Group.objects.get(id=groups[i])
-                            except ObjectDoesNotExist:
-                                return JsonResponse({"error": f"{GROUP_WITH_ID} {i} {DOES_NOT_EXIST}"},status=400)
-                            except ValueError:
-                                return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {i}"},status=400)
-                            add_user_group(getGroupNameById(groups[i]), username)
+                                Group.objects.get(id=group)
+                            except Group.DoesNotExist:
+                                return JsonResponse({"error": f"{CONSTANT_GROUP} {ERROR_MESSAGES_INEXISTANT}"},status=400)
+                            add_user_group(getGroupNameById(group), username)
                         serializer_user = UserSerializerPost(data=data)
                         gid = getUidGroup()
                         groupname = {"groupname": username}
@@ -699,7 +671,7 @@ def create_user(request):
                 else:
                     return JsonResponse({"msg": f"{ERROR_MESSAGES_CREATING} {CONSTANT_USER}"}, status=400)
             else:
-                return JsonResponse({"msg": ERROR_MESSAGES_INVALID_PASSWORD}, status=201)
+                return JsonResponse({"msg": f"{ERROR_MESSAGES_INVALID} {CONSTANT_PASSWORD}"}, status=400)
 
 
 @swagger_auto_schema(
@@ -752,11 +724,11 @@ def delete_user(request, id):
     try:
         user = User.objects.get(id=id)
     except User.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_USER} {NOT_FOUND}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
         # raise ValidationError(f"{CONSTANT_USER} {NOT_FOUND}")
 
     if not Group.objects.filter(groupname=user.username).exists():
-        return JsonResponse({"error": f"{GROUP_NOT_MATCHING} '{user.username}"}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_GROUP_NOT_MATCHING} '{user.username}"}, status=400)
         # raise ValidationError(f"{GROUP_NOT_MATCHING} '{user.username}'.")
     else:
         group = Group.objects.filter(groupname=user.username)
@@ -847,118 +819,116 @@ def modify_user(request, id):
         - Success: {"data": {...}, "msg": "User successfully updated."}
         - Failure: {"msg": "Error updating username."}
     """
-    if (request.method == 'PUT'):
-        if not User.objects.filter(id=id).exists():
-            return JsonResponse({'error': f"{CONSTANT_USER} {NOT_FOUND}"}, status=400)
-            # raise ValidationError(f"{CONSTANT_USER} {NOT_FOUND}")
-        user_by_id = User.objects.filter(id=id)
-        user_dict = serializers.serialize("json", user_by_id)
-        res = json.loads(user_dict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields'].pop('password')
-        res[0]['fields']['id'] = id
-        user_json = res[0]['fields']
-        oldusername = user_json['username']
-        data = request.data
-        newusername = data['username']
-        newfullname = data['fullname']
-        if not Roles.objects.filter(id=data['role']).exists():
-            return JsonResponse({'error': f"{CONSTANT_ROLE} {NOT_FOUND}"}, status=400)
-        if not is_valid_email(data['email']):
-            return JsonResponse({"error": f"{INVALID_EMAIL_FORMAT}"}, status=400) 
-        data['dn_user'] = None
-        email_founded=False
-        if data['password_ad'] != "":
-            id_server = data['id_server']
-            ad_server = ADServer.objects.get(id=id_server)
-            try:
-                is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
-                if is_password_matched:
-                    ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
-                    ldap_conn = ldap.initialize(ldap_uri)
-                    ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
-                    result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
-                         # get the list of users email from AD server 
-                    user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
-                         # get the list of users email from openldap server 
-                    user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
+    try:
+        User.objects.get(id=id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    user_by_id = User.objects.filter(id=id)
+    user_dict = serializers.serialize("json", user_by_id)
+    res = json.loads(user_dict)
+    res[0].pop('model')
+    id = res[0]['pk']
+    res[0].pop('pk')
+    res[0]['fields'].pop('password')
+    res[0]['fields']['id'] = id
+    user_json = res[0]['fields']
+    oldusername = user_json['username']
+    data = request.data
+    newusername = data['username']
+    newfullname = data['fullname']
+    try:
+        Roles.objects.get(id=data["role"])
+    except Roles.DoesNotExist:
+        return JsonResponse({'error': f"{CONSTANT_ROLE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    if not is_valid_email(data['email']):
+        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_EMAIL_FORMAT}"}, status=400) 
+    data['dn_user'] = None
+    email_founded=False
+    if data['password_ad'] != "":
+        id_server = data['id_server']
+        ad_server = ADServer.objects.get(id=id_server)
+        try:
+            is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
+            if is_password_matched:
+                ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
+                ldap_conn = ldap.initialize(ldap_uri)
+                ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
+                result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
+                        # get the list of users email from AD server 
+                user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
+                        # get the list of users email from openldap server 
+                user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
 
-                    if data['email'].lower() in [user.lower() for user in user_principal_names]:
-                        newmail = data['email']
-                        email_founded=True
+                if data['email'].lower() in [user.lower() for user in user_principal_names]:
+                    newmail = data['email']
+                    email_founded=True
 
-                    if data['email'].lower() in [user.lower() for user in user_emails]:
-                        newmail = data['email']
-                        email_founded=True
-                        for entry in result:
-                                entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
-                                if data['email'].lower() == entry_email:
-                                    data['dn_user'] = entry[0]
-                                    break   
-                    if not email_founded:
-                            return JsonResponse({'msg': f"Email {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-                    ldap_conn.unbind()
-                else:
-                    return JsonResponse({'msg': ERROR_MESSAGES_INVALID_PASSWORD}, status=400)    
-            except ldap.SERVER_DOWN:
-                # LDAP authentication failed
-                return JsonResponse({'msg':f"{CONSTANT_LDAP_UNREACHABLE}"}, status=400)        
-            except ldap.LDAPError:
-                return JsonResponse({'msg':f"{ERROR_MESSAGES_CONNECTION}"}, status=400)  
-            
-        if User.objects.filter(email=data['email']).exclude(id=id).exists():
-            return JsonResponse({"msg": f"Email {ERROR_MESSAGES_EXISTANT}"}, status=400)    
-        newmail = data['email']
-        newrole = data['role']
-        user_object = User.objects.get(id=id)
-        user = user_object.__dict__
-        user['group'] = user_json['group']
-        if valid_input(newusername):
-            if username_exists(newusername) and newusername != oldusername:
-                msg = f"{CONSTANT_USERNAME} {CONSTANT_OR} {CONSTANT_PASSWORD} {ERROR_MESSAGES_EXISTANT}"
-                return JsonResponse({"msg": msg})
-
-            user_object.username = newusername
-            change_username(newusername, oldusername)
-            change_directory_name(oldusername, newusername)
-            if check_same_groupname_with_username(oldusername):
-                change_groupname_username(oldusername, newusername)
-            msg = f"{CONSTANT_USER} {SUCCESS_MESSAGES_UPDATING}"
-            user_object.fullname = newfullname
-            user_object.email = newmail
-            user_object.role_id = newrole
-            user_object.dn_user=data['dn_user']
-            if email_founded:
-                user_object.id_server=ad_server
+                if data['email'].lower() in [user.lower() for user in user_emails]:
+                    newmail = data['email']
+                    email_founded=True
+                    for entry in result:
+                            entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
+                            if data['email'].lower() == entry_email:
+                                data['dn_user'] = entry[0]
+                                break   
+                if not email_founded:
+                        return JsonResponse({'msg': f"Email {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+                ldap_conn.unbind()
             else:
-                user_object.id_server=None
-            if 'group' in data:
-                groups = data['group']
-                user_json['group'] = groups
-                test_by_group = Group.objects.filter(user__id=id)
-                test_by_group_dict = serializers.serialize("json", test_by_group)
-                restest_by_group = json.loads(test_by_group_dict)
-                for k in restest_by_group:
-                    delete_user_group(k['fields']['groupname'], newusername)
-                for m in data['group']:
-                    try:
-                        gg = Group.objects.get(id=m)
-                    except ObjectDoesNotExist:
-                        return JsonResponse({"error": f"{GROUP_WITH_ID} {m} {DOES_NOT_EXIST}"},status=400)
-                    except ValueError:
-                        return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {m}"},status=400)
-                    # gg = Group.objects.get(id=m)
-                    add_user_group(gg.groupname, newusername)
-                user_object.group.set(user_json['group'])
-            user_object.save()
-        else:
-            msg = f"{ERROR_MESSAGES_UPDATING} {CONSTANT_USERNAME}"
+                return JsonResponse({'msg': f"{ERROR_MESSAGES_INVALID} {CONSTANT_PASSWORD}"}, status=400)    
+        except ldap.SERVER_DOWN:
+            # LDAP authentication failed
+            return JsonResponse({'msg':f"{ERROR_MESSAGES_LDAP_UNREACHABLE}"}, status=400)        
+        except ldap.LDAPError:
+            return JsonResponse({'msg':f"{ERROR_MESSAGES_CONNECTION}"}, status=400)  
         
-        return JsonResponse({"data": data, "msg": msg})
+    if User.objects.filter(email=data['email']).exclude(id=id).exists():
+        return JsonResponse({"msg": f"Email {ERROR_MESSAGES_EXISTANT}"}, status=400)    
+    newmail = data['email']
+    newrole = data['role']
+    user_object = User.objects.get(id=id)
+    user = user_object.__dict__
+    user['group'] = user_json['group']
+    if valid_input(newusername):
+        if username_exists(newusername) and newusername != oldusername:
+            msg = f"{CONSTANT_USERNAME} {CONSTANT_OR} {CONSTANT_PASSWORD} {ERROR_MESSAGES_EXISTANT}"
+            return JsonResponse({"msg": msg})
+
+        user_object.username = newusername
+        change_username(newusername, oldusername)
+        change_directory_name(oldusername, newusername)
+        if check_same_groupname_with_username(oldusername):
+            change_groupname_username(oldusername, newusername)
+        msg = f"{CONSTANT_USER} {SUCCESS_MESSAGES_UPDATING}"
+        user_object.fullname = newfullname
+        user_object.email = newmail
+        user_object.role_id = newrole
+        user_object.dn_user=data['dn_user']
+        if email_founded:
+            user_object.id_server=ad_server
+        else:
+            user_object.id_server=None
+        if 'group' in data:
+            groups = data['group']
+            user_json['group'] = groups
+            test_by_group = Group.objects.filter(user__id=id)
+            test_by_group_dict = serializers.serialize("json", test_by_group)
+            restest_by_group = json.loads(test_by_group_dict)
+            for k in restest_by_group:
+                delete_user_group(k['fields']['groupname'], newusername)
+            for m in data['group']:
+                try:
+                    gg = Group.objects.get(id=m)
+                except Group.DoesNotExist:
+                    return JsonResponse({"error": f"{CONSTANT_GROUP} {ERROR_MESSAGES_INEXISTANT}"},status=400)
+                add_user_group(gg.groupname, newusername)
+            user_object.group.set(user_json['group'])
+        user_object.save()
     else:
-        return JsonResponse({"erorr": INVALID_METHOD}, status=400)
+        msg = f"{ERROR_MESSAGES_UPDATING} {CONSTANT_USERNAME}"
+    
+    return JsonResponse({"data": data, "msg": msg})
+
 
 @swagger_auto_schema(
     method='put',
@@ -1315,7 +1285,7 @@ def change_language(request, id):
         data = request.data
         profile = Profile.objects.get(user=User.objects.get(id=id))
         if data.get("language", "") not in ["en", "fr"]:
-            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
+            return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_DATA}"}, status=400)
         serializer_profile = ProfileSerializer(profile, data=data, partial=True)
         if serializer_profile.is_valid():
             # Change language of rule waf description

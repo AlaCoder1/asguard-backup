@@ -177,6 +177,19 @@ def get_handle_rule(ifname,type_rule,rule):
    else:
       return output[1].strip().split("\n")[0]
 
+def update_rule_remote(ifname,type_rule,handle,ruleupdate):
+   """function to update rule"""
+   ##initialiser les commanndes pour supprimer une règle et l'entregistrer dans nftables.conf
+   commandes=[
+      f"sudo nft replace rule inet filter_{ifname} {type_rule} handle {handle} {ruleupdate} ",
+      f'sudo nft list table inet filter_{ifname} > /etc/rules/{ifname}/nftables.conf'
+   ]
+   ##executer ces commandes
+   for cmd in commandes:
+      _,error=run_command(cmd)
+      if error !="":
+         return error  
+   return True
 
 def delete_rule_remote(ifname,type_rule,handle):
    """function to delete rule"""
@@ -201,6 +214,12 @@ def get_protocol_number(protocol_name):
     except socket.error:
         return None  # Protocol name not found
 
+
+def get_position(type_rule):
+   positions = list(Rule.objects.filter(type_rule=type_rule).values_list('position', flat=True))
+   max_position = max(positions) if positions else 0
+   position=max_position+1
+   return position
      
 def calculate_subnet_address(addr_prefix):
    if addr_prefix is not None:

@@ -668,9 +668,9 @@ export default {
           document.getElementById("app").attributes["servers"].value;
         const validJsonString = serversAttribute;
         console.log('validJsonString',validJsonString)
-        // const parsedArray = JSON.parse(validJsonString);
-        // rowData.value = parsedArray;
-        console.log("rowData.value", rowData.value);
+        const parsedArray = JSON.parse(validJsonString);
+        rowData.value = parsedArray;
+        console.log("rowData.value**", rowData.value);
 
         const statusAttribute =
           document.getElementById("app").attributes["status"].value;

@@ -7,7 +7,7 @@
     "emailForLdapAuth": "Email for Ldap auth",
     "roleUser": "Role User",
     "assignToGroup": "Assign to Group",
-    "desactivateUser": "Desactivate User",
+    "desactivateUser": "Activate User",
     "goupname": "Group name",
     "description": "Description",
     "server": "Directory Server",

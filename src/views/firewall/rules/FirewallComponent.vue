@@ -109,6 +109,10 @@
         :pagination="true"
         :paginationPageSize="4"
         :localeText="paginationLocalization"
+        :rowDragManaged="true"
+        :rowDragEntireRow="true"
+        @row-drag-enter="onRowDragStart"
+        @row-drag-end="onRowDragEnd"
       >
         <!-- @column-row-group-changed="onColumnRowGroupChanged"
              @firstDataRendered="onFirstDataRendered"
@@ -464,7 +468,20 @@ export default defineComponent({
         cellRenderer: actionCellRenderer,
       },
     ]);
+    //
 
+    const onRowDragStart = (event) => {
+      console.log("onRowDragStart", event.overIndex);
+    };
+    const onRowDragEnd = (event) => {
+      console.log("id", event.node.data.id);
+      console.log("onRowDragEnd", event.overIndex);
+
+      setTimeout(() => {
+        console.log("rowData : ", rowData.value);
+      }, 1000);
+    };
+    //
     function formatedLineSport(data) {
       const rslt = data.data.sport ? data.data.sport : "--";
       let eGui = document.createElement("div");
@@ -1072,6 +1089,8 @@ export default defineComponent({
     // );
 
     return {
+      onRowDragStart,
+      onRowDragEnd,
       changes,
       openModalAdd,
       saveRules,

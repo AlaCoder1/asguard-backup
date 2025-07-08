@@ -30,7 +30,6 @@
             variant="outlined"
           ></v-textarea>
 
-         
           <v-select
             :items="protocolList"
             v-model="state.formData.protocol"
@@ -259,6 +258,7 @@ export default {
       "all",
     ]);
     const state = reactive({
+      itemsRows: [],
       showConfirmation: false,
       isAll: false,
       id: "",
@@ -272,6 +272,7 @@ export default {
         sport: "ALL",
         daddr: "ALL",
         dport: "ALL",
+        // position: null,
       },
       openModal: false,
       textAlert: "",
@@ -407,6 +408,7 @@ export default {
           state.formData.sport = "ALL";
           state.formData.daddr = "ALL";
           state.formData.dport = "ALL";
+          // state.formData.position = null;
         }
       }
     );
@@ -479,6 +481,10 @@ export default {
       emitter.on("interface-uuid", (uuid) => {
         state.interUuid = uuid;
       });
+      emitter.on("row-rules", (data) => {
+        console.log("data", data);
+        state.itemsRows = data;
+      });
     });
     const closeConfirm = () => {
       state.showConfirmation = false;
@@ -511,6 +517,7 @@ export default {
         state.formData.sport = data.sport;
         state.formData.daddr = data.daddr;
         state.formData.dport = data.dport;
+        // state.formData.position = data.position;
         state.editValue = data.uuid;
 
         (state.status = data.status), (state.type_rule = data.type_rule);
@@ -544,6 +551,10 @@ export default {
       const result = await v$.value.$validate();
 
       if (result) {
+        // const lastPosition =
+        //   state.itemsRows.length > 0
+        //     ? Math.max(...state.itemsRows.map((item) => item.position))
+        //     : 0;
         let payload = {};
         if (
           state.formData.protocol === "all" ||
@@ -562,6 +573,8 @@ export default {
             id: modalMode.value === "edit" ? state.id : "",
             interUuid: state.interUuid,
             status: modalMode.value === "create" ? "new" : "old",
+            // position:
+            //   modalMode.value === "edit" ? state.formData.position : lastPosition + 1,
           };
         } else {
           payload = {
@@ -577,6 +590,8 @@ export default {
             id: modalMode.value === "edit" ? state.id : "",
             interUuid: state.interUuid,
             status: modalMode.value === "create" ? "new" : "old",
+            // position:
+            //   modalMode.value === "edit" ? state.formData.position : lastPosition + 1,
           };
         }
         if (modalMode.value === "edit") {

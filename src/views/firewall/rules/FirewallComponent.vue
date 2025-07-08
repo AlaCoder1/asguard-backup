@@ -82,6 +82,17 @@
               $t("firewall.add")
             }}</span>
           </v-btn>
+
+          <v-btn
+            class="ml-3 mt-2"
+            @click="deleteSelectedRows"
+            v-if="hasSelection"
+          >
+            <i class="fas fa-trash" style="color: #086eae"></i>
+            <!-- <span class="ml-2" style="color: #086eae"
+              >Delete Selected rules</span
+            > -->
+          </v-btn>
         </v-col>
       </v-row>
       <v-alert
@@ -107,8 +118,17 @@
         :defaultColDef="defaultColDef"
         style="width: 100%"
         :pagination="true"
-        :paginationPageSize="4"
+        :paginationPageSize="10"
         :localeText="paginationLocalization"
+        :rowDragManaged="true"
+        :rowDragEntireRow="true"
+        animateRows
+        @row-drag-enter="onRowDragStart"
+        @row-drag-end="onRowDragEnd"
+        :rowSelection="'multiple'"
+        @selection-changed="onSelectionChanged"
+        :rowMultiSelectWithClick="true"
+        rowClick="multiple"
       >
         <!-- @column-row-group-changed="onColumnRowGroupChanged"
              @firstDataRendered="onFirstDataRendered"
@@ -283,6 +303,8 @@ export default defineComponent({
     const emitter = inject("emitter");
     const { t } = useI18n();
     const last_Subscription = ref([]);
+    const hasSelection = ref(false);
+
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -382,6 +404,12 @@ export default defineComponent({
       //   minWidth: 50,
       //   maxWidth: 50,
       // },
+      {
+        headerName: "",
+        checkboxSelection: true,
+        headerCheckboxSelection: true,
+        width: 50,
+      },
       {
         field: "policy",
         headerName: policy,
@@ -533,6 +561,7 @@ export default defineComponent({
           state.modalMode = "create";
           state.isModalOpen = true;
           emitter.emit("interface-uuid", props.uuid);
+          emitter.emit("row-rules", rowData.value);
         } else {
           state.isviewModal = true;
           state.viewModal = true;
@@ -609,7 +638,7 @@ export default defineComponent({
         document.getElementById("filter-text-box").value
       );
     };
-    const handleAction = (action, rowData) => {
+    const handleAction = (action, rowDataTable) => {
       const user = user_privilege();
       switch (action) {
         case "delete":
@@ -618,9 +647,9 @@ export default defineComponent({
             state.isviewModal = true;
             state.viewModal = true;
           } else {
-            rowDataToDelete.value = rowData;
+            rowDataToDelete.value = rowDataTable;
             deleteDialog.value = true;
-            state.rowDataId = rowData.uuid;
+            state.rowDataId = rowDataTable.uuid;
           }
           break;
         case "update":
@@ -633,7 +662,8 @@ export default defineComponent({
             state.modalData = {};
             state.modalMode = "edit";
             state.isModalOpen = true;
-            state.editRow = rowData;
+            state.editRow = rowDataTable;
+            emitter.emit("row-rules", rowData.value);
           }
 
           break;
@@ -824,6 +854,7 @@ export default defineComponent({
       showAddModal.value = false;
     };
     const saveRules = () => {
+      console.log("rowData", rowData.value);
       const user = user_privilege();
       if (user === "viewer") {
         console.log("View Mode");
@@ -844,6 +875,7 @@ export default defineComponent({
             protocol: e.protocol,
             type_rule: e.type_rule,
             rule_description: e.rule_description,
+            // position: e.position,
           };
         });
 
@@ -936,6 +968,7 @@ export default defineComponent({
             dport: data.dport ?? "ALL",
             type_rule: data.type_rule,
             status: data.status,
+            // position: data.position,
           };
           rowData.value.push(ruleInbound);
           console.log("or", oldRow.value);
@@ -994,6 +1027,7 @@ export default defineComponent({
           dport: data.dport,
           type_rule: data.type_rule,
           status: data.status,
+          // position: data.position,
         };
 
         updateObjectById(data.uuid, ruleInbound);
@@ -1027,6 +1061,7 @@ export default defineComponent({
               type_rule: e.type_rule,
               rule_description: e.rule_description,
               status: "initial",
+              // position: e.position,
             };
           });
         } else {
@@ -1071,7 +1106,50 @@ export default defineComponent({
     //   { deep: true }
     // );
 
+    const onRowDragStart = (event) => {
+      console.log("event.overIndex", event.overIndex);
+    };
+    const onRowDragEnd = (event) => {
+      console.log("event.overIndex", event.overIndex);
+      console.log("event.api", event.api);
+
+      const api = event.api;
+      const allRows = [];
+
+      // Iterate over all rows in their new visual order
+      api.forEachNodeAfterFilterAndSort((node) => {
+        allRows.push(node.data);
+      });
+      console.log("allRows", allRows);
+
+      // Replace your rowData with the new order
+      rowData.value = allRows;
+    };
+
+    const deleteSelectedRows = () => {
+      const selectedRows = gridApi.value.getSelectedRows();
+
+      rowData.value = rowData.value.filter(
+        (row) => !selectedRows.includes(row)
+      );
+      console.log("selectedRows", selectedRows);
+
+      gridApi.value.setRowData(rowData.value);
+
+      hasSelection.value = false;
+    };
+    const onSelectionChanged = () => {
+      const selected = gridApi.value.getSelectedRows();
+      console.log("sele", selected);
+      hasSelection.value = selected.length > 0;
+    };
+
     return {
+      deleteSelectedRows,
+      onSelectionChanged,
+      onRowDragStart,
+      onRowDragEnd,
+      hasSelection,
       changes,
       openModalAdd,
       saveRules,

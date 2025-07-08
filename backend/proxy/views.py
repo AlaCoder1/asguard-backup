@@ -16,7 +16,8 @@ from rest_framework.authentication import SessionAuthentication
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from django.core.exceptions import ObjectDoesNotExist
-# Create your views here.
+
+from utils.utils_email import is_valid_email
 
 # Constants
 CONSTANT_SQUID = _('Squid')
@@ -64,11 +65,6 @@ ERROR_MESSAGES_INVALID = _("Invalid")
 ########################################
 ################ proxy ################
 ########################################
-
-def is_valid_email(email):
-    # Simple regex for validating an email
-    email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-    return re.match(email_regex, email) is not None
 
 
 def run_command(command):
@@ -358,6 +354,7 @@ def enable_by_time():
             'rule_name': Schema(
                 type=TYPE_STRING,
                 description="The rule name.",
+                example="rule1"
             ),
             'allow_by_auth': Schema(
                 type=TYPE_BOOLEAN,

@@ -11,7 +11,7 @@ class SetLanguageMiddleware:
         try:
             user_language = Profile.objects.get(id=request.user.id).language
         except Profile.DoesNotExist: # If there is no user connected, language will be taked from settings
-            user_language = System.objects.get().language
+            user_language = System.objects.all().first().language
         except Exception:  # English is the default language
             user_language = "en"
 

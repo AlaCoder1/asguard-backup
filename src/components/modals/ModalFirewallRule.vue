@@ -503,6 +503,7 @@ export default {
       }
     };
     const populate = (data) => {
+      console.log("data-Rule", data);
       if (modalMode.value === "edit") {
         state.id = data.id;
         let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
@@ -510,9 +511,9 @@ export default {
           (i) => i === data?.protocol
         );
 
-        state.formData.policy = filtredPolicy[0];
-        state.formData.rule_description = data.rule_description;
-        state.formData.protocol = filtredProtocol[0];
+        state.formData.policy = filtredPolicy[0] ?? "";
+        state.formData.rule_description = data.rule_description ?? "";
+        state.formData.protocol = filtredProtocol[0] ?? "";
         state.formData.saddr = data.saddr;
         state.formData.sport = data.sport;
         state.formData.daddr = data.daddr;
@@ -520,7 +521,8 @@ export default {
         // state.formData.position = data.position;
         state.editValue = data.uuid;
 
-        (state.status = data.status), (state.type_rule = data.type_rule);
+        state.status = data.status;
+        state.type_rule = data.type_rule;
       }
     };
     const getCookie = (name) => {

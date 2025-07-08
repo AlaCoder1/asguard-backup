@@ -68,7 +68,7 @@ def change_rule_one_to_one_nat_position_in_system(one_to_one_nat: OneToOneNat, n
 def build_command_create_one_to_one_nat(oifname, source, destination, translation, next_rule_handle):
     """Builds the command-line string used to create a OneToOne NAT rule."""
     # Set the basics of rule command
-    command_one_to_one_nat = ["sudo", "nft", "insert", "rule", "nat", "postrouting", "oifname", oifname, "ip", "saddr", source]
+    command_one_to_one_nat = ["sudo", "nft", "insert", "rule", "nat", "postrouting"]
     # Update the command to insert the rule in a specific position
     if next_rule_handle > 0:
         command_one_to_one_nat.insert(6, "position")
@@ -78,12 +78,17 @@ def build_command_create_one_to_one_nat(oifname, source, destination, translatio
         command_one_to_one_nat[2] = "add"
 
     # Set the address and port for source and destination if the user don't choose Any
+    oifname_command = []
     ip_addr_destination = []
+    if oifname:
+        oifname_command = ["oifname", oifname]
+    ip_addr_source = ["ip", "saddr", source]
     if destination != "any":
         ip_addr_destination = ["ip", "daddr", destination]
+    ip_translation = ["snat", "ip", "to", translation]
 
     # Complete the OneToOneNat rule command
-    added_fields_rule = [ip_addr_destination, ["snat", "ip", "to", translation]]
+    added_fields_rule = [oifname_command, ip_addr_source, ip_addr_destination, ip_translation]
     for command in added_fields_rule:
         command_one_to_one_nat.extend(command)
     

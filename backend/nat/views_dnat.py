@@ -25,6 +25,7 @@ from utils.utils_address import fix_ipv4_address
 # Constants
 CONSTANT_DNAT_RULE = _("DNAT rule")
 CONSTANT_DNAT_RULE_POSITION = _("DNAT rule position")
+CONSTANT_INTERFACE = _("interface")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -70,7 +71,7 @@ def get_dnat(request, id):
     'POST', responses={200: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO CREATE A DNAT RULE", 
     request_body=Schema(type=TYPE_OBJECT, required=[
-        'interface', 'source_address', 'source_port_from', 'source_port_to', 
+        'source_address', 'source_port_from', 'source_port_to', 
         'external_address', 'internal_address', 'port_forwarding'],
     properties={
         'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
@@ -104,8 +105,9 @@ def create_dnat(request):
         
         serializer_dnat = DNatSerializer(data=data)
         if serializer_dnat.is_valid():
-
-            interface_ifname = Interface.objects.get(id=data["interface"]).ifname
+            interface_ifname = None
+            if data["interface"]:
+                interface_ifname = Interface.objects.get(id=data["interface"]).ifname
             
             source = "any"
             if data["source_address"] != "":
@@ -142,6 +144,8 @@ def create_dnat(request):
         
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_DNAT_RULE}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -203,6 +207,8 @@ def delete_dnat(request, id):
 def update_dnat(request, id):
     """Updating a DNAT rule"""
     try:
+        dnat = DNat.objects.get(id=id)
+        
         data = request.data
         # Check data validity
         if not check_payload(data):
@@ -210,10 +216,6 @@ def update_dnat(request, id):
         # Apply correction for ipv4 addresses
         data["source_address"], data["external_address"], data["internal_address"] = fix_ipv4_address(
             [data["source_address"], data["external_address"], data["internal_address"]])
-        
-        dnat = DNat.objects.get(id=id)
-
-        interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
         source = "any"
         if data["source_address"] != "":
@@ -235,6 +237,9 @@ def update_dnat(request, id):
         
         serializer_dnat = DNatSerializer(dnat, data=data)
         if serializer_dnat.is_valid():
+            interface_ifname = None
+            if data["interface"]:
+                interface_ifname = Interface.objects.get(id=data["interface"]).ifname
 
             if dnat.rule_status:
                 # Get the rule handle of the next rule (by position)
@@ -260,7 +265,9 @@ def update_dnat(request, id):
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_DNAT_RULE}"}, status=400)
     except DNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 

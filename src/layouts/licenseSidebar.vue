@@ -13,7 +13,7 @@
       <div
         dense
         flat
-        class="row-pointer asguard_primary_dark"
+        class="row-pointer asguard_primary_dark mb-2"
         @click.stop="closeSidebar"
       >
         <div class="d-flex">
@@ -44,7 +44,7 @@
                 >
 
                 <v-list-item-title
-                  class="float-right  mr-5"
+                  class="float-right mr-5"
                   style="margin-top: 13px"
                   v-if="item.subItems.length > 0"
                 >
@@ -58,7 +58,7 @@
               </div>
             </v-list-item>
           </a>
-    
+
           <v-list-item
             v-for="subItem in filteredSubItems(item)"
             v-if="item.subMenuVisible"
@@ -116,171 +116,6 @@ export default {
       rail: false,
       mini: false,
       items: [
-        {
-          title: "sideBar.dashboard",
-          icon: "mdi mdi-view-dashboard",
-          href: "/dashboard",
-          active: "dashboard",
-          subItems: [],
-          mouseOverSubMenu: false,
-          subMenuVisible: false,
-        },
-        {
-          title: "sideBar.system",
-          icon: "mdi mdi-laptop",
-          active: "system",
-          subItems: [
-            {
-              title: "tabs.userManagement",
-              icon: "",
-              href: "/system/user-management",
-              active: "User management",
-            },
-            {
-              title: "tabs.certificateManagement",
-              icon: "",
-              href: "/system/certificat-management",
-              active: "certificat management",
-            },
-            {
-              title: "subtitle.rsaKeyPairs",
-              icon: "",
-              href: "/key_pairs",
-              active: "RSA Key Pairs",
-            },
-            {
-              title: "subtitle.systemLog",
-              icon: "",
-              href: "/system_log",
-              active: "System Log",
-            },
-            {
-              title: "subtitle.archivedLog",
-              icon: "",
-              href: "/logrotate",
-              active: "Archived Logs",
-            },
-            {
-              title: "subtitle.settings",
-              icon: "",
-              href: "/settings",
-              href: "/settings",
-              active: "Settings",
-            },
-          ],
-          mouseOverSubMenu: false,
-          subMenuVisible: false,
-        },
-        {
-          title: "sideBar.interfaces",
-          icon: "mdi mdi-network",
-          active: "interfaces",
-          subItems: [
-            {
-              title: "subtitle.listOfInterface",
-              icon: "",
-              href: "/interfaces/list-of-interface",
-              active: "List of interface",
-            },
-            {
-              title: "subtitle.typeOfInterface",
-              icon: "",
-              href: "/interfaces/type-of-interface",
-              active: "Type of interface",
-            },
-            {
-              title: "subtitle.DHCPV4",
-              icon: "",
-              href: "/services/server-dhcp4",
-              active: "DHCP V4",
-            },
-            {
-              title: "subtitle.routing",
-              icon: "",
-              href: "/routing",
-              href: "/routing",
-              active: "routing",
-            },
-          ],
-          subMenuVisible: false,
-        },
-        {
-          title: "sideBar.firewall",
-          icon: "mdi mdi-wall-fire",
-          active: "Firewall",
-          subItems: [
-            {
-              title: "subtitle.rules",
-              icon: "",
-              href: "/firewall/rules",
-              active: "Rules",
-            },
-            {
-              title: "subtitle.nat",
-              icon: "",
-              href: "/firewall/nat",
-              active: "Nat",
-            },
-          ],
-          subMenuVisible: false,
-        },
-        {
-          title: "sideBar.services",
-          icon: "mdi mdi-cog",
-          active: "Firewall",
-          subItems: [
-            {
-              title: "subtitle.siteToSiteVpn",
-              icon: "",
-              href: "/ipsec",
-              active: "Site to site VPN",
-            },
-
-            {
-              title: "subtitle.openVPN",
-              icon: "",
-              href: "/openvpn",
-              active: "OPEN VPN",
-            },
-            {
-              title: "subtitle.intrusionDetection",
-              icon: "",
-              href: "/ids-ips",
-              active: "Intrusion Detection",
-            },
-            {
-              title: "subtitle.proxyWeb",
-              icon: "",
-              href: "/proxy",
-              active: "Proxy Web",
-            },
-            {
-              title: "subtitle.SDWAN",
-              icon: "",
-              href: "/sdwan",
-              active: "SDWAN",
-            },
-            {
-              title: "subtitle.WAF",
-              icon: "",
-              href: "/waf",
-              active: "WAF",
-            },
-            {
-              title: "subtitle.ZTNA",
-              icon: "",
-              href: "/ztna",
-              active: "ZTNA",
-            },
-            {
-              title: "subtitle.Dmasque",
-              icon: "",
-              href: "/double-masque",
-              active: "double-masque",
-            },
-          ],
-          subMenuVisible: false,
-        },
         {
           title: "license",
           icon: "mdi mdi-cash-sync",
@@ -360,5 +195,8 @@ export default {
   font-family: Nunito;
   font-weight: 400;
   word-wrap: break-word;
+}
+.v-navigation-drawer__content {
+  width: 100%;
 }
 </style>

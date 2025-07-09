@@ -14,15 +14,20 @@ from drf_yasg import openapi
 @swagger_auto_schema(
     method='delete',
     operation_summary="API to delete a rule",
-      manual_parameters=[
-        openapi.Parameter(
-            'id',
-            openapi.IN_PATH,
-            description="ID of rule to delete",
-            type=openapi.TYPE_INTEGER,
-            required=True
-        ),
-    ],
+    #   manual_parameters=[
+    #     openapi.Parameter(
+    #         'id',
+    #         openapi.IN_PATH,
+    #         description="ID of rule to delete",
+    #         type=openapi.TYPE_INTEGER,
+    #         required=True
+    #     ),
+    # ],
+     request_body=openapi.Schema(
+        type=openapi.TYPE_ARRAY,
+       items=openapi.Items(type=openapi.TYPE_INTEGER),
+        example=[1, 2, 3, 4]
+     ),
     responses={
         200: openapi.Response(
             description=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}",
@@ -36,7 +41,7 @@ from drf_yasg import openapi
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
-def delete_rule(request,id):
+def delete_rule(request):
     """
     API to delete rule from system and database 
     This function to delete a rule from the system and database using id of rule in parameter verify if exist in database and system then delete it .
@@ -50,24 +55,28 @@ def delete_rule(request,id):
       or failure of the deletion operation.
     """
     if (request.method == 'DELETE'):
-        if (Rule.objects.filter(id=id).exists()):
-            rules = Rule.objects.get(id=id)
-            rule=rules.rule
-            type_rules=rules.type_rule
-            interface_object= Interface.objects.get(id=rules.interface_id)
-            ifname=interface_object.ifname
-            handle=get_handle_rule(ifname,type_rules,rule)
-            if handle is not None:
-              return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-              
-            rules.delete()
-            msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
-            status=200
-        
-        else:
-          msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
-          status=400
-        return JsonResponse({"msg": msg},status=status)
+        ids=request.data
+        all_response=[]
+        for id in ids:
+            if (Rule.objects.filter(id=id).exists()):
+                rules = Rule.objects.get(id=id)
+                rule=rules.rule
+                type_rules=rules.type_rule
+                interface_object= Interface.objects.get(id=rules.interface_id)
+                ifname=interface_object.ifname
+                handle=get_handle_rule(ifname,type_rules,rule)
+                if handle is not None:
+                    return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
+                
+                rules.delete()
+                msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
+                status=200
+            
+            else:
+                msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
+                status=400
+            all_response.append({"msg":msg,"status":status})
+        return JsonResponse({"responses": all_response},status=status)
       
 
 
@@ -163,7 +172,7 @@ def save_rules(request,name_interface):
     data_list=request.data
     interface_object= Interface.objects.get(name_interface=name_interface)
     ifname=interface_object.ifname
-    for data in data_list:
+    for index, data in enumerate(data_list):
         id_rule= None if data.get('id', None) == None else data.get('id', None)
         policy = data.get('policy', None)
         saddr = None if data.get('saddr', None) == "ALL" else data.get('saddr', None)
@@ -171,7 +180,7 @@ def save_rules(request,name_interface):
         sport = None if data.get('sport', None) == "ALL" else data.get('sport', None)
         dport = None if data.get('dport', None) == "ALL" else data.get('dport', None)
         protocol = None if data.get('protocol', None) == "ALL" else data.get('protocol', None)
-        position = data.get('position', None) 
+        position = index+1
         print({"position":position})
         type_rule = data.get('type_rule', None)
         rule_description= None if data.get('rule_description', None) == "" else data.get('rule_description', None)

@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
+from backend.rules.functions import update_rule_remote
 from backend.rules.models import Rule 
 from backend.rules.views import * 
 from backend.network.models import Interface
@@ -76,10 +77,11 @@ class Command(BaseCommand):
                 ruleupdate=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
             handle=get_handle_rule(interface,type_rule,rule)
             if handle is not None:
-                return_delete_rule_remote=delete_rule_remote(interface,type_rule,handle)
-                if return_delete_rule_remote is True:
-                    return_add_rule=add_rule_remote(ruleupdate,interface,type_rule)
-                    if  return_add_rule is True:
+                # return_delete_rule_remote=delete_rule_remote(interface,type_rule,handle)
+                # if return_delete_rule_remote is True:
+                #     return_add_rule=add_rule_remote(ruleupdate,interface,type_rule)
+                    return_update_rule=update_rule_remote(interface,type_rule,handle,ruleupdate)
+                    if  return_update_rule is True:
                         try:
                             rule = Rule.objects.get(rule=rule)
                             rule.rule = ruleupdate
@@ -97,10 +99,9 @@ class Command(BaseCommand):
                         except IntegrityError as e:
                             print("Error occurred:", e)
                             
+                    
                     else:
-                        return return_add_rule
-                else:
-                    return "This rule is already exist"
+                        return "Error in updating rule"
             else:
                 return "Something Wrong"
         except IntegrityError as e:

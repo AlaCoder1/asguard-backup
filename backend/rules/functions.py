@@ -177,6 +177,19 @@ def get_handle_rule(ifname,type_rule,rule):
    else:
       return output[1].strip().split("\n")[0]
 
+def update_rule_remote(ifname,type_rule,handle,ruleupdate):
+   """function to update rule"""
+   ##initialiser les commanndes pour supprimer une règle et l'entregistrer dans nftables.conf
+   commandes=[
+      f"sudo nft replace rule inet filter_{ifname} {type_rule} handle {handle} {ruleupdate} ",
+      f'sudo nft list table inet filter_{ifname} > /etc/rules/{ifname}/nftables.conf'
+   ]
+   ##executer ces commandes
+   for cmd in commandes:
+      _,error=run_command(cmd)
+      if error !="":
+         return error  
+   return True
 
 def delete_rule_remote(ifname,type_rule,handle):
    """function to delete rule"""
@@ -201,6 +214,12 @@ def get_protocol_number(protocol_name):
     except socket.error:
         return None  # Protocol name not found
 
+
+def get_position(type_rule):
+   positions = list(Rule.objects.filter(type_rule=type_rule).values_list('position', flat=True))
+   max_position = max(positions) if positions else 0
+   position=max_position+1
+   return position
      
 def calculate_subnet_address(addr_prefix):
    if addr_prefix is not None:
@@ -222,7 +241,7 @@ def calculate_subnet_address(addr_prefix):
    
    
 ###
-def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object):
+def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object,position):
    """function to add rule in system and database"""
    msg=''
    id_rule=None
@@ -254,6 +273,10 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
          ).exists():
       #appel la fonction pour ajouter rule dans le système
          return_add_rule=add_rule_remote(rule,ifname,type_rule)
+         # position=get_handle_rule(ifname,type_rule,rule)
+         # position=int(position.strip('handle').strip()) if position is not None else None
+         print({"position":position})
+         
          if return_add_rule is True:
             data = {
                'policy': policy,
@@ -264,6 +287,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
                'protocol': protocol,
                'type_rule': type_rule,
                'rule_description': rule_description,
+               'position':position,
                }
             data['interface']=interface_object.id
             #appel la fonction pour ajouter rule dans la base de données 
@@ -294,7 +318,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
    return msg,status,id_rule
 
 ##
-def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description):
+def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description,position):
       if (id is not None and Rule.objects.filter(id=id).exists()):
          rules_object = Rule.objects.get(id=id)
          rule=rules_object.rule
@@ -330,6 +354,8 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
             ).exists():
                # if return_delete_rule_remote is True:
                   return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
+                  # position=get_handle_rule(ifname,type_rules,rule)
+                  # position=int(position.strip('handle').strip()) if position is not None else None
                   if  return_add_rule is True:
                         data = {
                         "id":id,
@@ -339,7 +365,9 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
                         'sport': sport,
                         'dport': dport,
                         'protocol': protocol,
-                        'rule_description': rule_description
+                        'rule_description': rule_description,
+                        'position':position,
+                        
                         }
                         
                         #appel la fonction pour update rule dans la base de données 

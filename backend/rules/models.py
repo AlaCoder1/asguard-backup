@@ -14,6 +14,7 @@ class Rule(models.Model):
     sport= models.IntegerField(null=True)
     daddr=models.CharField(max_length=200, null=True)
     dport=models.IntegerField(null=True)
+    position=models.IntegerField(null=False,default=0)
     interface = models.ForeignKey(Interface, on_delete=models.CASCADE, null=True)
     class Meta:
         db_table = 'rule'

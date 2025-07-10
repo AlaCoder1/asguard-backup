@@ -156,7 +156,7 @@ export default {
   },
   methods: {
     goToSub() {
-      window.location.href = "/asguard/subscription/";
+      window.location.href = "/asguard/license/";
     },
   },
 };

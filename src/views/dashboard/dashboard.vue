@@ -171,6 +171,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import { user_privilege } from "@/mixins/user_privilege.js";
 import VButton from "@/components/VButton.vue";
 import helpModal from "@/components/modals/help.vue";
+import { checkFunctionality } from "@/mixins/checkFunctionality.js";
 
 export default {
   name: "HomeComponent",
@@ -647,6 +648,8 @@ export default {
     };
 
     onMounted(async () => {
+      checkFunctionality();
+
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       localStorage.setItem("lastSubscription", lastSubscription);

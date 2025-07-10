@@ -82,6 +82,16 @@
               $t("firewall.add")
             }}</span>
           </v-btn>
+          <v-btn
+            class="ml-3 mt-2"
+            @click="deleteSelectedRows"
+            v-if="hasSelection"
+          >
+            <i class="fas fa-trash" style="color: #086eae"></i>
+            <!-- <span class="ml-2" style="color: #086eae"
+              >Delete Selected rules</span
+            > -->
+          </v-btn>
         </v-col>
       </v-row>
       <v-alert
@@ -106,8 +116,17 @@
         :gridOptions="gridOptions"
         style="width: 100%"
         :pagination="true"
-        :paginationPageSize="4"
+        :paginationPageSize="10"
         :localeText="paginationLocalization"
+        :rowDragManaged="true"
+        :rowDragEntireRow="true"
+        animateRows
+        @row-drag-enter="onRowDragStart"
+        @row-drag-end="onRowDragEnd"
+        :rowSelection="'multiple'"
+        @selection-changed="onSelectionChanged"
+        :rowMultiSelectWithClick="true"
+        rowClick="multiple"
       >
         <!-- @column-row-group-changed="onColumnRowGroupChanged"
              @firstDataRendered="onFirstDataRendered"
@@ -281,6 +300,8 @@ export default defineComponent({
   setup(props) {
     const { t } = useI18n();
     const last_Subscription = ref([]);
+    const hasSelection = ref(false);
+
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -335,7 +356,7 @@ export default defineComponent({
       } else if (!last_Subscription.value.includes("Firewall L4")) {
         return `<br />  ${t(
           "firewall.msg_subscription"
-        )} <br /><a href="/asguard/subscription/" class="white-link"> ${t(
+        )} <br /><a href="/asguard/license/" class="white-link"> ${t(
           "firewall.sub_page"
         )}</a>`;
       } else {
@@ -391,6 +412,12 @@ export default defineComponent({
       //   minWidth: 50,
       //   maxWidth: 50,
       // },
+      {
+        headerName: "",
+        checkboxSelection: true,
+        headerCheckboxSelection: true,
+        width: 50,
+      },
       {
         field: "policy",
         headerName: policy,
@@ -910,6 +937,44 @@ export default defineComponent({
         }
       }
     };
+
+    const onRowDragStart = (event) => {
+      console.log("event.overIndex", event.overIndex);
+    };
+    const onRowDragEnd = (event) => {
+      console.log("event.overIndex", event.overIndex);
+      console.log("event.api", event.api);
+
+      const api = event.api;
+      const allRows = [];
+
+      // Iterate over all rows in their new visual order
+      api.forEachNodeAfterFilterAndSort((node) => {
+        allRows.push(node.data);
+      });
+      console.log("allRows", allRows);
+
+      // Replace your rowData with the new order
+      rowData.value = allRows;
+    };
+    const deleteSelectedRows = () => {
+      const selectedRows = gridApi.value.getSelectedRows();
+
+      rowData.value = rowData.value.filter(
+        (row) => !selectedRows.includes(row)
+      );
+      console.log("selectedRows", selectedRows);
+
+      gridApi.value.setRowData(rowData.value);
+
+      hasSelection.value = false;
+    };
+    const onSelectionChanged = () => {
+      const selected = gridApi.value.getSelectedRows();
+      console.log("sele", selected);
+      hasSelection.value = selected.length > 0;
+    };
+
     const saveModal = () => {
       showAddModal.value = false;
     };
@@ -1167,6 +1232,11 @@ export default defineComponent({
     // );
 
     return {
+      hasSelection,
+      onSelectionChanged,
+      deleteSelectedRows,
+      onRowDragStart,
+      onRowDragEnd,
       changes,
       openModalAdd,
       saveRules,

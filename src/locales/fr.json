@@ -14,6 +14,10 @@
     "LoginTime": "Temps de connexion",
     "resetPassword": "Réinitialisation du mot de passe"
   },
+  "license":"Licence",
+  "addlicense":"Ajouter une licence",
+  "keylicense":"La clé de licence se trouve dans l'e-mail de confirmation que vous avez reçu après votre achat.",
+  "licensekey":"Clé de licence",
   "other":"Autres",
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",

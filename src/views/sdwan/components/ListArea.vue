@@ -139,7 +139,7 @@ console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("SDWAN")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/license/" class="white-link"> ${t("firewall.sub_page")}</a>`;
   } else{
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   }

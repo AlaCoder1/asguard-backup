@@ -5,7 +5,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from backend.network.models import Interface
 from backend.network.serializers import InterfaceSerializer
-from backend.vxlan.functions import add_vxlan_sys, delete_vxlan_sys, get_all_nmcli_uuids,save_in_db, update_vxlan_sys
+from backend.vxlan.functions import add_vxlan_sys, delete_vxlan_sys, get_all_nmcli_uuids,save_in_db, update_vxlan_sys, validate_input_date
 from backend.vxlan.models import Vxlan
 from django.core import serializers
 from django.utils.translation import gettext_lazy as _,get_language
@@ -175,15 +175,20 @@ def add_vxlan(request):
     """
     if (request.method == 'POST'):
         data_input=request.data
-        vxlan_serializer=VxlanSerializer(data=data_input)
+        res_validate=validate_input_date(data_input)
+        if res_validate is None:
+            vxlan_serializer=VxlanSerializer(data=data_input)
 
-        if vxlan_serializer.is_valid():
-            vxlan_serializer.save()
-            msg= f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_CREATING}"
-            status=200
+            if vxlan_serializer.is_valid():
+                vxlan_serializer.save()
+                msg= f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_CREATING}"
+                status=200
+            else:
+                msg=str(next(iter(vxlan_serializer.errors.values()))[0]).strip('.')+"!"
+                print(msg)
+                status=400
         else:
-            msg=str(next(iter(vxlan_serializer.errors.values()))[0]).strip('.')+"!"
-            print(msg)
+            msg=res_validate
             status=400
     return JsonResponse({"msg": msg},status=status)
  
@@ -281,45 +286,50 @@ def update_vxlan(request,id):
     """
     if (request.method == 'PUT'):
         data_input =request.data
-        if Vxlan.objects.filter(id=id).exists():
-            vlan_object=Vxlan.objects.get(id=id)
-            vlan_serializer=VxlanSerializer(vlan_object,data=data_input)
-            if vlan_serializer.is_valid():
-                old_vxlan=vlan_object.vxlan_interface_name
-                old_vxlan_id=vlan_object.vxlan_connection_uuid
-                parent_interface=Interface.objects.get(id=data_input['parent_interface']).ifname
-                vxlan_id=data_input['vxlan_id']
-                vxlan_interface_name=data_input['vxlan_interface_name']
-                vxlan_source_address=data_input['vxlan_source_address']
-                vxlan_destination_address=data_input['vxlan_destination_address']
-                vxlan_destination_port=data_input['vxlan_destination_port']
-                vxlan_connection_uuid=data_input['vxlan_connection_uuid']
-                if Interface.objects.filter(ifname=old_vxlan).exists(): 
-                    interface_object=Interface.objects.get(ifname=old_vxlan)
-                    aux_save=update_vxlan_sys(old_vxlan_id,parent_interface,vxlan_id,vxlan_interface_name,vxlan_source_address,vxlan_destination_address,vxlan_destination_port,vxlan_connection_uuid) 
-                    data_save={
-                        "ifname":f"{vxlan_interface_name}",
-                        "private_aux":False,
-                        "bogon_aux":False,
-                        "description":f"update default config {vxlan_interface_name}",
-                        }
-                    if aux_save:
-                        interface_serializer=InterfaceSerializer(interface_object,data=data_save)
-                        msg,status=save_in_db(aux_save,interface_serializer)
-                        
+        res_validate=validate_input_date(data_input)
+        if res_validate is None:
+            if Vxlan.objects.filter(id=id).exists():
+                vlan_object=Vxlan.objects.get(id=id)
+                vlan_serializer=VxlanSerializer(vlan_object,data=data_input)
+                if vlan_serializer.is_valid():
+                    old_vxlan=vlan_object.vxlan_interface_name
+                    old_vxlan_id=vlan_object.vxlan_connection_uuid
+                    parent_interface=Interface.objects.get(id=data_input['parent_interface']).ifname
+                    vxlan_id=data_input['vxlan_id']
+                    vxlan_interface_name=data_input['vxlan_interface_name']
+                    vxlan_source_address=data_input['vxlan_source_address']
+                    vxlan_destination_address=data_input['vxlan_destination_address']
+                    vxlan_destination_port=data_input['vxlan_destination_port']
+                    vxlan_connection_uuid=data_input['vxlan_connection_uuid']
+                    if Interface.objects.filter(ifname=old_vxlan).exists(): 
+                        interface_object=Interface.objects.get(ifname=old_vxlan)
+                        aux_save=update_vxlan_sys(old_vxlan_id,parent_interface,vxlan_id,vxlan_interface_name,vxlan_source_address,vxlan_destination_address,vxlan_destination_port,vxlan_connection_uuid) 
+                        data_save={
+                            "ifname":f"{vxlan_interface_name}",
+                            "private_aux":False,
+                            "bogon_aux":False,
+                            "description":f"update default config {vxlan_interface_name}",
+                            }
+                        if aux_save:
+                            interface_serializer=InterfaceSerializer(interface_object,data=data_save)
+                            msg,status=save_in_db(aux_save,interface_serializer)
+                            
+                        else:
+                            msg=aux_save
+                            status=400
                     else:
-                        msg=aux_save
-                        status=400
+                        msg=f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}"
+                        status=200
+                    vlan_serializer.save()
                 else:
-                    msg=f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}"
-                    status=200
-                vlan_serializer.save()
+                    msg=str(next(iter(vlan_serializer.errors.values()))[0]).strip('.')+"!"
+                    status=400
+        
             else:
-                msg=str(next(iter(vlan_serializer.errors.values()))[0]).strip('.')+"!"
+                msg=f"{CONSTANT_VXLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
                 status=400
-      
         else:
-            msg=f"{CONSTANT_VXLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
+            msg=res_validate
             status=400
     return JsonResponse({"msg": msg},status=status) 
 

@@ -98,8 +98,8 @@
 <script>
 import "vuetify/styles";
 import axios from "axios";
-
 import Footer from "../../layouts/TheFooter.vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
   name: "HomeComponent",
@@ -121,9 +121,18 @@ export default {
       mail: "",
       idUser: "",
       isVerification: false,
+      last_Subscription: [],
     };
   },
-
+  mounted() {
+    const csrfToken = getCookie("csrftoken");
+    axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    axios
+      .get("/subscription/list_features_about_last_subscription")
+      .then((response) => {
+        this.last_Subscription = response.data.list_features;
+      });
+  },
   methods: {
     changeLang(item) {
       this.$i18n.locale = item;
@@ -146,7 +155,10 @@ export default {
             this.mail = response.data?.currentUser?.email;
             this.idUser = response.data?.currentUser?.id;
           } else {
-            let hrefPath = localStorage.getItem("href-path") ?? "/dashboard";
+            let hrefPath =
+              this.last_Subscription.length > 0
+                ? localStorage.getItem("href-path") ?? "/dashboard"
+                : "/asguard/license";
             window.location.href = hrefPath;
           }
 

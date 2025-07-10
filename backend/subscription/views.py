@@ -10,69 +10,117 @@ from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 from rest_framework.authentication import SessionAuthentication
 from django.core import serializers
+import requests
 # Create your views here.
+link = "https://tech.numeryx.fr:8443/"
+
+def resultat_check_key(key_to_check):
+    """api to check if a key is valid or not"""
+    url = link+"keys/ValidKeyBd"
+
+    payload = json.dumps({
+    "key_to_check": key_to_check
+    })
+    headers = {
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload, verify=False)
+    resultat = json.loads(response.text)
+    return resultat['rslt']
+
+def get_type_pack_fromk_key(key_to_check):
+    """api to get the type of pack of a key"""
+    url = link+"keys/getTypePack"
+
+    payload = json.dumps({
+    "key": key_to_check
+    })
+    headers = {
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("GET", url, headers=headers, data=payload, verify=False)
+    resultat = json.loads(response.text)
+    return resultat['type_pack']
+
+def get_use_number_fromk_key(key_to_check):
+    """api to get the number of uses of a key"""
+    url = link+"keys/getUseNumberKeyBd"
+
+    payload = json.dumps({
+    "key": key_to_check
+    })
+    headers = {
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("GET", url, headers=headers, data=payload, verify=False)
+    resultat = json.loads(response.text)
+    return resultat['UseNumber']
+
+def update_keys(key_to_check):
+    """api to update keys in database"""
+    url = link+"keys/UpdateKeyUsed"
+
+    payload = json.dumps({
+    "key": key_to_check
+    })
+    headers = {
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload, verify=False)
+    resultat = json.loads(response.text)
+    return resultat
 
 
-def add_plan(request):
-    msg=''
-    form = AddplanForm()
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def license_key(request):
     if request.method == 'POST':
-        form = AddplanForm(request.POST)
-        if form.is_valid():
-            form.save()
-            msg = "plan addes successfully"
-    plans=plan.objects.all()       
-    context = {'form': form,'msg':msg,'plans':plans}
-    return render(request, 'add_plan.html', context)
-
-def add_organizations(request):
-    msg=''
-    form = addorganizationForm()
-    if request.method == 'POST':
-        form = addorganizationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            msg = "organization addes successfully"
-    organizations=Organization.objects.all()               
-    context = {'form': form,'msg':msg,'organizations':organizations}
-    return render(request, 'add_organization.html', context)
-
-def add_paymentTransaction(request):
-    msg=''
-    form = AddpaymentTransactionForm()
-    if request.method == 'POST':
-        form = AddpaymentTransactionForm(request.POST)
-        if form.is_valid():
-            form.save()
-            msg = "paymentTransaction addes successfully"
-    paymentTransactions=paymentTransaction.objects.all()               
-    context = {'form': form,'msg':msg,'paymentTransactions':paymentTransactions}           
-    return render(request, 'add_paymentTransaction.html', context)
-
-def add_plansSubscription(request):
-    msg=''
-    form = AddplansSubscriptionForm()
-    if request.method == 'POST':
-        form = AddplansSubscriptionForm(request.POST)
-        if form.is_valid():
-            form.save()
-            msg = "plansSubscription addes successfully"
-    plansSubscriptions=plansSubscription.objects.all()               
-    context = {'form': form,'msg':msg,'plansSubscriptions':plansSubscriptions} 
-    return render(request, 'add_plansSubscription.html', context)
-
-def add_plansFeatures(request):
-    msg=''
-    form = AddplansFeaturesForm()
-    if request.method == 'POST':
-        form = AddplansFeaturesForm(request.POST)
-        if form.is_valid():
-            form.save()
-            msg = "plansFeatures addes successfully"
-    plansFeature=plansFeatures.objects.all()               
-    context = {'form': form,'msg':msg,'plansFeature':plansFeature} 
-    return render(request, 'add_plansFeatures.html', context)
-
+        data = request.data
+        key = data['key']
+        resultat = resultat_check_key(key)
+        pack = get_type_pack_fromk_key(key)
+        print({"resultat":resultat})
+        payment_instance = paymentTransaction()
+        if resultat == True:
+            UseNumber = get_use_number_fromk_key(key)
+            if UseNumber == 0:
+                update_keys(key)
+                payment_instance.status = "approved"
+                payment_instance.organization = Organization.objects.get(id=1)
+                payment_instance.plan = plan.objects.get(id=pack)
+                payment_instance.save()
+                function_plansSubscription()
+                function_planSubsciptionUsage()
+                return JsonResponse({"msg": "Key is valid", "type_pack": pack}, status=200)
+            else:
+                payment_instance.status = "declined"
+                payment_instance.organization = Organization.objects.get(id=1)
+                payment_instance.plan = plan.objects.get(id=pack)
+                payment_instance.save()
+                function_plansSubscription()
+                function_planSubsciptionUsage()
+                return JsonResponse({"msg": "Key is invalid"}, status=400)
+        elif resultat == False:
+            payment_instance.status = "declined"
+            payment_instance.organization = Organization.objects.get(id=1)
+            payment_instance.plan = plan.objects.get(id=pack)
+            payment_instance.save()
+            function_plansSubscription()
+            function_planSubsciptionUsage()
+            return JsonResponse({"msg": "Key is expired"}, status=400)
+        else:
+            payment_instance.status = "declined"
+            payment_instance.organization = Organization.objects.get(id=1)
+            payment_instance.plan = plan.objects.get(id=pack)
+            payment_instance.save()
+            function_plansSubscription()
+            function_planSubsciptionUsage()
+            return JsonResponse({"msg": "Key is invalid"}, status=400)
+        
 ##paymentTransaction_name
 def function_paymentTransaction(checkbox_value,select_value):
     payment_instance = paymentTransaction()

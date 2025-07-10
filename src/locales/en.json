@@ -14,6 +14,10 @@
     "LoginTime": "Login Time",
     "resetPassword": "Reset Password"
   },
+  "license":"License",
+  "addlicense":"Add a license",
+  "keylicense":"The license key is in the confirmation email you received after your purchase.",
+  "licensekey":"License key",
   "other": "Others",
   "login": {
     "verifyYourAccount": "Verify Your Account",

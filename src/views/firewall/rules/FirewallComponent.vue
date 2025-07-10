@@ -351,7 +351,7 @@ export default defineComponent({
       } else if (!last_Subscription.value.includes("Firewall L4")) {
         return `${t(
           "firewall.msg_subscription"
-        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+        )}<br /><a href="/asguard/license/" class="white-link"> ${t(
           "firewall.sub_page"
         )}</a>`;
       } else {

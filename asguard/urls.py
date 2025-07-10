@@ -59,7 +59,7 @@ urlpatterns = [
     path('firewall/rules', firewall_page),
     # path('settings/', settings_page),
     path('openvpn/', openvpn_page),
-    path('asguard/subscription/', subscription_page),
+    path('asguard/license/', subscription_page),
     path('', include('backend.tasks.urls')),
     path('auth/', include('backend.authentification.urls')),
     path('network/', include('backend.network.urls')),

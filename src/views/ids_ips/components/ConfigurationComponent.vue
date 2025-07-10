@@ -456,7 +456,7 @@ export default {
       } else if (!last_Subscription.value.includes("IDS/IPS")) {
         return `${t(
           "firewall.msg_subscription"
-        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+        )}<br /><a href="/asguard/license/" class="white-link"> ${t(
           "firewall.sub_page"
         )}</a>`;
       } else {

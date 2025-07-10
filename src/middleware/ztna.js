@@ -10,6 +10,8 @@ import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
 import mitt from "mitt";
 import { get_lang } from '../mixins/storage_language.js';
+import { checkFunctionality } from "@/mixins/checkFunctionality.js";
+import { startTimer } from "../mixins/timer_token.js";
 
 const app = createApp(index);
 const emitter = mitt();
@@ -19,6 +21,15 @@ const vuetify = createVuetify({
 });
 
 app.provide("emitter", emitter);
+
+const currentPath = window.location.pathname;
+function hrefPath() {
+  localStorage.setItem("href-path", currentPath);
+}
+
+hrefPath();
+startTimer();
+checkFunctionality();
 
 
 (async () => {

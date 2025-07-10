@@ -9,6 +9,17 @@ import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
 import { get_lang } from '../mixins/storage_language.js';
+import { checkFunctionality } from "@/mixins/checkFunctionality.js";
+import { startTimer } from "../mixins/timer_token.js";
+
+const currentPath = window.location.pathname;
+function hrefPath() {
+  localStorage.setItem("href-path", currentPath);
+}
+
+hrefPath();
+startTimer();
+checkFunctionality();
 
 const app = createApp(vpMonitoring);
 const vuetify = createVuetify({

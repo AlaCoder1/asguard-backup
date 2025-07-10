@@ -181,7 +181,7 @@ export default {
       } else if (!this.last_Subscription.includes("ZTNA")) {
         return `${this.$t(
           "firewall.msg_subscription"
-        )}<br /><a href="/asguard/subscription/" class="white-link"> ${this.$t(
+        )}<br /><a href="/asguard/license/" class="white-link"> ${this.$t(
           "firewall.sub_page"
         )}</a>`;
       } else {

@@ -131,7 +131,6 @@ export default {
       .get("/subscription/list_features_about_last_subscription")
       .then((response) => {
         this.last_Subscription = response.data.list_features;
-        console.log("***************0", this.last_Subscription);
       });
   },
   methods: {
@@ -159,7 +158,7 @@ export default {
             let hrefPath =
               this.last_Subscription.length > 0
                 ? localStorage.getItem("href-path") ?? "/dashboard"
-                : "/asguard/subscription";
+                : "/asguard/license";
             window.location.href = hrefPath;
           }
 

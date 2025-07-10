@@ -119,7 +119,7 @@ export default {
         {
           title: "license",
           icon: "mdi mdi-cash-sync",
-          href: "/asguard/subscription",
+          href: "/asguard/license",
           active: "Subscription",
           subItems: [],
           subMenuVisible: false,

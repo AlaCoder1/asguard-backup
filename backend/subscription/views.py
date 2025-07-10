@@ -72,7 +72,7 @@ def update_keys(key_to_check):
 
     response = requests.request("POST", url, headers=headers, data=payload, verify=False)
     resultat = json.loads(response.text)
-    return resultat['msg']
+    return resultat
 
 
 @api_view(['POST'])
@@ -82,21 +82,43 @@ def license_key(request):
         data = request.data
         key = data['key']
         resultat = resultat_check_key(key)
+        pack = get_type_pack_fromk_key(key)
+        print({"resultat":resultat})
+        payment_instance = paymentTransaction()
         if resultat == True:
             UseNumber = get_use_number_fromk_key(key)
             if UseNumber == 0:
                 update_keys(key)
-                pack = get_type_pack_fromk_key(key)
-                subscription(resultat,pack)
-                return JsonResponse({"msg": "Key is valid", "type_pack": type_pack}, status=200)
+                payment_instance.status = "approved"
+                payment_instance.organization = Organization.objects.get(id=1)
+                payment_instance.plan = plan.objects.get(id=pack)
+                payment_instance.save()
+                function_plansSubscription()
+                function_planSubsciptionUsage()
+                return JsonResponse({"msg": "Key is valid", "type_pack": pack}, status=200)
             else:
+                payment_instance.status = "declined"
+                payment_instance.organization = Organization.objects.get(id=1)
+                payment_instance.plan = plan.objects.get(id=pack)
+                payment_instance.save()
+                function_plansSubscription()
+                function_planSubsciptionUsage()
                 return JsonResponse({"msg": "Key is invalid"}, status=400)
         elif resultat == False:
-            pack = get_type_pack_fromk_key(key)
-            subscription(resultat,pack)
+            payment_instance.status = "declined"
+            payment_instance.organization = Organization.objects.get(id=1)
+            payment_instance.plan = plan.objects.get(id=pack)
+            payment_instance.save()
+            function_plansSubscription()
+            function_planSubsciptionUsage()
             return JsonResponse({"msg": "Key is expired"}, status=400)
         else:
-            subscription(False,None)
+            payment_instance.status = "declined"
+            payment_instance.organization = Organization.objects.get(id=1)
+            payment_instance.plan = plan.objects.get(id=pack)
+            payment_instance.save()
+            function_plansSubscription()
+            function_planSubsciptionUsage()
             return JsonResponse({"msg": "Key is invalid"}, status=400)
         
 ##paymentTransaction_name

@@ -11,6 +11,7 @@ import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
 import { get_lang } from '../mixins/storage_language.js';
+import { checkFunctionality } from "@/mixins/checkFunctionality.js";
 
 const emitter = mitt();
 
@@ -30,6 +31,7 @@ function hrefPath() {
 
 hrefPath();
 startTimer();
+checkFunctionality();
 
 (async () => {
   const locale = await get_lang();

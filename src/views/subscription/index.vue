@@ -3,12 +3,11 @@
     <base-layout :title="$t('license')">
       <template #content>
         <!-- <helpModal help="subscription"  /> -->
-
         <div class="mb-14" v-if="loading"></div>
 
         <div v-else>
           <div v-if="last_Subscription.length > 0">
-            <v-row class="justify-center mt-5 mb-4" v-if="subInfo">
+            <v-row class="justify-center  mb-4" v-if="subInfo" style="margin-top: 180px;">
               <v-col cols="3">
                 <v-alert
                   border="start"
@@ -112,10 +111,6 @@
               </v-card-text>
 
               <v-card-actions class="justify-end">
-                <!-- <v-btn color="primary" dark @click="addLicense">
-                <v-icon left>mdi-plus</v-icon>
-                Ajouter une licence
-              </v-btn> -->
                 <v-btn
                   large
                   rounded
@@ -128,7 +123,6 @@
                   class="mt-3 btn-add"
                   @click="addLicense"
                 >
-                  <!-- <v-icon left>mdi-plus</v-icon> -->
                   <span class="text-white pr-3 pl-3">{{
                     $t("buttons.Add")
                   }}</span>
@@ -137,72 +131,14 @@
             </v-card>
           </v-container>
         </div>
-
-        <!-- <div class="d-flex text-center justify-center">
-          <v-row class="mt-5" align="center" justify="start" dense>
-            <v-col cols="12" sm="8" md="6" lg="4">
-              <v-text-field
-                v-model="license"
-                label="Ajouter une licence"
-                outlined
-                dense
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row class="mt-5" align="center" justify="start" dense>
-            <v-col cols="12" sm="4" md="2" lg="2">
-              <v-btn color="primary" @click="addLicense" block> Ajouter </v-btn>
-            </v-col>
-          </v-row>
-        </div> -->
-
-        <!-- <v-container
-          fluid
-          class="d-flex justify-center align-center"
+        <v-snackbar
+          :timeout="2000"
+          v-model="state.snackbar"
+          location="bottom right"
+          :color="state.color"
         >
-          <v-card class="pa-5 mt-2 mb-7" max-width="700">
-            <v-card-title class="text-h5">Ajouter une licence</v-card-title>
-
-            <v-card-text>
-              <p class="mb-4">
-                La clé de licence se trouve dans l'e-mail de confirmation que
-                vous avez reçu après son achat.
-              </p>
-
-              <v-text-field v-model="license" label="Clé de licence" outlined />
-            </v-card-text>
-
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="primary" @click="addLicense">
-                AJOUTER UNE LICENCE
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-container> -->
-
-        <!-- <v-row class="mt-5"> -->
-        <!-- <v-col cols="2" /> -->
-        <!-- <v-col cols="8">
-            <h1 class="d-flex justify-center">
-              {{ $t("subscription.chooseYourPlan") }}
-            </h1>
-            <div class="subscription-cards">
-              <SubscriptionTypeCard
-                v-for="card in subscriptionCards"
-                :key="card.title"
-                :title="card.title"
-                :prices="card.prices"
-                :communservices="card.communservices"
-                :services="card.services"
-                :backgroundColor="card.backgroundColor"
-                :height="card.height"
-                :buttonColor="card.buttonColor"
-              />
-            </div>
-          </v-col> -->
-        <!-- <v-col cols="2" /> -->
-        <!-- </v-row> -->
+          {{ state.textAlert }}
+        </v-snackbar>
         <br />
       </template>
     </base-layout>
@@ -215,15 +151,13 @@ import helpModal from "@/components/modals/help.vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { useI18n } from "vue-i18n";
 import BaseLayout from "@/layouts/layout.vue";
-// import SubscriptionTypeCard from "./components/subscriptionTypeCard.vue";
-import { onMounted, inject, ref, computed } from "vue";
+import { onMounted, inject, ref, computed, reactive } from "vue";
 import { get_lang } from "@/mixins/storage_language.js";
 import dayjs from "dayjs";
 export default {
   name: "Subscription",
   components: {
     BaseLayout,
-    // SubscriptionTypeCard,
     helpModal,
   },
   setup() {
@@ -382,7 +316,6 @@ export default {
         .then((response) => {
           last_Subscription.value = response.data.list_features;
           loading.value = false;
-          console.log("***************0", last_Subscription.value);
         });
     };
 
@@ -444,12 +377,18 @@ export default {
       subscriptionCards.value[1].services = mappedService;
     });
 
+    const state = reactive({
+      snackbar: false,
+      color: "",
+      textAlert: "",
+    });
+
     const addLicense = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (license.value.trim() === "") {
-        alert("Veuillez entrer une licence");
+        // alert("Veuillez entrer une licence");
         return;
       } else {
         let payload = {
@@ -461,31 +400,38 @@ export default {
             console.log("response", response);
             license.value = "";
 
-            // state.openModal = false;
-            // state.snackbar = true;
-            // state.color = "success";
-            // state.textAlert = response.data.msg;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
 
-            // setTimeout(() => {
-            //   location.reload();
-            // }, 1000);
+            setTimeout(() => {
+              location.reload();
+              resetForm();
+            }, 1000);
           })
           .catch((i) => {
-            // if (i.response.status === 500) {
-            //   state.snackbar = true;
-            //   state.color = "red";
-            //   state.textAlert = t("errors.errorServer");
-            // } else {
-            //   state.snackbar = true;
-            //   state.color = "red";
-            //   state.textAlert = i.response.data.error;
-            // }
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+            }
           });
       }
       console.log("Licence ajoutée:", license.value);
     };
 
+    const resetForm = () => {
+      state.snackbar = false;
+      state.color = "";
+      state.textAlert = "";
+    };
     return {
+      resetForm,
+      state,
       loading,
       subscription,
       last_Subscription,

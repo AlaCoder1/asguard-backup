@@ -14,6 +14,7 @@
     "LoginTime": "Login Time",
     "resetPassword": "Reset Password"
   },
+  "needhelp":"Need help ?",
   "license":"License",
   "addlicense":"Add a license",
   "keylicense":"The license key is in the confirmation email you received after your purchase.",
@@ -210,7 +211,7 @@
     "inbound": "Inbound rules",
     "delete_confirm": "Delete Confirmation",
     "Save_confirm": "Save confirmation",
-    "msg_confirm_delete": "Are you sure you want to delete this rule from the Firewall?",
+    "msg_confirm_delete": "Are you sure you want to delete ?",
     "msg_confirm_save": "Are you sure you want to save?",
     "cancel": "Cancel",
     "delete": "Delete",

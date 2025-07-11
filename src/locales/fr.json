@@ -14,6 +14,7 @@
     "LoginTime": "Temps de connexion",
     "resetPassword": "Réinitialisation du mot de passe"
   },
+  "needhelp":"Besoin d'aide ?",
   "license":"Licence",
   "addlicense":"Ajouter une licence",
   "keylicense":"La clé de licence se trouve dans l'e-mail de confirmation que vous avez reçu après votre achat.",
@@ -209,7 +210,7 @@
     "inbound": "Règles entrantes",
     "delete_confirm": "Confirmation de suppression",
     "Save_confirm": "Confirmation de sauvegarde",
-    "msg_confirm_delete": "Êtes-vous sûr de vouloir supprimer cette règle du pare-feu ?",
+    "msg_confirm_delete": "Êtes-vous sûr de vouloir supprimer ?",
     "msg_confirm_save": "Êtes-vous sûr de vouloir sauvegarder?",
     "cancel": "Annuler",
     "delete": "Supprimer",

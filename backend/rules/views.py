@@ -12,7 +12,7 @@ from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INE
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 @swagger_auto_schema(
-    method='delete',
+    method='post',
     operation_summary="API to delete a rule",
     #   manual_parameters=[
     #     openapi.Parameter(
@@ -39,7 +39,7 @@ from drf_yasg import openapi
     }
 )
 
-@api_view(['DELETE'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def delete_rule(request):
     """
@@ -54,9 +54,10 @@ def delete_rule(request):
     JsonResponse: A JSON response containing a message indicating the success 
       or failure of the deletion operation.
     """
-    if (request.method == 'DELETE'):
+    if (request.method == 'POST'):
         ids=request.data
         all_response=[]
+        print(ids)
         for id in ids:
             if (Rule.objects.filter(id=id).exists()):
                 rules = Rule.objects.get(id=id)
@@ -76,7 +77,7 @@ def delete_rule(request):
                 msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
                 status=400
             all_response.append({"msg":msg,"status":status})
-        return JsonResponse({"responses": all_response},status=status)
+        return JsonResponse({"responses": all_response})
       
 
 

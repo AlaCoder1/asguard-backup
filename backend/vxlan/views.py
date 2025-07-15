@@ -178,7 +178,6 @@ def add_vxlan(request):
         res_validate=validate_input_date(data_input)
         if res_validate is None:
             vxlan_serializer=VxlanSerializer(data=data_input)
-
             if vxlan_serializer.is_valid():
                 vxlan_serializer.save()
                 msg= f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_CREATING}"

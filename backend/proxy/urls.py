@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('allRuleSquid', views.allRuleSquid, name='allRuleSquid'), 
     path('addRuleSquid', views.addRuleSquid, name='addRuleSquid'), 
+    path('updateRuleSquid/<int:rule_id>', views.updateRuleSquid, name='updateRuleSquid'), 
     path('deleteRuleSquid/<int:id>', views.deleteRuleSquid, name='deleteRuleSquid'), 
     path('updateStatusRule/<int:id>', views.updateStatusRule, name='updateStatusRule'), 
     

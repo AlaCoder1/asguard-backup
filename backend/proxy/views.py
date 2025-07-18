@@ -16,9 +16,9 @@ from rest_framework.authentication import SessionAuthentication
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.utils import translation
 from utils.utils_email import is_valid_email
-
+from backend.managementUsers.models import Profile
 # Constants
 CONSTANT_SQUID = _('Squid')
 CONSTANT_PATTERN = _('Pattern')
@@ -502,14 +502,30 @@ def addRuleSquid(request):
             try:
                 with open(file_path, 'a') as file:
                     file.write(value + '\n')
+                language = Profile.objects.get(id=data['user_id']).language
+                translation.activate(language)
                 serializerProxyRules = ProxyRulesSerializer(data=data)
                 if (serializerProxyRules.is_valid()):
-                    serializerProxyRules.save()
-                    server_satus = ServerSatus.objects.get(id=1)
-                    server_satus.status_server = True
-                    server_satus.save()
-                    msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
-                    return JsonResponse({"msg": msg}, status=200)
+                    try:
+                        serializerProxyRules.save()
+                        server_satus = ServerSatus.objects.get(id=1)
+                        server_satus.status_server = True
+                        server_satus.save()
+                        msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
+                        return JsonResponse({"msg": msg}, status=200)
+                    except IntegrityError as e:
+                        error_msg = str(e)
+                        if "unique constraint" in error_msg and "proxy_rules_value_key" in error_msg:
+                            # Custom translated message for duplicate value
+                            return JsonResponse(
+                                {"error": _("La valeur existe déjà et doit être unique.")},
+                                status=400
+                            )
+                        # Generic translated DB error
+                        return JsonResponse(
+                            {"error": _("Erreur d'intégrité de la base de données.")},
+                            status=400
+                        )
                 else:
                     return JsonResponse(serializerProxyRules.errors, status=400 )
             except Exception as e:

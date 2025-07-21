@@ -14,6 +14,7 @@
     "LoginTime": "Temps de connexion",
     "resetPassword": "Réinitialisation du mot de passe"
   },
+  "availableRange":"Plage disponible",
   "needhelp":"Besoin d'aide ?",
   "license":"Licence",
   "addlicense":"Ajouter une licence",
@@ -67,6 +68,7 @@
   },
 
   "errors": {
+    "formatRange":"Format doit correspondre à une adresse IP : X.X.X.X et ne doit pas être hors plage.",
     "duplicated":"Les adresses des champs source, traduction et destination doivent être toutes différentes.",
     "endAddress": "Format doit correspondre à l'adresse IP : X.X.X.X (dernier octet ne doit pas être 0 ou 255)",
     "port": "Port doit se terminer par 443",

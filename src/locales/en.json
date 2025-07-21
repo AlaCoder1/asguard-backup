@@ -14,6 +14,7 @@
     "LoginTime": "Login Time",
     "resetPassword": "Reset Password"
   },
+  "availableRange":"Available Range",
   "needhelp":"Need help ?",
   "license":"License",
   "addlicense":"Add a license",
@@ -67,6 +68,7 @@
   },
 
   "errors": {
+    "formatRange":"Format must be X.X.X.X and the address must not be out of range",
     "duplicated": "The source, translation, and destination fields must each contain a different address.",
     "endAddress": "Format must match IP address: X.X.X.X (last byte must not be 0 or 255)",
     "port": "Port must end with 443",

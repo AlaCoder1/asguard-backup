@@ -5,7 +5,7 @@ from django.db.models import Q
 from backend.gateway.models import Gateway
 from backend.network.models import Interface
 VLAN_MIN = 1
-VLAN_MAX = 4095
+VLAN_MAX = 4094
 DEFAULT_VLAN = 1
 
 class InvalidVLANTagError(Exception):

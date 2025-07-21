@@ -50,7 +50,7 @@ ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER = _("An area contains only two interfac
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_all_area(request):
+def get_all_area(_):
     """Getting all servers from database"""
     list_area = []
     list_area = get_list_all_area()
@@ -62,10 +62,12 @@ def get_all_area(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_area(request, id):
+def get_area(_, id):
     """Getting area by id from database"""
     area = get_one_area(id)
-    return JsonResponse(area, safe=False)
+    if area:
+        return JsonResponse(area, safe=False)
+    return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema(
@@ -171,10 +173,12 @@ def get_all_sdwan_rule(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_sdwan_rule(request, id):
+def get_sdwan_rule(_, id):
     """Getting sdwan_rules by id from database"""
     sdwan_rule = get_one_sdwan_rule(id)
-    return JsonResponse(sdwan_rule, safe=False)
+    if sdwan_rule:
+        return JsonResponse(sdwan_rule, safe=False)
+    return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema(
@@ -201,7 +205,8 @@ def create_sdwan_rule(request):
     try:
         data = request.data
         # Apply correction for ipv4 addresses
-        data["source_address"]= fix_ipv4_address([data["source_address"]])
+        data["source_address"] = fix_ipv4_address([data["source_address"]])
+        data["source_address"] = data["source_address"][0]
 
         data["table_id"] = search_routing_table_id()
         if data["algorythme_type"] == "failover":
@@ -274,9 +279,11 @@ def delete_sdwan_rule(request, id):
 def update_sdwan_rule(request, id):
     """Updating a new SDWAN rule"""
     try:
+        sdwan_rule = SdwanRules.objects.get(id=id)
         data = request.data
         # Apply correction for ipv4 addresses
-        data["source_address"] = fix_ipv4_address(data["source_address"])
+        data["source_address"] = fix_ipv4_address([data["source_address"]])
+        data["source_address"] = data["source_address"][0]
         
         if data["algorythme_type"] == "failover":
             # Check if the area contains only two interfaces in failover method
@@ -285,7 +292,6 @@ def update_sdwan_rule(request, id):
             data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
         else:
             data["primary_interface"] = None
-        sdwan_rule = SdwanRules.objects.get(id=id)
 
         serializer_sdwan_rule = SdwanRulesSerializer(sdwan_rule, data=data)
         if serializer_sdwan_rule.is_valid():
@@ -314,9 +320,9 @@ def update_sdwan_rule(request, id):
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SDWAN_RULE}"}, status=400)
     except Interface.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except SdwanRules.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @api_view(['PUT'])

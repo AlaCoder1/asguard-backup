@@ -17,7 +17,6 @@ urlpatterns = [
     # path('<int:id>', views.Settings, name="Settings"),
     path('getSystem/<int:id>', views.getSystem, name="getSystem"),
     path('getNetwork/<int:id>', views.getNetwork, name="getNetwork"),
-    path('getServerReseau/<int:id>', views.getServerReseau, name="getServerReseau"),
     path('createSystem', views.create_system, name="createSystem"),
     # path('createServerReseau', views.createServerReseau, name="createServer"),
     # path('createNetwork', views.createNetwork, name="createNetwork"),

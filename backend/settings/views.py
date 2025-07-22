@@ -34,9 +34,6 @@ Endpoints:
 6. `getNetwork(request, id) [GET]`
    - Fetches network details for a given ID.
 
-7. `getServerReseau(request, id) [GET]`
-   - Retrieves server network details.
-
 8. `createSystem(request) [POST]`
    - Creates a new system entry.
 
@@ -620,71 +617,6 @@ def getNetwork(request, id):
         # return a no content response.
         return JsonResponse(networkJson)
 
-@swagger_auto_schema(
-    method='GET',
-    responses={
-        200: Schema(
-            type=TYPE_OBJECT,
-            properties={
-                "id": Schema(type=TYPE_INTEGER),
-                "name": Schema(type=TYPE_STRING),
-                "address": Schema(type=TYPE_STRING),
-                "status": Schema(type=TYPE_STRING)
-            }
-        ),
-        404: 'Not Found'
-    },
-    operation_summary="API to retrieve server network information",
-    operation_description="Retrieve server network information by ID."
-)
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
-def getServerReseau(request, id):
-    """
-    Retrieves the server network information for a specific ID.
-
-    This function handles GET requests to retrieve the server network (ServerReseau) information based on the provided `id`. It fetches the data from the database, formats it by removing unnecessary fields, and returns the information as a JSON response.
-
-    Parameters:
-    ----------
-    request : HttpRequest
-        The HTTP request object containing the request details.
-
-    id : int
-        The unique identifier for the server network entry to be retrieved.
-
-    Returns:
-    -------
-    JsonResponse
-        A JSON response containing the server network details, excluding unnecessary fields.
-
-    Example:
-    --------
-    Success response:
-    {
-        "id": 1,
-        "name": "Server 1",
-        "address": "192.168.1.1",
-        "status": "active"
-    }
-
-    Raises:
-    ------
-    KeyError:
-        If no server network is found for the provided `id`.
-    """
-    if (request.method == 'GET'):
-        serverReseau = ServerReseau.objects.filter(id=id)
-        serverReseauDict = serializers.serialize("json", serverReseau)
-        res = json.loads(serverReseauDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        serverReseauJson = res[0]['fields']
-        # return a no content response.
-        return JsonResponse(serverReseauJson)
 
 @swagger_auto_schema(
     method='POST',

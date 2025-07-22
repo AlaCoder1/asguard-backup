@@ -84,10 +84,16 @@
                     <div class="ml-1 mt-5">/</div>
                   </v-col>
                   <v-col cols="4">
-                    <v-text-field
+                    <!-- <v-text-field
                       :label="$t('sdwan.prefix')"
                       v-model="state.formData.prefix"
-                    ></v-text-field>
+                    ></v-text-field> -->
+                    <v-select
+                      v-model="state.formData.prefix"
+                      :label="$t('sdwan.prefix')"
+                      :no-data-text="$t('nat.msg_no_data')"
+                      :items="numberList"
+                    ></v-select>
                     <p
                       class="error-feedback mb-5"
                       v-if="v$.formData.prefix.$errors.length"
@@ -297,6 +303,7 @@ import useValidate from "@vuelidate/core";
 import { helpers, requiredIf, required } from "@vuelidate/validators";
 import { reactive, computed, toRefs, watch, inject, ref } from "vue";
 import VButton from "@/components/VButton.vue";
+import { id } from "@/mixins/storage_language.js";
 export default {
   name: "Modal_User_Squid",
   components: {
@@ -322,6 +329,8 @@ export default {
     const { t } = useI18n();
     const { isOpenModal, editRowRule, modalModeRule } = toRefs(props);
     const emitter = inject("emitter");
+    const numberList = ref(Array.from({ length: 33 }, (_, i) => i));
+
     const state = reactive({
       formData: {
         days: [],
@@ -647,7 +656,6 @@ export default {
     };
 
     const submitForm = async () => {
-      console.log("state.formData.value2"), state.formData.value2;
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();
@@ -680,7 +688,21 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = i.response.data.error;
+
+                if (i.response.data?.error) {
+                  state.textAlert = i.response.data.error;
+                } else {
+                  const errorData = i.response.data;
+                  const allErrors = [];
+
+                  for (const key in errorData) {
+                    if (Array.isArray(errorData[key])) {
+                      allErrors.push(`${errorData[key].join(", ")}`);
+                    }
+                  }
+
+                  state.textAlert = allErrors.join(" | ");
+                }
               }
             });
         } else {
@@ -734,7 +756,10 @@ export default {
               time_to: to,
             };
           }
-          console.log("pay", payload);
+
+          payload = { ...payload, user_id: id };
+          console.log({ payload });
+
           axios
             .post("/proxy/addRuleSquid", payload)
             .then((response) => {
@@ -755,7 +780,27 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "red";
-                state.textAlert = i.response.data.error;
+
+                // if (i.response?.data?.days) {
+                //   const daysError = i.response.data.days.join(", ");
+                //   state.textAlert = daysError;
+                // } else {
+                // state.textAlert = i.response.data.error;
+                // }
+                if (i.response.data?.error) {
+                  state.textAlert = i.response.data.error;
+                } else {
+                  const errorData = i.response.data;
+                  const allErrors = [];
+
+                  for (const key in errorData) {
+                    if (Array.isArray(errorData[key])) {
+                      allErrors.push(`${errorData[key].join(", ")}`);
+                    }
+                  }
+
+                  state.textAlert = allErrors.join(" | ");
+                }
               }
             });
         }
@@ -766,6 +811,7 @@ export default {
 
     return {
       state,
+      numberList,
       v$,
       isDomains,
       isTimeAndDomains,

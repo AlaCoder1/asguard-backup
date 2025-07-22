@@ -32,14 +32,6 @@ class ProxyRulesByTimeSerializer(serializers.ModelSerializer):
         model = ProxyRules
         fields = ('rule_name','type', 'value','days','time_from','time_to','status','allow_by_auth')
         
-    def validate_days(self, value):
-        valid_days = {'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'}
-        days_list = [day.strip() for day in value.split(',')]
-        invalid_days = [day for day in days_list if day not in valid_days]
-        if invalid_days:
-            raise serializers.ValidationError(f"Invalid day(s): {', '.join(invalid_days)}")
-        return value
-
     def validate(self, attrs):
         if attrs['time_from'] >= attrs['time_to']:
             raise serializers.ValidationError("`time_from` must be earlier than `time_to`.")

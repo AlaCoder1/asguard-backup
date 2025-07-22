@@ -515,22 +515,20 @@ def addRuleSquid(request):
                         return JsonResponse({"msg": msg}, status=200)
                     except IntegrityError as e:
                         error_msg = str(e)
-                        if "unique constraint" in error_msg and "proxy_rules_value_key" in error_msg:
-                            # Custom translated message for duplicate value
-                            return JsonResponse(
-                                {"error": _("La valeur existe déjà et doit être unique.")},
-                                status=400
-                            )
-                        # Generic translated DB error
-                        return JsonResponse(
-                            {"error": _("Erreur d'intégrité de la base de données.")},
-                            status=400
-                        )
+                        if "proxy_rules_rule_name" in error_msg:
+                            translated_msg = _("Une règle avec ce nom existe déjà")  
+                        elif "proxy_rules_value_key" in error_msg:
+                            translated_msg = _("Une règle avec cette valeur est déjà utilisée.")
+                        else:
+                            translated_msg = _("Erreur d'intégrité de la base de données.")
+                        return JsonResponse({"error": translated_msg}, status=400)
                 else:
                     return JsonResponse(serializerProxyRules.errors, status=400 )
             except Exception as e:
                 return JsonResponse({"error": str(e)}, status=400)
         else:
+            language = Profile.objects.get(id=data['user_id']).language
+            translation.activate(language)
             serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
             if (serializerProxyRules.is_valid()):
                 serializerProxyRules.save()
@@ -617,6 +615,8 @@ def updateRuleSquid(request, rule_id):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
     else:
+        language = Profile.objects.get(id=data['user_id']).language
+        translation.activate(language)
         serializer = ProxyRulesByTimeSerializer(existing_rule, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -1608,23 +1608,35 @@ def add_user_squid(request):
     try:
         subprocess.run(['htpasswd', '-b', squid_conf_path, username_squid, password_squid], check=True)
         try:
-            user_proxy = ProxyUser(username=username_squid,email=email_squid)
+            language = Profile.objects.get(id=data['user_id']).language  
+            translation.activate(language)
+
+            user_proxy = ProxyUser(username=username_squid, email=email_squid)
             user_proxy.save()
+
             server_satus = ServerSatus.objects.get(id=1)
             server_satus.status_server = True
-            server_satus.save() 
-            #send_email_to_user(email_squid,password_squid,username_squid)
+            server_satus.save()
+
             msg = f"{CONSTANT_USER} {username_squid} {SUCCESS_MESSAGES_CREATING}"
-            status=200
-            return JsonResponse({"msg": msg}, status=status)
+            return JsonResponse({"msg": msg}, status=200)
+
         except IntegrityError as e:
-            msg = f"{ERROR_MESSAGES_SAVING_INSTANCE}: {e}"
-            status=400 
-            return JsonResponse({"error": msg}, status=status)
+            error_msg = str(e)
+
+            # Detect duplicate username error
+            if "proxy_user_username_key" in error_msg:
+                translated_msg = _("Ce nom d'utilisateur existe déjà.")  
+            elif "proxy_user_email_key" in error_msg:
+                translated_msg = _("Cet e-mail est déjà utilisé.")
+            else:
+                translated_msg = _("Erreur d'intégrité de la base de données.")
+
+            return JsonResponse({"msg": translated_msg}, status=400)
+
         except Exception as e:
-            msg = (f"{ERROR_MESSAGES_OCCURRED}: {e}")
-            status=400 
-            return JsonResponse({"error": msg}, status=status)
+            translated_msg = _(f"{ERROR_MESSAGES_OCCURRED}: {e}")
+            return JsonResponse({"error": translated_msg}, status=400)
         ### to add only one user every time in file
         # subprocess.run(['htpasswd', '-b', '-c', squid_conf_path, username_squid, password_squid], check=True)
     except subprocess.CalledProcessError as e:

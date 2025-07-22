@@ -13,7 +13,9 @@
           </v-card-title>
           <v-card-text>
             <v-container>
-              <h4 class="mb-3">Available Range : {{ initialRanges }}</h4>
+              <h4 class="mb-3">
+                {{ $t("availableRange") }} : {{ initialRanges }}
+              </h4>
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
@@ -446,8 +448,8 @@ export default {
     const error = computed(() => {
       return t("errors.valueRequired");
     });
-    const formatMustBeLikeAdresseIP = computed(() => {
-      return t("errors.formatMustBeLikeAdresseIP");
+    const formatRange = computed(() => {
+      return t("errors.formatRange");
     });
     const rules = computed(() => {
       return {
@@ -459,7 +461,7 @@ export default {
             )
           ),
           isValidlRangeFrom: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            formatRange,
 
             helpers.regex(
               /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
@@ -474,7 +476,7 @@ export default {
             )
           ),
           isValidlRangeTo: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            formatRange,
 
             helpers.regex(
               /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/

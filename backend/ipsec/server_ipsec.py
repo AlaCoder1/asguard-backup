@@ -6,10 +6,12 @@ from backend.ipsec.utils_config import comment_conn_in_config_file, edit_conn_in
 from backend.ipsec.utils_secrets import comment_line_in_secrets_file, create_line_secrets, edit_line_in_secrets_file, uncomment_line_in_secrets_file
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_KEY
 from backend.managementKeypairs.models import PublicKey
+from backend.nat.utils_system import add_nat_rule_in_system, delete_nat_rule_in_system
 from utils.commands_utils import execute_command_without_arguments
+from utils.errors_utils import CommandExecutionError
 
 
-def install_server_ipsec_in_system(conn_config, authentication, interface_address, remote_gateway):
+def install_server_ipsec_in_system(conn_config, authentication, interface_address, remote_gateway, address_remote_network):
     """Function to install an ipsec server in system by adding the right config of the tunnel"""
     
     # Adding the secret informations like the pre-shared key or certificates in ipsec.secrets file
@@ -27,11 +29,18 @@ def install_server_ipsec_in_system(conn_config, authentication, interface_addres
             private_key = public_key.private_key.name
             ipsec_secrets_file.write(f"""\n\n : RSA {private_key}.pem """)
 
+    # Add configuration of IPsec tunnel to the configuration file
     with open(PATH_IPSEC_CONF, 'a') as ipsec_file:
         ipsec_file.write(f'\n{conn_config}')
     
+    # Add a postrouting NAT rule of the IPsec configuration
+    command_postrouting_nat = ["sudo", "nft", "add", "rule", "nat", "postrouting", "ip", "daddr", address_remote_network, "accept"]
+    rule_content, handle_number = add_nat_rule_in_system(command_postrouting_nat)
+
     # Restart IPsec service to take the new configuration
     execute_command_without_arguments(['sudo', 'ipsec', 'restart'])
+
+    return rule_content, handle_number
 
 
 def delete_server_ipsec_in_system(server:ServerIPsec):
@@ -42,6 +51,12 @@ def delete_server_ipsec_in_system(server:ServerIPsec):
     
     # Delete secret line from secrets file
     edit_line_in_secrets_file(server, '')
+
+    # Delete the postrouting NAT rule of the IPsec configuration
+    try:
+        delete_nat_rule_in_system("postrouting", server.postrouting_rule_handle)
+    except CommandExecutionError:
+        pass
 
     # Restart IPsec service to take the new configuration
     execute_command_without_arguments(['sudo', 'ipsec', 'restart'])
@@ -68,25 +83,41 @@ def update_server_ipsec_in_system(previous_server:ServerIPsec, server:ServerIPse
     if not previous_server.server_status:
         comment_conn_in_config_file(server.conn_name)
         comment_line_in_secrets_file(server)
-    
+
+    # Update the postrouting NAT rule of the IPsec configuration by deleting the previous rule and add the new one
+    try:
+        delete_nat_rule_in_system("postrouting", server.postrouting_rule_handle)
+    except CommandExecutionError:
+        pass
+    command_postrouting_nat = ["sudo", "nft", "add", "rule", "nat", "postrouting", "ip", "daddr", server.address_remote_network, "accept"]
+    new_rule_content, new_handle_number = add_nat_rule_in_system(command_postrouting_nat)
 
     # Restart IPsec service to take the new configuration
     execute_command_without_arguments(['sudo', 'ipsec', 'restart'])
 
+    return new_rule_content, new_handle_number
 
-def change_status_conn(enable, server:ServerIPsec):
-    """Change status of a config in .conf and .secrets files by commenting or uncommenting"""
-    # Edit config file
-    if enable:
-        uncomment_conn_in_config_file(server.conn_name)
-    else:
-        comment_conn_in_config_file(server.conn_name)
+
+def enable_conn(server:ServerIPsec):
+    """Enable an Ipsec tunnel in ipsec.conf and ipsec.secrets files by uncommenting and add the postrouting rule"""
+    # Enable IPsec tunnel
+    uncomment_conn_in_config_file(server.conn_name)
+    uncomment_line_in_secrets_file(server)
+
+    # Add a postrouting NAT rule of the IPsec configuration
+    command_postrouting_nat = ["sudo", "nft", "add", "rule", "nat", "postrouting", "ip", "daddr", server.address_remote_network, "accept"]
+    rule_content, handle_number = add_nat_rule_in_system(command_postrouting_nat)
+    return rule_content, handle_number
+
+
+def disable_conn(server:ServerIPsec):
+    """Change status of a config in .conf and .secrets files by commenting or uncommenting and add or delete the postrouting rule"""
+    # Disable IPsec tunnel
+    comment_conn_in_config_file(server.conn_name)
+    comment_line_in_secrets_file(server)
     
-    # Edit secrets file
-    if enable:
-        uncomment_line_in_secrets_file(server)
-    else:
-        comment_line_in_secrets_file(server)
+    # Delete the postrouting NAT rule of the IPsec configuration
+    delete_nat_rule_in_system("postrouting", server.postrouting_rule_handle)
 
 
 def change_status_ipsec_in_system(status="start"):

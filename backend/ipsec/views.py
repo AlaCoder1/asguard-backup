@@ -7,10 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING
 
-from backend.ipsec.utils import check_payload_change_status, json_to_str_server_ipsec, up_ipsec_conn
+from backend.ipsec.utils import check_payload_change_status, check_payload_create_tunnel, json_to_str_server_ipsec, up_ipsec_conn
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec, get_status_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
-from backend.ipsec.server_ipsec import change_status_conn, change_status_ipsec_in_system, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
+from backend.ipsec.server_ipsec import disable_conn, enable_conn, change_status_ipsec_in_system, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
@@ -84,7 +84,7 @@ def get_server_ipsec(request, id):
 
 
 @swagger_auto_schema(
-        'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+        'POST', responses={201: 'Created', 400: 'Bad Request'}, 
         operation_summary="API TO CREATE AN IPSEC",
         request_body=Schema(type=TYPE_OBJECT, required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
         properties={
@@ -148,6 +148,10 @@ def create_server_ipsec(request):
     """Creating a new server in system and adding it to the database"""
     try:
         data = request.data
+
+        # Check data validity
+        if not check_payload_create_tunnel(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
 
         conn_name = data.get("conn_name", "")
         connection_method = data.get("connection_method", "")
@@ -234,9 +238,6 @@ def create_server_ipsec(request):
                         "hash_algorithm_ph2": hash_algorithm_ph2,
                         "pfs_key_group": pfs_key_group,
                         "lifetime_ph2": lifetime_ph2,
-                        
-                        # auto_ping_host": auto_ping_host,
-                        # manual_spd_entries": manual_spd_entries,
                         }
         
         if key_exchange_version == "V1":
@@ -296,12 +297,6 @@ def create_server_ipsec(request):
             server_data["type_remote_network"] = type_remote_network
             server_data["address_remote_network"] = address_remote_network
             data["address_remote_network"] = address_remote_network
-            
-        elif mode == "Route-based":
-            local_address = mode_ph2.get("local_address", "")
-            remote_address = mode_ph2.get("remote_address", "")
-            server_data["local_address"] = local_address
-            server_data["remote_address"] = remote_address
 
         if protocol == "ESP":
             encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
@@ -314,16 +309,22 @@ def create_server_ipsec(request):
             # Update the server config
             server_conf = json_to_str_server_ipsec(data)
 
-            # Install the server in system
+            # Install the server configuration in system
+            interface_ip_address = "any"
             if interface_name != 'Any':
-                install_server_ipsec_in_system(server_conf, authentication, interface_address.ip_address, remote_gateway)
-            else:
-                install_server_ipsec_in_system(server_conf, authentication, 'any', remote_gateway)
+                interface_ip_address = interface_address.ip_address
+            postrouting_rule_content, postrouting_rule_handle = install_server_ipsec_in_system(server_conf, authentication, interface_ip_address, remote_gateway, address_remote_network)
             time.sleep(3)
 
-            # Add the server to the database
-            serializer_server.save()
-            return JsonResponse({"msg": f"{conn_name} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+            # Add the postrouting rule data to the serializer
+            server_data["postrouting_rule_content"] = postrouting_rule_content
+            server_data["postrouting_rule_handle"] = postrouting_rule_handle
+            serializer_server = ServerIPsecSerializer(data=server_data)
+            if serializer_server.is_valid():
+
+                # Add the server to the database
+                serializer_server.save()
+                return JsonResponse({"msg": f"{conn_name} {SUCCESS_MESSAGES_CREATING}"}, status=201)
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_IPSEC_CONFIGURATION}"}, status=400)
@@ -542,25 +543,29 @@ def update_server_ipsec(request, id):
             encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
             server.encryption_algorithm_ph2 = ",".join(encryption_algorithm_ph2_list)
             data["encryption_algorithm_ph2"] = server.encryption_algorithm_ph2
-
-        serializer_server = ServerIPsecSerializer(server, data=data)
-        data["hash_algorithm_ph1"] = server.hash_algorithm_ph1
-        data["dh_key_group"] = server.dh_key_group
+        data_serializer = data.copy()
+        serializer_server = ServerIPsecSerializer(server, data=data_serializer)
+        data_serializer["hash_algorithm_ph1"] = server.hash_algorithm_ph1
+        data_serializer["dh_key_group"] = server.dh_key_group
         if serializer_server.is_valid():
-        
-            data["hash_algorithm_ph1"] = hash_algorithm_ph1_list
-            data["dh_key_group"] = dh_key_group_list
 
             # Update the server config and secrets
             server_conf = json_to_str_server_ipsec(data)
             
             # Install the server in system
-            update_server_ipsec_in_system(previous_server, server, server_conf)
+            postrouting_rule_content, postrouting_rule_handle = update_server_ipsec_in_system(previous_server, server, server_conf)
             time.sleep(3)
 
-            # Add the server to the database
-            serializer_server.save()
-            return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+            # Add the postrouting rule data to the serializer
+            data_serializer["postrouting_rule_content"] = postrouting_rule_content
+            data_serializer["postrouting_rule_handle"] = postrouting_rule_handle
+            serializer_server = ServerIPsecSerializer(server, data=data_serializer)
+            if serializer_server.is_valid():
+
+                # Add the server to the database
+                serializer_server.save()
+                return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+        
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
     except ServerIPsec.DoesNotExist:
@@ -591,18 +596,27 @@ def up_server_ipsec(request, id):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def status_server_ipsec(request, id):
-    """Change status of a server config from system and then from database"""
+    """Change status (enable or diable) of a server config from system and then from database"""
     try:
         data = request.data
         enable = data.get("enable", "")
-
         server = ServerIPsec.objects.get(id=id)
-        change_status_conn(enable, server)
+
+        # Enable IPsec tunnel
+        if enable:
+            rule_content, handle_number = enable_conn(server)
+            server.postrouting_rule_content = rule_content
+            server.postrouting_rule_handle = handle_number
+            server.server_status = enable
+            server.save()
+            return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_ENABLED}"})
+        
+        # Disable IPsec tunnel
+        disable_conn(server)
+        server.postrouting_rule_content = None
+        server.postrouting_rule_handle = None
         server.server_status = enable
         server.save()
-
-        if enable:
-            return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_ENABLED}"})
         return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_DISABLED}"})
         
     except ServerIPsec.DoesNotExist:

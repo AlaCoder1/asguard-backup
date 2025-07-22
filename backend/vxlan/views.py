@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _,get_language
 from backend.vxlan.serializers import VxlanSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+import re
 
 # Constants
 CONSTANT_VXLAN_CONFIG = _('Configuration VxLAN')
@@ -175,6 +175,7 @@ def add_vxlan(request):
     """
     if (request.method == 'POST'):
         data_input=request.data
+        data_input["vxlan_id"]=re.sub(r"\s+", "", data_input["vxlan_id"])
         res_validate=validate_input_date(data_input)
         if res_validate is None:
             vxlan_serializer=VxlanSerializer(data=data_input)
@@ -285,6 +286,7 @@ def update_vxlan(request,id):
     """
     if (request.method == 'PUT'):
         data_input =request.data
+        data_input["vxlan_id"]=re.sub(r"\s+", "", data_input["vxlan_id"])
         res_validate=validate_input_date(data_input)
         if res_validate is None:
             if Vxlan.objects.filter(id=id).exists():

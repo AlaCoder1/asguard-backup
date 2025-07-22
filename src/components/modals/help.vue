@@ -1,10 +1,29 @@
 <template>
-  <div class="mt-2 mr-5 d-flex justify-end cursor-pointer">
+  <!-- <div class="mt-2 mr-5 d-flex justify-end cursor-pointer">
     <span
       @click="openModal"
       style="cursor: pointer; font-size: 30px; color: #213e9f"
       class="mdi mdi-help-circle-outline cursor-pointer"
-    ></span>
+    >
+  </span>
+  </div> -->
+
+  <div class="mt-2 mr-5 d-flex justify-end cursor-pointer">
+    <v-btn
+      elevation="0"
+      style="background-color: transparent; box-shadow: none"
+    >
+      <span
+        v-bind="attrs"
+        v-on="on"
+        @click="openModal"
+        style="cursor: pointer; font-size: 30px; color: #213e9f"
+        class="mdi mdi-help-circle-outline"
+      ></span>
+      <v-tooltip activator="parent" location="top" color="info">{{
+        $t("needhelp")
+      }}</v-tooltip>
+    </v-btn>
   </div>
   <div>
     <v-row justify="center">

@@ -381,6 +381,13 @@ export default {
       return t("errors.formatMustBeLikeAdresseIP");
     });
 
+    const nbre = computed(() => {
+      return t("Waf.nombreMustBe");
+    });
+    const and = computed(() => {
+      return t("Waf.and");
+    });
+
     const rules = computed(() => {
       return {
         vni: {
@@ -389,6 +396,13 @@ export default {
             champInclude,
 
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 16777215`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 16777215;
+            }
           ),
         },
 
@@ -427,6 +441,14 @@ export default {
           isValidDport: helpers.withMessage(
             champInclude,
             helpers.regex(/^[0-9]+$/)
+          ),
+
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 65535`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 65535;
+            }
           ),
         },
         daddress: {

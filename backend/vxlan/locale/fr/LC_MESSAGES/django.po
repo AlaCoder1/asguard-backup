@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 20:39+0000\n"
+"POT-Creation-Date: 2025-07-15 09:56+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/vxlan/functions.py:6 backend/vxlan/views.py:18
+#: backend/vxlan/functions.py:7 backend/vxlan/views.py:18
 msgid "Configuration VxLAN"
 msgstr "Configuration VxLAN"
 
-#: backend/vxlan/functions.py:7 backend/vxlan/views.py:22
+#: backend/vxlan/functions.py:8 backend/vxlan/views.py:22
 msgid "Saved"
 msgstr "Sauvegardé"
 
@@ -57,6 +57,14 @@ msgstr "port"
 #: backend/vxlan/models.py:18
 msgid "connection name"
 msgstr "nom de la connection"
+
+#: backend/vxlan/validation.py:20
+msgid "VXLAN ID must be an integer."
+msgstr "L'ID VXLAN doit être un entier."
+
+#: backend/vxlan/validation.py:22
+msgid "VXLAN ID must be between "
+msgstr "L'ID VXLAN doit être compris entre "
 
 #: backend/vxlan/views.py:19
 msgid "Interface VxLAN"

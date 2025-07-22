@@ -24,6 +24,10 @@ def get_list_all_area():
 
 def get_one_area(id):
     """Getting area by id from database"""
+    try:
+        area = Area.objects.get(pk=id)
+    except Area.DoesNotExist:
+        return False
     area = Area.objects.filter(pk=id)
     area_dict = serializers.serialize("json", area)
     res = json.loads(area_dict)
@@ -31,5 +35,6 @@ def get_one_area(id):
     area_id = res[0]['pk']
     res[0].pop('pk')
     res[0]['fields']['id'] = area_id
-    res[0]['fields']['members'] = list(res[0]['fields']['members'].split(','))
+    area_interface = AreaInterface.objects.filter(area_id=area_id)
+    res[0]['fields']['members'] = [interface.interface.name_interface for interface in area_interface]
     return res[0]['fields']

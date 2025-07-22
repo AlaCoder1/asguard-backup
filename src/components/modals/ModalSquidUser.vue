@@ -268,6 +268,7 @@ export default {
       state.textAlert = "";
       state.color = "";
       state.snackbar = false;
+      v$.value.$reset();
     };
     const getCookie = (name) => {
       let cookieValue = null;

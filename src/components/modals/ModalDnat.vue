@@ -68,6 +68,7 @@
                     :label="$t('nat.prefix')"
                     v-model="state.sourcePrefix"
                     :items="numberList"
+                    clearable
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.sourcePrefix.$error">
                     {{ v$.sourcePrefix.$errors[0].$message }}
@@ -86,9 +87,10 @@
                     item-title="name"
                     item-value="slug"
                     return-object
+                    clearable
                   ></v-select>
                   <v-text-field
-                    v-if="state.sourceRangeFrom.slug === 'other'"
+                    v-if="state.sourceRangeFrom?.slug === 'other'"
                     :label="$t('nat.from')"
                     v-model="state.specificSourceFrom"
                   ></v-text-field>
@@ -108,9 +110,10 @@
                     item-title="name"
                     item-value="slug"
                     return-object
+                    clearable
                   ></v-select>
                   <v-text-field
-                    v-if="state.sourceRangeTo.slug === 'other'"
+                    v-if="state.sourceRangeTo?.slug === 'other'"
                     label="To"
                     v-model="state.specificSourceTo"
                   ></v-text-field>
@@ -134,7 +137,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="`${$t('nat.ent_ext_add')} *`"
+                    :label="`${$t('nat.ent_ext_add')}`"
                     v-model="state.externalAddress"
                   ></v-text-field>
                   <p
@@ -147,7 +150,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="`${$t('nat.ent_int_add')} *`"
+                    :label="`${$t('nat.ent_int_add')}`"
                     v-model="state.internalAddress"
                   ></v-text-field>
                   <p
@@ -173,16 +176,17 @@
                   </v-col>
                   <v-col cols="3" class="mb-n6">
                     <v-select
-                      :label="`${$t('nat.from')} *`"
+                      :label="`${$t('nat.from')}`"
                       :no-data-text="$t('nat.msg_no_data')"
                       v-model="state.destinationRangeFrom"
                       :items="state.listPort"
                       item-title="name"
                       item-value="slug"
                       return-object
+                      clearable
                     ></v-select>
                     <v-text-field
-                      v-if="state.destinationRangeFrom.slug === 'other'"
+                      v-if="state.destinationRangeFrom?.slug === 'other'"
                       :label="`${$t('nat.from')} *`"
                       v-model="state.specificDestinationFrom"
                     ></v-text-field>
@@ -193,25 +197,26 @@
                       {{ v$.specificDestinationFrom.$errors[0].$message }}
                     </p>
 
-                    <p
+                    <!-- <p
                       class="error-feedback mb-5"
                       v-if="v$.destinationRangeFrom.$error"
                     >
                       {{ v$.destinationRangeFrom.$errors[0].$message }}
-                    </p>
+                    </p> -->
                   </v-col>
                   <v-col cols="3" class="mb-n6">
                     <v-select
-                      :label="`${$t('nat.to')} *`"
+                      :label="`${$t('nat.to')}`"
                       v-model="state.destinationRangeTo"
                       :items="state.listPortDestinationTo"
                       :no-data-text="$t('nat.msg_no_data')"
                       item-title="name"
                       item-value="slug"
                       return-object
+                      clearable
                     ></v-select>
                     <v-text-field
-                      v-if="state.destinationRangeTo.slug === 'other'"
+                      v-if="state.destinationRangeTo?.slug === 'other'"
                       :label="`${$t('nat.to')} *`"
                       v-model="state.specificDestinationTo"
                     ></v-text-field>
@@ -222,12 +227,12 @@
                       {{ v$.specificDestinationTo.$errors[0].$message }}
                     </p>
 
-                    <p
+                    <!-- <p
                       class="error-feedback mb-5"
                       v-if="v$.destinationRangeTo.$error"
                     >
                       {{ v$.destinationRangeTo.$errors[0].$message }}
-                    </p>
+                    </p> -->
                   </v-col>
 
                   <p
@@ -243,17 +248,18 @@
 
                   <v-col cols="12" class="mb-n6">
                     <v-select
-                      :label="`${$t('nat.port')} *`"
+                      :label="`${$t('nat.port')}`"
                       v-model.number="state.port"
                       :no-data-text="$t('nat.msg_no_data')"
                       :items="state.listPort"
                       item-title="name"
                       item-value="slug"
                       return-object
+                      clearable
                     ></v-select>
 
                     <v-text-field
-                      v-if="state.port.slug === 'other'"
+                      v-if="state.port?.slug === 'other'"
                       :label="`${$t('nat.port')} *`"
                       v-model="state.specificPort"
                     ></v-text-field>
@@ -263,10 +269,10 @@
                     >
                       {{ v$.specificPort.$errors[0].$message }}
                     </p>
-
+                    <!-- 
                     <p class="error-feedback mb-5" v-if="v$.port.$error">
                       {{ v$.port.$errors[0].$message }}
-                    </p>
+                    </p> -->
                   </v-col>
                 </template>
 
@@ -405,24 +411,24 @@ export default {
       listPortSourceTo: [],
       listPortDestinationTo: [],
       //
-      interface: "",
+      interface: null,
       tcpIpVersion: { name: "IPv4", slug: "ipv4" },
-      protocol: "",
+      protocol: null,
       sourceAddress: "",
-      sourcePrefix: "",
+      sourcePrefix: null,
       destination: "",
       checkInterface: "Forwarding",
 
       //
-      sourceRangeFrom: "",
-      sourceRangeTo: "",
+      sourceRangeFrom: null,
+      sourceRangeTo: null,
       internalAddress: "",
       externalAddress: "",
       description: "",
-      port: "",
+      port: null,
       //
-      destinationRangeFrom: "",
-      destinationRangeTo: "",
+      destinationRangeFrom: null,
+      destinationRangeTo: null,
 
       //port other
       specificSourceFrom: "",
@@ -437,6 +443,50 @@ export default {
     onMounted(() => {
       getInterface();
     });
+
+    //
+    watch(
+      () => state.sourceRangeFrom,
+      (val) => {
+        if (val !== "other") {
+          state.specificSourceFrom = "";
+        }
+      }
+    );
+    watch(
+      () => state.sourceRangeTo,
+      (val) => {
+        if (val !== "other") {
+          state.specificSourceTo = "";
+        }
+      }
+    );
+    watch(
+      () => state.destinationRangeFrom,
+      (val) => {
+        if (val !== "other") {
+          state.specificDestinationFrom = "";
+        }
+      }
+    );
+    watch(
+      () => state.destinationRangeTo,
+      (val) => {
+        if (val !== "other") {
+          state.specificDestinationTo = "";
+        }
+      }
+    );
+    watch(
+      () => state.port,
+      (val) => {
+        if (val !== "other") {
+          state.specificPort = "";
+        }
+      }
+    );
+
+    //
 
     watch(
       () => isOpen.value,
@@ -488,7 +538,7 @@ export default {
     watch(
       () => state.sourceRangeFrom,
       (val) => {
-        if (val.slug) {
+        if (val?.slug) {
           state.listPortSourceTo = state.listPort.filter(
             (i) => i.slug >= val.slug
           );
@@ -498,7 +548,7 @@ export default {
     watch(
       () => state.destinationRangeFrom,
       (val) => {
-        if (val.slug) {
+        if (val?.slug) {
           state.listPortDestinationTo = state.listPort.filter(
             (i) => i.slug >= val.slug
           );
@@ -749,21 +799,21 @@ export default {
           payload = {
             ...payload,
             destination_port_from:
-              state.destinationRangeFrom.slug === "other"
+              state.destinationRangeFrom?.slug === "other"
                 ? state.specificDestinationFrom
                 : state.destinationRangeFrom?.slug
                 ? state.destinationRangeFrom?.slug
                 : "",
 
             destination_port_to:
-              state.destinationRangeTo.slug === "other"
+              state.destinationRangeTo?.slug === "other"
                 ? state.specificDestinationTo
                 : state.destinationRangeTo?.slug
                 ? state.destinationRangeTo?.slug
                 : "",
 
             destination_port:
-              state.port.slug === "other"
+              state.port?.slug === "other"
                 ? state.specificPort
                 : state.port?.slug
                 ? state.port?.slug
@@ -876,7 +926,7 @@ export default {
         },
 
         internalAddress: {
-          required: helpers.withMessage(error, required),
+          // required: helpers.withMessage(error, required),
           isValidSourceAddress: helpers.withMessage(
             formaaddress,
 
@@ -886,7 +936,7 @@ export default {
           ),
         },
         externalAddress: {
-          required: helpers.withMessage(error, required),
+          // required: helpers.withMessage(error, required),
           isValidSourceAddress: helpers.withMessage(
             formaaddress,
 
@@ -896,24 +946,24 @@ export default {
           ),
         },
 
-        destinationRangeFrom: {
-          requiredIfFuction: helpers.withMessage(
-            error,
-            requiredIf(() => state.checkInterface === "Port Forwarding")
-          ),
-        },
-        destinationRangeTo: {
-          requiredIfFuction: helpers.withMessage(
-            error,
-            requiredIf(() => state.checkInterface === "Port Forwarding")
-          ),
-        },
-        port: {
-          requiredIfFuction: helpers.withMessage(
-            error,
-            requiredIf(() => state.checkInterface === "Port Forwarding")
-          ),
-        },
+        // destinationRangeFrom: {
+        //   requiredIfFuction: helpers.withMessage(
+        //     error,
+        //     requiredIf(() => state.checkInterface === "Port Forwarding")
+        //   ),
+        // },
+        // destinationRangeTo: {
+        //   requiredIfFuction: helpers.withMessage(
+        //     error,
+        //     requiredIf(() => state.checkInterface === "Port Forwarding")
+        //   ),
+        // },
+        // port: {
+        //   requiredIfFuction: helpers.withMessage(
+        //     error,
+        //     requiredIf(() => state.checkInterface === "Port Forwarding")
+        //   ),
+        // },
 
         specificSourceFrom: {
           isValidSpecificSourceFrom: helpers.withMessage(
@@ -923,7 +973,7 @@ export default {
           ),
           requiredIfFuction: helpers.withMessage(
             onlynumbers,
-            requiredIf(() => state.sourceRangeFrom.slug === "other")
+            requiredIf(() => state.sourceRangeFrom?.slug === "other")
           ),
         },
 
@@ -935,7 +985,7 @@ export default {
           ),
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.sourceRangeTo.slug === "other")
+            requiredIf(() => state.sourceRangeTo?.slug === "other")
           ),
         },
 
@@ -947,7 +997,7 @@ export default {
           ),
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.destinationRangeFrom.slug === "other")
+            requiredIf(() => state.destinationRangeFrom?.slug === "other")
           ),
         },
         specificDestinationTo: {
@@ -958,7 +1008,7 @@ export default {
           ),
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.destinationRangeTo.slug === "other")
+            requiredIf(() => state.destinationRangeTo?.slug === "other")
           ),
         },
 
@@ -966,7 +1016,7 @@ export default {
           isValidSpecificSourceTo,
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.port.slug === "other")
+            requiredIf(() => state.port?.slug === "other")
           ),
         },
 

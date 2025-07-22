@@ -9,15 +9,15 @@ const user_data = JSON.parse(user);
 let id = user_data?.currentUser?.id;
 
 async function get_lang() {
-    let lang = null;
-    try {
-        let res = await axios.get(`/users/getLanguage/${id}`);
-        lang = res.data.language;
-        return lang;
-    } catch (error) {
-        console.error(error);
-    }
+  let lang = null;
+  try {
+    let res = await axios.get(`/users/getLanguage/${id}`);
+    lang = res.data.language;
+    return lang;
+  } catch (error) {
+    console.error(error);
+  }
 }
 get_lang();
 
-export { get_lang };
+export { get_lang, id };

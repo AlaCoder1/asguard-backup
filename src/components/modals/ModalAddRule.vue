@@ -303,6 +303,7 @@ import useValidate from "@vuelidate/core";
 import { helpers, requiredIf, required } from "@vuelidate/validators";
 import { reactive, computed, toRefs, watch, inject, ref } from "vue";
 import VButton from "@/components/VButton.vue";
+import { id } from "@/mixins/storage_language.js";
 export default {
   name: "Modal_User_Squid",
   components: {
@@ -655,7 +656,6 @@ export default {
     };
 
     const submitForm = async () => {
-      console.log("state.formData.value2"), state.formData.value2;
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();
@@ -756,7 +756,10 @@ export default {
               time_to: to,
             };
           }
-          console.log("pay", payload);
+
+          payload = { ...payload, user_id: id };
+          console.log({ payload });
+
           axios
             .post("/proxy/addRuleSquid", payload)
             .then((response) => {

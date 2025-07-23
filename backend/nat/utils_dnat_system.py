@@ -64,19 +64,22 @@ def build_command_create_dnat(iifname, source, destination, protocol, next_rule_
     tcp_destination = []
     ip_protocol = []
     forwarding_port = []
+    outgoing_ip_address = []
     if iifname:
         iifname_command = ["oifname", iifname]
     if source != "any":
         ip_addr_source = ["ip", "saddr", source["address"]]
         if source['port']:
             tcp_source = ["tcp", "sport", source["port"]]
-    ip_addr_destination = ["ip", "daddr", destination["external_address"]]
+    if destination["external_address"] != "":
+        ip_addr_destination = ["ip", "daddr", destination["external_address"]]
     if destination["port_forwarding"]:
         tcp_destination = ["tcp", "dport", destination["port_forwarding"]]
         forwarding_port = [destination["port"]]
     if protocol != "":
         ip_protocol = ["ip", "protocol", protocol]
-    outgoing_ip_address = ["dnat", "ip", "to", destination["internal_address"]]
+    if destination["internal_address"] != "":
+        outgoing_ip_address = ["dnat", "ip", "to", destination["internal_address"]]
 
     # Complete the DNAT rule command
     added_fields_rule = [iifname_command, ip_addr_source, ip_addr_destination, 
@@ -84,5 +87,4 @@ def build_command_create_dnat(iifname, source, destination, protocol, next_rule_
                          outgoing_ip_address, forwarding_port]
     for command in added_fields_rule:
         command_dnat.extend(command)
-    
     return command_dnat

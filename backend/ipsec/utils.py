@@ -3,6 +3,14 @@ from utils.commands_utils import execute_command_without_arguments
 from utils.errors_utils import CommandExecutionError
 
 
+def check_payload_create_tunnel(data: dict):
+    """Check the payload fileds"""
+    # Check the validity of phase2 mode
+    if data["mode_ph2"]["mode"] not in ["Tunnel IPv4"]: # At this moment only one mode
+        return False
+    return True
+
+
 def check_payload_change_status(data: dict):
     """Check the payload fileds for change ipsec status API"""
     if data["status"] in ["start", "stop"]:

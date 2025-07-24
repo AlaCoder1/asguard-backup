@@ -34,7 +34,7 @@ Endpoints:
 6. `getNetwork(request, id) [GET]`
    - Fetches network details for a given ID.
 
-8. `createSystem(request) [POST]`
+7. `createSystem(request) [POST]`
    - Creates a new system entry.
 
 Dependencies:

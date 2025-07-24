@@ -19,13 +19,24 @@ def save_ruleset_nft():
     write_file_from_system(PATH_RULESET_NFT, ruleset_process.stdout)
 
 
-def add_nat_rule_in_system(command_line):
+def add_nat_rule_in_system(command_line, chain="postrouting"):
     """Execute the command-line to create the rule nat and save it in ruleset nft file"""
+    
+    # Get the list of existing nat rules before adding the new one
+    previous_list_nat_rules =  extract_list_rule_nat_from_system(chain)
+
     # Execute the NAT rule in system
     execute_command_without_arguments(command_line)
 
     # Save ruleset in ruleset file
     save_ruleset_nft()
+
+    # Get the list of existing postrouting rules after adding the new one
+    new_list_nat_rules =  extract_list_rule_nat_from_system(chain)
+
+    # Get the rule handle and content
+    rule_content, handle_number = get_added_nat_rule(previous_list_nat_rules, new_list_nat_rules)
+    return rule_content, handle_number
 
 
 def delete_nat_rule_in_system(chain, handle_number):

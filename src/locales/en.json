@@ -91,7 +91,7 @@
     "portform": "The local Port field can only include Numbers min 4 and max 5",
     "formsepcificpassword": "There must be at least 20 characters, including at least one uppercase, one number, and one special character",
     "startwithletter": "The name can contain letters, digits, underscores, and hyphens, must begin with a letter, and can be up to 32 characters long",
-    "addressdAll": "Champ can include address 'X.X.X.X/X' Or word 'ALL'",
+    "addressdAll": "Champ can include address 'X.X.X.X/X' Or 'X.X.X.X' Or word 'ALL'",
     "numberALL": "Champ can include only Numbers Or word 'ALL'",
     "emptyArray": "The array is empty. Please add at least one element.",
     "emptyValue": "has an empty value",

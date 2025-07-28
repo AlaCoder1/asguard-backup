@@ -142,6 +142,8 @@ import {
 } from "@vuelidate/validators";
 import { reactive, computed, toRefs, watch, inject } from "vue";
 import VButton from "@/components/VButton.vue";
+import { id } from "@/mixins/storage_language.js";
+
 export default {
   name: "Modal_User_Squid",
   components: {
@@ -268,6 +270,7 @@ export default {
       state.textAlert = "";
       state.color = "";
       state.snackbar = false;
+      v$.value.$reset();
     };
     const getCookie = (name) => {
       let cookieValue = null;
@@ -296,6 +299,7 @@ export default {
           email: state.formData.email,
           username: state.formData.userName,
           password: state.formData.password,
+          user_id: id
         };
 
         axios

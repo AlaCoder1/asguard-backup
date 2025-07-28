@@ -78,6 +78,10 @@ class ServerIPsec(models.Model):
     auto_ping_host = models.CharField(max_length=300, default=None, null=True, blank=True)
     manual_spd_entries = models.CharField(max_length=300, default=None, null=True, blank=True)
 
+    # Postrouting NAT Rule content
+    postrouting_rule_content = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    postrouting_rule_handle = models.IntegerField(default=None, null=True)
+
     # Config status (Enable or Disable)
     server_status = models.BooleanField(default=True, null=True, blank=True)
 

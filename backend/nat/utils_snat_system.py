@@ -5,21 +5,14 @@ from backend.nat.utils_system import add_nat_rule_in_system, delete_nat_rule_in_
 
 def create_snat_rule_in_system(oifname, source, destination, protocol, masking, next_rule_handle=0):
     """Create an SNAT rule in system and return the rule handle and content"""
-    # Get the list of existing postrouting rules before adding the new one
-    previous_list_postrouting_rules =  extract_list_rule_nat_from_system()
 
     # Build the SNAT rule command
     command_snat = build_command_create_snat(
         oifname, source, destination, protocol, masking, next_rule_handle)
+
     # Create the SNAT rule in system
-    add_nat_rule_in_system(command_snat)
-
-    # Get the list of existing postrouting rules after adding the new one
-    new_list_postrouting_rules =  extract_list_rule_nat_from_system()
-
-    # Get the rule handle and content
-    rule_content, handle_number = get_added_nat_rule(
-        previous_list_postrouting_rules, new_list_postrouting_rules)
+    rule_content, handle_number = add_nat_rule_in_system(command_snat, "postrouting")
+    
     return handle_number, rule_content
 
 
@@ -33,23 +26,13 @@ def update_snat_rule_in_system(oifname, source, destination, protocol, masking, 
     """Update an SNAT rule in system and return the new rule handle and content"""
     # Delete the SNAT rule in system with previous params
     delete_nat_rule_in_system("postrouting", handle_number)
-    
-    # Get the list of existing postrouting rules after deleting the SNAT rule
-    previous_list_postrouting_rules =  extract_list_rule_nat_from_system()
 
     # Build the SNAT rule command
     command_snat = build_command_create_snat(
         oifname, source, destination, protocol, masking, next_rule_handle)
 
     # Create the SNAT rule in system with new params
-    add_nat_rule_in_system(command_snat)
-
-    # Get the list of existing postrouting rules after adding the SNAT rule in system with new params
-    new_list_postrouting_rules =  extract_list_rule_nat_from_system()
-
-    # Get the rule handle and content
-    new_rule_content, new_handle_number = get_added_nat_rule(
-        previous_list_postrouting_rules, new_list_postrouting_rules)
+    new_rule_content, new_handle_number = add_nat_rule_in_system(command_snat, "postrouting")
     
     return new_handle_number, new_rule_content
 

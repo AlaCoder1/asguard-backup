@@ -5,22 +5,13 @@ from backend.nat.utils_system import add_nat_rule_in_system, delete_nat_rule_in_
 
 def create_dnat_rule_in_system(iifname, source, destination, protocol, next_rule_handle=0):
     """Create an DNAT rule in system and return the rule handle and content"""
-    # Get the list of existing prerouting rules before adding the new one
-    previous_list_prerouting_rules =  extract_list_rule_nat_from_system("prerouting")
 
     # Build the DNAT rule command
     command_dnat = build_command_create_dnat(
         iifname, source, destination, protocol, next_rule_handle)
 
     # Create the DNAT rule in system
-    add_nat_rule_in_system(command_dnat)
-
-    # Get the list of existing prerouting rules after adding the new one
-    new_list_prerouting_rules =  extract_list_rule_nat_from_system("prerouting")
-
-    # Get the rule handle and content
-    rule_content, handle_number = get_added_nat_rule(
-        previous_list_prerouting_rules, new_list_prerouting_rules)
+    rule_content, handle_number = add_nat_rule_in_system(command_dnat, "prerouting")
     return handle_number, rule_content
 
 
@@ -33,23 +24,13 @@ def update_dnat_rule_in_system(iifname, source, destination, protocol, handle_nu
     """Update an DNAT rule in system and return the new rule handle and content"""
     # Delete the DNAT rule in system with previous params
     delete_nat_rule_in_system("prerouting", handle_number)
-    
-    # Get the list of existing prerouting rules after deleting the DNAT rule
-    previous_list_prerouting_rules =  extract_list_rule_nat_from_system("prerouting")
 
     # Build the DNAT rule command
     command_dnat = build_command_create_dnat(
         iifname, source, destination, protocol, next_rule_handle)
 
     # Create the DNAT rule in system with new params
-    add_nat_rule_in_system(command_dnat)
-
-    # Get the list of existing prerouting rules after adding the DNAT rule in system with new params
-    new_list_prerouting_rules =  extract_list_rule_nat_from_system("prerouting")
-    
-    # Get the rule handle and content
-    new_rule_content, new_handle_number = get_added_nat_rule(
-        previous_list_prerouting_rules, new_list_prerouting_rules)
+    new_rule_content, new_handle_number = add_nat_rule_in_system(command_dnat, "prerouting")
     return new_handle_number, new_rule_content
 
 
@@ -83,19 +64,22 @@ def build_command_create_dnat(iifname, source, destination, protocol, next_rule_
     tcp_destination = []
     ip_protocol = []
     forwarding_port = []
+    outgoing_ip_address = []
     if iifname:
         iifname_command = ["oifname", iifname]
     if source != "any":
         ip_addr_source = ["ip", "saddr", source["address"]]
         if source['port']:
             tcp_source = ["tcp", "sport", source["port"]]
-    ip_addr_destination = ["ip", "daddr", destination["external_address"]]
+    if destination["external_address"] != "":
+        ip_addr_destination = ["ip", "daddr", destination["external_address"]]
     if destination["port_forwarding"]:
         tcp_destination = ["tcp", "dport", destination["port_forwarding"]]
         forwarding_port = [destination["port"]]
     if protocol != "":
         ip_protocol = ["ip", "protocol", protocol]
-    outgoing_ip_address = ["dnat", "ip", "to", destination["internal_address"]]
+    if destination["internal_address"] != "":
+        outgoing_ip_address = ["dnat", "ip", "to", destination["internal_address"]]
 
     # Complete the DNAT rule command
     added_fields_rule = [iifname_command, ip_addr_source, ip_addr_destination, 
@@ -103,5 +87,4 @@ def build_command_create_dnat(iifname, source, destination, protocol, next_rule_
                          outgoing_ip_address, forwarding_port]
     for command in added_fields_rule:
         command_dnat.extend(command)
-    
     return command_dnat

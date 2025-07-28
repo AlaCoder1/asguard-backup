@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-21 16:08+0000\n"
+"POT-Creation-Date: 2025-07-24 08:36+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -148,7 +148,9 @@ msgid "is deleted"
 msgstr "est supprimé"
 
 #: backend/network/views.py:31
-msgid "does not active"
+#, fuzzy
+#| msgid "does not active"
+msgid "is not active"
 msgstr "n'est pas active"
 
 #: backend/network/views.py:32
@@ -158,3 +160,7 @@ msgstr "Échec de la configuration de l'"
 #: backend/network/views.py:33
 msgid "Failed to delete"
 msgstr "Échec de la suppression de l'"
+
+#: backend/network/views.py:34
+msgid "You need to delete the interface and set it up again"
+msgstr "Vous devez supprimer l'interface et la configurer à nouveau"

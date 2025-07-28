@@ -106,9 +106,9 @@ def get_vxlan(request):
                 example='test_vxlan'
             ),
             'vxlan_id': openapi.Schema(
-                type=openapi.TYPE_STRING,
+                type=openapi.TYPE_INTEGER,
                 description='VXLAN identifier',
-                example='80'
+                example=80
             ),
             'vxlan_source_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
@@ -175,7 +175,7 @@ def add_vxlan(request):
     """
     if (request.method == 'POST'):
         data_input=request.data
-        data_input["vxlan_id"]=re.sub(r"\s+", "", data_input["vxlan_id"])
+        # data_input["vxlan_id"]=re.sub(r"\s+", "", data_input["vxlan_id"])
         res_validate=validate_input_date(data_input)
         if res_validate is None:
             vxlan_serializer=VxlanSerializer(data=data_input)
@@ -185,7 +185,7 @@ def add_vxlan(request):
                 status=200
             else:
                 msg=str(next(iter(vxlan_serializer.errors.values()))[0]).strip('.')+"!"
-                print(msg)
+                # print(msg)
                 status=400
         else:
             msg=res_validate
@@ -220,9 +220,9 @@ def add_vxlan(request):
                 example='test_vxlan'
             ),
             'vxlan_id': openapi.Schema(
-                type=openapi.TYPE_STRING,
+                type=openapi.TYPE_INTEGER,
                 description='VXLAN identifier',
-                example='80'
+                example=80
             ),
             'vxlan_source_address': openapi.Schema(
                 type=openapi.TYPE_STRING,
@@ -286,7 +286,7 @@ def update_vxlan(request,id):
     """
     if (request.method == 'PUT'):
         data_input =request.data
-        data_input["vxlan_id"]=re.sub(r"\s+", "", data_input["vxlan_id"])
+        # data_input["vxlan_id"]=re.sub(r"\s+", "", data_input["vxlan_id"])
         res_validate=validate_input_date(data_input)
         if res_validate is None:
             if Vxlan.objects.filter(id=id).exists():

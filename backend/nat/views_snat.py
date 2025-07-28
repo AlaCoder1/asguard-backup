@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
-from drf_yasg.openapi import TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
+from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -176,7 +176,50 @@ def delete_snat(_, id):
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SNAT_RULE}"}, status=400)
     except SNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+
+
+@swagger_auto_schema(
+    'DELETE', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO DELETE A LIST OF SNAT RULE AND RETURN A LIST OF RESPONSES FOR EACH SNAT",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['list_rules'],
+        properties={
+            'list_rules': Schema(type=TYPE_ARRAY, description="Set the SNAT rule list of IDs",
+                                items=Schema(type=TYPE_INTEGER, example=1)),
+            }))
+@api_view(['Delete'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_list_snat(request):
+    """Deleting a list of snat rules"""
+    data = request.data
+    list_id_snat = data.get("list_rules")
+    list_responses = []
+    for id_snat in list_id_snat:
+        try:
+            snat = SNat.objects.get(id=id_snat)
+
+            if snat.rule_status:
+                # Delete rule from system
+                delete_snat_rule_in_system(snat.rule_number)
+
+                snat.delete()
+
+                for snat_rule in SNat.objects.filter(db_position__gt=snat.db_position).order_by("db_position"):
+                    snat_rule.db_position -= 1
+                    snat_rule.save()
+            
+            else:
+                # delete rule from database
+                snat.delete()
+            list_responses.append({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_DELETING}", "status": 200})
+
+        except CommandExecutionError:
+            list_responses.append({"msg": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SNAT_RULE}", "status": 400})
+        except SNat.DoesNotExist:
+            list_responses.append({"msg": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}", "status": 404})
+    return JsonResponse(list_responses, safe=False)
 
 
 @swagger_auto_schema(

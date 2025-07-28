@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
+from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -177,6 +177,49 @@ def delete_dnat(request, id):
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_DNAT_RULE}"}, status=400)
     except DNat.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema(
+    'DELETE', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO DELETE A LIST OF DNAT RULE AND RETURN A LIST OF RESPONSES FOR EACH DNAT",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['list_rules'],
+        properties={
+            'list_rules': Schema(type=TYPE_ARRAY, description="Set the DNAT rule list of IDs",
+                                items=Schema(type=TYPE_INTEGER, example=1)),
+            }))
+@api_view(['Delete'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_list_dnat(request):
+    """Deleting a list of dnat rules"""
+    data = request.data
+    list_id_dnat = data.get("list_rules")
+    list_responses = []
+    for id_dnat in list_id_dnat:
+        try:
+            dnat = DNat.objects.get(id=id_dnat)
+
+            if dnat.rule_status:
+                # Delete rule from system
+                delete_dnat_rule_in_system(dnat.rule_number)
+
+                dnat.delete()
+
+                for dnat_rule in DNat.objects.filter(db_position__gt=dnat.db_position).order_by("db_position"):
+                    dnat_rule.db_position -= 1
+                    dnat_rule.save()
+            
+            else:
+                # delete rule from database
+                dnat.delete()
+            list_responses.append({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_DELETING}", "status": 200})
+
+        except CommandExecutionError:
+            list_responses.append({"msg": f"{ERROR_MESSAGES_DELETING} {CONSTANT_DNAT_RULE}", "status": 400})
+        except DNat.DoesNotExist:
+            list_responses.append({"msg": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}", "status": 404})
+    return JsonResponse(list_responses, safe=False)
 
 
 @swagger_auto_schema(

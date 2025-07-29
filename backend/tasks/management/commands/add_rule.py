@@ -56,6 +56,7 @@ class Command(BaseCommand):
                 else:
                     rule_mod=rule.split("reject with icmp port-unreachable")[0].strip()
                     rule=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
+                rule=rule.strip()
                 if not Rule.objects.filter(
                     Q(rule=rule) & (
                         (Q(interface_id=interface_id.id) ) &

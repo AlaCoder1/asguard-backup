@@ -225,7 +225,6 @@ def conf(request,name_interface):
             # print("hello")
             device_info,ifname,id_interface,aux_main,generic_config_object,uuid = device_name_interface(name_interface)
             if uuid is not None:
-                
                     commandes=[]
                     commandes_final=[]
                     commandes_ipv6=[]
@@ -269,7 +268,7 @@ def conf(request,name_interface):
                                                 status=200
                
             else:
-                msg=f"{CONSTANT_INTERFACE_CONNECTION } {ERROR_MESSAGES_NOACTIVE}! \ "
+                msg=f"{CONSTANT_INTERFACE_CONNECTION } {ERROR_MESSAGES_NOACTIVE}! | {WARNING_CONNECTION} "
                 status=400
         else:
             print(resulltat)

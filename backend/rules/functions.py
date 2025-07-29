@@ -223,18 +223,21 @@ def get_position(type_rule):
      
 def calculate_subnet_address(addr_prefix):
    if addr_prefix is not None:
-      ip_address=addr_prefix.split("/")[0]
-      prefix=addr_prefix.split("/")[1]
-      # Validate input IP address
-      try:
-         ip_address = ipaddress.IPv4Address(ip_address)
-      except ValueError as e:
-         return f"Invalid input: {e}"
-      if prefix!="32":
-         network = ipaddress.IPv4Network(f"{ip_address}/{prefix}", strict=False)
-         return str(network.network_address)+"/"+prefix
+      if addr_prefix.find('/')!=-1:
+         ip_address=addr_prefix.split("/")[0]
+         prefix=addr_prefix.split("/")[1]
+         # Validate input IP address
+         try:
+            ip_address = ipaddress.IPv4Address(ip_address)
+         except ValueError as e:
+            return f"Invalid input: {e}"
+         if prefix!="32":
+            network = ipaddress.IPv4Network(f"{ip_address}/{prefix}", strict=False)
+            return str(network.network_address)+"/"+prefix
+         else:
+            return str(ip_address)
       else:
-         return str(ip_address)
+         return addr_prefix
    else:
       return None
    

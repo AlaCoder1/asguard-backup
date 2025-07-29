@@ -75,6 +75,7 @@ class Command(BaseCommand):
             else:
                 rule_mod=ruleupdate.split("reject with icmp port-unreachable")[0].strip()
                 ruleupdate=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
+            ruleupdate=ruleupdate.strip()
             handle=get_handle_rule(interface,type_rule,rule)
             if handle is not None:
                 # return_delete_rule_remote=delete_rule_remote(interface,type_rule,handle)

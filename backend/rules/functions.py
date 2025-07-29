@@ -223,18 +223,21 @@ def get_position(type_rule):
      
 def calculate_subnet_address(addr_prefix):
    if addr_prefix is not None:
-      ip_address=addr_prefix.split("/")[0]
-      prefix=addr_prefix.split("/")[1]
-      # Validate input IP address
-      try:
-         ip_address = ipaddress.IPv4Address(ip_address)
-      except ValueError as e:
-         return f"Invalid input: {e}"
-      if prefix!="32":
-         network = ipaddress.IPv4Network(f"{ip_address}/{prefix}", strict=False)
-         return str(network.network_address)+"/"+prefix
+      if addr_prefix.find('/')!=-1:
+         ip_address=addr_prefix.split("/")[0]
+         prefix=addr_prefix.split("/")[1]
+         # Validate input IP address
+         try:
+            ip_address = ipaddress.IPv4Address(ip_address)
+         except ValueError as e:
+            return f"Invalid input: {e}"
+         if prefix!="32":
+            network = ipaddress.IPv4Network(f"{ip_address}/{prefix}", strict=False)
+            return str(network.network_address)+"/"+prefix
+         else:
+            return str(ip_address)
       else:
-         return str(ip_address)
+         return addr_prefix
    else:
       return None
    
@@ -263,6 +266,8 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
       else:
          rule_mod=rule.split("reject with icmp port-unreachable")[0].strip()
          rule=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
+      
+      rule=rule.strip()
       # if not Rule.objects.filter(Q(rule=rule) & ((Q(interface_id=interface_object.pk)& Q(type_rule!=type_rule ) )|(Q(interface_id!=interface_object.pk) & Q(type_rule=type_rule )))).exists():
       if not Rule.objects.filter(
             Q(rule=rule) & (
@@ -275,7 +280,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
          return_add_rule=add_rule_remote(rule,ifname,type_rule)
          # position=get_handle_rule(ifname,type_rule,rule)
          # position=int(position.strip('handle').strip()) if position is not None else None
-         print({"position":position})
+         # print({"position":position})
          
          if return_add_rule is True:
             data = {
@@ -340,10 +345,10 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          else:
             rule_mod=ruleupdate.split("reject with icmp port-unreachable")[0].strip()
             ruleupdate=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
-      
+         ruleupdate=ruleupdate.strip()
          handle=get_handle_rule(ifname,type_rules,rule)
          if handle is not None: 
-               return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
+               return_delete_rule_remotyre=delete_rule_remote(ifname,type_rules,handle)
          if not Rule.objects.filter(
                ~Q(id=id)& 
                Q(rule=ruleupdate) & (
@@ -391,8 +396,8 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
             #    msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
             #    status=400
          else:
-               msg= f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
-               status=404
+               msg= f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
+               status=400
               
       else:
          msg=f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"

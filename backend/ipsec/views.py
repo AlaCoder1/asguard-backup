@@ -123,7 +123,7 @@ def get_server_ipsec(request, id):
             'margin_time': Schema(type=TYPE_STRING, example="10", description="set margin time", pattern=r"(\d+)"),
             'rekey_fuzz': Schema(type=TYPE_STRING, example="10", description="set rekey_fuzz", pattern=r"(\d+)"),
             'mode_ph2': Schema(type=TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
-                               properties={'mode': Schema(type=TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Route-based", "Transport"]),
+                               properties={'mode': Schema(type=TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Transport"], description="At this time only Tunnel IPv4 is working"),
                                            'local_address': Schema(type=TYPE_STRING, example="192.168.20.0", description="Local Address, required when selecting Route-based"),
                                            'remote_address': Schema(type=TYPE_STRING, example="192.168.40.0", description="Remote Address, required when selecting Route-based"),}),
             'description_ph2': Schema(type=TYPE_STRING, example="Description phase 2"),
@@ -402,7 +402,7 @@ def delete_server_ipsec(request, id):
             'margin_time': Schema(type=TYPE_STRING, example="10", description="set margin time", pattern=r"(\d+)"),
             'rekey_fuzz': Schema(type=TYPE_STRING, example="10", description="set rekey_fuzz", pattern=r"(\d+)"),
             'mode_ph2': Schema(type=TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
-                               properties={'mode': Schema(type=TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Route-based", "Transport"]),
+                               properties={'mode': Schema(type=TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Transport"], description="At this time only Tunnel IPv4 is working"),
                                            'local_address': Schema(type=TYPE_STRING, example="192.168.20.0", description="Local Address, required when selecting Route-based"),
                                            'remote_address': Schema(type=TYPE_STRING, example="192.168.40.0", description="Remote Address, required when selecting Route-based"),}),
             'description_ph2': Schema(type=TYPE_STRING, example="Description phase 2"),
@@ -428,6 +428,11 @@ def update_server_ipsec(request, id):
     try:
         # parse the incoming information
         data = request.data
+
+        # Check data validity
+        if not check_payload_create_tunnel(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
+        
         previous_server = ServerIPsec.objects.get(id=id)
         server = ServerIPsec.objects.get(id=id)
         

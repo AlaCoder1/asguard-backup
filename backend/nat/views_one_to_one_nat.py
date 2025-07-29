@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
-from drf_yasg.openapi import TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
+from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -151,6 +151,48 @@ def delete_one_to_one_nat(request, id):
     except OneToOneNat.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
+
+@swagger_auto_schema(
+    'DELETE', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO DELETE A LIST OF OneToOneNAT RULE AND RETURN A LIST OF RESPONSES FOR EACH OneToOneNAT",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['list_rules'],
+        properties={
+            'list_rules': Schema(type=TYPE_ARRAY, description="Set the OneToOneNAT rule list of IDs",
+                                items=Schema(type=TYPE_INTEGER, example=1)),
+            }))
+@api_view(['Delete'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_list_one_to_one_nat(request):
+    """Deleting a list of one_to_one_nat rules"""
+    data = request.data
+    list_id_one_to_one_nat = data.get("list_rules")
+    list_responses = []
+    for id_one_to_one_nat in list_id_one_to_one_nat:
+        try:
+            one_to_one_nat = OneToOneNat.objects.get(id=id_one_to_one_nat)
+
+            if one_to_one_nat.rule_status:
+                # Delete rule from system
+                delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
+
+                one_to_one_nat.delete()
+
+                for one_to_one_nat_rule in OneToOneNat.objects.filter(db_position__gt=one_to_one_nat.db_position).order_by("db_position"):
+                    one_to_one_nat_rule.db_position -= 1
+                    one_to_one_nat_rule.save()
+            
+            else:
+                # delete rule from database
+                one_to_one_nat.delete()
+            list_responses.append({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_DELETING}", "status": 200})
+
+        except CommandExecutionError:
+            list_responses.append({"msg": f"{ERROR_MESSAGES_DELETING} {CONSTANT_ONE_TO_ONE_NAT_RULE}", "status": 400})
+        except OneToOneNat.DoesNotExist:
+            list_responses.append({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}", "status": 404})
+    return JsonResponse(list_responses, safe=False)
 
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'},

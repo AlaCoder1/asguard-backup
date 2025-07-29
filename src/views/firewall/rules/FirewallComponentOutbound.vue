@@ -118,8 +118,8 @@
         :pagination="true"
         :paginationPageSize="10"
         :localeText="paginationLocalization"
-        :rowDragManaged="true"
-        :rowDragEntireRow="true"
+        :rowDragManaged="state.user === 'viewer' ? false : true"
+        :rowDragEntireRow="state.user === 'viewer' ? false : true"
         animateRows
         @row-drag-enter="onRowDragStart"
         @row-drag-end="onRowDragEnd"
@@ -310,6 +310,7 @@ export default defineComponent({
     const state = reactive({
       // deleteDialogSquid: false,
       // deletedRow: null,
+      user: null,
       Saverulesstate: false,
       snackbar: false,
       color: "",
@@ -561,7 +562,6 @@ export default defineComponent({
       const user = user_privilege();
 
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -856,17 +856,25 @@ export default defineComponent({
     const array = ref([]);
 
     const deleteSelectedRows = () => {
-      deleteDialog.value = true;
-
-      const selectedRows = gridApi.value.getSelectedRows();
+      const user = user_privilege();
+      if (user !== "viewer") {
+        if (last_Subscription.value.includes("Firewall L4")) {
+          deleteDialog.value = true;
+          const selectedRows = gridApi.value.getSelectedRows();
+          id_list_selection.value = selectedRows.map((i) => i);
+          array.value = [...id_list_selection.value];
+        } else {
+          state.isviewModal = true;
+          state.viewModal = true;
+        }
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
 
       // rowData.value = rowData.value.filter(
       //   (row) => !selectedRows.includes(row)
       // );
-
-      id_list_selection.value = selectedRows.map((i) => i);
-
-      array.value = [...id_list_selection.value];
 
       // gridApi.value.setRowData(rowData.value);
 
@@ -1049,6 +1057,7 @@ export default defineComponent({
       //   />
       //  </svg></span>`;
       // console.log(overlayTemplate.valye)
+      state.user = user_privilege();
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);

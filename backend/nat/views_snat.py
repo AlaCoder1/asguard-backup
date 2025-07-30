@@ -180,7 +180,7 @@ def delete_snat(_, id):
 
 
 @swagger_auto_schema(
-    'DELETE', responses={200: 'Created', 400: 'Bad Request'},
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO DELETE A LIST OF SNAT RULE AND RETURN A LIST OF RESPONSES FOR EACH SNAT",
     request_body=Schema(
         type=TYPE_OBJECT, required=['list_rules'],
@@ -188,7 +188,7 @@ def delete_snat(_, id):
             'list_rules': Schema(type=TYPE_ARRAY, description="Set the SNAT rule list of IDs",
                                 items=Schema(type=TYPE_INTEGER, example=1)),
             }))
-@api_view(['Delete'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_list_snat(request):

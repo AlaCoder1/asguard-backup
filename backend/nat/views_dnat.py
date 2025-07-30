@@ -68,7 +68,7 @@ def get_dnat(request, id):
 
 
 @swagger_auto_schema(
-    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    'POST', responses={201: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO CREATE A DNAT RULE", 
     request_body=Schema(type=TYPE_OBJECT, required=[
         'interface', 'tcp_ip', 'protocol', 'source_address', 'source_port_from', 'source_port_to', 
@@ -76,13 +76,17 @@ def get_dnat(request, id):
     properties={
         'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface, can take value null"),
         'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6", ""]),
-        'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""]),
+        'protocol': Schema(type=TYPE_STRING, enum=["", "udp", "tcp"]),
         'source_address': Schema(type=TYPE_STRING, example="50.50.50.0/24", description="Format of address/mask or blank for Any"),
+        'source_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""]),
+        'source_port': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
         'source_port_from': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
         'source_port_to': Schema(type=TYPE_STRING, example="443", description="Can be blank"),
         'external_address': Schema(type=TYPE_STRING, example="41.41.41.0", description="Format of address or blank for Any"),
         'internal_address': Schema(type=TYPE_STRING, example="10.1.12.75", description="Format of address or blank for Any"),
         'port_forwarding': Schema(type=TYPE_BOOLEAN, default=False),
+        'destination_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""], description="used when selecting Port Forwarding"),
+        'destination_port_forwarding': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
         'destination_port_from': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
         'destination_port_to': Schema(type=TYPE_STRING, example="443", description="used when selecting Port Forwarding"),
         'destination_port': Schema(type=TYPE_STRING, example="5000", description="used when selecting Port Forwarding"),
@@ -109,19 +113,10 @@ def create_dnat(request):
             if data["interface"]:
                 interface_ifname = Interface.objects.get(id=data["interface"]).ifname
             
-            source = "any"
-            if data["source_address"] != "":
-                source = {"address": data["source_address"],
-                          "port": data["source_port_from"]}
-                if data["source_port_to"] != "":
-                    source["port"] += f"""-{data["source_port_to"]}"""
-
-            destination = {"external_address": data["external_address"],
-                           "internal_address": data["internal_address"],
-                           "port_forwarding": data["port_forwarding"]}
-            if data["port_forwarding"]:
-                destination["port_forwarding"] = f'{data["destination_port_from"]}-{data["destination_port_to"]}'
-                destination["port"] = f' : {data["destination_port"]}'
+            source, destination = input_create_dnat(
+                data["source_address"], data["source_protocol"], data["source_port"], data["source_port_from"], data["source_port_to"], 
+                data["external_address"], data["internal_address"], data["destination_protocol"],
+                data["destination_port_forwarding"], data["destination_port_from"], data["destination_port_to"], data["destination_port"])
             
             rule_number, rule_content = create_dnat_rule_in_system(
                 interface_ifname, source, destination, data["protocol"])
@@ -150,10 +145,10 @@ def create_dnat(request):
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE AN DNAT RULE",)
-@api_view(['Delete'])
+@api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_dnat(request, id):
+def delete_dnat(_, id):
     """Deleting a dnat from database"""
     try:
         dnat = DNat.objects.get(id=id)
@@ -180,7 +175,7 @@ def delete_dnat(request, id):
 
 
 @swagger_auto_schema(
-    'DELETE', responses={200: 'Created', 400: 'Bad Request'},
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO DELETE A LIST OF DNAT RULE AND RETURN A LIST OF RESPONSES FOR EACH DNAT",
     request_body=Schema(
         type=TYPE_OBJECT, required=['list_rules'],
@@ -188,7 +183,7 @@ def delete_dnat(request, id):
             'list_rules': Schema(type=TYPE_ARRAY, description="Set the DNAT rule list of IDs",
                                 items=Schema(type=TYPE_INTEGER, example=1)),
             }))
-@api_view(['Delete'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_list_dnat(request):
@@ -231,13 +226,17 @@ def delete_list_dnat(request):
     properties={
         'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface, can take value null"),
         'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6", ""]),
-        'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""]),
+        'protocol': Schema(type=TYPE_STRING, enum=["", "udp", "tcp"]),
         'source_address': Schema(type=TYPE_STRING, example="50.50.50.0/24", description="Format of address/mask or blank for Any"),
+        'source_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""]),
+        'source_port': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
         'source_port_from': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
         'source_port_to': Schema(type=TYPE_STRING, example="443", description="Can be blank"),
         'external_address': Schema(type=TYPE_STRING, example="41.41.41.0", description="Format of address or blank for Any"),
         'internal_address': Schema(type=TYPE_STRING, example="10.1.12.75", description="Format of address or blank for Any"),
         'port_forwarding': Schema(type=TYPE_BOOLEAN, default=False),
+        'destination_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""], description="used when selecting Port Forwarding"),
+        'destination_port_forwarding': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
         'destination_port_from': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
         'destination_port_to': Schema(type=TYPE_STRING, example="443", description="used when selecting Port Forwarding"),
         'destination_port': Schema(type=TYPE_STRING, example="5000", description="used when selecting Port Forwarding"),
@@ -260,23 +259,10 @@ def update_dnat(request, id):
         data["source_address"], data["external_address"], data["internal_address"] = fix_ipv4_address(
             [data["source_address"], data["external_address"], data["internal_address"]])
 
-        source = "any"
-        if data["source_address"] != "":
-            source = {"address": data["source_address"],
-                      "port": data["source_port_from"]}
-            if data["source_port_to"] != "":
-                source["port"] += f"""-{data["source_port_to"]}"""
-
-        destination = {"external_address": data["external_address"],
-                       "internal_address": data["internal_address"],
-                       "port_forwarding": data["port_forwarding"]}
-        if data["port_forwarding"]:
-            destination["port_forwarding"] = f'{data["destination_port_from"]}-{data["destination_port_to"]}'
-            destination["port"] = f' : {data["destination_port"]}'
-        else:
-            dnat.destination_port_from = None
-            dnat.destination_port_to = None
-            dnat.destination_port = None
+        source, destination = input_create_dnat(
+                data["source_address"], data["source_protocol"], data["source_port"], data["source_port_from"], data["source_port_to"], 
+                data["external_address"], data["internal_address"], data["destination_protocol"],
+                data["destination_port_forwarding"], data["destination_port_from"], data["destination_port_to"], data["destination_port"])
         
         serializer_dnat = DNatSerializer(dnat, data=data)
         if serializer_dnat.is_valid():
@@ -318,12 +304,15 @@ def update_dnat(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def start_dnat(request, id):
+def start_dnat(_, id):
     """Start a DNAT rule. Change rule_status to True to add the rule to the nft table"""
     try:
         dnat = DNat.objects.get(id=id)
 
-        source, destination = input_create_dnat(dnat)
+        source, destination = input_create_dnat(
+            dnat.source_address, dnat.source_protocol, dnat.source_port, dnat.source_port_from, dnat.source_port_to,
+            dnat.external_address, dnat.internal_address, dnat.destination_protocol,
+            dnat.destination_port_forwarding, dnat.destination_port_from, dnat.destination_port_to, dnat.destination_port)
 
         # Add the rule in system
         # Find the next activated rule handle to insert the started rule above
@@ -352,7 +341,7 @@ def start_dnat(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def stop_dnat(request, id):
+def stop_dnat(_, id):
     """Stop an DNAT rule. By changing rule_status to False, the while loop of the script will be breaked"""
     try:
         dnat = DNat.objects.get(id=id)

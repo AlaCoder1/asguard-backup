@@ -68,9 +68,9 @@ def get_one_to_one_nat(_, id):
     request_body=Schema(
         type=TYPE_OBJECT, required=['source_address', 'translation_address', 'destination_address'],
         properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
+                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask"),
                     'destination_address': Schema(type=TYPE_STRING, example="51.51.51.0/24", description="format of address/mask or blank for Any"),
-                    'translation_address': Schema(type=TYPE_STRING, example="", description="format of address like 51.32.100.5"),
+                    'translation_address': Schema(type=TYPE_STRING, example="51.32.100.5/32", description="format of address/mask"),
                     'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
                     }
                     ))
@@ -153,7 +153,7 @@ def delete_one_to_one_nat(request, id):
 
 
 @swagger_auto_schema(
-    'DELETE', responses={200: 'Created', 400: 'Bad Request'},
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO DELETE A LIST OF OneToOneNAT RULE AND RETURN A LIST OF RESPONSES FOR EACH OneToOneNAT",
     request_body=Schema(
         type=TYPE_OBJECT, required=['list_rules'],
@@ -161,7 +161,7 @@ def delete_one_to_one_nat(request, id):
             'list_rules': Schema(type=TYPE_ARRAY, description="Set the OneToOneNAT rule list of IDs",
                                 items=Schema(type=TYPE_INTEGER, example=1)),
             }))
-@api_view(['Delete'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_list_one_to_one_nat(request):
@@ -198,11 +198,11 @@ def delete_list_one_to_one_nat(request):
     'PUT', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE A OneToOneNat RULE", 
     request_body=Schema(
-        type=TYPE_OBJECT, required=['interface', 'source_address', 'translation_address', 'destination_address'],
+        type=TYPE_OBJECT, required=['source_address', 'translation_address', 'destination_address'],
         properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
+                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask"),
                     'destination_address': Schema(type=TYPE_STRING, example="51.51.51.0/24", description="format of address/mask or blank for Any"),
-                    'translation_address': Schema(type=TYPE_STRING, example="", description="format of address like 51.32.100.5"),
+                    'translation_address': Schema(type=TYPE_STRING, example="51.32.100.5/32", description="format of address/mask"),
                     'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
                     }
                     ))

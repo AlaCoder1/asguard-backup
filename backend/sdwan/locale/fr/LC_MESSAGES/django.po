@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-10 16:20+0000\n"
+"POT-Creation-Date: 2025-07-31 11:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,6 +21,24 @@ msgstr ""
 #: backend/sdwan/models.py:8 backend/sdwan/models.py:17
 msgid "name"
 msgstr "nom"
+
+#: backend/sdwan/models.py:13
+msgid "area"
+msgstr "zone"
+
+#: backend/sdwan/models.py:22
+msgid "health_check"
+msgstr "contrôle_santé"
+
+#: backend/sdwan/models.py:23
+msgid "health_check_target"
+msgstr "objectif_contrôle_santé"
+
+#: backend/sdwan/models.py:29
+#, fuzzy
+#| msgid "SDwan rule"
+msgid "sdwan_rules"
+msgstr "régle SDwan"
 
 #: backend/sdwan/views.py:23
 msgid "SDwan rule"

@@ -10,7 +10,7 @@ class Area(models.Model):
 
 
     class Meta:
-        db_table = 'area'
+        db_table = _('area')
 
 
 class SdwanRules(models.Model):
@@ -19,14 +19,14 @@ class SdwanRules(models.Model):
     area = models.ForeignKey(Area, on_delete=models.CASCADE, default=None)
     algorythme_type = models.CharField(max_length=100, default=None, blank=True)
     destination_address = models.CharField(max_length=200, default=None, blank=True, null=True)
-    health_check = models.FloatField(default=5)
-    health_check_target = models.CharField(max_length=200, default=None, blank=True)
+    health_check = models.FloatField(default=5, verbose_name=_("health_check"))
+    health_check_target = models.CharField(max_length=200, default=None, blank=True, verbose_name=_("health_check_target"))
     primary_interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None, blank=True, null=True)
     table_id = models.IntegerField(default=1, unique=True)
     rule_status = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'sdwan_rules'
+        db_table = _('sdwan_rules')
 
 
 class AreaInterface(models.Model):

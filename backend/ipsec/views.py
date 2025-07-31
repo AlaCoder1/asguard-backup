@@ -98,8 +98,8 @@ def get_server_ipsec(request, id):
             'remote_gateway': Schema(type=TYPE_STRING, example="10.1.12.22", description="Remote address in format of x.x.x.x"),
             'dynamic_gateway': Schema(type=TYPE_BOOLEAN, default=False),
             'description_ph1': Schema(type=TYPE_STRING, example="Description phase 1"),
-            'authentication': Schema(type=TYPE_OBJECT, required=['authentication'],
-                                     properties={'authentication': Schema(type=TYPE_STRING, default=CONSTANT_METHOD_PSK, enum=[CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA]),
+            'authentication': Schema(type=TYPE_OBJECT, required=['authentication_method'],
+                                     properties={'authentication_method': Schema(type=TYPE_STRING, default=CONSTANT_METHOD_PSK, enum=[CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA]),
                                                  'pre_shared_key': Schema(type=TYPE_STRING, example="bB8u6Tj60uJL2RKYR0OCyiGMdds9gaEUs9Q2d3bRTTVRKJ516CCc1LeSMChAI0rc", description="required when authentication_method is Mutual PSK"),
                                                  'local_key_pair': Schema(type=TYPE_STRING, example="local_public_key", description="required when authentication_method is Mutual Public Key"),
                                                  'peer_key_pair': Schema(type=TYPE_STRING, example="peer_public_key", description="required when authentication_method is Mutual Public Key"),
@@ -245,6 +245,7 @@ def create_server_ipsec(request):
             server_data["negotiation_mode"] = negotiation_mode
 
         ca = ''
+        print("authen= ", authentication_method)
         if authentication_method == CONSTANT_METHOD_PSK:
             pre_shared_key = authentication.get("pre_shared_key", "")
             server_data["pre_shared_key"] = pre_shared_key
@@ -275,7 +276,7 @@ def create_server_ipsec(request):
         
         if mode == "Tunnel IPv4":
             # Local Network
-            local_network = mode_ph2.get("local_network", "")
+            local_network = data.get("local_network", "")
             type_local_network = local_network.get("type_local_network", "")
             if type_local_network == "Address":
                 address_local_network = local_network.get("address_local_network", "")
@@ -289,7 +290,7 @@ def create_server_ipsec(request):
             data["address_local_network"] = address_local_network
 
             # Remote Network
-            remote_network = mode_ph2.get("remote_network", "")
+            remote_network = data.get("remote_network", "")
             type_remote_network = remote_network.get("type_remote_network", "")
             address_remote_network = remote_network.get("address_remote_network", "")
             if type_remote_network == "Network":
@@ -329,15 +330,15 @@ def create_server_ipsec(request):
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_IPSEC_CONFIGURATION}"}, status=400)
     except Interface.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except CertificateAuthority.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except Certificate.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except PublicKey.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_PUBLIC_KEY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_PUBLIC_KEY} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -377,8 +378,8 @@ def delete_server_ipsec(request, id):
             'remote_gateway': Schema(type=TYPE_STRING, example="10.1.12.22", description="Remote address in format of x.x.x.x"),
             'dynamic_gateway': Schema(type=TYPE_BOOLEAN, default=False),
             'description_ph1': Schema(type=TYPE_STRING, example="Description phase 1"),
-            'authentication': Schema(type=TYPE_OBJECT, required=['authentication'],
-                                     properties={'authentication': Schema(type=TYPE_STRING, default=CONSTANT_METHOD_PSK, enum=[CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA]),
+            'authentication': Schema(type=TYPE_OBJECT, required=['authentication_method'],
+                                     properties={'authentication_method': Schema(type=TYPE_STRING, default=CONSTANT_METHOD_PSK, enum=[CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA]),
                                                  'pre_shared_key': Schema(type=TYPE_STRING, example="bB8u6Tj60uJL2RKYR0OCyiGMdds9gaEUs9Q2d3bRTTVRKJ516CCc1LeSMChAI0rc", description="required when authentication_method is Mutual PSK"),
                                                  'local_key_pair': Schema(type=TYPE_STRING, example="local_public_key", description="required when authentication_method is Mutual Public Key"),
                                                  'peer_key_pair': Schema(type=TYPE_STRING, example="peer_public_key", description="required when authentication_method is Mutual Public Key"),
@@ -520,7 +521,7 @@ def update_server_ipsec(request, id):
 
         if server.mode == "Tunnel IPv4":
             # Local Network
-            local_network = mode_ph2.get("local_network", "")
+            local_network = data.get("local_network", "")
             server.type_local_network = local_network.get("type_local_network", "")
             if server.type_local_network == "Address":
                 server.address_local_network = local_network.get("address_local_network", "")
@@ -532,7 +533,7 @@ def update_server_ipsec(request, id):
             data["address_local_network"] = server.address_local_network
 
             # Remote Network
-            remote_network = mode_ph2.get("remote_network", "")
+            remote_network = data.get("remote_network", "")
             server.type_remote_network = remote_network.get("type_remote_network", "")
             server.address_remote_network = remote_network.get("address_remote_network", "")
             if server.type_remote_network == "Network":

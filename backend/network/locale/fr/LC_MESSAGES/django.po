@@ -148,8 +148,6 @@ msgid "is deleted"
 msgstr "est supprimé"
 
 #: backend/network/views.py:31
-#, fuzzy
-#| msgid "does not active"
 msgid "is not active"
 msgstr "n'est pas active"
 

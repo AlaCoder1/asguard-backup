@@ -16,7 +16,7 @@ def input_create_dnat(
     # Source port
     if source_protocol:
         # A unique port
-        source["source_protocol"] = source_protocol
+        source["protocol"] = source_protocol
         if source_port:
             source["port"] = source_port
         # A range port

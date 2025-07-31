@@ -21,6 +21,7 @@
   "keylicense":"La clé de licence se trouve dans l'e-mail de confirmation que vous avez reçu après votre achat.",
   "licensekey":"Clé de licence",
   "other":"Autres",
+  "otherNat":"Autre",
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",
     "send": "Nous avons envoyé un code de vérification à",
@@ -232,6 +233,12 @@
     "remplirChamps": "Remplir les champs avec mot 'ALL'"
   },
   "nat": {
+    "range":"Plage",
+    "sourceProtocol":"Protocole source",
+    "select":"Sélectionner",
+    "sourcePort":"Source Port",
+    "destinationProtocol":"Protocole de destination",
+    "destinationPortForwarding":"Redirection de port de destination",
     "msg_confirm_delete": "Etes-vous sûr de vouloir supprimer cette ligne ?",
     "interface": "Interface",
     "protocol": "Protocole",

@@ -519,10 +519,15 @@ export default {
     };
 
     function actionSourcePort(data) {
+      console.log("actionSourcePort", data.data);
       let eGui = document.createElement("div");
       if (data.data.source_port_from || data.data.source_port_to) {
         eGui.innerHTML = `
       ${data.data.source_port_from}  -> ${data.data.source_port_to}
+        `;
+      } else if (data.data.source_port) {
+        eGui.innerHTML = `
+      ${data.data.source_port}
         `;
       } else {
         eGui.innerHTML = `
@@ -538,7 +543,13 @@ export default {
         eGui.innerHTML = `
       ${data.data.destination_port_from}  -> ${data.data.destination_port_to}
         `;
-      } else {
+      }
+      else if (data.data.destination_port_forwarding) {
+        eGui.innerHTML = `
+      ${data.data.destination_port_forwarding}
+        `;
+      }
+      else {
         eGui.innerHTML = `
       --
         `;

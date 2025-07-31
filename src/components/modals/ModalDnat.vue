@@ -51,6 +51,20 @@
                   ></v-select>
                 </v-col>
 
+                <v-col cols="12" class="mb-n1">
+                  <div
+                    class=""
+                    style="
+                      background-color: #bdbdbd;
+                      color: white;
+                      padding: 10px;
+                      border-radius: 10px;
+                    "
+                  >
+                    Source
+                  </div>
+                </v-col>
+
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
                     :label="$t('nat.ent_saddr')"
@@ -75,10 +89,61 @@
                   </p>
                 </v-col>
 
-                <v-col cols="6" class="mb-n6 mt-3">
+                <v-col cols="12" class="mb-n6">
+                  <v-select
+                    v-model="state.sourceProtocol"
+                    :label="$t('nat.sourceProtocol')"
+                    :no-data-text="$t('nat.msg_no_data')"
+                    item-title="name"
+                    item-value="id"
+                    :items="state.protocolList"
+                    clearable
+                    return-object
+                  ></v-select>
+                </v-col>
+
+                <v-col cols="4" class="mb-n6 mt-3">
                   <span>{{ $t("nat.sport_range") }} </span>
                 </v-col>
-                <v-col cols="3" class="mb-n6">
+
+                <v-col cols="8" class="mb-n6">
+                  <v-select
+                    v-model="state.selectedModeSource"
+                    :label="$t('nat.select')"
+                    :no-data-text="$t('nat.msg_no_data')"
+                    item-title="name"
+                    item-value="slug"
+                    :items="state.ListSelectedSource"
+                    clearable
+                    return-object
+                  ></v-select>
+                </v-col>
+                <v-col cols="4" class="mb-n6">
+                  <!-- {{ state.selectedModeSource }} -->
+                </v-col>
+
+                <v-col
+                  cols="8"
+                  class="mb-n6"
+                  v-if="state.selectedModeSource?.slug === 'port'"
+                >
+                  <v-text-field
+                    :label="$t('nat.sourcePort')"
+                    v-model="state.portSource"
+                  ></v-text-field>
+                  <!-- <p
+                    class="error-feedback mb-5"
+                    v-if="v$.externalAddress.$error"
+                  >
+                    {{ v$.externalAddress.$errors[0].$message }}
+                  </p> -->
+                </v-col>
+
+                <v-col
+                  cols="4"
+                  class="mb-n6"
+                  v-if="state.selectedModeSource?.slug === 'range'"
+                >
                   <v-select
                     :label="$t('nat.from')"
                     v-model="state.sourceRangeFrom"
@@ -101,7 +166,11 @@
                     {{ v$.specificSourceFrom.$errors[0].$message }}
                   </p>
                 </v-col>
-                <v-col cols="3" class="mb-n6">
+                <v-col
+                  cols="4"
+                  class="mb-n6"
+                  v-if="state.selectedModeSource?.slug === 'range'"
+                >
                   <v-select
                     :label="$t('nat.to')"
                     v-model="state.sourceRangeTo"
@@ -134,6 +203,20 @@
                 >
                   {{ $t("nat.msg_validation_port") }}
                 </p>
+
+                <v-col cols="12" class="mb-n1">
+                  <div
+                    class=""
+                    style="
+                      background-color: #bdbdbd;
+                      color: white;
+                      padding: 10px;
+                      border-radius: 10px;
+                    "
+                  >
+                    Destination
+                  </div>
+                </v-col>
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
@@ -171,10 +254,53 @@
                   </v-radio-group>
                 </v-col>
                 <template v-if="state.checkInterface === 'Port Forwarding'">
-                  <v-col cols="6" class="mb-n6 mt-3">
+                  <v-col cols="12" class="mb-n6">
+                    <v-select
+                      v-model="state.destinationProtocol"
+                      :label="$t('nat.destinationProtocol')"
+                      :no-data-text="$t('nat.msg_no_data')"
+                      item-title="name"
+                      item-value="id"
+                      :items="state.protocolList"
+                      clearable
+                      return-object
+                    ></v-select>
+                  </v-col>
+
+                  <v-col cols="4" class="mb-n6 mt-3">
                     <span>{{ $t("nat.dport_range") }}</span>
                   </v-col>
-                  <v-col cols="3" class="mb-n6">
+
+                  <v-col cols="8" class="mb-n6">
+                    <v-select
+                      v-model="state.selectedModeDestination"
+                      :label="$t('nat.select')"
+                      :no-data-text="$t('nat.msg_no_data')"
+                      item-title="name"
+                      item-value="slug"
+                      :items="state.ListSelectedDestination"
+                      clearable
+                      return-object
+                    ></v-select>
+                  </v-col>
+                  <v-col cols="4" class="mb-n6"> </v-col>
+
+                  <v-col
+                    cols="8"
+                    class="mb-n6"
+                    v-if="state.selectedModeDestination?.slug === 'port'"
+                  >
+                    <v-text-field
+                      :label="$t('nat.destinationPortForwarding')"
+                      v-model="state.portDestination"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col
+                    cols="4"
+                    class="mb-n6"
+                    v-if="state.selectedModeDestination?.slug === 'range'"
+                  >
                     <v-select
                       :label="`${$t('nat.from')}`"
                       :no-data-text="$t('nat.msg_no_data')"
@@ -204,7 +330,11 @@
                       {{ v$.destinationRangeFrom.$errors[0].$message }}
                     </p> -->
                   </v-col>
-                  <v-col cols="3" class="mb-n6">
+                  <v-col
+                    cols="4"
+                    class="mb-n6"
+                    v-if="state.selectedModeDestination?.slug === 'range'"
+                  >
                     <v-select
                       :label="`${$t('nat.to')}`"
                       v-model="state.destinationRangeTo"
@@ -376,6 +506,21 @@ export default {
     const numberList = ref(Array.from({ length: 33 }, (_, i) => i));
 
     const state = reactive({
+      sourceProtocol: null,
+      destinationProtocol: null,
+      portSource: "",
+      ListSelectedSource: [
+        { name: "Port", slug: "port" },
+        { name: t("nat.range"), slug: "range" },
+      ],
+      selectedModeSource: null,
+      //
+      portDestination: "",
+      ListSelectedDestination: [
+        { name: "Port", slug: "port" },
+        { name: t("nat.range"), slug: "range" },
+      ],
+      selectedModeDestination: null,
       id: null,
       //list
       isCombo: ["Forwarding", "Port Forwarding"],
@@ -406,7 +551,7 @@ export default {
         { name: "LDAP (Lightweight Directory Access Protocol)", slug: "389" },
         { name: "HTTPS (alternative)", slug: "8443" },
         { name: "SMTPS", slug: "465" },
-        { name: "OTHER", slug: "other" },
+        { name: t("otherNat"), slug: "other" },
       ],
       listPortSourceTo: [],
       listPortDestinationTo: [],
@@ -446,9 +591,48 @@ export default {
 
     //
     watch(
+      () => state.selectedModeSource,
+      (val) => {
+        if (val?.slug === "port") {
+          state.sourceRangeFrom = null;
+          state.specificSourceFrom = "";
+          state.sourceRangeTo = null;
+          state.specificSourceTo = "";
+        } else if (val?.slug === "range") {
+          state.portSource = "";
+        } else if (val === null) {
+          state.portSource = "";
+          state.sourceRangeFrom = null;
+          state.specificSourceFrom = "";
+          state.sourceRangeTo = null;
+          state.specificSourceTo = "";
+        }
+      }
+    );
+    watch(
+      () => state.selectedModeDestination,
+      (val) => {
+        if (val?.slug === "port") {
+          state.destinationRangeFrom = null;
+          state.specificDestinationFrom = "";
+          state.destinationRangeTo = null;
+          state.specificDestinationTo = "";
+        } else if (val?.slug === "range") {
+          state.portDestination = "";
+        } else if (val === null) {
+          state.portDestination = "";
+          state.destinationRangeFrom = null;
+          state.specificDestinationFrom = "";
+          state.destinationRangeTo = null;
+          state.specificDestinationTo = "";
+        }
+      }
+    );
+    //
+    watch(
       () => state.sourceRangeFrom,
       (val) => {
-        if (val !== "other") {
+        if (val?.slug !== "other") {
           state.specificSourceFrom = "";
         }
       }
@@ -456,7 +640,7 @@ export default {
     watch(
       () => state.sourceRangeTo,
       (val) => {
-        if (val !== "other") {
+        if (val?.slug !== "other") {
           state.specificSourceTo = "";
         }
       }
@@ -464,7 +648,7 @@ export default {
     watch(
       () => state.destinationRangeFrom,
       (val) => {
-        if (val !== "other") {
+        if (val?.slug !== "other") {
           state.specificDestinationFrom = "";
         }
       }
@@ -472,7 +656,7 @@ export default {
     watch(
       () => state.destinationRangeTo,
       (val) => {
-        if (val !== "other") {
+        if (val?.slug !== "other") {
           state.specificDestinationTo = "";
         }
       }
@@ -480,7 +664,7 @@ export default {
     watch(
       () => state.port,
       (val) => {
-        if (val !== "other") {
+        if (val?.slug !== "other") {
           state.specificPort = "";
         }
       }
@@ -504,24 +688,24 @@ export default {
       () => modalMode.value,
       () => {
         if (modalMode.value === "create") {
-          state.interface = "";
+          state.interface = null;
           state.tcpIpVersion = { name: "IPv4", slug: "ipv4" };
-          state.protocol = "";
+          state.protocol = null;
           state.sourceAddress = "";
-          state.sourcePrefix = "";
+          state.sourcePrefix = null;
           state.destination = "";
           state.checkInterface = "Forwarding";
 
           //
-          state.sourceRangeFrom = "";
-          state.sourceRangeTo = "";
+          state.sourceRangeFrom = null;
+          state.sourceRangeTo = null;
           state.internalAddress = "";
           state.externalAddress = "";
           state.description = "";
-          state.port = "";
+          state.port = null;
           //
-          state.destinationRangeFrom = "";
-          state.destinationRangeTo = "";
+          state.destinationRangeFrom = null;
+          state.destinationRangeTo = null;
 
           //port other
           state.specificSourceFrom = "";
@@ -531,6 +715,13 @@ export default {
           state.specificDestinationTo = "";
 
           state.specificPort = "";
+
+          state.sourceProtocol = null;
+          state.destinationProtocol = null;
+          state.portSource = "";
+          state.selectedModeSource = null;
+          state.portDestination = "";
+          state.selectedModeDestination = null;
         }
       }
     );
@@ -559,9 +750,9 @@ export default {
       () => state.checkInterface,
       (val) => {
         if (val === "Forwarding") {
-          state.port = "";
-          state.destinationRangeTo = "";
-          state.destinationRangeFrom = "";
+          state.port = null;
+          state.destinationRangeTo = null;
+          state.destinationRangeFrom = null;
         }
       }
     );
@@ -572,6 +763,35 @@ export default {
 
         state.id = data.id;
 
+        //
+
+        state.portSource = data.source_port ? data.source_port : "";
+        state.portDestination = data.destination_port_forwarding
+          ? data.destination_port_forwarding
+          : "";
+
+        // state.selectedModeSource = data.source_port
+        //   ? { name: "Port", slug: "port" }
+        //   : data.source_port_from ? { name: "Range", slug: "range" } : null;
+
+        state.selectedModeSource = data.source_port
+          ? { name: "Port", slug: "port" }
+          : data.source_port_from
+          ? { name: t("nat.range"), slug: "range" }
+          : null;
+
+        state.selectedModeDestination = data.destination_port_forwarding
+          ? { name: "Port", slug: "port" }
+          : data?.destination_port_from
+          ? { name: t("nat.range"), slug: "range" }
+          : null;
+
+        // state.selectedModeDestination = data.destination_port_forwarding
+        //   ? { name: "Port", slug: "port" }
+        //   : { name: "Range", slug: "range" };
+
+        //
+
         let filtredInterface = state.mapedInterface.filter(
           (i) => i.id === data?.interface
         );
@@ -581,6 +801,19 @@ export default {
         let filtredProtocol = state.protocolList.filter(
           (i) => i.slug === data?.protocol
         );
+        //update protocol source and destination
+
+        let filtredSourceProtocol = state.protocolList.filter(
+          (i) => i.slug === data?.source_protocol
+        );
+        state.sourceProtocol = filtredSourceProtocol[0];
+
+        let filtredDestinationProtocol = state.protocolList.filter(
+          (i) => i.slug === data?.destination_protocol
+        );
+        state.destinationProtocol = filtredDestinationProtocol[0];
+
+        //
 
         state.interface = filtredInterface[0];
         state.tcpIpVersion = filtredIpVersion[0];
@@ -601,7 +834,7 @@ export default {
 
         if (filtredSourcePortFrom.length == 0) {
           state.sourceRangeFrom = data?.source_port_from
-            ? { name: "OTHER", slug: "other" }
+            ? { name: t("otherNat"), slug: "other" }
             : "";
 
           setTimeout(() => {
@@ -617,7 +850,7 @@ export default {
 
         if (filtredSourcePorTo.length == 0) {
           state.sourceRangeTo = data?.source_port_from
-            ? { name: "OTHER", slug: "other" }
+            ? { name: t("otherNat"), slug: "other" }
             : "";
 
           setTimeout(() => {
@@ -630,9 +863,10 @@ export default {
         state.externalAddress = data.external_address;
         state.internalAddress = data.internal_address;
 
-        state.checkInterface = data.destination_port
-          ? "Port Forwarding"
-          : "Forwarding";
+        state.checkInterface =
+          data.destination_port || data?.destination_protocol
+            ? "Port Forwarding"
+            : "Forwarding";
 
         let filtredPort = state.listPort.filter(
           (i) => i.slug === data?.destination_port
@@ -640,7 +874,7 @@ export default {
 
         if (filtredPort.length == 0) {
           state.port = data.destination_port
-            ? { name: "OTHER", slug: "other" }
+            ? { name: t("otherNat"), slug: "other" }
             : "";
           setTimeout(() => {
             state.specificPort = data.destination_port;
@@ -655,7 +889,7 @@ export default {
 
         if (filtredDestinationPortFrom.length == 0) {
           state.destinationRangeFrom = data?.destination_port_from
-            ? { name: "OTHER", slug: "other" }
+            ? { name: t("otherNat"), slug: "other" }
             : "";
 
           setTimeout(() => {
@@ -671,7 +905,7 @@ export default {
 
         if (filtredDestinationPortTo.length == 0) {
           state.destinationRangeTo = data?.destination_port_to
-            ? { name: "OTHER", slug: "other" }
+            ? { name: t("otherNat"), slug: "other" }
             : "";
 
           setTimeout(() => {
@@ -718,24 +952,24 @@ export default {
       emitter.emit("closeDnatModal");
       v$.value.$reset();
       if (modalMode.value === "create") {
-        state.interface = "";
+        state.interface = null;
         state.tcpIpVersion = { name: "IPv4", slug: "ipv4" };
-        state.protocol = "";
+        state.protocol = null;
         state.sourceAddress = "";
-        state.sourcePrefix = "";
+        state.sourcePrefix = null;
         state.destination = "";
         state.checkInterface = "Forwarding";
 
         //
-        state.sourceRangeFrom = "";
-        state.sourceRangeTo = "";
+        state.sourceRangeFrom = null;
+        state.sourceRangeTo = null;
         state.internalAddress = "";
         state.externalAddress = "";
         state.description = "";
-        state.port = "";
+        state.port = null;
         //
-        state.destinationRangeFrom = "";
-        state.destinationRangeTo = "";
+        state.destinationRangeFrom = null;
+        state.destinationRangeTo = null;
 
         //port other
         state.specificSourceFrom = "";
@@ -745,6 +979,13 @@ export default {
         state.specificDestinationTo = "";
 
         state.specificPort = "";
+
+        state.selectedModeDestination = null;
+        state.portDestination = "";
+        state.selectedModeSource = null;
+        state.portSource = "";
+        state.sourceProtocol = null;
+        state.destinationProtocol = null;
       }
     };
 
@@ -784,6 +1025,12 @@ export default {
       const result = await v$.value.$validate();
       if (result) {
         let payload = {
+          //
+          source_port: state.portSource ? state.portSource : "",
+          source_protocol: state.sourceProtocol
+            ? state.sourceProtocol?.slug
+            : "",
+          //
           interface: state.interface ? state.interface.id : null,
           tcp_ip: state.tcpIpVersion ? state.tcpIpVersion?.slug : "",
           protocol: state.protocol?.slug ?? "",
@@ -804,36 +1051,65 @@ export default {
               : state.sourceRangeTo?.slug
               ? state.sourceRangeTo?.slug
               : "",
-          external_address: state.externalAddress,
-          internal_address: state.internalAddress,
+          external_address: state.externalAddress ? state.externalAddress : "",
+          internal_address: state.internalAddress ? state.internalAddress : "",
           port_forwarding: state.checkInterface === "Forwarding" ? false : true,
-          description: state.description,
+          description: state.description ? state.description : "",
+
+          //
+
+          destination_protocol: state.destinationProtocol
+            ? state.destinationProtocol?.slug
+            : "",
+          destination_port_forwarding: state.portDestination,
+          destination_port_from:
+            state.destinationRangeFrom?.slug === "other"
+              ? state.specificDestinationFrom
+              : state.destinationRangeFrom?.slug
+              ? state.destinationRangeFrom?.slug
+              : "",
+
+          destination_port_to:
+            state.destinationRangeTo?.slug === "other"
+              ? state.specificDestinationTo
+              : state.destinationRangeTo?.slug
+              ? state.destinationRangeTo?.slug
+              : "",
+
+          destination_port:
+            state.port?.slug === "other"
+              ? state.specificPort
+              : state.port?.slug
+              ? state.port?.slug
+              : "",
         };
-        if (state.checkInterface === "Port Forwarding") {
-          payload = {
-            ...payload,
-            destination_port_from:
-              state.destinationRangeFrom?.slug === "other"
-                ? state.specificDestinationFrom
-                : state.destinationRangeFrom?.slug
-                ? state.destinationRangeFrom?.slug
-                : "",
+        // if (state.checkInterface === "Port Forwarding") {
+        //   payload = {
+        //     ...payload,
+        //     destination_protocol: state.destinationProtocol?.slug,
+        //     destination_port_forwarding: state.portDestination,
+        //     destination_port_from:
+        //       state.destinationRangeFrom?.slug === "other"
+        //         ? state.specificDestinationFrom
+        //         : state.destinationRangeFrom?.slug
+        //         ? state.destinationRangeFrom?.slug
+        //         : "",
 
-            destination_port_to:
-              state.destinationRangeTo?.slug === "other"
-                ? state.specificDestinationTo
-                : state.destinationRangeTo?.slug
-                ? state.destinationRangeTo?.slug
-                : "",
+        //     destination_port_to:
+        //       state.destinationRangeTo?.slug === "other"
+        //         ? state.specificDestinationTo
+        //         : state.destinationRangeTo?.slug
+        //         ? state.destinationRangeTo?.slug
+        //         : "",
 
-            destination_port:
-              state.port?.slug === "other"
-                ? state.specificPort
-                : state.port?.slug
-                ? state.port?.slug
-                : "",
-          };
-        }
+        //     destination_port:
+        //       state.port?.slug === "other"
+        //         ? state.specificPort
+        //         : state.port?.slug
+        //         ? state.port?.slug
+        //         : "",
+        //   };
+        // }
 
         if (modalMode.value === "edit") {
           console.log("payload", payload);

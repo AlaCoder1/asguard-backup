@@ -10,7 +10,9 @@ class Area(models.Model):
 
 
     class Meta:
-        db_table = _('area')
+        db_table = 'area'
+        verbose_name = _("Area")  # singular, used in admin
+        verbose_name_plural = _("Areas")  # plural, used in admin lists
 
 
 class SdwanRules(models.Model):
@@ -26,7 +28,9 @@ class SdwanRules(models.Model):
     rule_status = models.BooleanField(default=False)
 
     class Meta:
-        db_table = _('sdwan_rules')
+        db_table = 'sdwan_rules'
+        verbose_name = _("SD-WAN Rule")  # singular, used in admin
+        verbose_name_plural = _("SD-WAN Rules")  # plural, used in admin lists
 
 
 class AreaInterface(models.Model):

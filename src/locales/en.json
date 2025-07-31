@@ -21,6 +21,7 @@
   "keylicense":"The license key is in the confirmation email you received after your purchase.",
   "licensekey":"License key",
   "other": "Others",
+  "otherNat": "Other",
   "login": {
     "verifyYourAccount": "Verify Your Account",
     "send": "We sent a verification code to",
@@ -233,6 +234,12 @@
     "remplirChamps": "Fill the fields with word 'ALL'"
   },
   "nat": {
+    "range":"Range",
+    "sourceProtocol":"Source Protocol",
+    "select":"Select",
+    "sourcePort":"Port source",
+    "destinationProtocol":"Destination Protocol",
+    "destinationPortForwarding":"Destination port forwarding",
     "msg_confirm_delete": "Are you sure you want to delete this Row ?",
     "interface": "Interface",
     "protocol": "Protocol",

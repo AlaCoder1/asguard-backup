@@ -14,6 +14,7 @@ def input_create_dnat(
             source["port"] = source_port
         # A range port
         elif source_port_from:
+            source["source_protocol"] = source_protocol
             source["port"] = source_port_from
             if source_port_to:
                 source["port"] += f"""-{source_port_to}"""

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-31 11:41+0000\n"
+"POT-Creation-Date: 2025-07-31 13:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,35 +18,39 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/sdwan/models.py:8 backend/sdwan/models.py:17
+#: backend/sdwan/models.py:8 backend/sdwan/models.py:19
 msgid "name"
 msgstr "nom"
 
-#: backend/sdwan/models.py:13
-msgid "area"
-msgstr "zone"
+#: backend/sdwan/models.py:14 backend/sdwan/views.py:24
+msgid "Area"
+msgstr "Zone"
 
-#: backend/sdwan/models.py:22
+#: backend/sdwan/models.py:15
+#, fuzzy
+#| msgid "Area"
+msgid "Areas"
+msgstr "Zones"
+
+#: backend/sdwan/models.py:24
 msgid "health_check"
 msgstr "contrôle_santé"
 
-#: backend/sdwan/models.py:23
+#: backend/sdwan/models.py:25
 msgid "health_check_target"
 msgstr "objectif_contrôle_santé"
 
-#: backend/sdwan/models.py:29
-#, fuzzy
-#| msgid "SDwan rule"
-msgid "sdwan_rules"
-msgstr "régle SDwan"
+#: backend/sdwan/models.py:32
+msgid "SD-WAN Rule"
+msgstr "Règle SD-WAN"
+
+#: backend/sdwan/models.py:33
+msgid "SD-WAN Rules"
+msgstr "Règles SD-WAN"
 
 #: backend/sdwan/views.py:23
 msgid "SDwan rule"
 msgstr "régle SDwan"
-
-#: backend/sdwan/views.py:24
-msgid "Area"
-msgstr "Zone"
 
 #: backend/sdwan/views.py:25
 msgid "Gateway"
@@ -111,3 +115,11 @@ msgstr "Une zone contient au moins deux interfaces"
 #: backend/sdwan/views.py:42
 msgid "An area contains only two interfaces"
 msgstr "Une zone ne contient que deux interfaces"
+
+#, fuzzy
+#~| msgid "SDwan rule"
+#~ msgid "sdwan_rules"
+#~ msgstr "régle SDwan"
+
+#~ msgid "area"
+#~ msgstr "zone"

@@ -77,7 +77,7 @@ def build_command_create_dnat(iifname, source, destination, protocol, next_rule_
     if source["address"]:
         ip_addr_source = ["ip", "saddr", source["address"]]
     if source['protocol'] and source['port']:
-        tcp_source = [source["source_protocol"], "sport", source["port"]]
+        tcp_source = [source["protocol"], "sport", source["port"]]
     if destination["external_address"] != "":
         ip_addr_destination = ["ip", "daddr", destination["external_address"]]
     if destination["port_forwarding"]:

@@ -1026,8 +1026,10 @@ export default {
       if (result) {
         let payload = {
           //
-          source_port: state.portSource,
-          source_protocol: state.sourceProtocol?.slug,
+          source_port: state.portSource ? state.portSource : "",
+          source_protocol: state.sourceProtocol
+            ? state.sourceProtocol?.slug
+            : "",
           //
           interface: state.interface ? state.interface.id : null,
           tcp_ip: state.tcpIpVersion ? state.tcpIpVersion?.slug : "",
@@ -1049,38 +1051,65 @@ export default {
               : state.sourceRangeTo?.slug
               ? state.sourceRangeTo?.slug
               : "",
-          external_address: state.externalAddress,
-          internal_address: state.internalAddress,
+          external_address: state.externalAddress ? state.externalAddress : "",
+          internal_address: state.internalAddress ? state.internalAddress : "",
           port_forwarding: state.checkInterface === "Forwarding" ? false : true,
-          description: state.description,
+          description: state.description ? state.description : "",
+
+          //
+
+          destination_protocol: state.destinationProtocol
+            ? state.destinationProtocol?.slug
+            : "",
+          destination_port_forwarding: state.portDestination,
+          destination_port_from:
+            state.destinationRangeFrom?.slug === "other"
+              ? state.specificDestinationFrom
+              : state.destinationRangeFrom?.slug
+              ? state.destinationRangeFrom?.slug
+              : "",
+
+          destination_port_to:
+            state.destinationRangeTo?.slug === "other"
+              ? state.specificDestinationTo
+              : state.destinationRangeTo?.slug
+              ? state.destinationRangeTo?.slug
+              : "",
+
+          destination_port:
+            state.port?.slug === "other"
+              ? state.specificPort
+              : state.port?.slug
+              ? state.port?.slug
+              : "",
         };
-        if (state.checkInterface === "Port Forwarding") {
-          payload = {
-            ...payload,
-            destination_protocol: state.destinationProtocol?.slug,
-            destination_port_forwarding: state.portDestination,
-            destination_port_from:
-              state.destinationRangeFrom?.slug === "other"
-                ? state.specificDestinationFrom
-                : state.destinationRangeFrom?.slug
-                ? state.destinationRangeFrom?.slug
-                : "",
+        // if (state.checkInterface === "Port Forwarding") {
+        //   payload = {
+        //     ...payload,
+        //     destination_protocol: state.destinationProtocol?.slug,
+        //     destination_port_forwarding: state.portDestination,
+        //     destination_port_from:
+        //       state.destinationRangeFrom?.slug === "other"
+        //         ? state.specificDestinationFrom
+        //         : state.destinationRangeFrom?.slug
+        //         ? state.destinationRangeFrom?.slug
+        //         : "",
 
-            destination_port_to:
-              state.destinationRangeTo?.slug === "other"
-                ? state.specificDestinationTo
-                : state.destinationRangeTo?.slug
-                ? state.destinationRangeTo?.slug
-                : "",
+        //     destination_port_to:
+        //       state.destinationRangeTo?.slug === "other"
+        //         ? state.specificDestinationTo
+        //         : state.destinationRangeTo?.slug
+        //         ? state.destinationRangeTo?.slug
+        //         : "",
 
-            destination_port:
-              state.port?.slug === "other"
-                ? state.specificPort
-                : state.port?.slug
-                ? state.port?.slug
-                : "",
-          };
-        }
+        //     destination_port:
+        //       state.port?.slug === "other"
+        //         ? state.specificPort
+        //         : state.port?.slug
+        //         ? state.port?.slug
+        //         : "",
+        //   };
+        // }
 
         if (modalMode.value === "edit") {
           console.log("payload", payload);

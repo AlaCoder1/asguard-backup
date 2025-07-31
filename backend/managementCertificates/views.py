@@ -5,7 +5,7 @@ from django.db.models.deletion import ProtectedError
 from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import SessionAuthentication
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
+from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Parameter, IN_PATH
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from backend.ipsec.models import ServerIPsec
@@ -58,6 +58,7 @@ def get_all_cert_auth(request):
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET A CERTIFICATE AUTHORITY",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -196,11 +197,12 @@ def create_cert_auth(request):
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DELETE CERTIFICATE AUTHORITY",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_cert_auth(request, id):
+def delete_cert_auth(_, id):
     """Deleting a Certificates Authority from system and then from database"""
     try:
         ca = CertificateAuthority.objects.get(id=id)
@@ -226,6 +228,7 @@ def delete_cert_auth(request, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO DOWNLOAD CERTIFICATE AUTHORITY",
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     request_body=Schema(type=TYPE_OBJECT, required=['type'],
     properties={"type": Schema(type=TYPE_STRING, enum=['certificate', 'private_key'])}))
 @api_view(['POST'])
@@ -250,11 +253,12 @@ def export_cert_auth(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DOWNLOAD REVOKACTION LIST OF A CERTIFICATE AUTHORITY",)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def export_cert_auth_list_rev(request, id):
+def export_cert_auth_list_rev(_, id):
     """Exporting a Certificate Authority"""
     try:
         ca = CertificateAuthority.objects.get(id=id)
@@ -284,6 +288,7 @@ def get_all_certificates(request):
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET A CERTIFICATE",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -440,12 +445,13 @@ def create_certificate(request):
 
 @swagger_auto_schema(
     'DELETE', request_body=CertificateSerializer, 
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO DELETE A CERTIFICATE AUTHORITY",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_certificate(request, id):
+def delete_certificate(_, id):
     """Deleting a Certificates from system and then from database"""
     try:
         cert = Certificate.objects.get(id=id)
@@ -481,6 +487,7 @@ def delete_certificate(request, id):
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO REVOKE A CERTIFICATE",
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     request_body=Schema(type=TYPE_OBJECT, required=['reason'],
     properties={"reason": Schema(type=TYPE_STRING, enum=[
         "No Status", "Unspecified", "key compromise", "CA compromise", "affiliation changed ", 
@@ -518,11 +525,12 @@ def revoke_certificate(request, id):
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO UNREVOKE A CERTIFICATE",)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def unrevoke_certificate(request, id):
+def unrevoke_certificate(_, id):
     try:
         cert = Certificate.objects.get(id=id)
         ca = cert.certificate_authority
@@ -542,6 +550,7 @@ def unrevoke_certificate(request, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO DOWNLOAD A CERTIFICATE",
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     request_body=Schema(type=TYPE_OBJECT, required=['download_type'],
     properties={"download_type": Schema(type=TYPE_STRING, enum=["certificate", "private_key", "p12"]),
                 "password": Schema(type=TYPE_STRING, example="password certificate", description="Required when download_type is p12")}))

@@ -603,7 +603,10 @@ export default {
           state.sourceRangeFrom = data?.source_port_from
             ? { name: "OTHER", slug: "other" }
             : "";
-          state.specificSourceFrom = data.source_port_from;
+
+          setTimeout(() => {
+            state.specificSourceFrom = data.source_port_from;
+          }, 1000);
         } else {
           state.sourceRangeFrom = filtredSourcePortFrom[0];
         }
@@ -616,7 +619,10 @@ export default {
           state.sourceRangeTo = data?.source_port_from
             ? { name: "OTHER", slug: "other" }
             : "";
-          state.specificSourceTo = data.source_port_to;
+
+          setTimeout(() => {
+            state.specificSourceTo = data.source_port_to;
+          }, 1000);
         } else {
           state.sourceRangeTo = filtredSourcePorTo[0];
         }
@@ -636,7 +642,9 @@ export default {
           state.port = data.destination_port
             ? { name: "OTHER", slug: "other" }
             : "";
-          state.specificPort = data.destination_port;
+          setTimeout(() => {
+            state.specificPort = data.destination_port;
+          }, 1000);
         } else {
           state.port = filtredPort[0];
         }
@@ -649,7 +657,10 @@ export default {
           state.destinationRangeFrom = data?.destination_port_from
             ? { name: "OTHER", slug: "other" }
             : "";
-          state.specificDestinationFrom = data.destination_port_from;
+
+          setTimeout(() => {
+            state.specificDestinationFrom = data.destination_port_from;
+          }, 1000);
         } else {
           state.destinationRangeFrom = filtredDestinationPortFrom[0];
         }
@@ -662,7 +673,10 @@ export default {
           state.destinationRangeTo = data?.destination_port_to
             ? { name: "OTHER", slug: "other" }
             : "";
-          state.specificDestinationTo = data.destination_port_to;
+
+          setTimeout(() => {
+            state.specificDestinationTo = data.destination_port_to;
+          }, 1000);
         } else {
           state.destinationRangeTo = filtredDestinationPortTo[0];
         }

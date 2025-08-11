@@ -12,17 +12,22 @@ from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INE
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 @swagger_auto_schema(
-    method='delete',
+    method='post',
     operation_summary="API to delete a rule",
-      manual_parameters=[
-        openapi.Parameter(
-            'id',
-            openapi.IN_PATH,
-            description="ID of rule to delete",
-            type=openapi.TYPE_INTEGER,
-            required=True
-        ),
-    ],
+    #   manual_parameters=[
+    #     openapi.Parameter(
+    #         'id',
+    #         openapi.IN_PATH,
+    #         description="ID of rule to delete",
+    #         type=openapi.TYPE_INTEGER,
+    #         required=True
+    #     ),
+    # ],
+     request_body=openapi.Schema(
+        type=openapi.TYPE_ARRAY,
+       items=openapi.Items(type=openapi.TYPE_INTEGER),
+        example=[1, 2, 3, 4]
+     ),
     responses={
         200: openapi.Response(
             description=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}",
@@ -34,9 +39,9 @@ from drf_yasg import openapi
     }
 )
 
-@api_view(['DELETE'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-def delete_rule(request,id):
+def delete_rule(request):
     """
     API to delete rule from system and database 
     This function to delete a rule from the system and database using id of rule in parameter verify if exist in database and system then delete it .
@@ -49,25 +54,30 @@ def delete_rule(request,id):
     JsonResponse: A JSON response containing a message indicating the success 
       or failure of the deletion operation.
     """
-    if (request.method == 'DELETE'):
-        if (Rule.objects.filter(id=id).exists()):
-            rules = Rule.objects.get(id=id)
-            rule=rules.rule
-            type_rules=rules.type_rule
-            interface_object= Interface.objects.get(id=rules.interface_id)
-            ifname=interface_object.ifname
-            handle=get_handle_rule(ifname,type_rules,rule)
-            if handle is not None:
-              return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-              
-            rules.delete()
-            msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
-            status=200
-        
-        else:
-          msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
-          status=400
-        return JsonResponse({"msg": msg},status=status)
+    if (request.method == 'POST'):
+        ids=request.data
+        all_response=[]
+        print(ids)
+        for id in ids:
+            if (Rule.objects.filter(id=id).exists()):
+                rules = Rule.objects.get(id=id)
+                rule=rules.rule
+                type_rules=rules.type_rule
+                interface_object= Interface.objects.get(id=rules.interface_id)
+                ifname=interface_object.ifname
+                handle=get_handle_rule(ifname,type_rules,rule)
+                if handle is not None:
+                    return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
+                
+                rules.delete()
+                msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
+                status=200
+            
+            else:
+                msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
+                status=400
+            all_response.append({"msg":msg,"status":status})
+        return JsonResponse({"responses": all_response})
       
 
 
@@ -88,6 +98,7 @@ def delete_rule(request,id):
         items=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
+                
                 'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Rule ID (optional for new rules)',example=1),
                 'policy': openapi.Schema(
                     type=openapi.TYPE_STRING, 
@@ -110,6 +121,7 @@ def delete_rule(request,id):
                     default="inbound"
                     ),
                 'rule_description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the rule',example="test rule inbound"),
+                'position':openapi.Schema(type=openapi.TYPE_INTEGER, description='Rule position',example=1)
             },
             required=['policy', 'type_rule'], 
            
@@ -161,7 +173,7 @@ def save_rules(request,name_interface):
     data_list=request.data
     interface_object= Interface.objects.get(name_interface=name_interface)
     ifname=interface_object.ifname
-    for data in data_list:
+    for index, data in enumerate(data_list):
         id_rule= None if data.get('id', None) == None else data.get('id', None)
         policy = data.get('policy', None)
         saddr = None if data.get('saddr', None) == "ALL" else data.get('saddr', None)
@@ -169,12 +181,14 @@ def save_rules(request,name_interface):
         sport = None if data.get('sport', None) == "ALL" else data.get('sport', None)
         dport = None if data.get('dport', None) == "ALL" else data.get('dport', None)
         protocol = None if data.get('protocol', None) == "ALL" else data.get('protocol', None)
+        position = index+1
+        print({"position":position})
         type_rule = data.get('type_rule', None)
         rule_description= None if data.get('rule_description', None) == "" else data.get('rule_description', None)
         if id_rule is None:
-            msg,status,id_rule=add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object)
+            msg,status,id_rule=add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object,position)
         else:
-            msg,status=update_rule_db(id_rule,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description)
+            msg,status=update_rule_db(id_rule,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description,position)
         responses.append({"id":id_rule,"msg":msg,"status":status})
     return JsonResponse({"response": responses},status=status)  
      

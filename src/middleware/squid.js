@@ -16,6 +16,7 @@ import "dayjs/locale/fr";
 import fr from "element-plus/es/locale/lang/fr";
 import en from "element-plus/es/locale/lang/en";
 import { get_lang } from "../mixins/storage_language.js";
+import { checkFunctionality } from "@/mixins/checkFunctionality.js";
 
 const app = createApp(squid);
 const vuetify = createVuetify({
@@ -33,6 +34,7 @@ function hrefPath() {
 
 hrefPath();
 startTimer();
+checkFunctionality();
 
 (async () => {
   const locale = await get_lang();

@@ -7,7 +7,7 @@ class RuleSerializer(serializers.ModelSerializer):
             model = Rule
             fields = ['rule','rule_description','rule_status','type_rule',
                       'policy','protocol','saddr','sport',
-                      'daddr','dport','interface'
+                      'daddr','dport','interface','position'
                       ]
             
 class FirewallLogsSerializer(serializers.ModelSerializer):

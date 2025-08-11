@@ -36,11 +36,52 @@
       </v-card>
     </v-dialog>
   </v-overlay>
-  <div class="mr-3">
-    <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
+
+  <v-dialog v-model="deleteDialog" max-width="500px">
+    <v-card>
+      <v-card-title class="headline">{{
+        $t("firewall.delete_confirm")
+      }}</v-card-title>
+      <v-card-text>{{ $t("firewall.msg_confirm_delete") }}</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="cancelDeleteRow">{{
+          $t("firewall.cancel")
+        }}</v-btn>
+        <v-btn color="blue darken-1" text @click="confirmDeleteRow">{{
+          $t("firewall.delete")
+        }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <div>
+    <div class="mt-6" style="display: flex; flex-direction: column">
       <h4>{{ $t("tabs.DNAT") }}</h4>
       <v-divider></v-divider>
       <v-row>
+        <v-col cols="12" class="mt-2">
+          <v-alert
+            v-model="state.snackbarAlert"
+            v-for="(error, index) in state.textAlertRow"
+            :key="index"
+            :type="error.status === 400 ? 'error' : 'success'"
+            :color="error.status === 400 ? 'error' : 'success'"
+            style="margin-bottom: 10px"
+          >
+            {{ error.msg }}
+          </v-alert>
+        </v-col>
+        <v-col cols="12" class="d-flex justify-end mt-2">
+          <v-btn
+            class="ml-3"
+            @click.prevent="deleteSelectedRows"
+            v-if="hasSelection"
+          >
+            <i class="fas fa-trash" style="color: #086eae"></i>
+          </v-btn>
+        </v-col>
+
         <v-col cols="12">
           <div style="overflow: hidden; flex-grow: 1">
             <ag-grid-vue
@@ -58,6 +99,10 @@
               @row-drag-enter="onRowDragStart"
               @row-drag-end="onRowDragEnd"
               :localeText="paginationLocalization"
+              :rowSelection="'multiple'"
+              @selection-changed="onSelectionChanged"
+              :rowMultiSelectWithClick="true"
+              rowClick="multiple"
             />
           </div>
           <div class="d-flex justify-end mt-3 mb-14">
@@ -133,11 +178,19 @@ export default {
   setup() {
     const { t } = useI18n();
     const overlayTemplate = ref("");
+
+    const hasSelection = ref(false);
+    const deleteDialog = ref(false);
+    const id_list_selection = ref([]);
+    const array = ref([]);
+
     const paginationLocalization = reactive({
       of: "/",
     });
     const emitter = inject("emitter");
     const state = reactive({
+      textAlertRow: [],
+      snackbarAlert: false,
       initialRowIndex: null,
       user: null,
       isExec: false,
@@ -197,6 +250,12 @@ export default {
       return t("nat.action");
     });
     const columnDnat = ref([
+      {
+        headerName: "",
+        checkboxSelection: true,
+        headerCheckboxSelection: true,
+        width: 50,
+      },
       {
         headerName: interface_row,
         field: "interface_name",
@@ -460,10 +519,15 @@ export default {
     };
 
     function actionSourcePort(data) {
+      console.log("actionSourcePort", data.data);
       let eGui = document.createElement("div");
       if (data.data.source_port_from || data.data.source_port_to) {
         eGui.innerHTML = `
       ${data.data.source_port_from}  -> ${data.data.source_port_to}
+        `;
+      } else if (data.data.source_port) {
+        eGui.innerHTML = `
+      ${data.data.source_port}
         `;
       } else {
         eGui.innerHTML = `
@@ -479,7 +543,13 @@ export default {
         eGui.innerHTML = `
       ${data.data.destination_port_from}  -> ${data.data.destination_port_to}
         `;
-      } else {
+      }
+      else if (data.data.destination_port_forwarding) {
+        eGui.innerHTML = `
+      ${data.data.destination_port_forwarding}
+        `;
+      }
+      else {
         eGui.innerHTML = `
       --
         `;
@@ -659,7 +729,70 @@ export default {
           }
         });
     };
+
+    const onSelectionChanged = () => {
+      const selected = gridApi.value.getSelectedRows();
+      hasSelection.value = selected.length > 0;
+    };
+
+    const deleteSelectedRows = () => {
+      const user = user_privilege();
+
+      if (user !== "viewer") {
+        deleteDialog.value = true;
+        const selectedRows = gridApi.value.getSelectedRows();
+        id_list_selection.value = selectedRows.map((i) => i.id);
+        array.value = [...id_list_selection.value];
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
+    };
+
+    const cancelDeleteRow = () => {
+      deleteDialog.value = false;
+    };
+    const confirmDeleteRow = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let payload = {
+        list_rules: array.value,
+      };
+
+      axios
+        .post(`/nat/deleteDNat`, payload)
+        .then((response) => {
+          const results = response.data;
+          console.log("results9", results);
+          state.snackbarAlert = true;
+          state.textAlertRow = results;
+          deleteDialog.value = false;
+
+          setTimeout(() => {
+            state.textAlertRow = [];
+            location.reload();
+          }, 3000);
+        })
+        .catch((i) => {
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.response;
+          }
+        });
+    };
     return {
+      confirmDeleteRow,
+      cancelDeleteRow,
+      deleteSelectedRows,
+      onSelectionChanged,
+      hasSelection,
+      deleteDialog,
       state,
       gridOptions,
       columnDnat,

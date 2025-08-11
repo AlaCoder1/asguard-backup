@@ -28,10 +28,10 @@ SUCCESS_MESSAGES_DELETING = _("is deleted")
 
 
 # Error messages
-ERROR_MESSAGES_NOACTIVE = _("does not active")
+ERROR_MESSAGES_NOACTIVE = _("is not active")
 ERROR_MESSAGES_FAILED = _("Failed to configure")
 ERROR_MESSAGES_FAILED_DELETE = _("Failed to delete")
-
+WARNING_CONNECTION=_("You need to delete the interface and set it up again")
 
 
 
@@ -225,7 +225,6 @@ def conf(request,name_interface):
             # print("hello")
             device_info,ifname,id_interface,aux_main,generic_config_object,uuid = device_name_interface(name_interface)
             if uuid is not None:
-                
                     commandes=[]
                     commandes_final=[]
                     commandes_ipv6=[]
@@ -269,7 +268,7 @@ def conf(request,name_interface):
                                                 status=200
                
             else:
-                msg=f"{CONSTANT_INTERFACE_CONNECTION } {ERROR_MESSAGES_NOACTIVE}"
+                msg=f"{CONSTANT_INTERFACE_CONNECTION } {ERROR_MESSAGES_NOACTIVE}! | {WARNING_CONNECTION} "
                 status=400
         else:
             print(resulltat)

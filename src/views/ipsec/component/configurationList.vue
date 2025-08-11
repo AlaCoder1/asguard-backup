@@ -122,7 +122,7 @@ export default {
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
       } else if (!last_Subscription.value.includes("VPN IPSEC")) {
-        return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+        return `${t("firewall.msg_subscription")}<br /><a href="/asguard/license/" class="white-link"> ${t("firewall.sub_page")}</a>`;
       } else {
         return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
       }
@@ -668,9 +668,9 @@ export default {
           document.getElementById("app").attributes["servers"].value;
         const validJsonString = serversAttribute;
         console.log('validJsonString',validJsonString)
-        // const parsedArray = JSON.parse(validJsonString);
-        // rowData.value = parsedArray;
-        console.log("rowData.value", rowData.value);
+        const parsedArray = JSON.parse(validJsonString);
+        rowData.value = parsedArray;
+        console.log("rowData.value**", rowData.value);
 
         const statusAttribute =
           document.getElementById("app").attributes["status"].value;

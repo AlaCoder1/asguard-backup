@@ -85,16 +85,16 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
       policy="reject with icmp port-unreachable"
    if type_rule=='inbound' :
       if protocol.upper() != "ALL":
-         rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
+         rule = f'ip saddr {saddr} ip daddr {daddr} {protocol} sport {sport} {protocol} dport {dport} {policy}'
       else:
-         rule='iifname "{}" ip saddr {} ip daddr {} {}'.format(ifname,saddr,daddr,policy)
+         rule = f'ip saddr {saddr} ip daddr {daddr} {policy}'
          
     ##cas outbound
    elif type_rule=='outbound' :
       if protocol.upper() != "ALL":
-         rule='oifname "{}" ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(ifname,daddr,saddr,protocol,sport,protocol,dport,policy)
+         rule = f'ip daddr {daddr} ip saddr {saddr} {protocol} sport {sport} {protocol} dport {dport} {policy}'
       else:
-         rule='oifname "{}" ip daddr {} ip saddr {} {}'.format(ifname,daddr,saddr,policy)
+         rule = f'ip daddr {daddr} ip saddr {saddr} {policy}'
          
    #####cas saddr is None
    if saddr is None:
@@ -113,7 +113,7 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
       rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
    ############ 
    if sport is None and dport is None and not protocol.startswith("icmp type") and protocol.upper()!="ALL" :
-      rule=rule[:rule.find(policy)]+"ip protocol {} ".format(protocol)+rule[rule.find(policy):]
+      rule=rule[:rule.find(policy)]+" ip protocol {} ".format(protocol)+rule[rule.find(policy):]
    return rule
 
 
@@ -177,6 +177,19 @@ def get_handle_rule(ifname,type_rule,rule):
    else:
       return output[1].strip().split("\n")[0]
 
+def update_rule_remote(ifname,type_rule,handle,ruleupdate):
+   """function to update rule"""
+   ##initialiser les commanndes pour supprimer une règle et l'entregistrer dans nftables.conf
+   commandes=[
+      f"sudo nft replace rule inet filter_{ifname} {type_rule} handle {handle} {ruleupdate} ",
+      f'sudo nft list table inet filter_{ifname} > /etc/rules/{ifname}/nftables.conf'
+   ]
+   ##executer ces commandes
+   for cmd in commandes:
+      _,error=run_command(cmd)
+      if error !="":
+         return error  
+   return True
 
 def delete_rule_remote(ifname,type_rule,handle):
    """function to delete rule"""
@@ -201,28 +214,37 @@ def get_protocol_number(protocol_name):
     except socket.error:
         return None  # Protocol name not found
 
+
+def get_position(type_rule):
+   positions = list(Rule.objects.filter(type_rule=type_rule).values_list('position', flat=True))
+   max_position = max(positions) if positions else 0
+   position=max_position+1
+   return position
      
 def calculate_subnet_address(addr_prefix):
    if addr_prefix is not None:
-      ip_address=addr_prefix.split("/")[0]
-      prefix=addr_prefix.split("/")[1]
-      # Validate input IP address
-      try:
-         ip_address = ipaddress.IPv4Address(ip_address)
-      except ValueError as e:
-         return f"Invalid input: {e}"
-      if prefix!="32":
-         network = ipaddress.IPv4Network(f"{ip_address}/{prefix}", strict=False)
-         return str(network.network_address)+"/"+prefix
+      if addr_prefix.find('/')!=-1:
+         ip_address=addr_prefix.split("/")[0]
+         prefix=addr_prefix.split("/")[1]
+         # Validate input IP address
+         try:
+            ip_address = ipaddress.IPv4Address(ip_address)
+         except ValueError as e:
+            return f"Invalid input: {e}"
+         if prefix!="32":
+            network = ipaddress.IPv4Network(f"{ip_address}/{prefix}", strict=False)
+            return str(network.network_address)+"/"+prefix
+         else:
+            return str(ip_address)
       else:
-         return str(ip_address)
+         return addr_prefix
    else:
       return None
    
    
    
 ###
-def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object):
+def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object,position):
    """function to add rule in system and database"""
    msg=''
    id_rule=None
@@ -244,6 +266,8 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
       else:
          rule_mod=rule.split("reject with icmp port-unreachable")[0].strip()
          rule=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
+      
+      rule=rule.strip()
       # if not Rule.objects.filter(Q(rule=rule) & ((Q(interface_id=interface_object.pk)& Q(type_rule!=type_rule ) )|(Q(interface_id!=interface_object.pk) & Q(type_rule=type_rule )))).exists():
       if not Rule.objects.filter(
             Q(rule=rule) & (
@@ -254,6 +278,10 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
          ).exists():
       #appel la fonction pour ajouter rule dans le système
          return_add_rule=add_rule_remote(rule,ifname,type_rule)
+         # position=get_handle_rule(ifname,type_rule,rule)
+         # position=int(position.strip('handle').strip()) if position is not None else None
+         # print({"position":position})
+         
          if return_add_rule is True:
             data = {
                'policy': policy,
@@ -264,6 +292,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
                'protocol': protocol,
                'type_rule': type_rule,
                'rule_description': rule_description,
+               'position':position,
                }
             data['interface']=interface_object.id
             #appel la fonction pour ajouter rule dans la base de données 
@@ -294,7 +323,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
    return msg,status,id_rule
 
 ##
-def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description):
+def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description,position):
       if (id is not None and Rule.objects.filter(id=id).exists()):
          rules_object = Rule.objects.get(id=id)
          rule=rules_object.rule
@@ -316,10 +345,10 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          else:
             rule_mod=ruleupdate.split("reject with icmp port-unreachable")[0].strip()
             ruleupdate=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
-      
+         ruleupdate=ruleupdate.strip()
          handle=get_handle_rule(ifname,type_rules,rule)
          if handle is not None: 
-               return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
+               return_delete_rule_remotyre=delete_rule_remote(ifname,type_rules,handle)
          if not Rule.objects.filter(
                ~Q(id=id)& 
                Q(rule=ruleupdate) & (
@@ -330,6 +359,8 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
             ).exists():
                # if return_delete_rule_remote is True:
                   return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
+                  # position=get_handle_rule(ifname,type_rules,rule)
+                  # position=int(position.strip('handle').strip()) if position is not None else None
                   if  return_add_rule is True:
                         data = {
                         "id":id,
@@ -339,7 +370,9 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
                         'sport': sport,
                         'dport': dport,
                         'protocol': protocol,
-                        'rule_description': rule_description
+                        'rule_description': rule_description,
+                        'position':position,
+                        
                         }
                         
                         #appel la fonction pour update rule dans la base de données 
@@ -363,8 +396,8 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
             #    msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
             #    status=400
          else:
-               msg= f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
-               status=404
+               msg= f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
+               status=400
               
       else:
          msg=f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"

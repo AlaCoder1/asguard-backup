@@ -155,7 +155,9 @@ def get_uuid_con(ifname):
 def refresh_conf_system(uuid,aux_main):
     cmd_final=[]
     if not aux_main:
-        cmd_final=[ "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),]
+        cmd_final=[ "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),
+                   "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),
+                   ]
     return cmd_final
 
 ##get old configuration in service
@@ -213,7 +215,7 @@ def run_command_with_timeout(type, command, timeout):
             shell=True,  # Use shell=True to interpret the entire command as a single string
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True  # Use text=True to handle the output as text (Python 3.7+)
+            text=True  
         )
         stdout, stderr = process.communicate(timeout=timeout)
         elapsed_time = time.time() - start_time

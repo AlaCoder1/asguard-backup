@@ -82,6 +82,16 @@
               $t("firewall.add")
             }}</span>
           </v-btn>
+          <v-btn
+            class="ml-3 mt-2"
+            @click.prevent="deleteSelectedRows"
+            v-if="hasSelection"
+          >
+            <i class="fas fa-trash" style="color: #086eae"></i>
+            <!-- <span class="ml-2" style="color: #086eae"
+              >Delete Selected rules</span
+            > -->
+          </v-btn>
         </v-col>
       </v-row>
       <v-alert
@@ -106,8 +116,17 @@
         :gridOptions="gridOptions"
         style="width: 100%"
         :pagination="true"
-        :paginationPageSize="4"
+        :paginationPageSize="10"
         :localeText="paginationLocalization"
+        :rowDragManaged="state.user === 'viewer' ? false : true"
+        :rowDragEntireRow="state.user === 'viewer' ? false : true"
+        animateRows
+        @row-drag-enter="onRowDragStart"
+        @row-drag-end="onRowDragEnd"
+        :rowSelection="'multiple'"
+        @selection-changed="onSelectionChanged"
+        :rowMultiSelectWithClick="true"
+        rowClick="multiple"
       >
         <!-- @column-row-group-changed="onColumnRowGroupChanged"
              @firstDataRendered="onFirstDataRendered"
@@ -218,14 +237,14 @@
         </v-btn>
       </div>
 
-      <v-snackbar
+      <!-- <v-snackbar
         :timeout="2000"
         v-model="state.snackbarDelete"
         location="bottom right"
         :color="state.color"
       >
         {{ state.textAlertDelete }}
-      </v-snackbar>
+      </v-snackbar> -->
       <v-dialog v-model="state.Saverulesstate" max-width="500px">
         <v-card>
           <v-card-title class="headline">
@@ -281,6 +300,8 @@ export default defineComponent({
   setup(props) {
     const { t } = useI18n();
     const last_Subscription = ref([]);
+    const hasSelection = ref(false);
+
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -289,12 +310,14 @@ export default defineComponent({
     const state = reactive({
       // deleteDialogSquid: false,
       // deletedRow: null,
+      user: null,
       Saverulesstate: false,
       snackbar: false,
       color: "",
       isviewModal: false,
       viewModal: false,
       textAlert: [],
+      snackbarMessages: [],
       textAlertDelete: "",
       snackbarDelete: false,
       enable: false,
@@ -335,7 +358,7 @@ export default defineComponent({
       } else if (!last_Subscription.value.includes("Firewall L4")) {
         return `<br />  ${t(
           "firewall.msg_subscription"
-        )} <br /><a href="/asguard/subscription/" class="white-link"> ${t(
+        )} <br /><a href="/asguard/license/" class="white-link"> ${t(
           "firewall.sub_page"
         )}</a>`;
       } else {
@@ -391,6 +414,12 @@ export default defineComponent({
       //   minWidth: 50,
       //   maxWidth: 50,
       // },
+      {
+        headerName: "",
+        checkboxSelection: true,
+        headerCheckboxSelection: true,
+        width: 50,
+      },
       {
         field: "policy",
         headerName: policy,
@@ -533,7 +562,6 @@ export default defineComponent({
       const user = user_privilege();
 
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -625,6 +653,7 @@ export default defineComponent({
             state.viewModal = true;
           } else {
             rowDataToDelete.value = rowData;
+            array.value = [rowData];
             deleteDialog.value = true;
             state.rowDataId = rowData.uuid;
           }
@@ -786,130 +815,166 @@ export default defineComponent({
     //     }
     //   }
     // };
-
-    const confirmDelete = () => {
+    const api_delete_rules = (idsArray) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (oldRow.value.length === 0 && rowDataToDelete.value.id) {
-        const index = rowData.value.findIndex(
-          (item) => item.id === rowDataToDelete.value.id
-        );
-        if (index !== -1) {
-          rowData.value.splice(index, 1);
 
-          axios
-            .delete(`/rules/deleteRule/${rowDataToDelete.value.id}`)
-            .then((response) => {
-              if (response.status == "200") {
-                // state.snackbar = true;
-                state.color = "success";
-                // state.textAlert = response.data.msg;
-                // setTimeout(() => {
-                //   location.reload();
-                // }, 1000);
-                state.snackbarDelete = true;
-                state.textAlertDelete = response.data.msg;
-                // setTimeout(() => {
-                //   location.reload();
-                // }, 1000);
-              }
-            })
-            .catch((i) => {
-              if (i.response.status === 500) {
-                state.snackbarDelete = true;
-                state.color = "red";
-                state.textAlertDelete = t("errors.errorServer");
-              } else {
-                state.snackbarDelete = true;
-                state.color = "red";
-                state.textAlertDelete = i.response.data.response;
-              }
-            });
+      axios
+        .post(`/rules/deleteRules`, idsArray)
+        .then((response) => {
+          // if (response.status == 200) {
+          //   // state.color = "success";
+          //   // state.snackbarDelete = true;
+          //   // state.textAlertDelete = response.data.msg;
+          // }
+          const results = response.data.responses;
+          state.snackbar = true;
+          state.textAlert = results;
 
-          if (rowData.value.length === 0) changes.value = true;
-          deleteDialog.value = false;
-          oldRow.value.push({ ...rowDataToDelete.value, status: "deleted" });
-
-          if (gridApi.value) {
-            gridApi.value.setRowData(rowData.value);
+          setTimeout(() => {
+            state.textAlert = [];
+          }, 3000);
+        })
+        .catch((i) => {
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
           } else {
-            console.error("Grid API.");
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.response;
+
+            // setTimeout(() => {
+            //   state.textAlert = [];
+            //   location.reload();
+            // }, 3000);
           }
-        }
-      } else if (oldRow.value.length != 0 && rowDataToDelete.value.id) {
-        const index = oldRow.value.findIndex(
-          (obj) => obj.id === rowDataToDelete.value.id
-        );
-        if (index !== -1) {
-          oldRow.value[index].status = "deleted";
+        });
+    };
+    const id_list_selection = ref([]);
+    const array = ref([]);
+
+    const deleteSelectedRows = () => {
+      const user = user_privilege();
+      if (user !== "viewer") {
+        if (last_Subscription.value.includes("Firewall L4")) {
+          deleteDialog.value = true;
+          const selectedRows = gridApi.value.getSelectedRows();
+          id_list_selection.value = selectedRows.map((i) => i);
+          array.value = [...id_list_selection.value];
         } else {
-          oldRow.value.push({ ...rowDataToDelete.value, status: "deleted" });
+          state.isviewModal = true;
+          state.viewModal = true;
         }
-        const index2 = rowData.value.findIndex(
-          (item) => item.id === rowDataToDelete.value.id
-        );
-
-        if (index2 !== -1) {
-          rowData.value.splice(index, 1);
-
-          deleteDialog.value = false;
-          if (gridApi.value) {
-            axios
-              .delete(`/rules/deleteRule/${rowDataToDelete.value.id}`)
-              .then((response) => {
-                if (response.status == "200") {
-                  // state.snackbar = true;
-                  // state.color = "success";
-                  // state.textAlert = response.data.msg;
-                  // setTimeout(() => {
-                  //   location.reload();
-                  // }, 1000);
-                  state.color = "success";
-                  state.snackbarDelete = true;
-                  state.textAlertDelete = response.data.msg;
-                  // setTimeout(() => {
-                  //   location.reload();
-                  // }, 1000);
-                }
-              })
-              .catch((i) => {
-                if (i.response.status === 500) {
-                  state.snackbarDelete = true;
-                  state.color = "red";
-                  state.textAlertDelete = t("errors.errorServer");
-                } else {
-                  state.snackbarDelete = true;
-                  state.color = "red";
-                  state.textAlertDelete = i.response.data.response;
-                }
-              });
-            gridApi.value.setRowData(rowData.value);
-          } else {
-            console.error("Grid API.");
-          }
-        }
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
       }
 
-      if (!rowDataToDelete.value.id) {
-        const index = rowData.value.findIndex(
-          (item) => item.uuid === state.rowDataId
-        );
+      // rowData.value = rowData.value.filter(
+      //   (row) => !selectedRows.includes(row)
+      // );
 
-        if (index !== -1) {
-          rowData.value.splice(index, 1);
+      // gridApi.value.setRowData(rowData.value);
 
-          if (rowData.value.length === 0) changes.value = false;
+      // hasSelection.value = false;
 
-          deleteDialog;
-          deleteDialog.value = false;
-          if (gridApi.value) {
-            gridApi.value.setRowData(rowData.value);
-          } else {
-            console.error("Grid API.");
+      // console.log("id_list_selection.value", id_list_selection.value);
+    };
+
+    const confirmDelete = () => {
+      console.log("array", rowDataToDelete.value);
+
+      if (!Array.isArray(array.value)) return;
+
+      const idsToDelete = [];
+
+      array.value.forEach((row) => {
+        if (row.id) {
+          const index = rowData.value.findIndex((item) => item.id === row.id);
+
+          if (index !== -1) {
+            rowData.value.splice(index, 1);
+            idsToDelete.push(row.id);
+
+            if (oldRow.value.length === 0) {
+              oldRow.value.push({ ...row, status: "deleted" });
+            } else {
+              const oldIndex = oldRow.value.findIndex(
+                (obj) => obj.id === row.id
+              );
+              if (oldIndex !== -1) {
+                oldRow.value[oldIndex].status = "deleted";
+              } else {
+                oldRow.value.push({ ...row, status: "deleted" });
+              }
+            }
+          }
+        } else if (row.uuid) {
+          const index = rowData.value.findIndex(
+            (item) => item.uuid === row.uuid
+          );
+
+          if (index !== -1) {
+            rowData.value.splice(index, 1);
           }
         }
+      });
+
+      // Mise à jour de l'UI
+      deleteDialog.value = false;
+      if (rowData.value.length === 0) {
+        changes.value = true;
+      }
+
+      if (gridApi.value) {
+        gridApi.value.setRowData(rowData.value);
+      } else {
+        console.error("Grid API.");
+      }
+
+      // Appel de l'API si au moins un ID est présent
+      if (idsToDelete.length > 0) {
+        api_delete_rules(idsToDelete);
       }
     };
+
+    const onRowDragStart = (event) => {
+      console.log("event.overIndex", event.overIndex);
+    };
+    const onRowDragEnd = (event) => {
+      const api = event.api;
+      const allRows = [];
+
+      // Iterate over all rows in their new visual order
+      api.forEachNodeAfterFilterAndSort((node) => {
+        allRows.push(node.data);
+      });
+      console.log("allRows", allRows);
+
+      // Replace your rowData with the new order
+      rowData.value = allRows;
+    };
+    // const deleteSelectedRows = () => {
+    //   const selectedRows = gridApi.value.getSelectedRows();
+
+    //   rowData.value = rowData.value.filter(
+    //     (row) => !selectedRows.includes(row)
+    //   );
+    //   console.log("selectedRows", selectedRows);
+
+    //   gridApi.value.setRowData(rowData.value);
+
+    //   hasSelection.value = false;
+    // };
+
+    const onSelectionChanged = () => {
+      const selected = gridApi.value.getSelectedRows();
+      console.log("sele", selected);
+      hasSelection.value = selected.length > 0;
+    };
+
     const saveModal = () => {
       showAddModal.value = false;
     };
@@ -959,10 +1024,10 @@ export default defineComponent({
               state.textAlert = i.response.data.response;
 
               state.Saverulesstate = false;
-              setTimeout(() => {
-                state.textAlert = [];
-                location.reload();
-              }, 3000);
+              // setTimeout(() => {
+              //   state.textAlert = [];
+              //   location.reload();
+              // }, 3000);
             }
           });
       }
@@ -992,6 +1057,7 @@ export default defineComponent({
       //   />
       //  </svg></span>`;
       // console.log(overlayTemplate.valye)
+      state.user = user_privilege();
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
@@ -1167,6 +1233,11 @@ export default defineComponent({
     // );
 
     return {
+      hasSelection,
+      onSelectionChanged,
+      deleteSelectedRows,
+      onRowDragStart,
+      onRowDragEnd,
       changes,
       openModalAdd,
       saveRules,

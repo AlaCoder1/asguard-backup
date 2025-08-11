@@ -27,8 +27,12 @@ def get_list_all_sdwan_rule():
     return list_sdwan_rule
 
 
-def get_one_sdwan_rule():
+def get_one_sdwan_rule(id):
     """Getting sdwan_rule by id from database"""
+    try:
+        sdwan_rule = SdwanRules.objects.get(pk=id)
+    except SdwanRules.DoesNotExist:
+        return False
     sdwan_rule = SdwanRules.objects.filter(pk=id)
     sdwan_rule_dict = serializers.serialize("json", sdwan_rule)
     res = json.loads(sdwan_rule_dict)

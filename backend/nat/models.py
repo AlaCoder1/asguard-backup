@@ -5,7 +5,7 @@ from backend.network.models import Interface
 
 
 class SNat(models.Model):
-    interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None)
+    interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None, null=True)
     tcp_ip = models.CharField(max_length=100, default=None, null=True, blank=True)
     protocol = models.CharField(max_length=100, default=None, null=True, blank=True)
     source_address = models.CharField(max_length=100, default=None, null=True, blank=True)
@@ -28,7 +28,7 @@ class SNat(models.Model):
 
 
 class OneToOneNat(models.Model):
-    interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None)
+    interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None, null=True)
     source_address = models.CharField(max_length=100, default=None, null=True, blank=True)
     translation_address = models.CharField(max_length=100, default=None, null=True, blank=True)
     destination_address = models.CharField(max_length=100, default=None, null=True, blank=True)
@@ -44,14 +44,18 @@ class OneToOneNat(models.Model):
 
 
 class DNat(models.Model):
-    interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None)
+    interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None, null=True)
     tcp_ip = models.CharField(max_length=100, default=None, null=True, blank=True)
     protocol = models.CharField(max_length=100, default=None, null=True, blank=True)
     source_address = models.CharField(max_length=100, default=None, null=True, blank=True)
+    source_protocol = models.CharField(max_length=100, default=None, null=True, blank=True)
+    source_port = models.CharField(max_length=20, default=None, null=True, blank=True)
     source_port_from = models.CharField(max_length=20, default=None, null=True, blank=True)
     source_port_to = models.CharField(max_length=20, default=None, null=True, blank=True)
     external_address = models.CharField(max_length=100, default=None, null=True, blank=True)
     internal_address = models.CharField(max_length=100, default=None, null=True, blank=True)
+    destination_protocol = models.CharField(max_length=100, default=None, null=True, blank=True)
+    destination_port_forwarding = models.CharField(max_length=20, default=None, null=True, blank=True)
     destination_port_from = models.CharField(max_length=20, default=None, null=True, blank=True)
     destination_port_to = models.CharField(max_length=20, default=None, null=True, blank=True)
     destination_port = models.CharField(max_length=20, default=None, null=True, blank=True)

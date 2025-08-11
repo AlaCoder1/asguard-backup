@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.db.models.deletion import ProtectedError
 from django.contrib.auth.hashers import check_password, make_password
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
+from drf_yasg.openapi import IN_PATH, Parameter, Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -69,6 +69,7 @@ def get_all_server_openvpn(request):
     
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET AN OPENVPN SERVER",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -302,11 +303,12 @@ def create_server_openvpn(request):
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DELETE AN OPENVPN SERVER",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_server_openvpn(request, id):
+def delete_server_openvpn(_, id):
     """Deleting a server from system and then from database"""
     try:
         server = ServerOpenvpn.objects.get(id=id)
@@ -340,6 +342,7 @@ def delete_server_openvpn(request, id):
 
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     operation_summary="API TO CREATE AN OPENVPN SERVER",
     request_body=Schema(type=TYPE_OBJECT, required=[
         'name', 'server_mode', 'protocol', 'device_mode', 'interface', 'local_port', 'tls_auth', 
@@ -498,8 +501,7 @@ def update_server_openvpn(request, id):
         else:
             server.ntp_server1 = None
             server.ntp_server2 = None
-        
-        if client_management.get('client_management_select'):
+        if client_management.get('client_management_select') and client_management.get('password'):
             server.client_management_port = client_management.get('port')
             if server.client_management_password and not check_password(client_management.get('password'), server.client_management_password):
                 return JsonResponse({"error": "error previous password"}, status=400)
@@ -547,11 +549,12 @@ def update_server_openvpn(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO Start AN OPENVPN SERVER",)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def start_server_openvpn(request, id):
+def start_server_openvpn(_, id):
     """Starting a server and opening a tunnel"""
     try:
         server = ServerOpenvpn.objects.get(id=id)
@@ -566,11 +569,12 @@ def start_server_openvpn(request, id):
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO Restart AN OPENVPN SERVER",)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def restart_server_openvpn(request, id):
+def restart_server_openvpn(_, id):
     """Retarting a server and reopening a tunnel"""
     try:
         server = ServerOpenvpn.objects.get(id=id)
@@ -585,11 +589,12 @@ def restart_server_openvpn(request, id):
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO STOP AN OPENVPN SERVER",)
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def stop_server_openvpn(request, id):
+def stop_server_openvpn(_, id):
     """Stoping a server and closing a tunnel"""
     try:
         server = ServerOpenvpn.objects.get(id=id)
@@ -620,6 +625,7 @@ def get_all_client_openvpn(request):
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET AN OPENVPN CLIENT",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -787,12 +793,13 @@ def create_client_openvpn(request):
         return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
-@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'},
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)], 
                      operation_summary="API TO DELETE AN OPENVPN CLIENT",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_client_openvpn(request, id):
+def delete_client_openvpn(_, id):
     """Deleting a client from system and then from database"""
     try:
 
@@ -813,6 +820,7 @@ def delete_client_openvpn(request, id):
 
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     operation_summary="API TO CREATE AN OPENVPN Client",
     request_body=Schema(type=TYPE_OBJECT, required=[
         'server_name', 'name', 'server_mode', 'protocol', 'device_mode', 'resolv_retry', 
@@ -952,11 +960,12 @@ def update_client_openvpn(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO DOWNLOAD A CLIENT",)
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
+                     operation_summary="API TO EXPORT A CLIENT OPENVPN FROM A SERVER",)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def export_client_openvpn(request, id):
+def export_client_openvpn(_, id):
     """Exporting a Client openvpn"""
     try:
         client = ClientOpenvpn.objects.get(id=id)
@@ -974,6 +983,7 @@ def export_client_openvpn(request, id):
 
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     operation_summary="API TO GENERATE AN OPENVPN Client FROM A SERVER",
     request_body=Schema(type=TYPE_OBJECT, required=['name', 'client_cert'],
                         properties={

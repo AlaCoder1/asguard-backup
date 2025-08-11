@@ -300,7 +300,7 @@ export default {
       let checkSadrr = false;
       if (state.formData.saddr !== "ALL") {
         if (
-          !/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/.test(
+          !/^((25[0-5]|2[0-4][0-9]|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4][0-9]|1\d{2}|[1-9]?\d)(\/([1-9]|[12][0-9]|3[0-2]))?$/.test(
             state.formData.saddr
           )
         )
@@ -314,7 +314,7 @@ export default {
       let daddrCheck = false;
       if (state.formData.daddr !== "ALL") {
         if (
-          !/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/.test(
+          !/^((25[0-5]|2[0-4][0-9]|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4][0-9]|1\d{2}|[1-9]?\d)(\/([1-9]|[12][0-9]|3[0-2]))?$/.test(
             state.formData.daddr
           )
         )
@@ -510,16 +510,16 @@ export default {
           (i) => i === data?.protocol
         );
 
-        state.formData.policy = filtredPolicy[0];
-        state.formData.rule_description = data.rule_description;
-        state.formData.protocol = filtredProtocol[0];
+        state.formData.policy = filtredPolicy[0] ?? "";
+        state.formData.rule_description = data.rule_description ?? "";
+        state.formData.protocol = filtredProtocol[0] ?? "";
         state.formData.saddr = data.saddr;
         state.formData.sport = data.sport;
         state.formData.daddr = data.daddr;
         state.formData.dport = data.dport;
         state.editValue = data.uuid;
-
-        (state.status = data.status), (state.type_rule = data.type_rule);
+        state.status = data.status;
+        state.type_rule = data.type_rule;
       }
     };
     const getCookie = (name) => {

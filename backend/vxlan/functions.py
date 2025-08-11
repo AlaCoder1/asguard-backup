@@ -1,4 +1,5 @@
 import subprocess
+from backend.vxlan.validation import InvalidVXLANTagError, validate_vxlan_tag
 from backend.network.models import Interface
 from backend.network.serializers import InterfaceSerializer
 from django.utils.translation import gettext_lazy as _
@@ -6,7 +7,13 @@ from django.utils.translation import gettext_lazy as _
 CONSTANT_VXLAN_CONFIG = _('Configuration VxLAN')
 SUCCESS_MESSAGES_SAVED = _("Saved")
 
-
+def validate_input_date(data):
+    """validate input data"""
+    try:
+        validate_vxlan_tag(int(data["vxlan_id"]))
+        
+    except(InvalidVXLANTagError) as e:
+        return str(e)
 def get_all_nmcli_uuids():
     """function to get list of uuid """
     result = subprocess.run(['nmcli', '-t', 'connection', 'show'], stdout=subprocess.PIPE, text=True)

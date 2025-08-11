@@ -119,7 +119,7 @@
       </form>
     </v-dialog>
     <v-snackbar
-      :timeout="2000"
+      :timeout="3000"
       v-model="state.snackbar"
       location="bottom right"
       :color="state.color"
@@ -142,6 +142,8 @@ import {
 } from "@vuelidate/validators";
 import { reactive, computed, toRefs, watch, inject } from "vue";
 import VButton from "@/components/VButton.vue";
+import { id } from "@/mixins/storage_language.js";
+
 export default {
   name: "Modal_User_Squid",
   components: {
@@ -257,6 +259,18 @@ export default {
     );
     const closeModal = () => {
       emitter.emit("closeSquidUserModal");
+      reset();
+    };
+    const reset = () => {
+      state.formData.email = "";
+      state.formData.password = "";
+      state.formData.confirm_password = "";
+      state.formData.userName = null;
+      state.openModal = false;
+      state.textAlert = "";
+      state.color = "";
+      state.snackbar = false;
+      v$.value.$reset();
     };
     const getCookie = (name) => {
       let cookieValue = null;
@@ -285,6 +299,7 @@ export default {
           email: state.formData.email,
           username: state.formData.userName,
           password: state.formData.password,
+          user_id: id
         };
 
         axios
@@ -295,6 +310,7 @@ export default {
               state.color = "success";
               state.textAlert = response.data.msg;
               setTimeout(() => {
+                reset();
                 location.reload();
               }, 1000);
             }
@@ -307,7 +323,7 @@ export default {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i.response.data.error;
             }
           });
       } else {

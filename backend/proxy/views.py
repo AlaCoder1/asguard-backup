@@ -16,8 +16,9 @@ from rest_framework.authentication import SessionAuthentication
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from django.core.exceptions import ObjectDoesNotExist
-# Create your views here.
-
+from django.utils import translation
+from utils.utils_email import is_valid_email
+from backend.managementUsers.models import Profile
 # Constants
 CONSTANT_SQUID = _('Squid')
 CONSTANT_PATTERN = _('Pattern')
@@ -64,11 +65,6 @@ ERROR_MESSAGES_INVALID = _("Invalid")
 ########################################
 ################ proxy ################
 ########################################
-
-def is_valid_email(email):
-    # Simple regex for validating an email
-    email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-    return re.match(email_regex, email) is not None
 
 
 def run_command(command):
@@ -358,6 +354,7 @@ def enable_by_time():
             'rule_name': Schema(
                 type=TYPE_STRING,
                 description="The rule name.",
+                example="rule1"
             ),
             'allow_by_auth': Schema(
                 type=TYPE_BOOLEAN,
@@ -505,19 +502,33 @@ def addRuleSquid(request):
             try:
                 with open(file_path, 'a') as file:
                     file.write(value + '\n')
+                language = Profile.objects.get(id=data['user_id']).language
+                translation.activate(language)
                 serializerProxyRules = ProxyRulesSerializer(data=data)
                 if (serializerProxyRules.is_valid()):
-                    serializerProxyRules.save()
-                    server_satus = ServerSatus.objects.get(id=1)
-                    server_satus.status_server = True
-                    server_satus.save()
-                    msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
-                    return JsonResponse({"msg": msg}, status=200)
+                    try:
+                        serializerProxyRules.save()
+                        server_satus = ServerSatus.objects.get(id=1)
+                        server_satus.status_server = True
+                        server_satus.save()
+                        msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
+                        return JsonResponse({"msg": msg}, status=200)
+                    except IntegrityError as e:
+                        error_msg = str(e)
+                        if "proxy_rules_rule_name" in error_msg:
+                            translated_msg = _("Une règle avec ce nom existe déjà")  
+                        elif "proxy_rules_value_key" in error_msg:
+                            translated_msg = _("Une règle avec cette valeur est déjà utilisée.")
+                        else:
+                            translated_msg = _("Erreur d'intégrité de la base de données.")
+                        return JsonResponse({"error": translated_msg}, status=400)
                 else:
                     return JsonResponse(serializerProxyRules.errors, status=400 )
             except Exception as e:
                 return JsonResponse({"error": str(e)}, status=400)
         else:
+            language = Profile.objects.get(id=data['user_id']).language
+            translation.activate(language)
             serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
             if (serializerProxyRules.is_valid()):
                 serializerProxyRules.save()
@@ -525,6 +536,94 @@ def addRuleSquid(request):
                 return JsonResponse({"msg": msg}, status=200)
             else:
                 return JsonResponse(serializerProxyRules.errors, status=400 )
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+def updateRuleSquid(request, rule_id):
+    """
+    Updates an existing Squid rule by its ID.
+
+    - Handles both standard rules and time-based rules.
+    - Updates corresponding ACL or squid.conf file.
+    - Updates database entry using the appropriate serializer.
+    """
+    try:
+        # Fetch the rule from the DB
+        existing_rule = ProxyRules.objects.get(id=rule_id)
+    except ProxyRules.DoesNotExist:
+        return JsonResponse({"error": _("La règle spécifiée n'existe pas.")}, status=404)
+
+    data = request.data
+    write_in_file = True
+    new_value = data['value']
+    old_value = existing_rule.value
+
+    # Determine file path or squid.conf
+    if data['allow_by_auth'] == False:
+        if data['type'] == "ip":
+            file_path = '/etc/squid/blocked_ip.acl'
+        elif data['type'] == "domain":
+            if data.get('time_from') and data.get('time_to'):
+                squid_path = '/etc/squid/squid.conf'
+                name_rule = 'block_' + old_value
+                time_block_rule = 'time_' + name_rule
+                # Clean previous lines (basic version)
+                remove_acl_rule(squid_path, name_rule, time_block_rule)
+                # Add updated lines
+                line1 = f'acl block_{new_value} url_regex {new_value}\n'
+                add_line_after_pattern(squid_path, 'acl localnet src fe80::/10', line1)
+                line2 = f'acl time_block_{new_value} time {data["days"]} {data["time_from"]}-{data["time_to"]}\n'
+                add_line_after_pattern(squid_path, line1, line2)
+                line3 = f'\nhttp_access deny block_{new_value} time_block_{new_value}\n'
+                add_line_after_pattern(squid_path, line2, line3)
+                write_in_file = False
+            else:
+                file_path = '/etc/squid/blocked_domain.acl'
+        else:
+            file_path = '/etc/squid/blocked_subnet.acl'
+    else:
+        if data['type'] == "ip":
+            file_path = '/etc/squid/allowed_ip_by_auth.acl'
+        elif data['type'] == "domain":
+            file_path = '/etc/squid/allowed_domain_by_auth.acl'
+        else:
+            file_path = '/etc/squid/allowed_subnet_by_auth.acl'
+
+    if write_in_file:
+        try:
+            # Replace old value with new value in file
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+            with open(file_path, 'w') as file:
+                for line in lines:
+                    if old_value in line:
+                        new_line = '#' + new_value if data['status'] is False else new_value
+                        file.write(new_line + '\n')
+                    else:
+                        file.write(line)
+
+            language = Profile.objects.get(id=data['user_id']).language
+            translation.activate(language)
+
+            serializer = ProxyRulesSerializer(existing_rule, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse({"msg": f"{data['type']} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+            else:
+                return JsonResponse(serializer.errors, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    else:
+        language = Profile.objects.get(id=data['user_id']).language
+        translation.activate(language)
+        serializer = ProxyRulesByTimeSerializer(existing_rule, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse({"msg": f"{data['type']} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+        else:
+            return JsonResponse(serializer.errors, status=400)
+
 
 @swagger_auto_schema(
     method='DELETE',
@@ -1509,23 +1608,35 @@ def add_user_squid(request):
     try:
         subprocess.run(['htpasswd', '-b', squid_conf_path, username_squid, password_squid], check=True)
         try:
-            user_proxy = ProxyUser(username=username_squid,email=email_squid)
+            language = Profile.objects.get(id=data['user_id']).language  
+            translation.activate(language)
+
+            user_proxy = ProxyUser(username=username_squid, email=email_squid)
             user_proxy.save()
+
             server_satus = ServerSatus.objects.get(id=1)
             server_satus.status_server = True
-            server_satus.save() 
-            #send_email_to_user(email_squid,password_squid,username_squid)
+            server_satus.save()
+
             msg = f"{CONSTANT_USER} {username_squid} {SUCCESS_MESSAGES_CREATING}"
-            status=200
-            return JsonResponse({"msg": msg}, status=status)
+            return JsonResponse({"msg": msg}, status=200)
+
         except IntegrityError as e:
-            msg = f"{ERROR_MESSAGES_SAVING_INSTANCE}: {e}"
-            status=400 
-            return JsonResponse({"error": msg}, status=status)
+            error_msg = str(e)
+
+            # Detect duplicate username error
+            if "proxy_user_username_key" in error_msg:
+                translated_msg = _("Ce nom d'utilisateur existe déjà.")  
+            elif "proxy_user_email_key" in error_msg:
+                translated_msg = _("Cet e-mail est déjà utilisé.")
+            else:
+                translated_msg = _("Erreur d'intégrité de la base de données.")
+
+            return JsonResponse({"msg": translated_msg}, status=400)
+
         except Exception as e:
-            msg = (f"{ERROR_MESSAGES_OCCURRED}: {e}")
-            status=400 
-            return JsonResponse({"error": msg}, status=status)
+            translated_msg = _(f"{ERROR_MESSAGES_OCCURRED}: {e}")
+            return JsonResponse({"error": translated_msg}, status=400)
         ### to add only one user every time in file
         # subprocess.run(['htpasswd', '-b', '-c', squid_conf_path, username_squid, password_squid], check=True)
     except subprocess.CalledProcessError as e:

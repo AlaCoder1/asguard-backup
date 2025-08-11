@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
+from backend.rules.functions import get_position
 from backend.rules.models import Rule 
 from backend.rules.views import * 
 from backend.network.models import Interface
@@ -55,6 +56,7 @@ class Command(BaseCommand):
                 else:
                     rule_mod=rule.split("reject with icmp port-unreachable")[0].strip()
                     rule=f'{rule_mod} log prefix "{prefix}" reject with icmp port-unreachable'
+                rule=rule.strip()
                 if not Rule.objects.filter(
                     Q(rule=rule) & (
                         (Q(interface_id=interface_id.id) ) &
@@ -64,7 +66,8 @@ class Command(BaseCommand):
                     return_add_rule=add_rule_remote(rule,interface,type_rule)
                     if return_add_rule is True:
                         try:
-                            rule = Rule.objects.create(rule=rule, rule_status=True, type_rule=type_rule, policy=policy, rule_description=description, protocol=protocol, saddr=source_address, sport=source_port, daddr=destination_address, dport=destination_port, interface=interface_id)
+                            position=get_position(type_rule)
+                            rule = Rule.objects.create(rule=rule, rule_status=True, type_rule=type_rule, policy=policy, rule_description=description, protocol=protocol, saddr=source_address, sport=source_port, daddr=destination_address, dport=destination_port, interface=interface_id,position=position)
                             return "rule added succesffuly"
                         except IntegrityError as e:
                             print("Error occurred:", e)

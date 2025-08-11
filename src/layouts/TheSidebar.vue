@@ -282,9 +282,9 @@ export default {
           subMenuVisible: false,
         },
         {
-          title: "subtitle.subscription",
+          title: "license",
           icon: "mdi mdi-cash-sync",
-          href: "/asguard/subscription",
+          href: "/asguard/license",
           active: "Subscription",
           subItems: [],
           subMenuVisible: false,
@@ -331,9 +331,6 @@ export default {
     },
   },
   computed: {
-    // user() {
-    //   return storeAuth.user;
-    // },
     isAdmin() {
       return this.user?.currentUser?.role === "admin";
     },

@@ -29,6 +29,7 @@ class Command(BaseCommand):
         print({"list_servers":list_servers})
 
         try:
+            System.objects.all().delete()
             System.objects.create(hostname=hostname,domaine='localdomain',time_zone =time_zone)
             Network.objects.create(prever_ipv4_ipv6=None,server_dns=list_servers,allow_server_dns = None,exclude_interfaces = None,getway_failover = None)
             return "generale settings added succesffuly"

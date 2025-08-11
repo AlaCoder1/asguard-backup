@@ -140,8 +140,15 @@ def deactivate_all_rules():
 def get_next_nat_handle(rule_nat, chain="postrouting"):
     """Get the next rule handle in system. If the chain is postrouting it must take the minimum between SNAT and OneToOneNat"""
     if chain == "postrouting":
-        list_next_snat = SNat.objects.filter(rule_status=True, postrouting_position__gt=rule_nat.postrouting_position)
-        list_next_one_to_one_nat = OneToOneNat.objects.filter(rule_status=True, postrouting_position__gt=rule_nat.postrouting_position)
+        try:
+            list_next_snat = SNat.objects.filter(rule_status=True, postrouting_position__gt=rule_nat.postrouting_position)
+        except ValueError:
+            list_next_snat = []
+        try:
+            list_next_one_to_one_nat = OneToOneNat.objects.filter(rule_status=True, postrouting_position__gt=rule_nat.postrouting_position)
+        except ValueError:
+            list_next_one_to_one_nat = []
+
         if len(list_next_snat) > 0:
             next_snat_handle = list_next_snat.order_by('postrouting_position')[0].rule_number
             if len(list_next_one_to_one_nat) > 0:

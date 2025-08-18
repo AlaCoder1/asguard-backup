@@ -284,7 +284,7 @@ console.log('current_user',current_user.value)
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
 
-      if (params.data.time_from === "--") {
+      // if (params.data.time_from === "--") {
         eGui.innerHTML = `
         <button
       class="action-button edit"
@@ -298,15 +298,15 @@ console.log('current_user',current_user.value)
           <i class="fas fa-times" style="color: #086eae;"></i>
       </button>
       `;
-      } else {
-        eGui.innerHTML = `
-      <button
-        class="action-button delete"
-        data-action="delete">
-          <i class="fas fa-times" style="color: #086eae;"></i>
-      </button>
-      `;
-      }
+      // else {
+      //   eGui.innerHTML = `
+      // <button
+      //   class="action-button delete"
+      //   data-action="delete">
+      //     <i class="fas fa-times" style="color: #086eae;"></i>
+      // </button>
+      // `;
+      // }
 
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {

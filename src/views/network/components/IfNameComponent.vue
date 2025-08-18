@@ -311,7 +311,7 @@
                   ></v-select>
                 </v-col>
                 <v-col align-self="center" cols="3">
-                  <label>IPV4 gateway</label>
+                  <label>{{$t('interface.iPv4gateway')}}</label>
                   <small style="color: red">*</small>
                 </v-col>
                 <v-col cols="3" class="mb-n6 ml-3 mt-3"  >
@@ -954,7 +954,7 @@
                 </p>
                 <v-row>
                   <v-text-field
-                    label="Gateway IPV4 *"
+                    :label="`${$t('interface.iPv4gateway')} *`"
                     clsas="w-100"
                     v-model="gateway.gwaddress"
                   ></v-text-field>
@@ -996,7 +996,7 @@
                 </v-row>
                 <v-row>
                   <input type="checkbox" v-model="gateway.multiwan_aux" />
-                  <label class="ml-3">Multi-WAN Gateway</label>
+                  <label class="ml-3">{{$t('interface.multiWANGateway')}}</label>
                 </v-row>
               </v-container>
             </v-form>

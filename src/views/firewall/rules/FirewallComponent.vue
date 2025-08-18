@@ -1008,10 +1008,10 @@ export default defineComponent({
               state.textAlert = i.response.data.response;
 
               state.Saverulesstate = false;
-              // setTimeout(() => {
-              //   state.textAlert = [];
-              //   location.reload();
-              // }, 3000);
+
+              setTimeout(() => {
+                state.textAlert = [];
+              }, 4000);
             }
           });
       }

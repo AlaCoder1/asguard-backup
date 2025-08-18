@@ -160,6 +160,7 @@ import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { user_privilege } from "@/mixins/user_privilege.js";
+import { id } from "@/mixins/storage_language.js";
 
 export default {
   components: {
@@ -254,6 +255,7 @@ export default {
 
           let payload = {
             port: state.proxyPort,
+            user_id: id,
           };
 
           axios

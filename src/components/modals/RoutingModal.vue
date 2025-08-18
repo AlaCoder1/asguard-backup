@@ -27,7 +27,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.gateway"
-                    label="Gateway *"
+                    :label="`${$t('dhcpV4.gateway')} *`"
                     item-title="name"
                     item-value="id"
                     :items="state.listGateway"

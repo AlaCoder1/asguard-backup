@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING
+from drf_yasg.openapi import IN_PATH, Parameter, Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 
 from backend.ipsec.utils import check_payload_change_status, check_payload_create_tunnel, json_to_str_server_ipsec, up_ipsec_conn
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec, get_status_ipsec
@@ -71,6 +71,7 @@ def get_all_server_ipsec(request):
     
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET AN IPSEC",)
 @api_view(['GET'])
 @require_http_methods(['GET'])
@@ -126,17 +127,15 @@ def get_server_ipsec(request, id):
             'rekey_fuzz': Schema(type=TYPE_STRING, example="10", description="set rekey_fuzz", pattern=r"(\d+)"),
             'mode_ph2': Schema(type=TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
                                properties={'mode': Schema(type=TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Transport"], description="At this time only Tunnel IPv4 is working"),
-                                           'local_address': Schema(type=TYPE_STRING, example="192.168.20.0", description="Local Address, required when selecting Route-based"),
-                                           'remote_address': Schema(type=TYPE_STRING, example="192.168.40.0", description="Remote Address, required when selecting Route-based"),}),
+                                           'local_network': Schema(type=TYPE_OBJECT, description="Local network block", required=['type_local_network'], 
+                                                                    properties={'type_local_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network", "WAN subnet", "LAN subnet"]),
+                                                                                'address_local_network': Schema(type=TYPE_STRING, example="192.168.45.0", description="Public address of local network, required when selecting Address or Network"),
+                                                                                'mask': Schema(type=TYPE_STRING, example="24", description="Public address mask, required when selecting Network"),}),
+                                            'remote_network': Schema(type=TYPE_OBJECT, description="Remote network block", required=['type_remote_network', 'address_remote_network'], 
+                                                                    properties={'type_remote_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network"]),
+                                                                                'address_remote_network': Schema(type=TYPE_STRING, example="192.168.55.0", description="Public address of remote network"),
+                                                                                'mask': Schema(type=TYPE_STRING, example="24", description="Public address mask, required when selecting Network"),})}),
             'description_ph2': Schema(type=TYPE_STRING, example="Description phase 2"),
-            'local_network': Schema(type=TYPE_OBJECT, description="Local network block", required=['type_local_network'], 
-                                    properties={'type_local_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network", "WAN subnet", "LAN subnet"]),
-                                                'address_local_network': Schema(type=TYPE_STRING, example="192.168.45.0", description="Public address of local network, required when selecting Address or Network"),
-                                                'mask': Schema(type=TYPE_STRING, example="24", description="Public address mask, required when selecting Network"),}),
-            'remote_network': Schema(type=TYPE_OBJECT, description="Remote network block", required=['type_remote_network', 'address_remote_network'], 
-                                     properties={'type_remote_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network"]),
-                                                 'address_remote_network': Schema(type=TYPE_STRING, example="192.168.55.0", description="Public address of remote network"),
-                                                 'mask': Schema(type=TYPE_STRING, example="24", description="Public address mask, required when selecting Network"),}),
             'sa_key_exchange': Schema(type=TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
                                       properties={'protocol': Schema(type=TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
                                                   'encryption_algorithm_ph2': Schema(type=TYPE_ARRAY, example=["256", "128"], items=Schema(type=TYPE_STRING), description="User can choose more than one"),
@@ -248,7 +247,6 @@ def create_server_ipsec(request):
             server_data["negotiation_mode"] = negotiation_mode
 
         ca = ''
-        print("authen= ", authentication_method)
         if authentication_method == CONSTANT_METHOD_PSK:
             pre_shared_key = authentication.get("pre_shared_key", "")
             server_data["pre_shared_key"] = pre_shared_key
@@ -279,7 +277,7 @@ def create_server_ipsec(request):
         
         if mode == "Tunnel IPv4":
             # Local Network
-            local_network = data.get("local_network", "")
+            local_network = mode_ph2.get("local_network", "")
             type_local_network = local_network.get("type_local_network", "")
             if type_local_network == "Address":
                 address_local_network = local_network.get("address_local_network", "")
@@ -293,7 +291,7 @@ def create_server_ipsec(request):
             data["address_local_network"] = address_local_network
 
             # Remote Network
-            remote_network = data.get("remote_network", "")
+            remote_network = mode_ph2.get("remote_network", "")
             type_remote_network = remote_network.get("type_remote_network", "")
             address_remote_network = remote_network.get("address_remote_network", "")
             if type_remote_network == "Network":
@@ -345,12 +343,13 @@ def create_server_ipsec(request):
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DELETE AN IPSEC",)
 @api_view(['DELETE'])
 @require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_server_ipsec(request, id):
+def delete_server_ipsec(_, id):
     """Deleting a server from system and then from database"""
     try:
         server = ServerIPsec.objects.get(id=id)
@@ -369,7 +368,8 @@ def delete_server_ipsec(request, id):
 
 @swagger_auto_schema(
         'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-        operation_summary="API TO CREATE AN IPSEC",
+        manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
+        operation_summary="API TO UPDATE AN IPSEC",
         request_body=Schema(type=TYPE_OBJECT, required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
         properties={
             'conn_name': Schema(type=TYPE_STRING, example="tun_ipsec"),
@@ -384,7 +384,7 @@ def delete_server_ipsec(request, id):
             'description_ph1': Schema(type=TYPE_STRING, example="Description phase 1"),
             'authentication': Schema(type=TYPE_OBJECT, required=['authentication_method'],
                                      properties={'authentication_method': Schema(type=TYPE_STRING, default=CONSTANT_METHOD_PSK, enum=[CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA]),
-                                                 'pre_shared_key': Schema(type=TYPE_STRING, example="bB8u6Tj60uJL2RKYR0OCyiGMdds9gaEUs9Q2d3bRTTVRKJ516CCc1LeSMChAI0rc", description="required when authentication_method is Mutual PSK"),
+                                                 'pre_shared_key': Schema(type=TYPE_STRING, example="bB8u6Tj60uJL2RKYR0OCyiGMdds9gaE-----Us9Q2d3bRTTVRKJ516CCc1LeSMChAI0rc", description="required when authentication_method is Mutual PSK"),
                                                  'local_key_pair': Schema(type=TYPE_STRING, example="local_public_key", description="required when authentication_method is Mutual Public Key"),
                                                  'peer_key_pair': Schema(type=TYPE_STRING, example="peer_public_key", description="required when authentication_method is Mutual Public Key"),
                                                  'cert': Schema(type=TYPE_STRING, example="cert_server", description="Certificate (has a private key) name from list of certificates, required when authentication_method is Mutual RSA"),
@@ -408,17 +408,15 @@ def delete_server_ipsec(request, id):
             'rekey_fuzz': Schema(type=TYPE_STRING, example="10", description="set rekey_fuzz", pattern=r"(\d+)"),
             'mode_ph2': Schema(type=TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
                                properties={'mode': Schema(type=TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Transport"], description="At this time only Tunnel IPv4 is working"),
-                                           'local_address': Schema(type=TYPE_STRING, example="192.168.20.0", description="Local Address, required when selecting Route-based"),
-                                           'remote_address': Schema(type=TYPE_STRING, example="192.168.40.0", description="Remote Address, required when selecting Route-based"),}),
+                                           'local_network': Schema(type=TYPE_OBJECT, description="Local network block", required=['type_local_network'], 
+                                                                    properties={'type_local_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network", "WAN subnet", "LAN subnet"]),
+                                                                                'address_local_network': Schema(type=TYPE_STRING, example="192.168.45.0", description="Public address of local network, required when selecting Address or Network"),
+                                                                                'mask': Schema(type=TYPE_STRING, example="24", description="Public address mask, required when selecting Network"),}),
+                                            'remote_network': Schema(type=TYPE_OBJECT, description="Remote network block", required=['type_remote_network', 'address_remote_network'], 
+                                                                    properties={'type_remote_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network"]),
+                                                                                'address_remote_network': Schema(type=TYPE_STRING, example="192.168.55.0", description="Public address of remote network"),
+                                                                                'mask': Schema(type=TYPE_STRING, example="24", description="Public address mask, required when selecting Network"),})}),
             'description_ph2': Schema(type=TYPE_STRING, example="Description phase 2"),
-            'local_network': Schema(type=TYPE_OBJECT, description="Local network block", required=['type_local_network'], 
-                                    properties={'type_local_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network", "WAN subnet", "LAN subnet"]),
-                                                'address_local_network': Schema(type=TYPE_STRING, example="192.168.45.0", description="Public address of local network, required when selecting Address or Network"),
-                                                'mask': Schema(type=TYPE_STRING, example="24", description="Public address mask, required when selecting Network"),}),
-            'remote_network': Schema(type=TYPE_OBJECT, description="Remote network block", required=['type_remote_network', 'address_remote_network'], 
-                                     properties={'type_remote_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network"]),
-                                                 'address_remote_network': Schema(type=TYPE_STRING, example="192.168.55.0", description="Public address of remote network"),
-                                                 'mask': Schema(type=TYPE_STRING, example="24", description="Public address mask, required when selecting Network"),}),
             'sa_key_exchange': Schema(type=TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
                                       properties={'protocol': Schema(type=TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
                                                   'encryption_algorithm_ph2': Schema(type=TYPE_ARRAY, example=["256", "128"], items=Schema(type=TYPE_STRING), description="User can choose more than one"),
@@ -526,7 +524,7 @@ def update_server_ipsec(request, id):
 
         if server.mode == "Tunnel IPv4":
             # Local Network
-            local_network = data.get("local_network", "")
+            local_network = mode_ph2.get("local_network", "")
             server.type_local_network = local_network.get("type_local_network", "")
             if server.type_local_network == "Address":
                 server.address_local_network = local_network.get("address_local_network", "")
@@ -538,7 +536,7 @@ def update_server_ipsec(request, id):
             data["address_local_network"] = server.address_local_network
 
             # Remote Network
-            remote_network = data.get("remote_network", "")
+            remote_network = mode_ph2.get("remote_network", "")
             server.type_remote_network = remote_network.get("type_remote_network", "")
             server.address_remote_network = remote_network.get("address_remote_network", "")
             if server.type_remote_network == "Network":
@@ -588,12 +586,13 @@ def update_server_ipsec(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO UP A CONN IPSEC",)
 @api_view(['POST'])
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def up_server_ipsec(request, id):
+def up_server_ipsec(_, id):
     """Up a conn IPsec from system"""
     server = ServerIPsec.objects.get(id=id)
     up_ipsec_status = up_ipsec_conn(server.conn_name)
@@ -603,7 +602,11 @@ def up_server_ipsec(request, id):
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO ENABLE OR DISABLE AN IPSEC CONFIGURATION",)
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
+                     operation_summary="API TO ENABLE OR DISABLE AN IPSEC CONFIGURATION",
+                     request_body=Schema(
+                         type=TYPE_OBJECT, required=['enable'], properties={
+                             'enable': Schema(type=TYPE_BOOLEAN)}))
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -617,25 +620,29 @@ def status_server_ipsec(request, id):
 
         # Enable IPsec tunnel
         if enable:
-            rule_content, handle_number = enable_conn(server)
-            server.postrouting_rule_content = rule_content
-            server.postrouting_rule_handle = handle_number
-            server.server_status = enable
-            server.save()
+            # Check if the IPsec tunnel is enactive
+            if not server.server_status:
+                rule_content, handle_number = enable_conn(server)
+                server.postrouting_rule_content = rule_content
+                server.postrouting_rule_handle = handle_number
+                server.server_status = enable
+                server.save()
             return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_ENABLED}"})
         
         # Disable IPsec tunnel
-        disable_conn(server)
-        server.postrouting_rule_content = None
-        server.postrouting_rule_handle = None
-        server.server_status = enable
-        server.save()
+        # Check if the IPsec tunnel is active
+        if server.server_status:
+            disable_conn(server)
+            server.postrouting_rule_content = None
+            server.postrouting_rule_handle = None
+            server.server_status = enable
+            server.save()
         return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_DISABLED}"})
         
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema(

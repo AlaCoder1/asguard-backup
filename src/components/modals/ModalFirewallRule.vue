@@ -9,6 +9,9 @@
           <span class="headline" v-if="modalMode === 'edit'">
             {{ $t("firewall.update_rule") }}
           </span>
+          <span class="headline" v-if="modalMode === 'copy'">
+            {{ $t("firewall.clone") }}
+          </span>
         </v-card-title>
         <v-card-text>
           <v-select
@@ -143,6 +146,12 @@
                   </span>
                   <span
                     class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'copy'"
+                  >
+                    {{ $t("firewall.cloneBTN") }}
+                  </span>
+                  <span
+                    class="text-white pr-3 pl-3"
                     v-if="modalMode === 'edit'"
                   >
                     {{ $t("buttons.update") }}
@@ -184,6 +193,12 @@
                     >
                       {{ $t("buttons.create") }}
                     </span>
+                    <span
+                    class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'copy'"
+                  >
+                    {{ $t("firewall.cloneBTN") }}
+                  </span>
                     <span
                       class="text-white pr-3 pl-3"
                       v-if="modalMode === 'edit'"
@@ -504,7 +519,7 @@ export default {
     };
     const populate = (data) => {
       console.log("data-Rule", data);
-      if (modalMode.value === "edit") {
+      if (modalMode.value === "edit" || modalMode.value === "copy") {
         state.id = data.id;
         let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
         let filtredProtocol = protocolList.value.filter(
@@ -565,7 +580,7 @@ export default {
           state.formData.protocol === "icmp type echo-reply"
         ) {
           payload = {
-            uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
+            uuid: modalMode.value === "create" || modalMode.value === "copy"  ? uuidv4() : state.editValue,
             type_rule: "inbound",
             policy: state.formData.policy,
             rule_description: state.formData.rule_description,
@@ -574,13 +589,13 @@ export default {
             daddr: state.formData.daddr,
             id: modalMode.value === "edit" ? state.id : "",
             interUuid: state.interUuid,
-            status: modalMode.value === "create" ? "new" : "old",
+            status: modalMode.value === "create" || modalMode.value === "copy"  ? "new" : "old",
             // position:
             //   modalMode.value === "edit" ? state.formData.position : lastPosition + 1,
           };
         } else {
           payload = {
-            uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
+            uuid: modalMode.value === "create" || modalMode.value === "copy" ? uuidv4() : state.editValue,
             type_rule: "inbound",
             policy: state.formData.policy,
             rule_description: state.formData.rule_description,
@@ -591,7 +606,7 @@ export default {
             dport: state.formData.dport,
             id: modalMode.value === "edit" ? state.id : "",
             interUuid: state.interUuid,
-            status: modalMode.value === "create" ? "new" : "old",
+            status: modalMode.value === "create" || modalMode.value === "copy" ? "new" : "old",
             // position:
             //   modalMode.value === "edit" ? state.formData.position : lastPosition + 1,
           };
@@ -618,7 +633,7 @@ export default {
           //   });
           emitter.emit("edit-firewallRule", payload);
           emitter.emit("old-row", editRow.value);
-        } else if (modalMode.value === "create") {
+        } else if (modalMode.value === "create" || modalMode.value === "copy") {
           // axios
           //   .post(`/rules/addRule/${state.nameInter}`, payload)
           //   .then((response) => {

@@ -18,7 +18,7 @@
     </v-dialog>
   </v-overlay>
   <v-app id="inspire">
-    <base-layout title="Key Pair" active-menu="Key_Pair">
+    <base-layout :title="$t('keyPair')" active-menu="Key_Pair">
       <template #content>
         <helpModal help="key-pair"/>
         <div class="mr-3">

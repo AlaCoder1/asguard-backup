@@ -191,6 +191,11 @@ export default {
     const network = computed(() => {
       return t("routing.network");
     });
+
+    const gateway = computed(() => {
+      return t("dhcpV4.gateway");
+    });
+
     const close = () => {
       state.isviewModal = false;
       state.viewModal = false;
@@ -208,7 +213,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Gateway",
+        headerName: gateway,
         field: "gateway_name",
         sortable: true,
         filter: true,

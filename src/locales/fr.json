@@ -14,14 +14,32 @@
     "LoginTime": "Temps de connexion",
     "resetPassword": "Réinitialisation du mot de passe"
   },
-  "availableRange":"Plage disponible",
-  "needhelp":"Besoin d'aide ?",
-  "license":"Licence",
-  "addlicense":"Ajouter une licence",
-  "keylicense":"La clé de licence se trouve dans l'e-mail de confirmation que vous avez reçu après votre achat.",
-  "licensekey":"Clé de licence",
-  "other":"Autres",
-  "otherNat":"Autre",
+  "keyPair":"Paire de clés",
+  "createPrivateKey":"Créer une clé privée",
+  "createPublicKey":"Créer une clé publique",
+  "importPublicKey":"Importer une clé publique",
+  "doubleMask": {
+    "services": "Services : Double masque du filtre IP",
+    "ask": "Voulez-vous vraiment",
+    "activate": "activer",
+    "deactivate": "désactiver",
+    "option": "cette option",
+    "no": "Non",
+    "yes": "Oui",
+    "performanceGain": "Gain de performance",
+    "initialRules": "Nombre initial des règles",
+    "currentRules": "Nombre de règles actuel",
+    "ratio": "TAUX DE COMPRESSION"
+  },
+
+  "availableRange": "Plage disponible",
+  "needhelp": "Besoin d'aide ?",
+  "license": "Licence",
+  "addlicense": "Ajouter une licence",
+  "keylicense": "La clé de licence se trouve dans l'e-mail de confirmation que vous avez reçu après votre achat.",
+  "licensekey": "Clé de licence",
+  "other": "Autres",
+  "otherNat": "Autre",
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",
     "send": "Nous avons envoyé un code de vérification à",
@@ -69,8 +87,8 @@
   },
 
   "errors": {
-    "formatRange":"Format doit correspondre à une adresse IP : X.X.X.X et ne doit pas être hors plage.",
-    "duplicated":"Les adresses des champs source, traduction et destination doivent être toutes différentes.",
+    "formatRange": "Format doit correspondre à une adresse IP : X.X.X.X et ne doit pas être hors plage.",
+    "duplicated": "Les adresses des champs source, traduction et destination doivent être toutes différentes.",
     "endAddress": "Format doit correspondre à l'adresse IP : X.X.X.X (dernier octet ne doit pas être 0 ou 255)",
     "port": "Port doit se terminer par 443",
     "oblig": "Champs obligatoires",
@@ -100,9 +118,9 @@
     "noModif": "Rule Non modifiable",
     "invalidChar": "Au moins un élément contient un hôte ou un port vide, ou des caractères invalides.",
     "validHostname": "Le Champ doit respecter les conditions suivantes :\n- Être compris entre 1 et 253 caractères.\n- Être composé de labels séparés par des points.\n- Chaque label doit comporter entre 1 et 63 caractères.\n- Contenir uniquement des lettres, des chiffres et des tirets (-).\n- Ne peut commencer ou se terminer par un tiret.",
-    "validAddmac":"Format valide : XX:XX:XX:XX:XX:XX ou XX-XX-XX-XX-XX-XX.\nDoit contenir uniquement des caractères hexadécimaux (0-9,a-f)\net ne pas être composé uniquement de zéros.",
-    "validMTU":"MTU doit être compris entre 576 et 9000",
-    "validMSS":"MSSV doit être supérieur à 576"
+    "validAddmac": "Format valide : XX:XX:XX:XX:XX:XX ou XX-XX-XX-XX-XX-XX.\nDoit contenir uniquement des caractères hexadécimaux (0-9,a-f)\net ne pas être composé uniquement de zéros.",
+    "validMTU": "MTU doit être compris entre 576 et 9000",
+    "validMSS": "MSSV doit être supérieur à 576"
   },
   "placeholder": {
     "enterPassword": "Saisir le mot de passe",
@@ -201,8 +219,9 @@
     "distinguishedname": "Nom Distingué",
     "ListRevocation": "Liste de révocation par autorité",
     "Listauthoriy": "liste des autorités de certification",
-    "certificat": "certificat",
-    "agGridOf": "de"
+    "certificat": "Certificat",
+    "agGridOf": "de",
+    "raison": "Raison"
   },
   "firewall": {
     "DropRejectRule": "Êtes-vous sûr de vouloir créer cette règle avec 'rejeter' ou 'abandonner' ?",
@@ -233,12 +252,12 @@
     "remplirChamps": "Remplir les champs avec mot 'ALL'"
   },
   "nat": {
-    "range":"Plage",
-    "sourceProtocol":"Protocole source",
-    "select":"Sélectionner",
-    "sourcePort":"Source Port",
-    "destinationProtocol":"Protocole de destination",
-    "destinationPortForwarding":"Redirection de port de destination",
+    "range": "Plage",
+    "sourceProtocol": "Protocole source",
+    "select": "Sélectionner",
+    "sourcePort": "Source Port",
+    "destinationProtocol": "Protocole de destination",
+    "destinationPortForwarding": "Redirection de port de destination",
     "msg_confirm_delete": "Etes-vous sûr de vouloir supprimer cette ligne ?",
     "interface": "Interface",
     "protocol": "Protocole",
@@ -332,9 +351,10 @@
     "addedSuccessfully": "Gateway ajoutée avec succès",
     "savedSuccessfully": "Configuration sauvegardée avec succès",
     "addIPv4Gateway": "Ajouter IPv4 Gateway",
-    "gatewayName": "Saisir le nom de Gateway",
-    "GatewayDefault": "Gateway par défaut",
-    "farGateway": "Gateway lointaine",
+    "gatewayName": "Saisir le nom de la passerelle",
+    "GatewayDefault": "Passerelle par défaut",
+    "farGateway": "Passerelle distante",
+    "multiWANGateway":"Passerelle Multi-WAN",
     "descriptionRequired": "description est obligatoire",
     "IPV4Required": "type de configuration IPV4 est requis",
     "IPV4AddressRequired": "adresse IPV4 est requise",
@@ -359,7 +379,8 @@
     "requiredOptions": "Options obligatoires",
     "supersedeDomaineName": "Remplacer nom du domaine",
     "prependDomainServer": "Serveur de domaine en amont",
-    "numberValidity": "Format non valide. Veuillez saisir uniquement des nombres entiers."
+    "numberValidity": "Format non valide. Veuillez saisir uniquement des nombres entiers.",
+    "iPv4gateway":"Passerelle IPv4"
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Autres types d'interfaces",
@@ -482,7 +503,7 @@
   },
 
   "squid": {
-    "errorTime": "L'heure de début et l'heure de fin sont identiques",
+    "errorTime": "L'heure de début ne peut pas être identique ou supérieure à l'heure de fin.",
     "restart": "Veuillez redémarrer le service pour que les modifications soient prises en compte.",
     "proxyPort": "Port du proxy",
     "etesVouSur": "Êtes-vous sûr de vouloir",

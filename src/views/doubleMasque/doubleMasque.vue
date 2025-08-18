@@ -1,46 +1,80 @@
 <template>
   <v-container>
-
     <v-overlay v-model="state.loading">
-      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
     </v-overlay>
 
     <v-card class="pa-5 mt-2 mb-7">
-      <v-card-title style="margin-left: -15px" class="text-h5">Services : Double masque du filtre IP</v-card-title>
+      <v-card-title style="margin-left: -15px" class="text-h5">{{
+        $t("doubleMask.services")
+      }}</v-card-title>
 
-      <v-switch v-model="enabled" label="Activer les doubles masques du filtre IP" color="#213E9F"
-        @change="confirmSwitch" class="mt-3"></v-switch>
+      <v-switch
+        v-model="enabled"
+        label="Activer les doubles masques du filtre IP"
+        color="#213E9F"
+        @change="confirmSwitch"
+        class="mt-3"
+      ></v-switch>
 
-
-      <v-dialog v-model="dialog" persistent  max-width="410px">
+      <v-dialog v-model="dialog" persistent max-width="410px">
         <v-card>
           <v-card-title>Confirmation</v-card-title>
-          <v-card-text>Voulez-vous vraiment {{ !tempValue ? 'activer' : 'désactiver' }} cette option ?</v-card-text>
+          <v-card-text
+            >{{ $t("doubleMask.ask") }}
+            {{
+              !tempValue
+                ? $t("doubleMask.activate")
+                : $t("doubleMask.deactivate")
+            }}
+            {{ $t("doubleMask.option") }} ?</v-card-text
+          >
           <v-card-actions>
             <v-spacer></v-spacer>
             <!-- <v-btn color="red" @click="cancelSwitch">Non</v-btn>
             <v-btn color="green" @click="confirmEnable">Oui</v-btn> -->
-            <v-btn rounded outlined color="#213E9F" :isLarge="true" variant="outlined" class="ml-2"
-              @click="cancelSwitch">
-              <span style="color: #213e9f" class="pr-3 pl-3">Non</span>
+            <v-btn
+              rounded
+              outlined
+              color="#213E9F"
+              :isLarge="true"
+              variant="outlined"
+              class="ml-2"
+              @click="cancelSwitch"
+            >
+              <span style="color: #213e9f" class="pr-3 pl-3">{{ $t("doubleMask.no") }}</span>
             </v-btn>
-            <v-btn rounded outlined style="background-color:#213E9F" color="#213E9F" label-color="#213E9F"
-              :isLarge="true" class="ml-2" @click="confirmEnable">
-              <span class="text-white pr-3 pl-3">
-                Oui</span>
-
+            <v-btn
+              rounded
+              outlined
+              style="background-color: #213e9f"
+              color="#213E9F"
+              label-color="#213E9F"
+              :isLarge="true"
+              class="ml-2"
+              @click="confirmEnable"
+            >
+              <span class="text-white pr-3 pl-3"> {{ $t("doubleMask.yes") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
-
 
       <!-- Save Button -->
       <!-- <v-btn color="blue" @click="saveSettings">Save</v-btn>
@@ -61,24 +95,32 @@
 
       <!-- Performance Info -->
       <v-alert variant="outlined" type="info" color="#213E9F">
-        <div>{{ chartOptions.series[0] }}% Gain de performance</div>
+        <div>{{ chartOptions.series[0] }}% {{ $t("doubleMask.performanceGain") }}</div>
         <v-expansion-panels>
           <v-expansion-panel>
-            <v-expansion-panel-title>Nombre initial des règles :
-              {{ initialRules }}</v-expansion-panel-title>
+            <v-expansion-panel-title
+              >{{ $t("doubleMask.initialRules") }} :
+              {{ initialRules }}</v-expansion-panel-title
+            >
           </v-expansion-panel>
           <v-expansion-panel>
-            <v-expansion-panel-title>Nombre de règles actuel :
-              {{ actualRules }}</v-expansion-panel-title>
+            <v-expansion-panel-title
+              >{{ $t("doubleMask.currentRules") }}  :
+              {{ actualRules }}</v-expansion-panel-title
+            >
           </v-expansion-panel>
         </v-expansion-panels>
       </v-alert>
 
       <!-- Compression Gauge -->
       <v-card class="mt-5">
-
         <div id="chart" class="mt-3 mr-2">
-          <apexchart ref="apexChart" height="350" :options="chartOptions" :series="chartOptions.series">
+          <apexchart
+            ref="apexChart"
+            height="350"
+            :options="chartOptions"
+            :series="chartOptions.series"
+          >
           </apexchart>
         </div>
 
@@ -96,7 +138,12 @@
         </v-sheet> -->
       </v-card>
 
-      <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+      <v-snackbar
+        :timeout="2000"
+        v-model="state.snackbar"
+        location="bottom right"
+        :color="state.color"
+      >
         {{ state.textAlert }}
 
         <template v-slot:actions> </template>
@@ -105,10 +152,9 @@
   </v-container>
 </template>
 
-
-
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from "vue-i18n";
+import { ref, reactive, onMounted } from "vue";
 import axios from "axios";
 import { getCookie } from "@/mixins/csrftoken.js";
 import VueApexCharts from "vue3-apexcharts";
@@ -121,26 +167,28 @@ export default {
 
   setup() {
 
+    const { t } = useI18n();
+    
     onMounted(() => {
-      getInfo()
-
-    })
+      getInfo();
+    });
 
     const getInfo = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/double_mask/getstatus").then(
-        (response) => {
-          console.log('response', response.data)
+      axios
+        .get("/double_mask/getstatus")
+        .then((response) => {
+          console.log("response", response.data);
           enabled.value = response.data.msg?.active;
           chartOptions.value.series = [response.data.msg?.ratio];
-          actualRules.value = response.data.msg?.n_actuel
-          initialRules.value = response.data.msg?.n_init
-        },
-      ).catch((e) => {
-        console.log('e', e)
-      });
+          actualRules.value = response.data.msg?.n_actuel;
+          initialRules.value = response.data.msg?.n_init;
+        })
+        .catch((e) => {
+          console.log("e", e);
+        });
     };
 
     const changeStatus = (status) => {
@@ -175,8 +223,7 @@ export default {
             state.textAlert = i.response.data.error;
           }
         });
-    }
-
+    };
 
     const enabled = ref(false);
     const dialog = ref(false);
@@ -193,13 +240,11 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (enabled.value) {
-        changeStatus('activate')
-        console.log('enabledTrue', enabled.value)
-
-      }
-      else {
-        console.log('enabledfalse', enabled.value)
-        changeStatus('deactivate')
+        changeStatus("activate");
+        console.log("enabledTrue", enabled.value);
+      } else {
+        console.log("enabledfalse", enabled.value);
+        changeStatus("deactivate");
       }
     };
 
@@ -216,42 +261,42 @@ export default {
       series: [0],
       chart: {
         height: 350,
-        type: 'radialBar',
-        offsetY: -10
+        type: "radialBar",
+        offsetY: -10,
       },
 
-      colors: ['#213E9F'],
+      colors: ["#213E9F"],
       plotOptions: {
         radialBar: {
           startAngle: -135,
           endAngle: 135,
           dataLabels: {
             name: {
-              fontSize: '16px',
-              color: '#213E9F',
-              offsetY: 120
+              fontSize: "16px",
+              color: "#213E9F",
+              offsetY: 120,
             },
             value: {
               offsetY: 76,
-              fontSize: '22px',
-              color: '#213E9F',
+              fontSize: "22px",
+              color: "#213E9F",
               formatter: function (val) {
                 return val + "%";
-              }
-            }
+              },
+            },
           },
           track: {
-            background: '#f2f2f2'
+            background: "#f2f2f2",
           },
           hollow: {
-            size: '65%'
-          }
-        }
+            size: "65%",
+          },
+        },
       },
       fill: {
-        type: 'gradient',
+        type: "gradient",
         gradient: {
-          shade: 'dark',
+          shade: "dark",
           shadeIntensity: 0.15,
           inverseColors: false,
           opacityFrom: 1,
@@ -260,22 +305,22 @@ export default {
           colorStops: [
             {
               offset: 0,
-              color: '#213E9F',
-              opacity: 1
+              color: "#213E9F",
+              opacity: 1,
             },
             {
               offset: 100,
-              color: '#CC0000',
-              opacity: 1
-            }
-          ]
-        }
+              color: "#CC0000",
+              opacity: 1,
+            },
+          ],
+        },
       },
       stroke: {
         dashArray: 4,
         // lineCap: 'round'
       },
-      labels: ['TAUX DE COMPRESSION'],
+      labels: [t('doubleMask.ratio')],
     });
 
     const state = reactive({
@@ -298,13 +343,11 @@ export default {
       actualRules,
       performanceGain,
       compressionRate,
-      chartOptions
-
+      chartOptions,
     };
   },
 };
 </script>
-
 
 <style scoped>
 .text-subtitle1 {

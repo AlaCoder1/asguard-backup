@@ -632,6 +632,12 @@ export default defineComponent({
           >
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
+         <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
         <button
           class="action-button delete"
           data-action="delete"
@@ -646,6 +652,12 @@ export default defineComponent({
           data-action="update"
           >
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+           <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         <button
           class="action-button delete"
@@ -693,6 +705,22 @@ export default defineComponent({
             state.modalMode = "edit";
             state.isModalOpen = true;
             state.editRow = rowDataTable;
+            emitter.emit("row-rules", rowData.value);
+          }
+
+          break;
+        case "copy":
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            mode.value = "copy";
+            state.modalData = {};
+            state.modalMode = "copy";
+            state.isModalOpen = true;
+            state.editRow = rowDataTable;
+            emitter.emit("interface-uuid", props.uuid);
             emitter.emit("row-rules", rowData.value);
           }
 
@@ -1058,6 +1086,7 @@ export default defineComponent({
       console.log("rules.value", rules.value);
 
       emitter.on("add-firewallRule", (data) => {
+        console.log('**', data)
         if (data.interUuid === props.uuid) {
           if (!rowData.value) {
             rowData.value = [];

@@ -608,6 +608,12 @@ export default defineComponent({
           >
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
+              <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
         <button
           class="action-button delete"
           data-action="delete"
@@ -622,6 +628,12 @@ export default defineComponent({
           data-action="update"
           >
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+              <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         <button
           class="action-button delete"
@@ -670,6 +682,21 @@ export default defineComponent({
             state.isModalOpen = true;
             state.editRow = rowData;
           }
+
+          break;
+          case "copy":
+            if (user === "viewer") {
+              console.log("View Mode");
+              state.isviewModal = true;
+              state.viewModal = true;
+            } else {
+              mode.value = "copy";
+              state.modalData = {};
+              state.modalMode = "copy";
+              state.isModalOpen = true;
+              state.editRow = rowData;
+              emitter.emit("inter-Outbound-uuid", props.uuid);        
+              }
 
           break;
         default:

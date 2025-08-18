@@ -6,7 +6,7 @@ import string
 import subprocess
 from django.conf import settings
 import psycopg2
-
+import secrets
 def send_email_to_user(email, password, username):
     subject = 'Welcome ' + username
     message = f'Welcome {username},\n\nThis is your account:\n* EMAIL: {email}\n* PASSWORD: {password}\n\nBest regards'
@@ -24,7 +24,8 @@ def send_email_to_user(email, password, username):
     
 def generate_random_string(length=8):
     characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for _ in range(length))
+    
+    return ''.join(secrets.choice(characters) for _ in range(length))
 
 
 def extract_names_from_file(file_path):
@@ -49,26 +50,3 @@ def change_pwd_squid(username_squid,password_squid):
     except subprocess.CalledProcessError as e:
         return False
     
-def get_email_by_username(username):
-    try:
-        connection = psycopg2.connect(
-            host="localhost",        
-            port=5432,        
-            user="postgres",
-            password="mypassword",
-            dbname="postgres"
-        )
-        cursor = connection.cursor()
-        cursor.execute("SELECT email FROM proxy_user where username = %s",(username,))
-        exists = cursor.fetchone()
-        if exists:
-            return exists[0]
-        else:
-            return None
-    except Exception as error:
-        return False
-    finally:
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()

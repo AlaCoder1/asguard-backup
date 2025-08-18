@@ -15,7 +15,7 @@ from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_CON
 from backend.ztna.serializers import HostConfigsSerializer, HostSerializerUpdate, InterceptConfigsSerializer, InterceptSerializerUpdate
 from backend.ztna.utils import get_ztna_token_from_system
 from backend.ztna.utils_configurations import get_payload_config_database, get_payload_config_openziti, is_exist_config
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_CONFIGURATION = _('Configuration')
@@ -37,6 +37,7 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA CONFIGURATIONS FROM OPENZITI API",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_configs_from_openziti(request):
@@ -54,6 +55,7 @@ def get_configs_from_openziti(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA HOST CONFIGURATIONS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_host_configs(request):
@@ -69,6 +71,7 @@ def get_host_configs(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA INTERCEPT CONFIGURATIONS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_intercept_configs(request):
@@ -107,6 +110,7 @@ def get_intercept_configs(request):
             )
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_configs(request):
@@ -156,6 +160,7 @@ def add_configs(request):
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'},
                      operation_summary="API TO DELETE A ZTNA INTERCEPT CONFIGURATION",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_intercept_configs(request, id):
@@ -177,6 +182,7 @@ def delete_intercept_configs(request, id):
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'},
                      operation_summary="API TO DELETE A ZTNA HOST CONFIGURATION",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_host_configs(request, id):
@@ -218,6 +224,7 @@ def delete_host_configs(request, id):
             )
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_intercept_configs(request, id):
@@ -270,6 +277,7 @@ def update_intercept_configs(request, id):
             )
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_host_configs(request, id):

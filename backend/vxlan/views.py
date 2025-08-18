@@ -13,7 +13,7 @@ from backend.vxlan.serializers import VxlanSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import re
-
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_VXLAN_CONFIG = _('Configuration VxLAN')
 CONSTANT_VXLAN_INTERFACE = _('Interface VxLAN')
@@ -53,6 +53,7 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vxlan(request):
     """
@@ -156,6 +157,7 @@ def get_vxlan(request):
 
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_vxlan(request):
     """
@@ -269,6 +271,7 @@ def add_vxlan(request):
 )
   
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vxlan(request,id):
     """
@@ -352,6 +355,7 @@ def update_vxlan(request,id):
 
 
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vxlan(request,id):
     """
@@ -403,6 +407,7 @@ vxlan_request_schema = openapi.Schema(
 )
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def assign_vxlan_interface(request):
     """API to assign vxlan to interface  and create new interface of vxlan to configure it
@@ -478,6 +483,7 @@ vxlan_request_schema_update = openapi.Schema(
     operation_summary="API TO update ASSIGN VXLAN Interface",
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vxlan_interface(request,id_interface):
     """
@@ -526,6 +532,7 @@ def update_vxlan_interface(request,id_interface):
     operation_summary="API DELETE VxLAN interface",
 )    
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vxlan_interface(request,id_interface):
     """
@@ -575,6 +582,7 @@ def delete_vxlan_interface(request,id_interface):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vxlan_interface(request):
     """

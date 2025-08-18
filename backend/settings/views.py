@@ -71,6 +71,7 @@ from collections import defaultdict
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.decorators.http import require_http_methods
 # Create your views here.
 
 
@@ -123,6 +124,7 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
             }]
         }))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def generale_settings(request,id):
     """
@@ -242,6 +244,7 @@ def generale_settings(request,id):
     operation_description="Retrieve general system settings, including hostname, domain, and time zone."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def get_generale_settings(request,id):
@@ -309,6 +312,7 @@ def get_generale_settings(request,id):
     operation_description="Retrieve a list of available time zones with their ID, name, and offset."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def time_zones(request):
@@ -403,6 +407,7 @@ def time_zones(request):
     operation_description="Retrieve gateway information along with associated details, including DNS servers, interfaces, and metrics."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def gatways_information(request):
@@ -502,6 +507,7 @@ def gatways_information(request):
     operation_description="Retrieve system information by ID."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getSystem(request, id):
@@ -569,6 +575,7 @@ def getSystem(request, id):
     operation_description="Retrieve network information by ID."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getNetwork(request, id):
@@ -654,6 +661,7 @@ def getNetwork(request, id):
     operation_description="Create a new system and store it in the database. A success message is returned upon successful creation."
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def create_system(request):
@@ -727,6 +735,7 @@ def create_system(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET SYSTEM LANGUAGE",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 # @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def get_language(request):
@@ -741,6 +750,7 @@ def get_language(request):
         operation_summary="API TO UPDATE SYSTEM LANGUAGE",
         request_body=Schema(type=TYPE_OBJECT, required=['language'], properties={'language': Schema(type=TYPE_STRING, enum=["en", "fr"])}))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_language(request, id):

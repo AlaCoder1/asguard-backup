@@ -15,8 +15,7 @@ from backend.waf.utils_application import create_application_waf_in_system, dele
 from backend.waf.utils_config import update_waf_configuration_in_system
 from backend.waf.utils_rules import create_rule_waf_in_system, create_rule_waf_str, delete_rule_waf_in_system, update_rule_waf_in_system
 from utils.errors_utils import CommandExecutionError
-
-
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_WAF_CONFIG = _("WAF Config")
 CONSTANT_WAF_RULE = _("WAF Rule")
@@ -41,6 +40,7 @@ ERROR_MESSAGES_MODSECURITY_RULE = _("Cannot deleting or updating one of the mods
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET THE WAF CONFIG",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_waf_config(request):
@@ -79,6 +79,7 @@ def get_waf_config(request):
             }
             ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_config_waf(request, id):
@@ -103,6 +104,7 @@ def update_config_waf(request, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL WAF RULES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_waf_rule(request):
@@ -115,6 +117,7 @@ def get_all_waf_rule(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET A WAF RULE",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_waf_rule(request, id):
@@ -159,6 +162,7 @@ def get_waf_rule(request, id):
             }
             ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_waf_rule(request):
@@ -191,6 +195,7 @@ def create_waf_rule(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE A WAF RULE",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_waf_rule(request, id):
@@ -251,6 +256,7 @@ def delete_waf_rule(request, id):
             }
             ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_waf_rule(request, id):
@@ -291,6 +297,7 @@ def update_waf_rule(request, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL WAF APPLICATIONS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_waf_application(request):
@@ -302,6 +309,7 @@ def get_all_waf_application(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET A WAF APPLICATION",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_waf_application(request, id):
@@ -375,6 +383,7 @@ def get_waf_application(request, id):
                     }
                     ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_waf_application(request):
@@ -421,6 +430,7 @@ def create_waf_application(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE A WAF RULE",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_waf_application(request, id):
@@ -509,6 +519,7 @@ def delete_waf_application(request, id):
                     }
                     ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_waf_application(request, id):
@@ -564,6 +575,7 @@ def update_waf_application(request, id):
 
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def restart_nginx(request):
@@ -577,6 +589,7 @@ def restart_nginx(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL WAF ALERTS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_waf_alerts(request):

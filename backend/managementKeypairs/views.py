@@ -12,7 +12,7 @@ from backend.managementKeypairs.list_key_pairs import get_list_all_private_key, 
 from backend.managementKeypairs.models import PrivateKey, PublicKey
 from backend.managementKeypairs.serializers import PrivateKeySerializer, PublicKeySerializer
 from utils.errors_utils import CommandExecutionError
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_PRIVATE_KEY = _("Private Key")
@@ -35,6 +35,7 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL PRIVATE KEYS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_private_key(request):
@@ -47,6 +48,7 @@ def get_all_private_key(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET A PRIVATE KEY",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_private_key(request, id):
@@ -65,6 +67,7 @@ def get_private_key(request, id):
                     'encryption_algorithm': Schema(type=TYPE_STRING, enum=['RSA'], description="Always is RSA"),
                     'key_size': Schema(type=TYPE_STRING, enum=['2048', '4096', '8192'])}))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_private_key(request):
@@ -94,6 +97,7 @@ def create_private_key(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE A PRIVATE KEY",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_private_key(request, id):
@@ -121,6 +125,7 @@ def delete_private_key(request, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL PUBLIC KEYS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_public_key(request):
@@ -133,6 +138,7 @@ def get_all_public_key(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET A PUBLIC KEY",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_public_key(request, id):
@@ -155,6 +161,7 @@ def get_public_key(request, id):
                 'encryption_algorithm': Schema(type=TYPE_STRING, enum=['RSA'], description="Always is RSA"),
                 'public_key_value': Schema(type=TYPE_STRING, example="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi1fcisJwGXHZ4/A9VC85\nr6fY7eV4l52FxP6wQOxGrTpIU8GH+ud9hxd3xWt3xXgNpxcVys7jLJ4qc3iRjiUU\nt/cqI+kZmdHUkyLJqFk9vhs/oymYuESDn5XN7AM2dgPKkYsXIhMVQ0d35WCKwADX\neWgV9d9ziPxQNNHr8GyASiqiwYcsf2fHlxOSB+jX62JI8eqHESU+cJl55KpmSY+9\nkbLnc7JQDU/g+hhvvwqwxgyMPORnNkS9cyXMMogSDzYMBiS/vHyuq5XolYCJkqOk\nZznx2nLXJPTc6CcNSfXDSkEt7QX5l8wlDdUUA76q+OxBtBxn61sl48Ni85tfxImM\n9wIDAQAB\n-----END PUBLIC KEY-----", description="Value of the imported public key when using import method"),})}))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_public_key(request):
@@ -210,6 +217,7 @@ def create_public_key(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE A PUBLIC KEY",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_public_key(request, id):

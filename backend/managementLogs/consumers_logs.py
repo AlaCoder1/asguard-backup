@@ -43,21 +43,24 @@ class LogsdConsumer(AsyncWebsocketConsumer):
             logs_erializer.save()
        
     async def start_data_loop_global_chart(self):
-        while True:
-            list_data=[]
-            command = "sudo journalctl -n 1000"
-            completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
-            output = completed_process.stdout.splitlines()
-            for x in output:
-                date, process, message=get_attributes_logs(x)
-                if date is not None and process is not None and message is not None:
-                    data = {
-                        "date": date,
-                        "process": process,
-                        "message": message,
-                    }
-                    # print(data)
-                    list_data.append(data)
-                    await self.save_system_usage(data)
-                    await self.send(json.dumps(list_data))
-            await asyncio.sleep(900)
+        try:
+            while True:
+                list_data=[]
+                command = "sudo journalctl -n 1000"
+                completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+                output = completed_process.stdout.splitlines()
+                for x in output:
+                    date, process, message=get_attributes_logs(x)
+                    if date is not None and process is not None and message is not None:
+                        data = {
+                            "date": date,
+                            "process": process,
+                            "message": message,
+                        }
+                        # print(data)
+                        list_data.append(data)
+                        await self.save_system_usage(data)
+                        await self.send(json.dumps(list_data))
+                await asyncio.sleep(900)
+        except asyncio.CancelledError:
+            pass

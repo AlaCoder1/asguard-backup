@@ -11,6 +11,7 @@ from backend.rules.serializers import RuleSerializer
 from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_UPDATING
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.views.decorators.http import require_http_methods
 @swagger_auto_schema(
     method='post',
     operation_summary="API to delete a rule",
@@ -40,6 +41,7 @@ from drf_yasg import openapi
 )
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def delete_rule(request):
     """
@@ -154,6 +156,7 @@ def delete_rule(request):
 
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def save_rules(request,name_interface):
   """
@@ -244,6 +247,7 @@ add_rule_schema = openapi.Schema(
 
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_rule(request,name_interface):
     """
@@ -328,6 +332,7 @@ responses={
   },
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_rule(request,name_interface):
     """

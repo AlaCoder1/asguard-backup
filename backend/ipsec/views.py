@@ -17,8 +17,7 @@ from backend.network.models import IP4Config, Interface
 from backend.ipsec.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA
 from utils.errors_utils import CommandExecutionError
 from .models import ServerIPsec
-
-
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_IPSEC_SERVICE = _("IPsec Service")
 CONSTANT_IPSEC_CONFIGURATION = _("IPsec configuration")
@@ -47,6 +46,7 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET IPSEC STATUS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_ipsec_status(request):
@@ -60,6 +60,7 @@ def get_ipsec_status(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL IPSEC",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_server_ipsec(request):
@@ -72,6 +73,7 @@ def get_all_server_ipsec(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET AN IPSEC",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_server_ipsec(request, id):
@@ -142,6 +144,7 @@ def get_server_ipsec(request, id):
                                                   'pfs_key_group': Schema(type=TYPE_STRING, example="15:3072", description="If not off should be group:key")}),
             'lifetime_ph2': Schema(type=TYPE_STRING, example="3600", description="set lifetime in seconds", pattern=r"(\d+)"),}))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_server_ipsec(request):
@@ -344,6 +347,7 @@ def create_server_ipsec(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE AN IPSEC",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_server_ipsec(request, id):
@@ -422,6 +426,7 @@ def delete_server_ipsec(request, id):
                                                   'pfs_key_group': Schema(type=TYPE_STRING, example="15:3072", description="If not off should be group:key")}),
             'lifetime_ph2': Schema(type=TYPE_STRING, example="3600", description="set lifetime in seconds", pattern=r"(\d+)"),}))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_server_ipsec(request, id):
@@ -585,6 +590,7 @@ def update_server_ipsec(request, id):
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO UP A CONN IPSEC",)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def up_server_ipsec(request, id):
@@ -599,6 +605,7 @@ def up_server_ipsec(request, id):
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO ENABLE OR DISABLE AN IPSEC CONFIGURATION",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def status_server_ipsec(request, id):
@@ -638,6 +645,7 @@ def status_server_ipsec(request, id):
             type=TYPE_OBJECT, required=['status'],
             properties={'status': Schema(type=TYPE_STRING, enum=['start', 'stop'])}))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def status_ipsec(request):

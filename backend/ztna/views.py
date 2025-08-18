@@ -7,7 +7,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_ZTNA = _('ZTNA')
@@ -26,6 +26,7 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET ZTNA TOKEN")
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_ztna_token(request):
@@ -44,6 +45,7 @@ def get_ztna_token(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET ZTNA SERVICE STATUS")
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def status_ztna(request):
@@ -62,6 +64,7 @@ def status_ztna(request):
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO START ZTNA SERVICE",)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_ztna(request):
@@ -80,6 +83,7 @@ def start_ztna(request):
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO STOP ZTNA SERVICE",)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_ztna(request):
@@ -97,6 +101,7 @@ def stop_ztna(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET THE LOCAL DOMAIN FOR LINUX OS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_local_domain_linux(request):
@@ -112,6 +117,7 @@ def get_local_domain_linux(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET THE LOCAL DOMAIN FOR LINUX WINDOWS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_local_domain_windows(request):

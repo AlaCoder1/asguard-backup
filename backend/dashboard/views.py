@@ -6,7 +6,7 @@ from rest_framework.authentication import SessionAuthentication
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.utils.translation import gettext_lazy as _
-
+from django.views.decorators.http import require_http_methods
 @swagger_auto_schema(
     method='PUT',
     operation_summary="API to update service action",
@@ -46,6 +46,7 @@ from django.utils.translation import gettext_lazy as _
 )
 # API to set actions service
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def set_actions_service(request):
     if (request.method == 'PUT'):

@@ -16,7 +16,7 @@ from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
 from utils.utils_address import fix_ipv4_address
 
-
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_SNAT_RULE = _("SNAT rule")
 CONSTANT_SNAT_RULE_POSITION = _("SNAT rule position")
@@ -42,6 +42,7 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL SNAT RULES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_snat(_):
@@ -54,6 +55,7 @@ def get_all_snat(_):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET AN SNAT RULE",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_snat(_, id):
@@ -85,6 +87,7 @@ def get_snat(_, id):
             }
             ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_snat(request):
@@ -151,6 +154,7 @@ def create_snat(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO DELETE AN SNAT RULE",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_snat(_, id):
@@ -189,6 +193,7 @@ def delete_snat(_, id):
                                 items=Schema(type=TYPE_INTEGER, example=1)),
             }))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_list_snat(request):
@@ -245,6 +250,7 @@ def delete_list_snat(request):
             }
             ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_snat(request, id):
@@ -318,6 +324,7 @@ def update_snat(request, id):
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO START AN SNAT RULE",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_snat(_, id):
@@ -356,6 +363,7 @@ def start_snat(_, id):
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO STOP AN SNAT RULE",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_snat(_, id):
@@ -387,6 +395,7 @@ def stop_snat(_, id):
         type=TYPE_OBJECT, required=["new_position"], properties={
             "new_position": Schema(type=TYPE_INTEGER, example="4", description="New position of SNAT rule after changing its position")}))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_snat_position(request, id):

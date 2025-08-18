@@ -18,7 +18,7 @@ from django.core.serializers import serialize
 import ruamel.yaml
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_CONFIGURATION = _("Configuration")
 CONSTANT_RULE = _("Rule")
@@ -186,6 +186,7 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
     operation_summary="API to Save System Configuration"
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_suricata_configuration(request, id):
     """
@@ -286,6 +287,7 @@ def update_suricata_configuration(request, id):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def activer_suricata_update(request, id):
     """
@@ -348,6 +350,7 @@ def activer_suricata_update(request, id):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_rules_from_database(request, num):
     """
@@ -417,6 +420,7 @@ def get_rules_from_database(request, num):
     )
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def save_rules_suricata(request, id):
     """
@@ -489,6 +493,7 @@ def save_rules_suricata(request, id):
     }
 )
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_rule(request, sid):
     """
@@ -553,6 +558,7 @@ def delete_rule(request, sid):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_alerts_to_database(request,id):
     """
@@ -618,6 +624,7 @@ def add_alerts_to_database(request,id):
 )
     
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_alerts_from_database(request,num):
     """

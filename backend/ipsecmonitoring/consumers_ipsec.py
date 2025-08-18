@@ -64,32 +64,35 @@ class IPSECConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async  
     def start_data_loop_ipsec(self,id):
         """function to get ipsec monitoring info"""
-        tunnel_name=ServerIPsec.objects.get(id=id).conn_name
-        uptime=get_uptime()
-        estab_time=get_time_established()
-        availability=get_availability(estab_time,uptime)
-        bytes_in=get_bytes_in()
-        bytes_out=get_bytes_out()
-        availability_bytes=get_availabile_bytes(bytes_in,bytes_out)
-        address=get_tunnel_ip(tunnel_name)
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S")
-        unix_timestamp = int(time.mktime(time.strptime(current_time, "%Y-%m-%d %H:%M:%S")))
-        active_sessions= get_active_session()
-        establishetd_date=get_establishetd_date()
-        packet_loss=get_packet_loss(address)
-        total_bytes=bytes_in+bytes_out
-        data={
-            "establishetd_date":establishetd_date,
-            "active_sessions":active_sessions,
-            "availability":availability,
-            "bytes_in":bytes_in,
-            "bytes_out":bytes_out,
-            "total_bytes":total_bytes,
-            "availability_bytes":availability_bytes,
-            "packet_loss":packet_loss,
-            "timestamp":unix_timestamp,
-            "time_added":time.time(),
-            "tunnel":id,
-            }
-        return data
-        
+        try:
+            tunnel_name=ServerIPsec.objects.get(id=id).conn_name
+            uptime=get_uptime()
+            estab_time=get_time_established()
+            availability=get_availability(estab_time,uptime)
+            bytes_in=get_bytes_in()
+            bytes_out=get_bytes_out()
+            availability_bytes=get_availabile_bytes(bytes_in,bytes_out)
+            address=get_tunnel_ip(tunnel_name)
+            current_time = time.strftime("%Y-%m-%d %H:%M:%S")
+            unix_timestamp = int(time.mktime(time.strptime(current_time, "%Y-%m-%d %H:%M:%S")))
+            active_sessions= get_active_session()
+            establishetd_date=get_establishetd_date()
+            packet_loss=get_packet_loss(address)
+            total_bytes=bytes_in+bytes_out
+            data={
+                "establishetd_date":establishetd_date,
+                "active_sessions":active_sessions,
+                "availability":availability,
+                "bytes_in":bytes_in,
+                "bytes_out":bytes_out,
+                "total_bytes":total_bytes,
+                "availability_bytes":availability_bytes,
+                "packet_loss":packet_loss,
+                "timestamp":unix_timestamp,
+                "time_added":time.time(),
+                "tunnel":id,
+                }
+            return data
+        except asyncio.CancelledError:
+            pass
+            

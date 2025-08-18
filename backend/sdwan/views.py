@@ -17,7 +17,7 @@ from backend.sdwan.utils import search_routing_table_id
 from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
 from utils.errors_utils import CommandExecutionError
 from utils.utils_address import fix_ipv4_address
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_SDWAN_RULE = _("SDwan rule")
@@ -48,6 +48,7 @@ ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER = _("An area contains only two interfac
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL AREAS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_area(_):
@@ -60,6 +61,7 @@ def get_all_area(_):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET AN AREA",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_area(_, id):
@@ -80,6 +82,7 @@ def get_area(_, id):
                     }
                     ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_area(request):
@@ -104,6 +107,7 @@ def create_area(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE AN AREA",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_area(request, id):
@@ -129,6 +133,7 @@ def delete_area(request, id):
                     }
                     ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_area(request, id):
@@ -159,6 +164,7 @@ def update_area(request, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL SDWAN RULES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_sdwan_rule(request):
@@ -171,6 +177,7 @@ def get_all_sdwan_rule(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET AN SDWAN RULE",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_sdwan_rule(_, id):
@@ -198,6 +205,7 @@ def get_sdwan_rule(_, id):
             }
             ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_sdwan_rule(request):
@@ -237,6 +245,7 @@ def create_sdwan_rule(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE AN SDWAN RULE",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_sdwan_rule(request, id):
@@ -274,6 +283,7 @@ def delete_sdwan_rule(request, id):
             }
             ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_sdwan_rule(request, id):
@@ -326,6 +336,7 @@ def update_sdwan_rule(request, id):
 
 
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_sdwan_rule(request, id):
@@ -362,6 +373,7 @@ def start_sdwan_rule(request, id):
 
 
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_sdwan_rule(request, id):

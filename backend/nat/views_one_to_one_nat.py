@@ -15,7 +15,7 @@ from backend.nat.utils_one_to_one_nat_system import change_rule_one_to_one_nat_p
 from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
 from utils.utils_address import fix_ipv4_address
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_ONE_TO_ONE_NAT_RULE = _("OneToOneNat rule")
@@ -42,6 +42,7 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL OneToOneNat RULES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_one_to_one_nat(_):
@@ -55,6 +56,7 @@ def get_all_one_to_one_nat(_):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET AN OneToOneNat RULE",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_one_to_one_nat(_, id):
@@ -76,6 +78,7 @@ def get_one_to_one_nat(_, id):
                     }
                     ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_one_to_one_nat(request):
@@ -127,6 +130,7 @@ def create_one_to_one_nat(request):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DELETE AN OneToOneNat RULE",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_one_to_one_nat(request, id):
@@ -164,6 +168,7 @@ def delete_one_to_one_nat(request, id):
                                 items=Schema(type=TYPE_INTEGER, example=1)),
             }))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_list_one_to_one_nat(request):
@@ -210,6 +215,7 @@ def delete_list_one_to_one_nat(request):
                     }
                     ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_one_to_one_nat(request, id):
@@ -271,6 +277,7 @@ def update_one_to_one_nat(request, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO START A ONE TO ONE NAT RULE",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_one_to_one_nat(_, id):
@@ -311,6 +318,7 @@ def start_one_to_one_nat(_, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO STOP A ONE TO ONE NAT RULE",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_one_to_one_nat(_, id):
@@ -345,6 +353,7 @@ def stop_one_to_one_nat(_, id):
         type=TYPE_OBJECT, required=["new_position"], properties={
             "new_position": Schema(type=TYPE_INTEGER, example="4", description="New position of One To One NAT rule after changing its position")}))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_one_to_one_nat_position(request, id):

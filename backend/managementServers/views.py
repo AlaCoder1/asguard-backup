@@ -13,6 +13,8 @@ from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth.hashers import check_password
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from django.views.decorators.http import require_http_methods
+
 
 # Constants
 CONSTANT_USER = _('User')
@@ -44,6 +46,7 @@ ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
       
 )
 @api_view(['GET'])
+@require_http_methods(["GET"])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_servers(request):
@@ -102,6 +105,7 @@ def get_all_servers(request):
 
 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_server(request, id):
     """
@@ -196,6 +200,7 @@ def get_server(request, id):
         }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def create_server(request):
     """
@@ -246,6 +251,7 @@ def create_server(request):
 )
 
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_server(request, id):
@@ -339,6 +345,7 @@ def delete_server(request, id):
         }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def modify_server(request, id):

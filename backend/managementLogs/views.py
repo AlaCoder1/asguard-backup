@@ -13,6 +13,7 @@ import os
 import gzip
 import zipfile
 from io import BytesIO
+from django.views.decorators.http import require_http_methods
 @swagger_auto_schema(
     method='GET',
     operation_summary="API to retrieve log entry details.",
@@ -31,6 +32,7 @@ from io import BytesIO
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_logs_data(request):
     """
@@ -80,6 +82,7 @@ def get_logs_data(request):
 )    
     
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def download_logs_data(request):
     """
@@ -124,6 +127,7 @@ def download_logs_data(request):
     responses={200: openapi.Response('Logrotate data retrieved successfully')}
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_logrotate_by_service(request, service):
     """
@@ -170,6 +174,7 @@ def get_logrotate_by_service(request, service):
 )    
     
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_logrotate_data(request):
     """
@@ -204,6 +209,7 @@ def get_logrotate_data(request):
 )    
    
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def download_logrotate_data(request):
     """
@@ -260,6 +266,7 @@ def download_logrotate_data(request):
     operation_summary="API DELETE logrotate file ",
 )
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_logrotate_file(request, file_id):
     """
@@ -307,6 +314,7 @@ def delete_logrotate_file(request, file_id):
     responses={200: openapi.Response('Logrotate data retrieved successfully')}
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def download_logs_service(request,file_path):
     """API to get data to download it into file"""

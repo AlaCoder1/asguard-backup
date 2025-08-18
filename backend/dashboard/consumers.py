@@ -46,35 +46,41 @@ class DashboardConsumer(AsyncWebsocketConsumer):
             Dashboardserializer.save()
        
     async def start_data_loop_global_chart(self):
-        while True:
-            cpu_percentage = psutil.cpu_percent(interval=1)
-            memory_percentage = psutil.virtual_memory().percent
-            # Get the current timestamp
-            current_time = time.strftime("%Y-%m-%d %H:%M:%S")
-            # Convert the formatted timestamp to a Unix timestamp
-            unix_timestamp = int(time.mktime(time.strptime(current_time, "%Y-%m-%d %H:%M:%S")))
-            ###uptime & current date
-            ###uptime
-            cmd_uptime="sudo echo \"$(uptime | awk '{{print $1}}') $(uptime | awk -F 'load average: ' '{{print $2}}')\""
-            completed_process_uptime=subprocess.run(cmd_uptime, shell=True, capture_output=True, text=True)
-            uptime=completed_process_uptime.stdout.strip('\n').strip()
-            ###current date
-            cmd_date="sudo date"
-            completed_process_date=subprocess.run(cmd_date, shell=True, capture_output=True, text=True)
-            current_date=completed_process_date.stdout.strip('\n').strip()
-            # Create a JSON object with the data
-            data = {
-                "timestamp": unix_timestamp,
-                "cpu_percentage": cpu_percentage,
-                "memory_percentage": memory_percentage,
-                "uptime":uptime,
-                "current_date":current_date
-            }
-           # Save the data to the database asynchronously
-            await self.save_system_usage(data)
-            # Send the JSON data to the WebSocket client
-            await self.send(json.dumps(data))
-            # await self.delete_data()
-            
-            # Sleep for a while before sending the next data (adjust the interval as needed)
-            await asyncio.sleep(1)
+        try:
+            while True:
+                cpu_percentage = psutil.cpu_percent(interval=1)
+                memory_percentage = psutil.virtual_memory().percent
+                # Get the current timestamp
+                current_time = time.strftime("%Y-%m-%d %H:%M:%S")
+                # Convert the formatted timestamp to a Unix timestamp
+                unix_timestamp = int(time.mktime(time.strptime(current_time, "%Y-%m-%d %H:%M:%S")))
+                ###uptime & current date
+                ###uptime
+                cmd_uptime="sudo echo \"$(uptime | awk '{{print $1}}') $(uptime | awk -F 'load average: ' '{{print $2}}')\""
+                completed_process_uptime=subprocess.run(cmd_uptime, shell=True, capture_output=True, text=True)
+                uptime=completed_process_uptime.stdout.strip('\n').strip()
+                ###current date
+                cmd_date="sudo date"
+                completed_process_date=subprocess.run(cmd_date, shell=True, capture_output=True, text=True)
+                current_date=completed_process_date.stdout.strip('\n').strip()
+                # Create a JSON object with the data
+                data = {
+                    "timestamp": unix_timestamp,
+                    "cpu_percentage": cpu_percentage,
+                    "memory_percentage": memory_percentage,
+                    "uptime":uptime,
+                    "current_date":current_date
+                }
+            # Save the data to the database asynchronously
+                await self.save_system_usage(data)
+                # Send the JSON data to the WebSocket client
+                   # Send to client
+                try:
+                    await self.send(json.dumps(data))
+                except RuntimeError:
+                    break 
+                
+                # Sleep for a while before sending the next data (adjust the interval as needed)
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            pass

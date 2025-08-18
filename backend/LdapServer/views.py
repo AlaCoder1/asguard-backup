@@ -19,7 +19,7 @@ from . import views
 from django.http import JsonResponse
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_LDAP_SERVER = _('Directory Server')
 CONSTANT_LDAP_UNREACHABLE= _('Directory Server unreachable, verify IP address or port')
@@ -64,9 +64,10 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
       
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getALLServers(request):
+def get_all_servers(request):
     """
     This function retrieves a list of servers from the database.
 
@@ -119,6 +120,7 @@ def getALLServers(request):
 
 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def getServerById(request, id):
@@ -172,7 +174,7 @@ def getServerById(request, id):
             "server_url": openapi.Schema(
                 type=openapi.TYPE_STRING,
                 description="The URL or IP address of the server.",
-                example="10.1.12.54"
+                example="192.168.0.1"
             ),
             "port": openapi.Schema(
                 type=openapi.TYPE_INTEGER,
@@ -218,6 +220,7 @@ def getServerById(request, id):
 )
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def connect_to_ad(request):
@@ -378,6 +381,7 @@ def connect_to_ad(request):
     }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @permission_classes([])
 def updateLdapServer(request, id):
     """
@@ -428,6 +432,7 @@ def updateLdapServer(request, id):
     operation_summary="API DELETE ldap server",
 )
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @permission_classes([])
 def deleteldap_server(request,id):
     """

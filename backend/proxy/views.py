@@ -19,6 +19,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import translation
 from utils.utils_email import is_valid_email
 from backend.managementUsers.models import Profile
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_SQUID = _('Squid')
 CONSTANT_PATTERN = _('Pattern')
@@ -116,6 +117,7 @@ def run_command(command):
     },
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def restart(request):
     """
@@ -158,6 +160,7 @@ def restart(request):
     },
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def start(request):
     """
@@ -196,6 +199,7 @@ def start(request):
     },
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def stop(request):
     """
@@ -234,6 +238,7 @@ def stop(request):
     },
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def allRuleSquid(request):
     """
@@ -418,6 +423,7 @@ def enable_by_time():
     },
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def addRuleSquid(request):
     """
@@ -570,10 +576,9 @@ def remove_acl_rule(file_path, name_rule, time_rule):
     except Exception as e:
         raise RuntimeError(f"Error while removing ACL rule: {str(e)}")
     
-# @api_view(['PUT'])
-# @authentication_classes([SessionAuthentication])
-from django.views.decorators.csrf import csrf_exempt
-@csrf_exempt
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
 def updateRuleSquid(request, rule_id):
     """
     Updates an existing Squid rule by its ID.
@@ -674,6 +679,7 @@ def updateRuleSquid(request, rule_id):
     },
 ) 
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def deleteRuleSquid(request,id):
     """
@@ -805,6 +811,7 @@ def get_squid_status():
     },
 ) 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_generale_info(request):
     """
@@ -898,6 +905,7 @@ def get_generale_info(request):
     }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_generale_info(request):
     """
@@ -988,6 +996,7 @@ def update_generale_info(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def disable_auth(request):
     """
@@ -1099,6 +1108,7 @@ def disable_auth(request):
 )
   
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def change_auth_status(request):
     """
@@ -1218,6 +1228,7 @@ def change_auth_status(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def enable_auth(request):
     """
@@ -1298,6 +1309,7 @@ def enable_auth(request):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def status_enable_auth(request):
     """
@@ -1392,6 +1404,7 @@ def status_enable_auth(request):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def allProxyUsers(request):
     """
@@ -1490,6 +1503,7 @@ def allProxyUsers(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def change_pwd(request):
     """
@@ -1603,6 +1617,7 @@ def change_pwd(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_user_squid(request):
     """
@@ -1709,6 +1724,7 @@ def add_user_squid(request):
     }
 )
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_user_squid(request, id):
     """
@@ -1844,6 +1860,7 @@ def get_line_from_file(file_path, target_line):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def allGroups(request):
     """
@@ -1954,6 +1971,7 @@ def allGroups(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def changeStausGroup(request):
     """
@@ -2051,6 +2069,7 @@ def changeStausGroup(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def readFromFile(request):
     """
@@ -2175,6 +2194,7 @@ def readFromFile(request):
 )
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def changeStausElementsInGroup(request):
     """
@@ -2439,6 +2459,7 @@ def addElement(type, allow_by_auth, status, value):
     }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def updateStatusRule(request, id):
     """
@@ -2637,6 +2658,7 @@ def file_selected(status, type):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def allACLFilesWithStatusOfAllElements(request):
     """

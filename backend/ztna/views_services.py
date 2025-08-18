@@ -13,7 +13,7 @@ from backend.ztna.models import HostConfigs, InterceptConfigs, Services
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_SERVICES
 from backend.ztna.serializers import ServicesSerializer, ServicesSerializerUpdate
 from backend.ztna.utils import get_ztna_token_from_system
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_SERVICE = _('Service')
@@ -34,6 +34,7 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA SERVICES FROM OPENZITI API",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_services_from_openziti(request):
@@ -52,6 +53,7 @@ def get_services_from_openziti(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA SERVICES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_services(request):
@@ -84,6 +86,7 @@ def get_all_services(request):
             )
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_services(request):
@@ -131,6 +134,7 @@ def add_services(request):
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'},
                      operation_summary="API TO DELETE A ZTNA SERVICE",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_services(request, id):
@@ -170,6 +174,7 @@ def delete_services(request, id):
             )
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_services(request, id):

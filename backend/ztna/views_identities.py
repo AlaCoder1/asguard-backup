@@ -15,7 +15,7 @@ from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_ENR
 from backend.ztna.serializers import EnrollementsSerializer, IdentitiesSerializer, IdentitiesSerializerUpdate
 from backend.ztna.utils import get_ztna_token_from_system
 from backend.ztna.utils_identities import get_identitie_from_ziti
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_IDENTITIE = _('Identity')
@@ -35,6 +35,7 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA IDENTITIES FROM OPENZITI API",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_identities_from_openziti(request):
@@ -52,6 +53,7 @@ def get_identities_from_openziti(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA IDENTITIES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_identities(request):
@@ -90,6 +92,7 @@ def get_all_identities(request):
             )
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_identities(request):
@@ -132,6 +135,7 @@ def add_identities(request):
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'},
                      operation_summary="API TO DELETE A ZTNA IDENTITIE",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_identities(request, id):
@@ -170,6 +174,7 @@ def delete_identities(request, id):
             )
 )
 @api_view(['PATCH'])
+@require_http_methods(['PATCH'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_identities(request, id):
@@ -219,6 +224,7 @@ def update_identities(request, id):
             )
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_enrollments(request):

@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from rest_framework.authentication import SessionAuthentication
 from django.core import serializers
 import requests
+from django.views.decorators.http import require_http_methods
 # Create your views here.
 link = "https://tech.numeryx.fr:8443/"
 
@@ -76,6 +77,7 @@ def update_keys(key_to_check):
 
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def license_key(request):
     if request.method == 'POST':
@@ -171,6 +173,7 @@ def function_planSubsciptionUsage():
             payment_subscription_usage_instance.save()
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])   
 def payment(request):
@@ -260,6 +263,7 @@ def if_subscribed(indexs_plans_feature):
     
 # @api_view(['POST'])
 # @authentication_classes([SessionAuthentication])
+@require_http_methods(['GET'])
 def list_features_about_last_subscription(request):
     list_features = []
     if request.method == 'GET':
@@ -278,7 +282,7 @@ def list_features_about_last_subscription(request):
             list_features = []
         # return list_features
         return JsonResponse({"list_features": list_features}, status=200)
-    
+@require_http_methods(['GET'])    
 def subscription_info(request):
     subscription_info = {}
     if request.method == 'GET':
@@ -298,7 +302,7 @@ def subscription_info(request):
     
     
     
-    
+@require_http_methods(['GET'])    
 def all_feature(request):
     features = []
     feature_element = {}
@@ -313,7 +317,7 @@ def all_feature(request):
         return JsonResponse({"features": features}, status=200)
         return features
         # return features
-        
+@require_http_methods(['GET'])        
 def all_plan(request):
     plans = []
     if request.method == 'GET':
@@ -323,7 +327,7 @@ def all_plan(request):
         return JsonResponse({"plans": plans}, status=200)
     
 
-
+@require_http_methods(['GET'])
 def getget(request):
     list_of_descriptions = []
     plan_dict = {}

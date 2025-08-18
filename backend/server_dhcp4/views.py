@@ -11,7 +11,7 @@ from backend.server_dhcp4.models import ServerDhcp4
 from backend.server_dhcp4.serializers import DHCP4ServerSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_DHCP_SERVER = _('DHCP server')
 CONSTANT_RANGE = _('The specified range is outside the available range')
@@ -48,6 +48,7 @@ ERROR_MESSAGES_EXISTANT = _("Already exist")
 )
 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_all_server_dhcp4(request):
     """
@@ -111,6 +112,7 @@ def get_all_server_dhcp4(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_server_dhcp4(request):
     """
@@ -215,6 +217,7 @@ def add_server_dhcp4(request):
     }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_config_dhcp4_server(request,id_server):
     """
@@ -301,6 +304,7 @@ def update_config_dhcp4_server(request,id_server):
     }
 )
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_server_dhcp4(request,server_id):
     """

@@ -16,7 +16,7 @@ from backend.routing.utils import check_gateway_address, create_gateway
 from backend.routing.utils_system import routing_in_system
 from utils.errors_utils import CommandExecutionError
 
-
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_ROUTE = _("Route")
 CONSTANT_GATEWAY = _("Gateway")
@@ -40,6 +40,7 @@ ERROR_MESSAGES_INCORRECT_GATEWAY_CREATING = _("If you want to create a new gatew
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL ROUTINGS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_routing(request):
@@ -51,6 +52,7 @@ def get_all_routing(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET A ROUTING",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_routing(request, id):
@@ -62,6 +64,7 @@ def get_routing(request, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL GATEWAYS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_gateway(request):
@@ -73,6 +76,7 @@ def get_all_gateway(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET A GATEWAY",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_gateway(request, id):
@@ -102,6 +106,7 @@ def get_gateway(request, id):
             }
             ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_routing(request):
@@ -169,6 +174,7 @@ def create_routing(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE AN ROUTE",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_routing(request, id):
@@ -218,6 +224,7 @@ def delete_routing(request, id):
             }
             ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_routing(request, id):

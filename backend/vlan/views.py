@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from backend.vlan.serializers import VlanSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_VLAN_CONFIG = _('Configuration VLAN')
 CONSTANT_VLAN_INTERFACE = _('Interface VLAN')
@@ -43,6 +44,7 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 )
 # Create your views here.
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vlan(request):
     """
@@ -120,6 +122,7 @@ def get_vlan(request):
     operation_summary="API to Add VLAN Configuration",
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_vlan(request):
     """
@@ -202,6 +205,7 @@ def add_vlan(request):
     operation_summary="API to Add VLAN Configuration",
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vlan(request,id):
     """
@@ -274,6 +278,7 @@ def update_vlan(request,id):
 )
 
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vlan(request,id):
     """
@@ -335,6 +340,7 @@ def delete_vlan(request,id):
 )
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def assign_vlan_interface(request):
     """
@@ -416,6 +422,7 @@ def assign_vlan_interface(request):
 
 
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vlan_interface(request,id_interface):
     """
@@ -474,6 +481,7 @@ def update_vlan_interface(request,id_interface):
 )
 
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vlan_interface(request,id_interface):
     """
@@ -519,6 +527,7 @@ def delete_vlan_interface(request,id_interface):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vlan_interface(request):
     """

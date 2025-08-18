@@ -23,7 +23,7 @@ from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
 from .utils import json_to_str_client, json_to_str_server
 from .server_openvpn import install_server_openvpn_in_system, delete_server_openvpn_in_system, update_server_openvpn_in_system
 from .client_openvpn import delete_client_openvpn_in_system, export_client_in_system, install_client_openvpn_in_system, update_client_openvpn_in_system
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_OPENVPN_SERVER = _('openvpn server')
@@ -58,6 +58,7 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL OPENVPN SERVERS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_server_openvpn(request):
@@ -72,6 +73,7 @@ def get_all_server_openvpn(request):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET AN OPENVPN SERVER",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_server_openvpn(request, id):
@@ -157,6 +159,7 @@ def get_server_openvpn(request, id):
         }
         ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_server_openvpn(request):
@@ -306,6 +309,7 @@ def create_server_openvpn(request):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DELETE AN OPENVPN SERVER",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_server_openvpn(_, id):
@@ -415,6 +419,7 @@ def delete_server_openvpn(_, id):
         }
         ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_server_openvpn(request, id):
@@ -552,6 +557,7 @@ def update_server_openvpn(request, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO Start AN OPENVPN SERVER",)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_server_openvpn(_, id):
@@ -572,6 +578,7 @@ def start_server_openvpn(_, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO Restart AN OPENVPN SERVER",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def restart_server_openvpn(_, id):
@@ -592,6 +599,7 @@ def restart_server_openvpn(_, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO STOP AN OPENVPN SERVER",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_server_openvpn(_, id):
@@ -615,6 +623,7 @@ def stop_server_openvpn(_, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL OPENVPN CLIENTS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_client_openvpn(request):
@@ -628,6 +637,7 @@ def get_all_client_openvpn(request):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET AN OPENVPN CLIENT",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_client_openvpn(request, id):
@@ -691,6 +701,7 @@ def get_client_openvpn(request, id):
         }
         ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_client_openvpn(request):
@@ -797,6 +808,7 @@ def create_client_openvpn(request):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)], 
                      operation_summary="API TO DELETE AN OPENVPN CLIENT",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_client_openvpn(_, id):
@@ -871,6 +883,7 @@ def delete_client_openvpn(_, id):
         }
         ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_client_openvpn(request, id):
@@ -963,6 +976,7 @@ def update_client_openvpn(request, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO EXPORT A CLIENT OPENVPN FROM A SERVER",)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def export_client_openvpn(_, id):
@@ -992,6 +1006,7 @@ def export_client_openvpn(_, id):
                             'interface_address': Schema(type=TYPE_STRING, example="10.1.12.91", description="Set an interface address for the client to connect to it if the server is configured on interface Any")}
                                                              ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def generate_client_openvpn(request, id):

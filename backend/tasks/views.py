@@ -52,8 +52,8 @@ import traceback
 #     # return subprocess.run(["userdel", "-r", username])
 #     return os.system("userdel " + "-r " +username)
     
-def home(request):
-    return render(request, 'home.html')
+# def home(request):
+#     return render(request, 'home.html')
 
 # def add_user(request):
 #     msg=''

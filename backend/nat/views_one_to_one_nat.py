@@ -16,6 +16,7 @@ from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
 from utils.utils_address import fix_ipv4_address
 from django.views.decorators.http import require_http_methods
+from decouple import config
 
 # Constants
 CONSTANT_ONE_TO_ONE_NAT_RULE = _("OneToOneNat rule")
@@ -38,7 +39,15 @@ ERROR_MESSAGES_CHANGING = _("System error in changing")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
-
+request_body_nat=Schema(
+        type=TYPE_OBJECT, required=['source_address', 'translation_address', 'destination_address'],
+        properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+                    'source_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask"),
+                    'destination_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask or blank for Any"),
+                    'translation_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask"),
+                    'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
+                    }
+                    )
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL OneToOneNat RULES",)
 @api_view(['GET'])
@@ -68,15 +77,7 @@ def get_one_to_one_nat(_, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE A OneToOneNat RULE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=['source_address', 'translation_address', 'destination_address'],
-        properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask"),
-                    'destination_address': Schema(type=TYPE_STRING, example="51.51.51.0/24", description="format of address/mask or blank for Any"),
-                    'translation_address': Schema(type=TYPE_STRING, example="51.32.100.5/32", description="format of address/mask"),
-                    'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
-                    }
-                    ))
+    request_body=request_body_nat)
 @api_view(['POST'])
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -205,15 +206,7 @@ def delete_list_one_to_one_nat(request):
     'PUT', responses={200: 'Created', 400: 'Bad Request'},
     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     operation_summary="API TO CREATE A OneToOneNat RULE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=['source_address', 'translation_address', 'destination_address'],
-        properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask"),
-                    'destination_address': Schema(type=TYPE_STRING, example="51.51.51.0/24", description="format of address/mask or blank for Any"),
-                    'translation_address': Schema(type=TYPE_STRING, example="51.32.100.5/32", description="format of address/mask"),
-                    'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
-                    }
-                    ))
+    request_body=request_body_nat)
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])

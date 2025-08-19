@@ -18,7 +18,7 @@ from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan
 from utils.errors_utils import CommandExecutionError
 from utils.utils_address import fix_ipv4_address
 from django.views.decorators.http import require_http_methods
-
+from decouple import config
 # Constants
 CONSTANT_SDWAN_RULE = _("SDwan rule")
 CONSTANT_AREA = _("Area")
@@ -45,6 +45,14 @@ ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER = _("An area contains only two interfac
 ########################################
 ################# AREA #################
 ########################################
+request_body_sdwan=Schema(
+        type=TYPE_OBJECT, required=['name', 'members'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="area1"),
+            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces'id, contains at least two interfaces", items=Schema(type=TYPE_INTEGER)),
+                    }
+                    )
+
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL AREAS",)
 @api_view(['GET'])
@@ -74,13 +82,7 @@ def get_area(_, id):
 
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN AREA",
-    request_body=Schema(
-        type=TYPE_OBJECT, required=['name', 'members'],
-        properties={
-            'name': Schema(type=TYPE_STRING, example="area1"),
-            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces'id, contains at least two interfaces", items=Schema(type=TYPE_INTEGER)),
-                    }
-                    ))
+    request_body=request_body_sdwan)
 @api_view(['POST'])
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -125,13 +127,7 @@ def delete_area(request, id):
 
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN AREA",
-    request_body=Schema(
-        type=TYPE_OBJECT, required=['name', 'members'],
-        properties={
-            'name': Schema(type=TYPE_STRING, example="area1"),
-            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces'id, contains at least two interfaces", items=Schema(type=TYPE_INTEGER)),
-                    }
-                    ))
+    request_body=request_body_sdwan)
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -196,11 +192,11 @@ def get_sdwan_rule(_, id):
                                     'health_check', 'health_check_target'],
         properties={
             'name': Schema(type=TYPE_STRING, example="test failover"),
-            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2/32", description="format of address/mask"),
+            'source_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask"),
             'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
             'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
             'health_check':Schema(type=TYPE_INTEGER, example=1),
-            'health_check_target':Schema(type=TYPE_STRING, example="8.8.8.8"),
+            'health_check_target':Schema(type=TYPE_STRING, example=config('SERVER_DNS')),
             'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")
             }
             ))
@@ -274,11 +270,11 @@ def delete_sdwan_rule(request, id):
                                     'health_check', 'health_check_target'],
         properties={
             'name': Schema(type=TYPE_STRING, example="test failover"),
-            'source_address': Schema(type=TYPE_STRING, example="2.2.2.2/32", description="format of address/mask"),
+            'source_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask"),
             'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
             'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
             'health_check':Schema(type=TYPE_INTEGER, example=1),
-            'health_check_target':Schema(type=TYPE_STRING, example="8.8.8.8"),
+            'health_check_target':Schema(type=TYPE_STRING, example=config('SERVER_DNS')),
             'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")
             }
             ))

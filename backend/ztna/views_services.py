@@ -15,6 +15,8 @@ from backend.ztna.serializers import ServicesSerializer, ServicesSerializerUpdat
 from backend.ztna.utils import get_ztna_token_from_system
 from django.views.decorators.http import require_http_methods
 
+from backend.ztna.utils_services import is_exist_config
+
 # Constants
 CONSTANT_SERVICE = _('Service')
 CONSTANT_INTERCEPT_CONFIGURATION = _('Intercept Configuration')
@@ -29,6 +31,7 @@ ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
+ERROR_MESSAGES_NAME_EXISTANT = _("Service with this name exist")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
@@ -94,6 +97,8 @@ def add_services(request):
     try:
         data = request.data
         datacopy = request.data.copy()
+        if is_exist_config(data["name"]):
+            return JsonResponse({"error": ERROR_MESSAGES_NAME_EXISTANT}, status=400)
         host = HostConfigs.objects.get(ref_host=data['configs'][1])
         intercept = InterceptConfigs.objects.get(ref_intercept=data['configs'][0])
         session_id = get_ztna_token_from_system()
@@ -183,6 +188,8 @@ def update_services(request, id):
         services = Services.objects.get(id=id)
         data = request.data
         datacopy = request.data.copy()
+        if is_exist_config(data["name"]):
+            return JsonResponse({"error": ERROR_MESSAGES_NAME_EXISTANT}, status=400)
         host = HostConfigs.objects.get(ref_host=data['configs'][1])
         intercept = InterceptConfigs.objects.get(ref_intercept=data['configs'][0])
         session_id = get_ztna_token_from_system()

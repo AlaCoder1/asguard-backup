@@ -94,9 +94,11 @@ def create_snat(request):
     """Creating a new SNAT rule and adding it to the database"""
     try:
         data = request.data
+        
         # Check data validity
         if not check_payload(data):
             return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
+        
         # Apply correction for ipv4 addresses
         data["source_address"], data["destination_address"] = fix_ipv4_address(
             [data["source_address"], data["destination_address"]])
@@ -345,8 +347,12 @@ def start_snat(_, id):
         if len(list_next_snat) > 0:
             next_snat = list_next_snat.order_by('db_position')[0]
             position_insert = next_snat.rule_number
+        
+        interface_ifname = None
+        if snat.interface:
+            interface_ifname = snat.interface.ifname
         rule_number, _ = create_snat_rule_in_system(
-            snat.interface.ifname, source, destination, snat.protocol, masking, position_insert)
+            interface_ifname, source, destination, snat.protocol, masking, position_insert)
         snat.rule_number = int(rule_number)
 
         snat.rule_status = True

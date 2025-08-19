@@ -12,7 +12,7 @@ def input_create_dnat(
               "port": None,
               }
     if source_address != "":
-        source = {"address": source_address}
+        source["address"] = source_address
     # Source port
     if source_protocol:
         # A unique port

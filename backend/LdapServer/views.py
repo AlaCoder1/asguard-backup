@@ -20,6 +20,7 @@ from django.http import JsonResponse
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_LDAP_SERVER = _('Directory Server')
 CONSTANT_LDAP_UNREACHABLE= _('Directory Server unreachable, verify IP address or port')
@@ -39,7 +40,49 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 ################################### API GET ALL LDAP SERVERS ##################################################
-
+properties_ldap={
+            "server_type": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The type of the server.",
+                enum=["openldap", "ad"],
+                default="openldap"
+            ),
+            "server_name": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The name of the server.",
+                example="ADServer"
+            ),
+            "server_url": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The URL or IP address of the server.",
+                example=config('IP_ADDRESS')
+            ),
+            "port": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description="The port used for server connection.",
+                example=389
+            ),
+            "search_base": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The base DN for directory searches.",
+                example="dc=testing,dc=local"
+            ),
+            "bind_user_dn": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The distinguished name of the user for binding.",
+                example="administrator@testing.local"
+            ),
+            "bind_user_password": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The password of the bind user.",
+                example="root123e.g"
+            ),
+            "ssl_tls_activation": openapi.Schema(
+                type=openapi.TYPE_BOOLEAN,
+                description="Indicates if SSL/TLS is activated.",
+                example=False
+            ),
+        }
 
 @swagger_auto_schema(
     method='GET',
@@ -159,49 +202,7 @@ def getServerById(request, id):
     operation_summary="API to establish server connection.",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        properties={
-            "server_type": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The type of the server.",
-                enum=["openldap", "ad"],
-                default="openldap"
-            ),
-            "server_name": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The name of the server.",
-                example="ADServer"
-            ),
-            "server_url": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The URL or IP address of the server.",
-                example="192.168.0.1"
-            ),
-            "port": openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                description="The port used for server connection.",
-                example=389
-            ),
-            "search_base": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The base DN for directory searches.",
-                example="dc=testing,dc=local"
-            ),
-            "bind_user_dn": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The distinguished name of the user for binding.",
-                example="administrator@testing.local"
-            ),
-            "bind_user_password": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The password of the bind user.",
-                example="root123e.g"
-            ),
-            "ssl_tls_activation": openapi.Schema(
-                type=openapi.TYPE_BOOLEAN,
-                description="Indicates if SSL/TLS is activated.",
-                example=False
-            ),
-        },
+        properties=properties_ldap,
         required=["server_type", "server_name", "server_url", "port", "search_base", "bind_user_dn", "bind_user_password"],
     ),
     responses={
@@ -321,49 +322,7 @@ def connect_to_ad(request):
     ],
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        properties={
-            "server_type": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The type of the server.",
-                enum=["openldap", "ad"],
-                default="openldap"
-            ),
-            "server_name": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The name of the server.",
-                example="ADServer"
-            ),
-            "server_url": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The URL or IP address of the server.",
-                example="10.1.12.54"
-            ),
-            "port": openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                description="The port used for server connection.",
-                example=389
-            ),
-            "search_base": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The base DN for directory searches.",
-                example="dc=testing,dc=local"
-            ),
-            "bind_user_dn": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The distinguished name of the user for binding.",
-                example="administrator@testing.local"
-            ),
-            "bind_user_password": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="The password of the bind user.",
-                example="root123e.g"
-            ),
-            "ssl_tls_activation": openapi.Schema(
-                type=openapi.TYPE_BOOLEAN,
-                description="Indicates if SSL/TLS is activated.",
-                example=False
-            ),
-        },
+        properties=properties_ldap,
         required=["server_type", "server_name", "server_url", "port", "search_base", "bind_user_dn", "bind_user_password"],
     ),
     responses={

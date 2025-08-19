@@ -20,6 +20,7 @@ from django.utils import translation
 from utils.utils_email import is_valid_email
 from backend.managementUsers.models import Profile
 from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_SQUID = _('Squid')
 CONSTANT_PATTERN = _('Pattern')
@@ -375,7 +376,7 @@ def enable_by_time():
             'value': Schema(
                 type=TYPE_STRING,
                 description="The IP, domain, or subnet to be blocked or allowed.",
-                example="192.168.1.100"
+                example=config('IP_ADDRESS')
             ),
             'status': Schema(
                 type=TYPE_BOOLEAN,
@@ -2393,8 +2394,6 @@ def addElement(type, allow_by_auth, status, value):
     file_path = file_selected(allow_by_auth, type)
     if  status == False:
         value = '#'+value
-    else:
-        value = value
     try:
         with open(file_path, 'a') as file:
             file.write(value + '\n')

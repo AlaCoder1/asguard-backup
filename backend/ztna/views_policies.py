@@ -129,6 +129,7 @@ def add_edge_routers_policies(request):
                         relay_policy_serializer.save()
                         return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
                     return JsonResponse({"error": list(relay_policy_serializer.errors.values())[0][0]}, status=400)
+            return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)

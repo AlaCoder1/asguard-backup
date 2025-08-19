@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING
+from drf_yasg.openapi import IN_PATH, Parameter, Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 
 from backend.ipsec.utils import check_payload_change_status, check_payload_create_tunnel, json_to_str_server_ipsec, up_ipsec_conn
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec, get_status_ipsec
@@ -42,8 +42,7 @@ ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UP_CONFIG = _("System error in up ipsec")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
-request_body_ipsec=Schema(type=TYPE_OBJECT, required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
-        properties={
+request_body_ipsec={
             'conn_name': Schema(type=TYPE_STRING, example="tun_ipsec"),
             'connection_method': Schema(type=TYPE_STRING, enum=["default", "Respond Only", "Start on traffic", "Start immediate"]),
             'key_exchange': Schema(type=TYPE_OBJECT, required=['key_exchange_version'],
@@ -96,7 +95,7 @@ request_body_ipsec=Schema(type=TYPE_OBJECT, required=['conn_name', 'connection_m
                                                   'encryption_algorithm_ph2': Schema(type=TYPE_ARRAY, example=["256", "128"], items=Schema(type=TYPE_STRING), description="User can choose more than one"),
                                                   'hash_algorithm_ph2': Schema(type=TYPE_ARRAY, example=["sha256", "sha512"], items=Schema(type=TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256"),
                                                   'pfs_key_group': Schema(type=TYPE_STRING, example="15:3072", description="If not off should be group:key")}),
-            'lifetime_ph2': Schema(type=TYPE_STRING, example="3600", description="set lifetime in seconds", pattern=r"(\d+)"),})
+            'lifetime_ph2': Schema(type=TYPE_STRING, example="3600", description="set lifetime in seconds", pattern=r"(\d+)"),}
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET IPSEC STATUS",)
@@ -126,6 +125,7 @@ def get_all_server_ipsec(request):
     
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET AN IPSEC",)
 @api_view(['GET'])
 @require_http_methods(['GET'])
@@ -143,7 +143,8 @@ def get_server_ipsec(request, id):
 @swagger_auto_schema(
         'POST', responses={201: 'Created', 400: 'Bad Request'}, 
         operation_summary="API TO CREATE AN IPSEC",
-        request_body=request_body_ipsec)
+        request_body=Schema(type=TYPE_OBJECT, required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
+        properties=request_body_ipsec))
 @api_view(['POST'])
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -249,7 +250,6 @@ def create_server_ipsec(request):
             server_data["negotiation_mode"] = negotiation_mode
 
         ca = ''
-        print("authen= ", authentication_method)
         if authentication_method == CONSTANT_METHOD_PSK:
             pre_shared_key = authentication.get("pre_shared_key", "")
             server_data["pre_shared_key"] = pre_shared_key
@@ -280,7 +280,7 @@ def create_server_ipsec(request):
         
         if mode == "Tunnel IPv4":
             # Local Network
-            local_network = data.get("local_network", "")
+            local_network = mode_ph2.get("local_network", "")
             type_local_network = local_network.get("type_local_network", "")
             if type_local_network == "Address":
                 address_local_network = local_network.get("address_local_network", "")
@@ -294,7 +294,7 @@ def create_server_ipsec(request):
             data["address_local_network"] = address_local_network
 
             # Remote Network
-            remote_network = data.get("remote_network", "")
+            remote_network = mode_ph2.get("remote_network", "")
             type_remote_network = remote_network.get("type_remote_network", "")
             address_remote_network = remote_network.get("address_remote_network", "")
             if type_remote_network == "Network":
@@ -346,12 +346,13 @@ def create_server_ipsec(request):
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DELETE AN IPSEC",)
 @api_view(['DELETE'])
 @require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_server_ipsec(request, id):
+def delete_server_ipsec(_, id):
     """Deleting a server from system and then from database"""
     try:
         server = ServerIPsec.objects.get(id=id)
@@ -370,8 +371,10 @@ def delete_server_ipsec(request, id):
 
 @swagger_auto_schema(
         'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-        operation_summary="API TO CREATE AN IPSEC",
-        request_body=request_body_ipsec)
+        manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
+        operation_summary="API TO UPDATE AN IPSEC",
+        request_body=Schema(type=TYPE_OBJECT, required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
+        properties=request_body_ipsec))
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -473,7 +476,7 @@ def update_server_ipsec(request, id):
 
         if server.mode == "Tunnel IPv4":
             # Local Network
-            local_network = data.get("local_network", "")
+            local_network = mode_ph2.get("local_network", "")
             server.type_local_network = local_network.get("type_local_network", "")
             if server.type_local_network == "Address":
                 server.address_local_network = local_network.get("address_local_network", "")
@@ -485,7 +488,7 @@ def update_server_ipsec(request, id):
             data["address_local_network"] = server.address_local_network
 
             # Remote Network
-            remote_network = data.get("remote_network", "")
+            remote_network = mode_ph2.get("remote_network", "")
             server.type_remote_network = remote_network.get("type_remote_network", "")
             server.address_remote_network = remote_network.get("address_remote_network", "")
             if server.type_remote_network == "Network":
@@ -535,12 +538,13 @@ def update_server_ipsec(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO UP A CONN IPSEC",)
 @api_view(['POST'])
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def up_server_ipsec(request, id):
+def up_server_ipsec(_, id):
     """Up a conn IPsec from system"""
     server = ServerIPsec.objects.get(id=id)
     up_ipsec_status = up_ipsec_conn(server.conn_name)
@@ -550,7 +554,11 @@ def up_server_ipsec(request, id):
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO ENABLE OR DISABLE AN IPSEC CONFIGURATION",)
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
+                     operation_summary="API TO ENABLE OR DISABLE AN IPSEC CONFIGURATION",
+                     request_body=Schema(
+                         type=TYPE_OBJECT, required=['enable'], properties={
+                             'enable': Schema(type=TYPE_BOOLEAN)}))
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -564,25 +572,29 @@ def status_server_ipsec(request, id):
 
         # Enable IPsec tunnel
         if enable:
-            rule_content, handle_number = enable_conn(server)
-            server.postrouting_rule_content = rule_content
-            server.postrouting_rule_handle = handle_number
-            server.server_status = enable
-            server.save()
+            # Check if the IPsec tunnel is enactive
+            if not server.server_status:
+                rule_content, handle_number = enable_conn(server)
+                server.postrouting_rule_content = rule_content
+                server.postrouting_rule_handle = handle_number
+                server.server_status = enable
+                server.save()
             return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_ENABLED}"})
         
         # Disable IPsec tunnel
-        disable_conn(server)
-        server.postrouting_rule_content = None
-        server.postrouting_rule_handle = None
-        server.server_status = enable
-        server.save()
+        # Check if the IPsec tunnel is active
+        if server.server_status:
+            disable_conn(server)
+            server.postrouting_rule_content = None
+            server.postrouting_rule_handle = None
+            server.server_status = enable
+            server.save()
         return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_DISABLED}"})
         
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
 
 
 @swagger_auto_schema(

@@ -249,6 +249,8 @@
     "save": "Sauvegarder",
     "add_rule": "Ajouter une nouvelle règle",
     "update_rule": "Mettre à jour la règle",
+    "clone": "Cloner une règle",
+    "cloneBTN": "Cloner",
     "remplirChamps": "Remplir les champs avec mot 'ALL'"
   },
   "nat": {

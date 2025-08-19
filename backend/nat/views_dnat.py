@@ -306,8 +306,12 @@ def start_dnat(_, id):
         if len(list_next_dnat) > 0:
             next_dnat = list_next_dnat.order_by('db_position')[0]
             position_insert = next_dnat.rule_number
+        
+        interface_ifname = None
+        if dnat.interface:
+            interface_ifname = dnat.interface.ifname
         rule_number, _ = create_dnat_rule_in_system(
-            dnat.interface.ifname, source, destination, dnat.protocol, position_insert)
+            interface_ifname, source, destination, dnat.protocol, position_insert)
         dnat.rule_number = int(rule_number)
 
         dnat.rule_status = True

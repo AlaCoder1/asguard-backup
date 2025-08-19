@@ -19,6 +19,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_INTERFACE_NETWORK = _('Interface')
 CONSTANT_INTERFACE_CONNECTION = _('Connection')
@@ -80,7 +81,7 @@ WARNING_CONNECTION=_("You need to delete the interface and set it up again")
                     'ip_address4': openapi.Schema(
                         type=openapi.FORMAT_IPV4,
                         description='IPv4 address (STATIC only)',
-                        example='10.1.12.70'
+                        example=config('IP_ADDRESS')
                     ),
                     'netmask4': openapi.Schema(
                         type=openapi.TYPE_INTEGER,
@@ -93,7 +94,7 @@ WARNING_CONNECTION=_("You need to delete the interface and set it up again")
                             'value': openapi.Schema(
                                 type=openapi.FORMAT_IPV4,
                                 description='IPv4 gateway address (STATIC only)',
-                                example='10.1.12.1'
+                                example=config('IP_ADDRESS')
                             )
                         }
                     ),
@@ -107,7 +108,7 @@ WARNING_CONNECTION=_("You need to delete the interface and set it up again")
                     'alias_add': openapi.Schema(
                         type=openapi.FORMAT_IPV4,
                         description='Alias IPv4 address (DHCP only)',
-                        example='192.5.5.215'
+                        example=config('IP_ADDRESS')
                     ),
                     'alias_mask': openapi.Schema(
                         type=openapi.TYPE_INTEGER,
@@ -117,7 +118,7 @@ WARNING_CONNECTION=_("You need to delete the interface and set it up again")
                     'reject': openapi.Schema(
                         type=openapi.FORMAT_IPV4,
                         description='Rejected IPv4 address (DHCP only)',
-                        example='192.33.137.209'
+                        example=config('IP_ADDRESS')
                     ),
                     'hostname': openapi.Schema(
                         type=openapi.TYPE_STRING,

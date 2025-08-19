@@ -17,6 +17,7 @@ from utils.errors_utils import CommandExecutionError
 from utils.utils_address import fix_ipv4_address
 
 from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_SNAT_RULE = _("SNAT rule")
 CONSTANT_SNAT_RULE_POSITION = _("SNAT rule position")
@@ -38,7 +39,25 @@ ERROR_MESSAGES_CHANGING = _("System error in changing")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
-
+request_body_snat=Schema(
+        type=TYPE_OBJECT, required=[
+            'source_address', 'source_port', 'destination_address', 'destination_port', 
+            'snat_type'],
+        properties={
+            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+            'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
+            'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"], description="required when choosing Static"),
+            'source_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask or blank for Any"),
+            'source_port': Schema(type=TYPE_STRING, example="80"),
+            'destination_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask or blank for Any"),
+            'destination_port': Schema(type=TYPE_STRING, example="443"),
+            'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
+            'translation_address_from': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="required when choosing Static, format of address like 51.32.100.5"),
+            'translation_address_to': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Optional when choosing Static, format of address like 51.32.100.10"),
+            'translation_port': Schema(type=TYPE_STRING, example="100", description="Optional when choosing Static"),
+            'description': Schema(type=TYPE_STRING, example="Description of SNAT", description="description of SNAT rule"),
+            }
+            )
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL SNAT RULES",)
 @api_view(['GET'])
@@ -67,25 +86,7 @@ def get_snat(_, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE AN SNAT RULE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=[
-            'source_address', 'source_port', 'destination_address', 'destination_port', 
-            'snat_type'],
-        properties={
-            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-            'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
-            'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"], description="required when choosing Static"),
-            'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
-            'source_port': Schema(type=TYPE_STRING, example="80"),
-            'destination_address': Schema(type=TYPE_STRING, example="192.168.30.0/24", description="format of address/mask or blank for Any"),
-            'destination_port': Schema(type=TYPE_STRING, example="443"),
-            'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
-            'translation_address_from': Schema(type=TYPE_STRING, example="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
-            'translation_address_to': Schema(type=TYPE_STRING, example="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
-            'translation_port': Schema(type=TYPE_STRING, example="100", description="Optional when choosing Static"),
-            'description': Schema(type=TYPE_STRING, example="Description of SNAT", description="description of SNAT rule"),
-            }
-            ))
+    request_body=request_body_snat)
 @api_view(['POST'])
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -232,25 +233,7 @@ def delete_list_snat(request):
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE AN SNAT RULE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=[
-            'source_address', 'source_port', 'destination_address', 'destination_port', 
-            'snat_type'],
-        properties={
-            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-            'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
-            'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"], description="required when choosing Static"),
-            'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
-            'source_port': Schema(type=TYPE_STRING, example="80"),
-            'destination_address': Schema(type=TYPE_STRING, example="192.168.30.0/24", description="format of address/mask or blank for Any"),
-            'destination_port': Schema(type=TYPE_STRING, example="443"),
-            'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
-            'translation_address_from': Schema(type=TYPE_STRING, example="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
-            'translation_address_to': Schema(type=TYPE_STRING, example="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
-            'translation_port': Schema(type=TYPE_STRING, example="100", description="Optional when choosing Static"),
-            'description': Schema(type=TYPE_STRING, example="Description of SNAT", description="description of SNAT rule"),
-            }
-            ))
+    request_body=request_body_snat)
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])

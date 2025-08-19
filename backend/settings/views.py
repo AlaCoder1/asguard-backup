@@ -72,6 +72,7 @@ from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYP
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.http import require_http_methods
+from decouple import config
 # Create your views here.
 
 
@@ -103,8 +104,8 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
                                                              'domain': Schema(type=TYPE_STRING,example="asurad.com"),
                                                              'timezone': Schema(type=TYPE_STRING,example="Africa/Addis_Ababa"),
                                                              'dns_servers': Schema(type=TYPE_OBJECT,
-                                                                                properties={'dns_server': Schema(type=TYPE_STRING,example="1.1.1.2"),
-                                                                                            'gateway': Schema(type=TYPE_STRING,example="10.1.12.1"),
+                                                                                properties={'dns_server': Schema(type=TYPE_STRING,example=config('SERVER_DNS')),
+                                                                                            'gateway': Schema(type=TYPE_STRING,example=config('IP_ADDRESS')),
                                                                                             'interface_id': Schema(type=TYPE_INTEGER,example=1),
                                                                                             'metric': Schema(type=TYPE_INTEGER,example=20014)}),
                                                              },example={
@@ -112,13 +113,13 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
             "domain": "asguad.com",
             "timezone": "Africa/Addis_Ababa",
             "dns_servers": [{
-                "dns_server": "1.1.1.2",
-                "gateway": "10.1.12.1",
+                "dns_server": config('SERVER_DNS'),
+                "gateway": config('IP_ADDRESS'),
                 "interface_id": 3,
                 "metric": 20014
             }, {
-                "dns_server": "1.1.1.5",
-                "gateway": "192.168.189.172",
+                "dns_server": config('SERVER_DNS'),
+                "gateway": config('IP_ADDRESS'),
                 "interface_id": 5,
                 "metric": 20014
             }]

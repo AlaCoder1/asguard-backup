@@ -315,7 +315,6 @@ def all_feature(request):
             features.append(feature_element)
             feature_element = {}
         return JsonResponse({"features": features}, status=200)
-        return features
         # return features
 @require_http_methods(['GET'])        
 def all_plan(request):

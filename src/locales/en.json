@@ -14,10 +14,10 @@
     "LoginTime": "Login Time",
     "resetPassword": "Reset Password"
   },
-  "keyPair":"Key Pair",
-  "createPrivateKey":"Create Private Key",
-  "createPublicKey":"Create Public Key",
-  "importPublicKey":"Import Public Key",
+  "keyPair": "Key Pair",
+  "createPrivateKey": "Create Private Key",
+  "createPublicKey": "Create Public Key",
+  "importPublicKey": "Import Public Key",
   "doubleMask": {
     "services": "Services : IP filter double mask",
     "ask": "Do you really want to",
@@ -358,7 +358,7 @@
     "gatewayName": "Enter Gateway Name",
     "GatewayDefault": "Default Gateway",
     "farGateway": "Far Gateway",
-    "multiWANGateway":"Multi-WAN Gateway",
+    "multiWANGateway": "Multi-WAN Gateway",
     "descriptionRequired": "Description is required",
     "IPV4Required": "IPV4 Setup Type is required",
     "IPV4AddressRequired": "IPV4 address is required",
@@ -384,7 +384,7 @@
     "supersedeDomaineName": "Supersede domaine name",
     "prependDomainServer": "Prepend domain server",
     "numberValidity": "Invalid format. Please enter whole numbers only.",
-    "iPv4gateway":"IPv4 gateway"
+    "iPv4gateway": "IPv4 gateway"
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Other Types of Interfaces",
@@ -1155,7 +1155,25 @@
     "Eventlogs": "Event logs",
     "Reset": "Reset",
     "Logfilesreset": "Log files have been reset",
-    "Excludeinterfaces": "Exclude interfaces"
+    "Excludeinterfaces": "Exclude interfaces",
+    "General": "General",
+    "Administration": "Administration",
+    "SystemAdministration": "System Administration",
+    "DetectedNetworkInterfacesSSH": "Detected network interfaces (SSH)",
+    "DetectedNetworkInterfacesWeb": "Detected network interfaces (Web Interface)",
+    "SecureShellServer": "Secure Shell Server",
+    "EnableSecureShell": "Enable Secure Shell",
+    "RootLogin": "Root Login",
+    "PermitRootUserLogin": "Permit root user login",
+    "AuthenticationMethod": "Authentication Method",
+    "PermitPasswordLogin": "Permit password login",
+    "SessionTimeout": "Session Timeout",
+    "Protocol": "Protocol",
+    "SSLCertificate": "SSL Certificate",
+    "TCPPort": "TCP Port",
+    "LoginMessages": "Login Messages",
+    "DisableWebGUISuccessfulLoginsLogging": "Disable logging of web GUI successful logins",
+    "PasswordLengthSetting": "Password length setting"
   },
   "profil": {
     "Personalinformations": "Personal informations",

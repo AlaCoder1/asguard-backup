@@ -14,10 +14,10 @@
     "LoginTime": "Temps de connexion",
     "resetPassword": "Réinitialisation du mot de passe"
   },
-  "keyPair":"Paire de clés",
-  "createPrivateKey":"Créer une clé privée",
-  "createPublicKey":"Créer une clé publique",
-  "importPublicKey":"Importer une clé publique",
+  "keyPair": "Paire de clés",
+  "createPrivateKey": "Créer une clé privée",
+  "createPublicKey": "Créer une clé publique",
+  "importPublicKey": "Importer une clé publique",
   "doubleMask": {
     "services": "Services : Double masque du filtre IP",
     "ask": "Voulez-vous vraiment",
@@ -356,7 +356,7 @@
     "gatewayName": "Saisir le nom de la passerelle",
     "GatewayDefault": "Passerelle par défaut",
     "farGateway": "Passerelle distante",
-    "multiWANGateway":"Passerelle Multi-WAN",
+    "multiWANGateway": "Passerelle Multi-WAN",
     "descriptionRequired": "description est obligatoire",
     "IPV4Required": "type de configuration IPV4 est requis",
     "IPV4AddressRequired": "adresse IPV4 est requise",
@@ -382,7 +382,7 @@
     "supersedeDomaineName": "Remplacer nom du domaine",
     "prependDomainServer": "Serveur de domaine en amont",
     "numberValidity": "Format non valide. Veuillez saisir uniquement des nombres entiers.",
-    "iPv4gateway":"Passerelle IPv4"
+    "iPv4gateway": "Passerelle IPv4"
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Autres types d'interfaces",
@@ -1152,7 +1152,25 @@
     "Eventlogs": "Journaux d'événements",
     "Reset": "Réinitialiser",
     "Logfilesreset": "Les fichiers journaux ont été réinitialisés",
-    "Excludeinterfaces": "Exclure les interfaces"
+    "Excludeinterfaces": "Exclure les interfaces",
+    "General": "Général",
+    "Administration": "Administration",
+    "SystemAdministration": "Administration Système",
+    "DetectedNetworkInterfacesSSH": "Interfaces réseau détectées (SSH)",
+    "DetectedNetworkInterfacesWeb": "Interfaces réseau détectées (Interface Web)",
+    "SecureShellServer": "Serveur Secure Shell",
+    "EnableSecureShell": "Activer Secure Shell",
+    "RootLogin": "Connexion Root",
+    "PermitRootUserLogin": "Autoriser la connexion de l’utilisateur root",
+    "AuthenticationMethod": "Méthode d’authentification",
+    "PermitPasswordLogin": "Autoriser la connexion par mot de passe",
+    "SessionTimeout": "Expiration de session",
+    "Protocol": "Protocole",
+    "SSLCertificate": "Certificat SSL",
+    "TCPPort": "Port TCP",
+    "LoginMessages": "Messages de connexion",
+    "DisableWebGUISuccessfulLoginsLogging": "Désactiver la journalisation des connexions réussies à l’interface Web",
+    "PasswordLengthSetting": "Paramètre de longueur du mot de passe"
   },
   "profil": {
     "Personalinformations": "Informations personnelles",

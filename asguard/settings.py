@@ -100,7 +100,7 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'backend.managementUsers.language_middleware.SetLanguageMiddleware',
-    'asguard.middleware.UvicornUserLoggingMiddleware',
+    # 'asguard.middleware.UvicornUserLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'asguard.urls'

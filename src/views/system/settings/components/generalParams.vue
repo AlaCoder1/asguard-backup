@@ -32,19 +32,16 @@
 
           <v-text-field
             :label="$t('settings.Hostname')"
-            density="compact"
             v-model="state.hostName"
           ></v-text-field>
 
           <v-text-field
             :label="$t('settings.Domain')"
-            density="compact"
             v-model="state.domain"
           ></v-text-field>
        
           <v-select
             :label="$t('settings.Timezone')"
-            density="compact"
             v-model="state.timeZone"
             item-title="name"
             item-value="id"
@@ -446,7 +443,7 @@ export default {
           break;
         case "delete":
           const index = rowDataGateway.value.findIndex(
-            (item) => item.id === rowData.id
+            (item) => item.uuid === rowData.uuid
           );
 
           if (index !== -1) {

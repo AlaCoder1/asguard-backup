@@ -16,6 +16,7 @@ from backend.waf.utils_config import update_waf_configuration_in_system
 from backend.waf.utils_rules import create_rule_waf_in_system, create_rule_waf_str, delete_rule_waf_in_system, update_rule_waf_in_system
 from utils.errors_utils import CommandExecutionError
 from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_WAF_CONFIG = _("WAF Config")
 CONSTANT_WAF_RULE = _("WAF Rule")
@@ -335,7 +336,7 @@ def get_waf_application(request, id):
                         type=TYPE_STRING, example="cert_server", 
                         description="Required when choosing HTTPS protocol"),
                     'application_value': Schema(
-                        type=TYPE_STRING, example="192.168.1.1"),
+                        type=TYPE_STRING, example=config('IP_ADDRESS')),
                     'application_port': Schema(
                         type=TYPE_INTEGER, example=1443, 
                         description="When choosing HTTPS protocol the port must be compatible with ssl in format of *443"),
@@ -471,7 +472,7 @@ def delete_waf_application(request, id):
                         type=TYPE_STRING, example="cert_server", 
                         description="Required when choosing HTTPS protocol"),
                     'application_value': Schema(
-                        type=TYPE_STRING, example="192.168.1.1"),
+                        type=TYPE_STRING, example=config('IP_ADDRESS')),
                     'application_port': Schema(
                         type=TYPE_INTEGER, example=1443, 
                         description="When choosing HTTPS protocol the port must be compatible with ssl in format of *443"),

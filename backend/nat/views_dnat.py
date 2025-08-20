@@ -21,7 +21,7 @@ from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
 from utils.utils_address import fix_ipv4_address
 from django.views.decorators.http import require_http_methods
-
+from decouple import config
 # Constants
 CONSTANT_DNAT_RULE = _("DNAT rule")
 CONSTANT_DNAT_RULE_POSITION = _("DNAT rule position")
@@ -43,7 +43,29 @@ ERROR_MESSAGES_CHANGING = _("System error in changing")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
-
+request_body_dnat=Schema(type=TYPE_OBJECT, required=[
+        'interface', 'tcp_ip', 'protocol', 'source_address', 'source_port_from', 'source_port_to', 
+        'external_address', 'internal_address', 'port_forwarding'],
+    properties={
+        'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface, can take value null"),
+        'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6", ""]),
+        'protocol': Schema(type=TYPE_STRING, enum=["", "udp", "tcp"]),
+        'source_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="Format of address/mask or blank for Any"),
+        'source_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""]),
+        'source_port': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
+        'source_port_from': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
+        'source_port_to': Schema(type=TYPE_STRING, example="443", description="Can be blank"),
+        'external_address': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Format of address or blank for Any"),
+        'internal_address': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Format of address or blank for Any"),
+        'port_forwarding': Schema(type=TYPE_BOOLEAN, default=False),
+        'destination_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""], description="used when selecting Port Forwarding"),
+        'destination_port_forwarding': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
+        'destination_port_from': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
+        'destination_port_to': Schema(type=TYPE_STRING, example="443", description="used when selecting Port Forwarding"),
+        'destination_port': Schema(type=TYPE_STRING, example="5000", description="used when selecting Port Forwarding"),
+        'description': Schema(type=TYPE_STRING, example="Description DNAT", description="description of DNAT rule"),
+        }
+        )
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL DNAT RULES",)
 @api_view(['GET'])
@@ -72,29 +94,7 @@ def get_dnat(request, id):
 @swagger_auto_schema(
     'POST', responses={201: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO CREATE A DNAT RULE", 
-    request_body=Schema(type=TYPE_OBJECT, required=[
-        'interface', 'tcp_ip', 'protocol', 'source_address', 'source_port_from', 'source_port_to', 
-        'external_address', 'internal_address', 'port_forwarding'],
-    properties={
-        'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface, can take value null"),
-        'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6", ""]),
-        'protocol': Schema(type=TYPE_STRING, enum=["", "udp", "tcp"]),
-        'source_address': Schema(type=TYPE_STRING, example="50.50.50.0/24", description="Format of address/mask or blank for Any"),
-        'source_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""]),
-        'source_port': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
-        'source_port_from': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
-        'source_port_to': Schema(type=TYPE_STRING, example="443", description="Can be blank"),
-        'external_address': Schema(type=TYPE_STRING, example="41.41.41.0", description="Format of address or blank for Any"),
-        'internal_address': Schema(type=TYPE_STRING, example="10.1.12.75", description="Format of address or blank for Any"),
-        'port_forwarding': Schema(type=TYPE_BOOLEAN, default=False),
-        'destination_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""], description="used when selecting Port Forwarding"),
-        'destination_port_forwarding': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
-        'destination_port_from': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
-        'destination_port_to': Schema(type=TYPE_STRING, example="443", description="used when selecting Port Forwarding"),
-        'destination_port': Schema(type=TYPE_STRING, example="5000", description="used when selecting Port Forwarding"),
-        'description': Schema(type=TYPE_STRING, example="Description DNAT", description="description of DNAT rule"),
-        }
-        ))
+    request_body=request_body_dnat)
 @api_view(['POST'])
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -225,29 +225,7 @@ def delete_list_dnat(request):
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO CREATE A DNAT RULE", 
-    request_body=Schema(type=TYPE_OBJECT, required=[
-        'interface', 'tcp_ip', 'protocol', 'source_address', 'source_port_from', 'source_port_to', 
-        'external_address', 'internal_address', 'port_forwarding'],
-    properties={
-        'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface, can take value null"),
-        'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6", ""]),
-        'protocol': Schema(type=TYPE_STRING, enum=["", "udp", "tcp"]),
-        'source_address': Schema(type=TYPE_STRING, example="50.50.50.0/24", description="Format of address/mask or blank for Any"),
-        'source_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""]),
-        'source_port': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
-        'source_port_from': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
-        'source_port_to': Schema(type=TYPE_STRING, example="443", description="Can be blank"),
-        'external_address': Schema(type=TYPE_STRING, example="41.41.41.0", description="Format of address or blank for Any"),
-        'internal_address': Schema(type=TYPE_STRING, example="10.1.12.75", description="Format of address or blank for Any"),
-        'port_forwarding': Schema(type=TYPE_BOOLEAN, default=False),
-        'destination_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""], description="used when selecting Port Forwarding"),
-        'destination_port_forwarding': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
-        'destination_port_from': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
-        'destination_port_to': Schema(type=TYPE_STRING, example="443", description="used when selecting Port Forwarding"),
-        'destination_port': Schema(type=TYPE_STRING, example="5000", description="used when selecting Port Forwarding"),
-        'description': Schema(type=TYPE_STRING, example="Description DNAT", description="description of DNAT rule"),
-        }
-        ))
+    request_body=request_body_dnat)
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -328,8 +306,12 @@ def start_dnat(_, id):
         if len(list_next_dnat) > 0:
             next_dnat = list_next_dnat.order_by('db_position')[0]
             position_insert = next_dnat.rule_number
+        
+        interface_ifname = None
+        if dnat.interface:
+            interface_ifname = dnat.interface.ifname
         rule_number, _ = create_dnat_rule_in_system(
-            dnat.interface.ifname, source, destination, dnat.protocol, position_insert)
+            interface_ifname, source, destination, dnat.protocol, position_insert)
         dnat.rule_number = int(rule_number)
 
         dnat.rule_status = True

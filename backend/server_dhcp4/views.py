@@ -12,6 +12,7 @@ from backend.server_dhcp4.serializers import DHCP4ServerSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_DHCP_SERVER = _('DHCP server')
 CONSTANT_RANGE = _('The specified range is outside the available range')
@@ -173,15 +174,12 @@ def add_server_dhcp4(request):
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            # 'subnet_addr': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet address',example="192.168.20.0"),
-            # 'subnet_mask': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Subnet mask',example="255.255.255.0"),
-            # 'available_range': openapi.Schema(type=openapi.TYPE_STRING, description='Subnet address',example="192.168.20.1 - 192.168.20.254"),
             'dns_server': openapi.Schema(type=openapi.TYPE_ARRAY,
                                          items=openapi.Schema(
                                            type=openapi.TYPE_STRING
                                          )
-                                         , description='DNS server(s)',example=["8.8.8.8"]),
-            'gateway': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Gateway address',example="192.168.20.1"),
+                                         , description='DNS server(s)',example=[config('SERVER_DNS')]),
+            'gateway': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_IPV4, description='Gateway address',example=config('IP_ADDRESS')),
             'domain_name': openapi.Schema(type=openapi.TYPE_STRING, description='Domain name',example="test.com"),
             'enable_dhcpv4': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enable/disable DHCPv4'),
             'ranges_address': openapi.Schema(
@@ -189,8 +187,8 @@ def add_server_dhcp4(request):
                 items=openapi.Items(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'range_from': openapi.Schema(type=openapi.TYPE_STRING, description='Start of the IP range',example="192.168.20.6"),
-                        'range_to': openapi.Schema(type=openapi.TYPE_STRING, description='End of the IP range',example="192.168.20.58"),
+                        'range_from': openapi.Schema(type=openapi.TYPE_STRING, description='Start of the IP range',example=config('IP_ADDRESS')),
+                        'range_to': openapi.Schema(type=openapi.TYPE_STRING, description='End of the IP range',example=config('IP_ADDRESS')),
                     }
             )
             , description='Enable/disable DHCPv4')

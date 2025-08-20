@@ -12,6 +12,7 @@ from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INE
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.views.decorators.http import require_http_methods
+from decouple import config
 @swagger_auto_schema(
     method='post',
     operation_summary="API to delete a rule",
@@ -108,8 +109,8 @@ def delete_rule(request):
                     enum=["drop", "accept", "reject"],  
                     default="drop"
                     ),
-                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example="10.1.12.69/32"),
-                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example="10.1.12.25/32"),
+                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example=config('IP_ADDRESS')),
+                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example=config('IP_ADDRESS')),
                 'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port',example=22),
                 'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port',example=22,),
                 'protocol': openapi.Schema(
@@ -206,8 +207,8 @@ add_rule_schema = openapi.Schema(
                     enum=["drop", "accept", "reject"],  
                     default="drop"
                     ),
-                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example="10.1.12.69/32"),
-                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example="10.1.12.25/32"),
+                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example=config('IP_ADDRESS')),
+                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example=config('IP_MASK')),
                 'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port',example=22),
                 'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port',example=22,),
                 'protocol': openapi.Schema(

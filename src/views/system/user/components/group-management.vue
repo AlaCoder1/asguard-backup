@@ -182,9 +182,6 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("group id :" + this.deletedRow.id);
-
       axios
         .delete(`/groups/deleteGroup/${this.deletedRow.id}`)
 
@@ -220,26 +217,15 @@ export default {
     },
     // closeModal() {
     //   this.isModalOpen = false;
-    //   console.log('close',this.isModalOpen)
     //   // location.reload();
     // },
 
     handleModalUpdate(formData) {
-      console.log("formDataformDataformDataformData", formData);
       //
       this.modalData = formData;
-      console.log("formData", formData);
-      console.log("this.selectedRowIndex", this.rowData[this.selectedRowIndex]);
-
       // this.rowData[this.modalData.id - 1] = updatedData;
       if (this.modalMode === "update") {
-        console.log("update action ..." + JSON.stringify(this.rowData));
         this.update(formData, () => {
-          console.log(
-            "old DataList :" +
-              JSON.stringify(this.DataList[this.selectedRowIndex])
-          );
-
           this.$set(this.DataList, this.selectedRowIndex, {
             groupname: formData.groupname,
             description: formData.description,
@@ -253,13 +239,9 @@ export default {
           //   sudoers: formData.sudoers,
           // };
 
-          console.log("new formData :" + JSON.stringify(formData));
           // this.selectedRowIndex = null;
         });
       } else {
-        console.log("create action ...");
-
-        console.log("formData : " + JSON.stringify(formData));
         // Handle the data returned from the modal here
         this.Create(formData, () => {
           this.DataList.push(formData);
@@ -327,9 +309,6 @@ export default {
           this.rowEdit = rowData;
 
           this.getgroup(rowData.id, (data) => {
-            console.log("Edit clicked for row Group:", rowData);
-            console.log("response data local 1:", data);
-
             // this.modalData = {
             //   id: data?.id,
             //   gid: data?.gid,
@@ -344,7 +323,6 @@ export default {
           // Perform edit action
         }
         case "delete":
-          console.log("Delete clicked for row:", rowData);
           this.deleteDialog = true;
           this.deletedRow = rowData;
 
@@ -358,11 +336,9 @@ export default {
 
           break;
         case "update":
-          console.log("Update clicked for row:", rowData);
           // Perform update action
           break;
         case "cancel":
-          console.log("Cancel clicked for row:", rowData);
           // Perform cancel action
           break;
         default:
@@ -390,9 +366,6 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("DataList :" + JSON.stringify(this.DataList));
-
       // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
 
       const params = {
@@ -401,22 +374,17 @@ export default {
         sudoers: data.sudoers,
       };
 
-      console.log("params are : " + JSON.stringify(params));
-
       axios.post("/groups/createGroup", params).then(
         (response) => {
           callback();
-          console.log(response);
         },
         (err) => {
           if (err.response && err.response.status === 401) {
             const responseData = err.response.data; // Access the response data
-            console.log("401 Error Response:", responseData);
             // this.invalid = true ;
             this.message = responseData.message;
             // Handle the 401 error here
           } else {
-            console.error("Error occurred:", err);
             // Handle other errors
           }
         }
@@ -426,16 +394,12 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("group id :" + id);
-
       axios
         .delete(`/groups/deleteGroup/${id}`)
 
         .then((response) => {
           callback();
           // Handle the successful response
-          console.log("Resource deleted:", response.data);
         })
         .catch((error) => {
           if (error.response.status === 500) {
@@ -453,9 +417,6 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("DataList :" + JSON.stringify(data));
-
       axios
         .put(`/groups/groupChangeGroupname/${data.id}`, {
           Newgroupname: data.groupname,
@@ -463,7 +424,6 @@ export default {
         .then((response) => {
           callback();
           // Handle the successful response
-          console.log("Resource updated:", response.data);
         })
         .catch((error) => {
           if (error.response.status === 500) {
@@ -483,11 +443,9 @@ export default {
         .then((response) => {
           callback(response.data);
           // Handle the successful response
-          console.log("Data received:", response.data);
         })
         .catch((error) => {
           // Handle any errors that occur during the request
-          console.error("Error fetching data:", error);
         });
     },
     // Fetch APIs

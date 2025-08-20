@@ -237,7 +237,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege("Suricata");
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -501,7 +500,6 @@ export default {
           // newRowNode.setEditing(true);
         }
       } else {
-        console.error("gridApi is not available");
       }
     };
     const onSelectionChanged = () => {
@@ -724,7 +722,7 @@ export default {
             if (gridApi.value) {
               gridApi.value.setRowData(rowDataRules.value);
             } else {
-              console.error("Grid API.");
+              
             }
           }
           const csrfToken = getCookie("csrftoken");
@@ -766,7 +764,7 @@ export default {
             if (gridApi.value) {
               gridApi.value.setRowData(rowDataRules.value);
             } else {
-              console.error("Grid API.");
+              
             }
           }
         }
@@ -806,12 +804,10 @@ export default {
       axios
         .get(`/ids-ips/getRulesFromDatabase/${state.page}`)
         .then((response) => {
-          console.log("response", response);
           rowDataRules.value = response.data.rules;
           state.nombrePageRules = response.data.nombrePageRules;
         })
         .catch((e) => {
-          console.log("e", e.response);
         });
     };
     onMounted(() => {
@@ -819,7 +815,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value);
       getData();
 
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
@@ -842,7 +837,6 @@ export default {
       //   let parsedArray2 = JSON.parse(validJsonString2);
       //   rowDataRules.value = parsedArray2;
       // } catch (error) {
-      //   console.error("Error setting rowDataRules:", error);
       // }
     });
 
@@ -859,7 +853,6 @@ export default {
       deleteDialog,
       cellWasClicked: (event) => {
         // Example of consuming Grid Event
-        console.log("cell was clicked", event);
       },
       deselectRows: () => {
         gridApi.value.deselectAll();

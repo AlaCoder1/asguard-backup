@@ -39,7 +39,7 @@
             :label="$t('settings.Domain')"
             v-model="state.domain"
           ></v-text-field>
-       
+
           <v-select
             :label="$t('settings.Timezone')"
             v-model="state.timeZone"
@@ -253,7 +253,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataGateway.value);
       } else {
-        console.error("Grid API.");
       }
 
       state.timeZoneList = parsedArray;
@@ -285,7 +284,6 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataGateway.value);
         } else {
-          console.error("Grid API.");
         }
       });
 
@@ -320,7 +318,6 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataGateway.value);
         } else {
-          console.error("Grid API.");
         }
       });
     });
@@ -392,7 +389,7 @@ export default {
             }
           });
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 
@@ -402,7 +399,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataGateway.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -451,7 +447,6 @@ export default {
             if (gridApi.value) {
               gridApi.value.setRowData(rowDataGateway.value);
             } else {
-              console.error("Grid API.");
             }
           }
           break;
@@ -473,9 +468,7 @@ export default {
       return t("errors.valueRequired");
     });
     const rules = computed(() => {
-      return {
-    
-      };
+      return {};
     });
 
     const v$ = useValidate(rules, state);

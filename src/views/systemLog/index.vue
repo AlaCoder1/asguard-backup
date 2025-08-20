@@ -138,21 +138,17 @@ export default {
       );
 
       state.socket.onopen = () => {
-        console.log("WebSocket connection opened.");
       };
 
       state.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log("data**", data);
         if (state.socket.readyState === WebSocket.OPEN) {
           const data = JSON.parse(event.data);
-          console.log("data00", data);
           rowDataKeys.value = [];
           rowDataKeys.value = data;
         }
 
         state.socket.onclose = () => {
-          console.log("WebSocket connection closed.");
         };
       };
     };
@@ -192,7 +188,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataKeys.value);
       } else {
-        console.error("Grid API.");
       }
     };
     const onFilterTextBoxChanged = () => {
@@ -201,12 +196,10 @@ export default {
       );
     };
     const downloadLogs = () => {
-      console.log("ok");
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios.get("/system_log/downloadLogs").then((response) => {
-        console.log("oui", response);
         const text = response.data.data;
         const blob = new Blob([text], {
           type: "application/x-x509-ca-cert",

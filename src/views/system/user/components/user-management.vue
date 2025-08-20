@@ -204,7 +204,6 @@ export default {
       axios
         .delete(`/users/deleteUser/${this.deletedRow.id}`)
         .then((response) => {
-          console.log("Resource deleted:", response.data);
           this.closeModal();
 
           this.snackbar = true;
@@ -276,8 +275,6 @@ export default {
           // this.selectedRowIndex = CurrentIndex;
 
           // this.getuser(rowData.id, (data) => {
-          //   console.log("Edit clicked for row:", rowData);
-          //   console.log("response data local 1:", data);
 
           //   // this.openModal();
 
@@ -297,11 +294,10 @@ export default {
         }
         case "change":
           this.isModalPasswordOpen = true;
-          this.modalMode = 'update';
+          this.modalMode = "update";
           this.rowEdit = rowData;
           break;
         case "delete":
-          console.log("Delete clicked for row:", rowData);
           this.deleteDialog = true;
           this.deletedRow = rowData;
 
@@ -317,10 +313,8 @@ export default {
 
           break;
         case "update":
-          console.log("Update clicked for row:", rowData);
           break;
         case "cancel":
-          console.log("Cancel clicked for row:", rowData);
           break;
         default:
           break;
@@ -328,13 +322,11 @@ export default {
     },
 
     openModalAdd() {
-      console.log("ok");
       this.modalData = {};
       this.modalMode = "create"; // Assuming you want to open the modal in create mode
       this.isModalOpen = true;
     },
     openModal() {
-      console.log("ok");
       this.modalData = {};
       this.modalMode = "create"; // Assuming you want to open the modal in create mode
       this.isModalOpen = true;
@@ -349,18 +341,10 @@ export default {
     handleModalUpdate(formData) {
       //
       this.modalData = formData;
-      console.log("formData", formData);
-      console.log("this.selectedRowIndex", this.rowData[this.selectedRowIndex]);
 
       // this.rowData[this.modalData.id - 1] = updatedData;
       if (this.modalMode === "update") {
-        console.log("update action ..." + JSON.stringify(this.rowData));
         this.update(formData, () => {
-          console.log(
-            "old DataList :" +
-              JSON.stringify(this.DataList.users[this.selectedRowIndex])
-          );
-
           this.DataList.users[this.selectedRowIndex] = {
             id: formData.id,
             username: formData.username,
@@ -371,13 +355,9 @@ export default {
             group: formData.groups,
           };
 
-          console.log("new formData :" + JSON.stringify(formData));
           // this.selectedRowIndex = null;
         });
       } else {
-        console.log("create action ...");
-
-        console.log("formData : " + JSON.stringify(formData));
         // Handle the data returned from the modal here
         this.Create(formData, () => {
           this.DataList.users.push(formData);
@@ -408,9 +388,6 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("DataList :" + JSON.stringify(this.DataList));
-
       // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
 
       const params = {
@@ -422,22 +399,17 @@ export default {
         group: data.groups,
       };
 
-      console.log("params are : " + JSON.stringify(params));
-
       axios.post("/users/createUser", params).then(
         (response) => {
           callback();
-          console.log(response);
         },
         (err) => {
           if (err.response && err.response.status === 401) {
             const responseData = err.response.data; // Access the response data
-            console.log("401 Error Response:", responseData);
             // this.invalid = true ;
             this.message = responseData.message;
             // Handle the 401 error here
           } else {
-            console.error("Error occurred:", err);
             // Handle other errors
           }
         }
@@ -447,16 +419,12 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("user id :" + id);
-
       axios
         .delete(`/users/deleteUser/${id}`)
 
         .then((response) => {
           callback();
           // Handle the successful response
-          console.log("Resource deleted:", response.data);
         })
         .catch((i) => {
           if (i.response.status === 500) {
@@ -474,9 +442,6 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("DataList :" + JSON.stringify(data));
-
       axios
         .put(`/users/modifyUser/${data.id}`, {
           username: data.username,
@@ -489,7 +454,6 @@ export default {
         .then((response) => {
           callback();
           // Handle the successful response
-          console.log("Resource updated:", response.data);
         })
         .catch((i) => {
           if (i.response.status === 500) {
@@ -509,11 +473,9 @@ export default {
         .then((response) => {
           callback(response.data);
           // Handle the successful response
-          console.log("Data received:", response.data);
         })
         .catch((error) => {
           // Handle any errors that occur during the request
-          console.error("Error fetching data:", error);
         });
     },
     // Fetch APIs

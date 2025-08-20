@@ -302,9 +302,7 @@ export default {
           name: identity.name,
         }));
 
-        console.log("Identities.value", Identities.value);
       } catch (error) {
-        console.error("Failed to fetch identities:", error);
         Identities.value = [];
       }
     };
@@ -333,7 +331,6 @@ export default {
 
 
       if (!Array.isArray(Identities.value)) {
-        console.error("Identities.value is not an array:", Identities.value);
         return false;
       }
 

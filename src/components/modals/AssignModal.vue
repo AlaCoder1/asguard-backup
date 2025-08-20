@@ -428,7 +428,7 @@ export default {
           }
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

@@ -686,7 +686,6 @@ export default defineComponent({
           break;
           case "copy":
             if (user === "viewer") {
-              console.log("View Mode");
               state.isviewModal = true;
               state.viewModal = true;
             } else {
@@ -730,7 +729,6 @@ export default defineComponent({
     //     gridApi.value.setColumnDefs(columnDefs.value);
     //     gridApi.value.setColumnOrder(columnOrder.value);
     //   } else {
-    //     console.log("event.columns is undefined or null");
     //   }
     // };
     const handleRemove = () => {
@@ -766,7 +764,6 @@ export default defineComponent({
     //     if (index !== -1) {
     //       rowData.value.splice(index, 1);
     //       if (rowData.value.length === 0) changes.value = false;
-    //       console.log("no00");
     //       deleteDialog.value = false;
     //       oldRow.value.push({ ...rowDataToDelete.value, status: "deleted" });
     //       // if (rowData.value.length === 0) changes.value = false;
@@ -774,7 +771,7 @@ export default defineComponent({
     //       if (gridApi.value) {
     //         gridApi.value.setRowData(rowData.value);
     //       } else {
-    //         console.error("Grid API.");
+    //         
     //       }
     //     }
     //   } else {
@@ -786,7 +783,6 @@ export default defineComponent({
     //     }
     //   }
     //   if (rowDataToDelete.value.id) {
-    //     console.log("rowDataToDelete.value", rowDataToDelete.value);
     //     const index = rowData.value.findIndex(
     //       (item) => item.id === rowDataToDelete.value.id
     //     );
@@ -798,7 +794,7 @@ export default defineComponent({
     //       if (gridApi.value) {
     //         gridApi.value.setRowData(rowData.value);
     //       } else {
-    //         console.error("Grid API.");
+    //         
     //       }
     //     }
 
@@ -837,7 +833,7 @@ export default defineComponent({
     //       if (gridApi.value) {
     //         gridApi.value.setRowData(rowData.value);
     //       } else {
-    //         console.error("Grid API.");
+    //         
     //       }
     //     }
     //   }
@@ -907,11 +903,9 @@ export default defineComponent({
 
       // hasSelection.value = false;
 
-      // console.log("id_list_selection.value", id_list_selection.value);
     };
 
     const confirmDelete = () => {
-      console.log("array", rowDataToDelete.value);
 
       if (!Array.isArray(array.value)) return;
 
@@ -958,7 +952,7 @@ export default defineComponent({
       if (gridApi.value) {
         gridApi.value.setRowData(rowData.value);
       } else {
-        console.error("Grid API.");
+        
       }
 
       // Appel de l'API si au moins un ID est présent
@@ -968,7 +962,6 @@ export default defineComponent({
     };
 
     const onRowDragStart = (event) => {
-      console.log("event.overIndex", event.overIndex);
     };
     const onRowDragEnd = (event) => {
       const api = event.api;
@@ -978,7 +971,6 @@ export default defineComponent({
       api.forEachNodeAfterFilterAndSort((node) => {
         allRows.push(node.data);
       });
-      console.log("allRows", allRows);
 
       // Replace your rowData with the new order
       rowData.value = allRows;
@@ -989,7 +981,6 @@ export default defineComponent({
     //   rowData.value = rowData.value.filter(
     //     (row) => !selectedRows.includes(row)
     //   );
-    //   console.log("selectedRows", selectedRows);
 
     //   gridApi.value.setRowData(rowData.value);
 
@@ -998,7 +989,6 @@ export default defineComponent({
 
     const onSelectionChanged = () => {
       const selected = gridApi.value.getSelectedRows();
-      console.log("sele", selected);
       hasSelection.value = selected.length > 0;
     };
 
@@ -1008,7 +998,6 @@ export default defineComponent({
     const saveRules = () => {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -1083,7 +1072,6 @@ export default defineComponent({
       //     data-name="Unbox"
       //   />
       //  </svg></span>`;
-      // console.log(overlayTemplate.valye)
       state.user = user_privilege();
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
@@ -1097,7 +1085,7 @@ export default defineComponent({
         if (gridApi.value) {
           gridApi.value.setRowData(rowData.value);
         } else {
-          console.error("Grid API.");
+          
         }
       });
 
@@ -1131,7 +1119,7 @@ export default defineComponent({
           if (gridApi.value) {
             gridApi.value.setRowData(rowData.value);
           } else {
-            console.error("Grid API.");
+            
           }
         }
       });
@@ -1193,7 +1181,7 @@ export default defineComponent({
         if (gridApi.value) {
           gridApi.value.setRowData(rowData.value);
         } else {
-          console.error("Grid API.");
+          
         }
       });
     });
@@ -1243,8 +1231,6 @@ export default defineComponent({
     //   () => rowData.value,
     //   (newValue, oldValue) => {
     //     if (rowData.value.length) {
-    //       console.log("oldValue10", oldValue);
-    //       console.log("newValue10", newValue);
     //     }
     //   },
     //   { immediate: true }
@@ -1252,8 +1238,6 @@ export default defineComponent({
     // watch(
     //   () => rowData.value?.slice(),
     //   (newArray, oldArray) => {
-    //     // console.log("oldValue", oldArray);
-    //     // console.log("newValue", newArray);
     //     // oldRow.value = oldArray
     //   },
     //   { deep: true }

@@ -184,7 +184,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataVlan.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -254,7 +253,6 @@ export default {
       switch (action) {
         case "delete":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
@@ -266,7 +264,6 @@ export default {
           break;
         case "edit":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
@@ -285,7 +282,6 @@ export default {
     const openModalAdd = () => {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {

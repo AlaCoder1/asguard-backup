@@ -135,7 +135,6 @@ export default {
     });
     const overlayMessage = computed(() => {
 current_user.value= user_privilege('Sdwan') 
-console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("SDWAN")) {
@@ -244,7 +243,6 @@ console.log('current_user',current_user.value)
       switch (action) {
         case "show":
           if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
-            console.log("show", rowData);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
@@ -252,7 +250,6 @@ console.log('current_user',current_user.value)
           break;
         case "edit":
           if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
-            console.log("edit", rowData);
             state.modalMode = "edit";
             state.isModalAreaOpen = true;
             state.editRow = rowData;
@@ -263,7 +260,6 @@ console.log('current_user',current_user.value)
           break;
         case "delete":
           if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
-            console.log("delete", rowData);
             state.deleteDialog = true;
             state.deletedRow = rowData;
           } else {
@@ -307,7 +303,6 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
 
       let allArea = document.getElementById("app").attributes["allArea"].value;
       let parsedArray = JSON.parse(allArea);

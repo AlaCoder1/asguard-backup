@@ -133,7 +133,6 @@ export default {
     });
     const overlayMessage = computed(() => {
 current_user.value= user_privilege() 
-console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("Proxy")) {
@@ -185,7 +184,6 @@ console.log('current_user',current_user.value)
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataAclList.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -271,7 +269,6 @@ console.log('current_user',current_user.value)
       switch (action) {
         case "edit":
       if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
-          console.log("rowData", rowData);
 
             state.modalData = {};
             state.editRow = rowData;
@@ -284,7 +281,6 @@ console.log('current_user',current_user.value)
           break;
         case "enable":
         if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
-          console.log("rowData", rowData);
           const csrfToken = getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -358,7 +354,6 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
 
       emitter.on("closeAclListModal", () => {
         state.isModalOpen = false;

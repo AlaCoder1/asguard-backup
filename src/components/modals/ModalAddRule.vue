@@ -606,7 +606,6 @@ export default {
     watch(
       () => isDomains.value,
       (val) => {
-        console.log("valDomain :", val);
         if (val) {
           state.formData.value = "";
           state.formData.prefix = "";
@@ -672,7 +671,6 @@ export default {
     );
 
     const populate = (val) => {
-      console.log("edit-modal", val);
       if (modalModeRule.value === "edit") {
         state.rowEdit = val;
         state.formData.status = val.status === "Disable" ? false : true;
@@ -820,7 +818,6 @@ export default {
         }
 
         payload = { ...payload, user_id: id };
-        console.log({ payload });
         if (modalModeRule.value === "edit") {
           // let payload = {
           //   status: state.formData.status,
@@ -910,7 +907,7 @@ export default {
             });
         }
       } else {
-        console.log("error", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

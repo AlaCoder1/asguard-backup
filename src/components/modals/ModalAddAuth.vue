@@ -421,7 +421,6 @@ export default {
     isImportCetif() {
       this.v$.$reset();
       this.state.formData.lifeTime = "";
-      console.log("this.state.formData.lifeTime", this.state.formData.lifeTime);
     },
     isCreateCetif(test) {
       this.v$.$reset();
@@ -455,9 +454,6 @@ export default {
       //     );
       //     this.countriesList = countryList;
       //   },
-      //   (error) => {
-      //     console.log(error);
-      //   }
       // );
       let countryList = countries.map((element) => {
         return {
@@ -579,7 +575,7 @@ export default {
             }
           });
       } else {
-        console.log("this.v$.$error", this.v$);
+        console.log("error :", this.v$);
       }
     },
   },

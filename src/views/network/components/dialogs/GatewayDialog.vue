@@ -117,7 +117,6 @@ export default {
       this.$emit("close");
     },
     addGateway() {
-      console.log('tst')
       // Emit an event to inform the parent component to save the gateway data
       this.$emit("save", this.gateway);
       this.emitter.emit("gateway-object", this.gateway);

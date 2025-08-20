@@ -287,7 +287,7 @@ export default {
   components: {
     BaseLayout,
     VButton,
-    helpModal
+    helpModal,
   },
 
   mounted() {
@@ -416,7 +416,6 @@ export default {
       axios
         .get(`/users/getUser/${userId}`)
         .then((response) => {
-          console.log("response", response);
           this.username =
             response.data.username === "null" ? "" : response.data.username;
           this.firstname =
@@ -448,9 +447,7 @@ export default {
               : response.data.profile.country;
           this.imageURL = response.data.profile.photo_url;
         })
-        .catch((e) => {
-          console.log("e", e.response);
-        });
+        .catch((e) => {});
     },
 
     uploadImage() {
@@ -506,7 +503,6 @@ export default {
             },
           })
           .then((response) => {
-            console.log("response*", response);
             if (response.status == "200") {
               this.snackbar = true;
               this.color = "success";
@@ -564,7 +560,7 @@ export default {
             }
           });
       } else {
-        console.log("his.v$", this.v$);
+        console.log("error :", this.v$);
       }
     },
   },

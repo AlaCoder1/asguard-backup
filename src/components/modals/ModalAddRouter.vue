@@ -196,9 +196,7 @@ export default {
 
         Relays.value = RelaysArray.map((identity) => ({ name: identity.name }));
 
-        console.log("Relays.value", Relays.value);
       } catch (error) {
-        console.error("Failed to fetch Relays:", error);
         Relays.value = [];
       }
     };

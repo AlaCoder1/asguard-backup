@@ -535,9 +535,6 @@ export default {
 
           state.mapedInterface = interfaces;
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -604,7 +601,6 @@ export default {
         }
 
         if (modalMode.value === "edit") {
-          console.log("payload", payload);
           axios
             .put(`/nat/updateSNat/${state.id}`, payload)
             .then((response) => {
@@ -654,7 +650,7 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

@@ -154,7 +154,6 @@ export default {
     watch(
       () => selectedId.value,
       (val) => {
-        console.log(val);
         state.itemId = val;
       }
     );
@@ -182,7 +181,6 @@ export default {
           requestBody.roleAttributes.push(...RouterAttribute.value); // Spread operator to add all elements of the array
         }
 
-        console.log(requestBody);
         const proxyUrl = "https://asguard:3000";
         const apiUrl = `/edge/management/v1/edge-routers/${state.itemId}`;
         const response = await axios.patch(proxyUrl + apiUrl, requestBody, {
@@ -191,15 +189,10 @@ export default {
             "Content-Type": "application/json",
           },
         });
-        console.log("here");
         setTimeout(() => {
           location.reload();
         }, 1000);
       } catch (error) {
-        console.error(
-          "Failed to update item:",
-          error.response ? error.response.data : error.message
-        );
       }
     };
     const selectItem = (item) => {

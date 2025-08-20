@@ -184,7 +184,6 @@ export default {
     handleAction(action, rowData) {
       switch (action) {
         case "cloud":
-          console.log("rowData", rowData);
           break;
         default:
           break;

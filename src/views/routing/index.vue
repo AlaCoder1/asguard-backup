@@ -184,7 +184,6 @@ export default {
         .replace(/False/g, "false")
         .replace(/None/g, "null");
       const parsedArray = JSON.parse(validJsonString);
-      console.log("listRouting: ", parsedArray);
 
       rowDataRoute.value = parsedArray;
     });
@@ -250,7 +249,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRoute.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -320,7 +318,6 @@ export default {
       switch (action) {
         case "delete":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
@@ -331,11 +328,9 @@ export default {
           break;
         case "edit":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
-            console.log("rowData", rowData);
             state.modalMode = "edit";
             state.isModalOpen = true;
             state.editRow = rowData;
@@ -350,7 +345,6 @@ export default {
     const openModalAdd = () => {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {

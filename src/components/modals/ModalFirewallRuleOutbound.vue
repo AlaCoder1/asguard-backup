@@ -598,7 +598,6 @@ export default {
           // axios
           //   .put(`/rules/updateRule/${state.nameInter}`, payload)
           //   .then((response) => {
-          //     console.log("re", response);
           //     if (response.status == "200") {
           //       state.snackbar = true;
           //       state.color = "success";
@@ -609,7 +608,6 @@ export default {
           //     }
           //   })
           //   .catch((i) => {
-          //     console.log("res", i.response);
           //     state.snackbar = true;
           //     state.color = "red";
           //     state.textAlert = i.response.data.response;
@@ -620,7 +618,6 @@ export default {
           // axios
           //   .post(`/rules/addRule/${state.nameInter}`, payload)
           //   .then((response) => {
-          //     console.log("re", response);
           //     if (response.status == "200") {
           //       state.snackbar = true;
           //       state.color = "success";
@@ -631,7 +628,6 @@ export default {
           //     }
           //   })
           //   .catch((i) => {
-          //     console.log("res", i.response);
           //     state.snackbar = true;
           //     state.color = "red";
           //     state.textAlert = i.response.data.response;
@@ -642,7 +638,7 @@ export default {
         closeModal();
         v$.value.$reset();
       } else {
-        console.log("error", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

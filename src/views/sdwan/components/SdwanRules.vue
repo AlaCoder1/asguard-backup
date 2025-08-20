@@ -169,7 +169,6 @@ export default {
     });
     const overlayMessage = computed(() => {
 current_user.value= user_privilege('Sdwan') 
-console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("SDWAN")) {
@@ -344,7 +343,6 @@ console.log('current_user',current_user.value)
       switch (action) {
         case "play":
       if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("SDWAN") ) {
-          console.log("play", rowData);
           state.loading = true;
           state.isLoadingDialogue = true;
           axios
@@ -380,7 +378,6 @@ console.log('current_user',current_user.value)
           break;
         case "stop":
         if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("SDWAN") ) {
-          console.log("stop", rowData);
 
             state.loading = true;
             state.isLoadingDialogue = true;
@@ -417,7 +414,6 @@ console.log('current_user',current_user.value)
           break;
         case "edit":
         if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("SDWAN") ) {
-          console.log("edit", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -428,7 +424,6 @@ console.log('current_user',current_user.value)
           break;
         case "delete":
         if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("SDWAN") ) {
-          console.log("delete", rowData);
           state.deleteDialog = true;
           state.deletedRow = rowData;
         } else {
@@ -471,11 +466,9 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
 
       let allRule = document.getElementById("app").attributes["allRule"].value;
       let parsedArray = JSON.parse(allRule);
-      console.log("parsedArray", parsedArray);
 
       if (!rowDataRule.value) rowDataRule.value = [];
       rowDataRule.value = parsedArray;

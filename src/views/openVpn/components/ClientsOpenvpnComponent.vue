@@ -581,7 +581,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value);
       // getInterface();
       getAllCertAuth();
       getAllClientCertif();
@@ -596,7 +595,6 @@ export default {
      </svg></span>`;
 
       emitter.on("edit-client", (data) => {
-        console.log("clinet-edit", data);
         if (data) state.isEditState = "edit";
         state.modeState = "edit";
         state.id = data.id;
@@ -699,7 +697,7 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataCertificats.value);
         } else {
-          console.error("Grid API.");
+          
         }
       });
     });
@@ -708,7 +706,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege("Openvpn");
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -1025,7 +1022,7 @@ export default {
               if (gridApi.value) {
                 gridApi.value.setRowData(rowDataCertificats.value);
               } else {
-                console.error("Grid API.");
+                
               }
             }
           } else {
@@ -1084,7 +1081,7 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataCertificats.value);
         } else {
-          console.error("Grid API.");
+          
         }
       } else {
         state.isviewModal = true;
@@ -1097,7 +1094,7 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataCertificats.value);
       } else {
-        console.error("Grid API.");
+        
       }
     };
 
@@ -1184,9 +1181,7 @@ export default {
 
           state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
         },
-        (error) => {
-          console.log(error);
-        }
+     
       );
     };
 
@@ -1213,9 +1208,6 @@ export default {
             (i) => i.is_private_key
           );
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
     const save = async () => {
@@ -1366,7 +1358,7 @@ export default {
               });
           }
         } else {
-          console.log("v$.value", v$.value);
+          console.log("error :", v$.value);
 
           var isArrayEmpty = rowDataCertificats.value.length === 0;
           if (isArrayEmpty) {
@@ -1548,7 +1540,7 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataCertificats.value);
         } else {
-          console.error("Grid API.");
+          
         }
         v$.value.$reset();
       } else {

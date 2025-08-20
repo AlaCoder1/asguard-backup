@@ -257,7 +257,6 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         const features = getPackId();
-        console.log("features", features);
 
         // if (features.length === 4) {
         //   state.snackbar = true;

@@ -223,10 +223,8 @@ export default defineComponent({
     const onGridReady = (params) => {
       gridApi.value = params.api;
       if (gridApi.value) {
-        // console.log(logData.value);
         gridApi.value.setRowData(rowData.value);
       } else {
-        console.error("Grid API is not available.");
       }
     };
     // const groupedTabs = computed(() => {
@@ -285,7 +283,6 @@ export default defineComponent({
     };
 
     const downloadLogsForRow = (rowData) => {
-      console.log("Downloading logs for row:", rowData);
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 

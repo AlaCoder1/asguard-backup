@@ -175,7 +175,6 @@ export default {
     });
     const overlayMessage = computed(() => {
 current_user.value= user_privilege('Ztna') 
-console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("ZTNA")) {
@@ -398,7 +397,6 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
 
       let token = document.getElementById("app").getAttribute("token");
 
@@ -408,7 +406,6 @@ console.log('current_user',current_user.value)
 
       let router_policiesObject = JSON.parse(router_policiesString);
 
-      console.log("router_policiesObject", router_policiesObject);
 
       rowDataRouter.value = router_policiesObject ? router_policiesObject : [];
       if (token && token !== "null") {
@@ -428,7 +425,6 @@ console.log('current_user',current_user.value)
       emitter.on("closeUpdateModal", () => {
         state.isModalUpdateOpen = false;
       });
-      console.log("relay:", rowDataRouter);
     });
 
     const openModalRouter = () => {

@@ -243,9 +243,7 @@ export default {
 
         ServicePolicies.value = ServicePoliciesArray.map(identity => ({ name: identity.name }));
 
-        console.log('ServicePolicies.value', ServicePolicies.value);
       } catch (error) {
-        console.error("Failed to fetch ServicePolicies:", error);
         ServicePolicies.value = [];
       }
     };
@@ -259,11 +257,9 @@ export default {
       try {
         servicesObject = JSON.parse(servicesString);
       } catch (error) {
-        console.error("Failed to parse services string:", error);
       }
 
       ServList.value = servicesObject
-      console.log("hetha services", ServList.value)
       let IdentitiesString = document
         .getElementById("app")
         .getAttribute("Identities");
@@ -407,7 +403,6 @@ export default {
     };
 
     const cancel = () => {
-      console.log("tes");
       emitter.emit("closeServicesModal");
     };
     const selectItem = (item) => {

@@ -497,7 +497,6 @@ export default {
         state.interUuid = uuid;
       });
       emitter.on("row-rules", (data) => {
-        console.log("data", data);
         state.itemsRows = data;
       });
     });
@@ -518,7 +517,6 @@ export default {
       }
     };
     const populate = (data) => {
-      console.log("data-Rule", data);
       if (modalMode.value === "edit" || modalMode.value === "copy") {
         state.id = data.id;
         let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
@@ -615,7 +613,6 @@ export default {
           // axios
           //   .put(`/rules/updateRule/${state.nameInter}`, payload)
           //   .then((response) => {
-          //     console.log("re", response);
           //     if (response.status == "200") {
           //       state.snackbar = true;
           //       state.color = "success";
@@ -626,7 +623,6 @@ export default {
           //     }
           //   })
           //   .catch((i) => {
-          //     console.log("res", i.response);
           //     state.snackbar = true;
           //     state.color = "red";
           //     state.textAlert = i.response.data.response;
@@ -637,7 +633,6 @@ export default {
           // axios
           //   .post(`/rules/addRule/${state.nameInter}`, payload)
           //   .then((response) => {
-          //     console.log("re", response);
           //     if (response.status == "200") {
           //       state.snackbar = true;
           //       state.color = "success";
@@ -648,7 +643,6 @@ export default {
           //     }
           //   })
           //   .catch((i) => {
-          //     console.log("res", i.response);
           //     state.snackbar = true;
           //     state.color = "red";
           //     state.textAlert = i.response.data.response;
@@ -659,7 +653,7 @@ export default {
         closeModal();
         v$.value.$reset();
       } else {
-        console.log("error", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

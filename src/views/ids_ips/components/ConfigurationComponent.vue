@@ -623,7 +623,6 @@ export default {
     };
 
     // function actionCopyIface(data) {
-    //   console.log("data", data);
     //   let eGui = document.createElement("div");
 
     //   if (typeof data.data.copy_iface === "object") {
@@ -636,7 +635,6 @@ export default {
     //     );
     //   }
 
-    //   console.log("filtredInterfaceIface", filtredInterface[0]);
 
     //   eGui.innerHTML = `
     //     ${filtredInterface[0].name}
@@ -645,13 +643,11 @@ export default {
     // }
 
     // function actionCopyInterface(data) {
-    //   console.log("data", data);
     //   let eGui = document.createElement("div");
 
     //   let filtredInterface = listeInterfaces.value.filter(
     //     (i) => i.name === data.data.name_interface
     //   );
-    //   console.log("filtredInterface*****", filtredInterface[0]);
 
     //   eGui.innerHTML = `
     //     ${filtredInterface[0].name}
@@ -717,7 +713,6 @@ export default {
 
     const reloadData = async () => {
       const user = user_privilege("Suricata");
-      console.log("user update", user);
       if (
         user &&
         user !== "viewer" &&
@@ -774,7 +769,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value);
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
         d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
@@ -813,7 +807,7 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataAF.value);
         } else {
-          console.error("Grid API.");
+          
         }
       });
 
@@ -854,7 +848,7 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataAF.value);
         } else {
-          console.error("Grid API.");
+          
         }
       });
 
@@ -914,7 +908,7 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataAF.value);
       } else {
-        console.error("Grid API.");
+        
       }
     });
     const handleRemove = () => {
@@ -926,13 +920,12 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataAF.value);
       } else {
-        console.error("Grid API.");
+        
       }
     };
 
     const openModalAdd = () => {
       const user = user_privilege("Suricata");
-      console.log(user);
       if (
         user &&
         user !== "viewer" &&
@@ -1058,7 +1051,6 @@ export default {
           }
         } else {
           state.SaveConfig = false;
-          console.log("v$", v$.value);
           if (rowDataAF.value.length === 0) {
             state.snackbar = true;
             state.color = "error";
@@ -1115,7 +1107,7 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataAF.value);
         } else {
-          console.error("Grid API.");
+          
         }
       }
     };

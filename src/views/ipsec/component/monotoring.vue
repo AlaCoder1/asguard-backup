@@ -352,7 +352,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       state.last_Subscription = parsedArraySubscription;
-      console.log("*********** :", state.last_Subscription);
       getAllListServer();
     });
     const error = computed(() => {
@@ -405,7 +404,6 @@ export default {
       );
 
       state.socket.onopen = () => {
-        console.log("WebSocket connection opened.");
         state.socket.send(
           JSON.stringify({
             id: state.server.id,
@@ -480,7 +478,6 @@ export default {
       };
 
       state.socket.onclose = () => {
-        console.log("WebSocket connection closed.");
       };
     };
     const close = () => {

@@ -327,9 +327,6 @@ export default {
 
           state.mapedInterface = interfaces;
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -431,7 +428,7 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
     const error = computed(() => {

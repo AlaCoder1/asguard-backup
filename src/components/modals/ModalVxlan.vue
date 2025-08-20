@@ -224,7 +224,6 @@ export default {
 
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("data", data);
 
         let filtredInterface = state.listDevice.filter(
           (i) => i.id === data?.parent_interface
@@ -279,9 +278,7 @@ export default {
 
           state.listDevice = interfaces;
         },
-        (error) => {
-          console.log(error);
-        }
+    
       );
     };
 
@@ -350,7 +347,7 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

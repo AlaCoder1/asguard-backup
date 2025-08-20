@@ -199,7 +199,6 @@ export default {
     );
 
     const populate = (data) => {
-      console.log("edit*", data);
       if (modalMode.value === "edit") {
         state.editValue = data.uuid;
         state.rangeFrom = data.range_from.trim();
@@ -263,10 +262,8 @@ export default {
     const computedTestRange = computed(() => {
       let isValidRange = false;
       if (validateRange(state.rangeFrom, state.rangeTo)) {
-        // console.log("Both ranges are valid.");
         isValidRange = true;
       } else {
-        // console.log("Invalid range input.");
         isValidRange = false;
       }
       return isValidRange;
@@ -282,10 +279,7 @@ export default {
 
     const same_edit = computed(() => {
       if (modalMode.value === "edit") {
-        console.log("tt");
         // const matching = state.ranges.find((a) => a.uuid === state.editValue);
-        console.log("state.currentRow", state.currentRow);
-
         if (
           state.currentRow.range_from.trim() === state.rangeFrom &&
           state.currentRow.range_to.trim() === state.rangeTo
@@ -303,8 +297,6 @@ export default {
           plage.range_from.trim() === rangeFrom ||
           plage.range_to.trim() === rangeTo
       );
-      console.log("**ranges*", ranges);
-      console.log("***", matchingRange);
 
       if (matchingRange) {
         if (matchingRange.range_from.trim() === rangeFrom) {
@@ -340,9 +332,6 @@ export default {
 
     // const verifierPlageExistante = computed(() => {
     //   // const { rangeFrom, rangeTo } = new_plage;
-    //   console.log("**999");
-    //   console.log("state.ranges", state.ranges);
-
     //   let matchingRange = null;
 
     //   if (state.ranges && state.rangeTo) {
@@ -351,7 +340,6 @@ export default {
     //         plage.rangeFrom === state.rangeFrom ||
     //         plage.range_to === state.rangeTo
     //     );
-    //     console.log("***", matchingRange);
     //   }
 
     //   if (matchingRange) {
@@ -398,8 +386,6 @@ export default {
           rangeTo: state.rangeTo,
         };
 
-        console.log("verification", state.ranges);
-
         let payload = {
           idConf: state.confId,
           uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
@@ -421,9 +407,6 @@ export default {
           let filtredList = state.ranges.filter(
             (e) => e.uuid !== state.editValue
           );
-          console.log("filtredList", filtredList);
-          console.log("nouvellePlage", nouvellePlage);
-
           const verification = verifierPlageExistante(
             nouvellePlage,
             filtredList
@@ -436,7 +419,7 @@ export default {
         closeModal();
         v$.value.$reset();
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

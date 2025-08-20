@@ -180,14 +180,12 @@ export default {
       axios
         .get("/double_mask/getstatus")
         .then((response) => {
-          console.log("response", response.data);
           enabled.value = response.data.msg?.active;
           chartOptions.value.series = [response.data.msg?.ratio];
           actualRules.value = response.data.msg?.n_actuel;
           initialRules.value = response.data.msg?.n_init;
         })
         .catch((e) => {
-          console.log("e", e);
         });
     };
 
@@ -241,9 +239,7 @@ export default {
 
       if (enabled.value) {
         changeStatus("activate");
-        console.log("enabledTrue", enabled.value);
       } else {
-        console.log("enabledfalse", enabled.value);
         changeStatus("deactivate");
       }
     };

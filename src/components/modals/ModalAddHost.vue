@@ -180,9 +180,7 @@ export default {
 
         intercept.value = interceptArray.map(identity => ({ name: identity.name }));
 
-        console.log('intercept.value', intercept.value);
       } catch (error) {
-        console.error("Failed to fetch intercept:", error);
         intercept.value = [];
       }
     };
@@ -197,9 +195,7 @@ export default {
 
         Host.value = HostArray.map((identity) => ({ name: identity.name }));
 
-        console.log("Host.value", Host.value);
       } catch (error) {
-        console.error("Failed to fetch Host:", error);
         Host.value = [];
       }
     };

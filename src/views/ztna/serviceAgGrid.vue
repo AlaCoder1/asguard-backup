@@ -162,7 +162,6 @@ export default {
     });
     const overlayMessage = computed(() => {
 current_user.value= user_privilege('Ztna') 
-console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("ZTNA")) {
@@ -260,7 +259,6 @@ console.log('current_user',current_user.value)
       if (gridService.value) {
         gridService.value.setRowData(rowDataService.value);
       } else {
-        console.error("Grid API is not available.");
       }
     };
 
@@ -396,7 +394,6 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
       let token = document.getElementById("app").getAttribute("token");
       if (token && token !== "null") {
         tokenStatus.value = true;

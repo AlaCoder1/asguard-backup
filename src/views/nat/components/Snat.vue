@@ -487,7 +487,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataSnat.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -545,7 +544,6 @@ export default {
       switch (action) {
         case "edit":
           if (user !== "viewer") {
-            console.log("edit", rowData);
             state.modalMode = "edit";
             state.isModalAreaOpen = true;
             state.editRow = rowData;
@@ -556,7 +554,6 @@ export default {
           break;
         case "delete":
           if (user !== "viewer") {
-            console.log("delete", rowData);
             state.deleteDialog = true;
             state.deletedRow = rowData;
           } else {
@@ -588,9 +585,6 @@ export default {
 
           state.mapedInterface = interfaces;
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -723,7 +717,6 @@ export default {
         .post(`/nat/deleteSNat`, payload)
         .then((response) => {
           const results = response.data;
-          console.log("results9", results);
           state.snackbarAlert = true;
           state.textAlertRow = results;
           deleteDialog.value = false;

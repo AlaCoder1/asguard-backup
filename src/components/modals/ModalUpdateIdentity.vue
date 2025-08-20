@@ -188,7 +188,6 @@ export default {
     );
 
     const populate = (data) => {
-      console.log("dataIdentityUpdate", data);
       if (data) {
         identityId.value = data.id;
         IdentityName.value = data.name;
@@ -220,7 +219,6 @@ export default {
           }
           requestBody.roleAttributes.push(...IdentityAttribute.value);
         }
-        console.log(requestBody);
         const proxyUrl = "https://asguard:3000";
         const apiUrl = `/edge/management/v1/identities/${state.itemId}`;
         const response = await axios.patch(proxyUrl + apiUrl, requestBody, {
@@ -233,10 +231,6 @@ export default {
           location.reload();
         }, 1000);
       } catch (error) {
-        console.error(
-          "Failed to update item:",
-          error.response ? error.response.data : error.message
-        );
       }
     };
     const onReset = () => {

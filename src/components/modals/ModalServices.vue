@@ -168,9 +168,7 @@ export default {
 
         Services.value = ServicesArray.map(service => ({ name: service.name }));
 
-        console.log('Services.value', Services.value);
       } catch (error) {
-        console.error("Failed to fetch Services:", error);
         Services.value = [];
       }
     };
@@ -259,11 +257,9 @@ export default {
       try {
         configsObject = JSON.parse(configsString);
       } catch (error) {
-        console.error("Failed to parse configs string:", error);
       }
 
       interceptList.value = configsObject;
-      console.log('intercept', interceptList.value)
     };
 
     const fetchHostConfigs = () => {
@@ -275,11 +271,9 @@ export default {
       try {
         configsObject = JSON.parse(configsString);
       } catch (error) {
-        console.error("Failed to parse configs string:", error);
       }
 
       hostList.value = configsObject;
-      console.log('host,', hostList.value)
     };
     function ValidName(value) {
       const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;

@@ -269,7 +269,7 @@ export default {
         closeModal();
         v$.value.$reset();
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

@@ -439,7 +439,6 @@ export default {
       switch (action) {
         case "start":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
@@ -481,9 +480,7 @@ export default {
 
           break;
         case "restart":
-          console.log("restart", rowData);
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
@@ -522,9 +519,7 @@ export default {
           }
           break;
         case "stop":
-          console.log("stop", rowData);
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
@@ -582,7 +577,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowData.value);
       } else {
-        console.error("Grid API.");
       }
     };
     const defaultColDef = {
@@ -595,7 +589,6 @@ export default {
       );
 
       state.socket.onopen = () => {
-        console.log("WebSocket connection opened.");
       };
 
       state.socket.onmessage = (event) => {
@@ -636,14 +629,11 @@ export default {
 
           apexChart.value.updateOptions({});
         } else {
-          console.log(
-            "WebSocket is not in the OPEN state. Unable to send a message."
-          );
+          
         }
       };
 
       state.socket.onclose = () => {
-        console.log("WebSocket connection closed.");
       };
     };
 
@@ -685,7 +675,6 @@ export default {
         };
       });
       rowDataServices.value = infoService;
-      console.log("rowDataServices.value", rowDataServices.value);
 
       const element = JSON.parse(gateways);
 

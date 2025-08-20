@@ -40,8 +40,6 @@
                     :columnDefs="columnKeys"
                     :rowData="rowDataKeys.value"
                     :overlayNoRowsTemplate="overlayTemplate"
-                    :pagination="true"
-                    :paginationPageSize="4"
                     :localeText="paginationLocalization"
                   />
                 </div>

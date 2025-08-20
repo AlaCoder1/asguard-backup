@@ -352,7 +352,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege("Openvpn");
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -516,9 +515,6 @@ export default {
 
           state.serverList = servers;
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -531,7 +527,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value);
       getAllListServer();
     });
     overlayTemplate.value = `
@@ -548,7 +543,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowData.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -589,7 +583,6 @@ export default {
       );
 
       state.socket.onopen = () => {
-        console.log("WebSocket connection opened.");
         state.socket.send(
           JSON.stringify({
             lang: state.lang,
@@ -600,7 +593,6 @@ export default {
       };
       state.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        // console.log("dataaa", data);
 
         if (typeof data === "object") {
           state.dataChart = data;
@@ -677,7 +669,6 @@ export default {
       };
 
       state.socket.onclose = () => {
-        console.log("WebSocket connection closed.");
       };
     };
 

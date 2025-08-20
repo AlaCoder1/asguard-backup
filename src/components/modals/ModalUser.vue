@@ -245,9 +245,7 @@ export default {
 
           state.formData.mapedServer = serverAd;
         },
-        (error) => {
-          console.log(error);
-        }
+      
       );
     };
     const champNoInclude = computed(() => {
@@ -355,7 +353,6 @@ export default {
   methods: {
     populate(data) {
       if (this.mode == "update") {
-        console.log("data", data);
         this.state.formData.username = data.username;
         this.state.formData.fullname = data.fullname;
         this.state.formData.email = data.email;
@@ -385,18 +382,10 @@ export default {
         this.state.formData.activateStatus = filtredAD[0] ? true : false;
         // this.state.formData.passwordDN = data.password_ad;
 
-        console.log(
-          "state.formData.mapedServer",
-          this.state.formData.mapedServer
-        );
       }
     },
     handleGroupChange(selectedItems) {
-      console.log("Selected Groups:", JSON.stringify(selectedItems));
-      console.log(
-        "formData Groups:",
-        JSON.stringify(this.state.formData.groups)
-      );
+   
     },
 
     closeModal() {
@@ -433,13 +422,11 @@ export default {
       return cookieValue;
     },
     submitForm() {
-      console.log({ "this.state.formData": this.state.formData });
       this.v$.$validate();
       if (!this.v$.$error) {
         let groupsIds = this.state.formData?.groups?.map((i) => {
           return i.id;
         });
-        console.log({ "this.state.formData": this.state.formData });
         const payload = {
           username: this.state.formData.username,
           password: this.state.formData.password,
@@ -458,7 +445,6 @@ export default {
           // group: [67],
           // is_active: true
         };
-        console.log({ payload });
 
         const csrfToken = this.getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -519,11 +505,9 @@ export default {
             password_ad: this.state.formData.passwordDN ?? "",
             id_server: this.state.formData.dnValue?.id ?? "",
           };
-          console.log("payload2", payload2);
           axios
             .put(`/users/modifyUser/${this.userId}`, payload2)
             .then((response) => {
-              console.log("resUpdate", response);
               if (response.status == 200) {
                 this.closeModal();
 

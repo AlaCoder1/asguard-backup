@@ -412,7 +412,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege("Openvpn");
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -815,9 +814,6 @@ export default {
           var combinedArray = [...listInter, ...interfaces];
           state.mapedInterface = combinedArray;
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -837,9 +833,6 @@ export default {
     //         };
     //       });
     //     },
-    //     (error) => {
-    //       console.log(error);
-    //     }
     //   );
     // };
     // const getAllCertAuth = () => {
@@ -856,9 +849,6 @@ export default {
     //       });
     //       state.mapedCertifAuth = mapedList;
     //     },
-    //     (error) => {
-    //       console.log(error);
-    //     }
     //   );
     // };
 
@@ -883,9 +873,6 @@ export default {
             (i) => i.is_private_key
           );
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
     const getAllCertAuth = () => {
@@ -903,9 +890,6 @@ export default {
           });
           state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -942,7 +926,6 @@ export default {
     watch(
       () => dataServer.value,
       (newValue) => {
-        console.log("newValueserver000", newValue);
         if (newValue != "tabs.servers") {
           // cancel();
         }
@@ -1039,7 +1022,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value);
       getInterface();
       getAllCertAuth();
       getCertif();
@@ -1290,7 +1272,6 @@ export default {
             verbosity_level: state.verbLevel?.slug ?? state.verbLevel ?? "",
             client_management: client_management,
           };
-          console.log("paylood", payload);
           state.loading = true;
           state.isLoadingDialogue = true;
 
@@ -1359,7 +1340,7 @@ export default {
               });
           }
         } else {
-          console.log("res", v$.value);
+          console.log("error :", v$.value);
         }
       } else {
         state.isviewModal = true;

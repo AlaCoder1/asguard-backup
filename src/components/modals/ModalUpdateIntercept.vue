@@ -131,7 +131,6 @@ export default {
     watch(
       () => selectedId.value,
       (val) => {
-        console.log(val);
         state.itemId = val;
       }
     );
@@ -145,7 +144,6 @@ export default {
       try {
         configsObject = JSON.parse(configsString);
       } catch (error) {
-        console.error("Failed to parse configs string:", error);
         configsObject = { data: [] }; // Default to an empty array if parsing fails
       }
       configs.value = configsObject.data;
@@ -170,7 +168,6 @@ export default {
 
           requestBody.name = ConfigName.value.trim();
         } else {
-          console.log("Configuration not found");
         }
 
         const proxyUrl = "https://asguard:3000";
@@ -181,15 +178,11 @@ export default {
             "Content-Type": "application/json",
           },
         });
-        console.log("here");
         setTimeout(() => {
           location.reload();
         }, 1000);
       } catch (error) {
-        console.error(
-          "Failed to update item:",
-          error.response ? error.response.data : error.message
-        );
+    
       }
     };
     const selectItem = (item) => {

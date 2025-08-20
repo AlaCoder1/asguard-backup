@@ -301,7 +301,6 @@ export default {
     function extractPFSKey(data) {
       let data_dh_key_group = String(data); // Ensure data is converted to a string
       let split_data_dh_key_group = data_dh_key_group.split(":")[1];
-      console.log(split_data_dh_key_group);
       return split_data_dh_key_group;
     }
     function uppercaseData(data) {
@@ -501,7 +500,6 @@ export default {
         case "edit":
           if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
 
-            console.log("edit :", rowData);
             emitter.emit("add-serverIpsec");
 
             setTimeout(() => {
@@ -525,7 +523,6 @@ export default {
         case "up":
           if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
 
-            console.log("up", rowData);
             let id = rowData.id;
             upServer(id);
           } else {
@@ -543,14 +540,12 @@ export default {
           reject(new Error("Request is taking longer than expected."));
         }, 4000);
       });
-      console.log("up", id);
       try {
         loading.value = true;
         isLoadingDialogue.value = true;
         // loading.value = true;
         // isLoadingDialogue.value = true;
         // let response = await axios.post(`/ipsec/upServerIPsec/${id}`);
-        // console.log("response", response);
         // if (response) {
         //   snackbar.value = true;
         //   color.value = "success";
@@ -566,7 +561,6 @@ export default {
           timeoutPromise,
         ]);
 
-        console.log("response", response);
 
         if (response) {
           snackbar.value = true;
@@ -667,14 +661,11 @@ export default {
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
         const validJsonString = serversAttribute;
-        console.log('validJsonString',validJsonString)
         const parsedArray = JSON.parse(validJsonString);
         rowData.value = parsedArray;
-        console.log("rowData.value**", rowData.value);
 
         const statusAttribute =
           document.getElementById("app").attributes["status"].value;
-        console.log("statusAttribute", statusAttribute);
         
 
         status.value = statusAttribute === "False" ? false : true;
@@ -685,7 +676,6 @@ export default {
     } 
   },1000)
       } catch (error) {
-        console.log(error);
       }
     });
 

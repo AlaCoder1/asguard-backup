@@ -183,9 +183,7 @@ export default {
           name: identity.name,
         }));
 
-        console.log("RelayPolicies.value", RelayPolicies.value);
       } catch (error) {
-        console.error("Failed to fetch RelayPolicies:", error);
         RelayPolicies.value = [];
       }
     };
@@ -243,7 +241,6 @@ export default {
         .getAttribute("routers");
       let routersObject;
       routersObject = JSON.parse(routersString);
-      console.log("routersObject00--------------:", routersObject);
       routersList.value = routersObject ? routersObject : [];
       let IdentitiesString = document
         .getElementById("app")
@@ -283,7 +280,6 @@ export default {
 
     const submitForm = async () => {
       const isFieldValid = rulesName.every(rule => rule(name.value) === true);
-      console.log(isFieldValid)
       if (isFieldValid || modalMode.value === "edit"
       ) {
         const csrfToken = getCookie("csrftoken");

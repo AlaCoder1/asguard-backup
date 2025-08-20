@@ -90,13 +90,11 @@ export default {
     axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
     axios.get("/subscription/list_features_about_last_subscription").then((response) => {
       this.last_Subscription = response.data.list_features
-      console.log('last sub', response.data.list_features)
 
     });
 
     axios.get("/ipsec/getIPsecStatus").then((response) => {
       this.isIpsecnotrunning = !response.data;
-      console.log('statusipsec', !this.isIpsecnotrunning)
     });
 
      let ids = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
@@ -136,13 +134,11 @@ export default {
         axios
           .post(`/ipsec/${endpoint}`, data)
           .then((response) => {
-            console.log("response", response);
             setTimeout(() => {
               location.reload();
             }, 1000);
           })
           .catch((i) => {
-            console.error("Error in status change", error);
           });
       }
     }, 1000)

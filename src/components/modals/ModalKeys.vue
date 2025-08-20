@@ -155,7 +155,6 @@ export default {
     onMounted(() => {
       let privateKeyAttribute =
         document.getElementById("app").attributes["privateKey"].value;
-      console.log("privateKeyAttribute", privateKeyAttribute);
 
       const validJsonString = privateKeyAttribute
         .replace(/'/g, '"')
@@ -345,7 +344,7 @@ export default {
           addPublicKey(payload);
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

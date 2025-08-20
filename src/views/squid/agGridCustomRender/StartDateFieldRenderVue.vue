@@ -23,7 +23,6 @@ export default {
     };
   },
   beforeMount() {
-    console.log('this.params',this.params)
     this.protocols = this.params.values ?? "";
     if (this.params.data.start_time) {
       this.selectedProtocols = this.params.data.start_time ?? "";

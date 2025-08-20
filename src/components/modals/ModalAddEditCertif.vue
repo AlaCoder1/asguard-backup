@@ -507,9 +507,6 @@ export default {
       //     );
       //     this.countriesList = countryList;
       //   },
-      //   (error) => {
-      //     console.log(error);
-      //   }
       // );
       let countryList = countries.map((element) => {
         return {
@@ -641,7 +638,7 @@ export default {
             }
           });
       } else {
-        console.log("rr", this.v$);
+        console.log("error :", this.v$);
       }
     },
   },

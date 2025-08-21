@@ -538,6 +538,39 @@ def addRuleSquid(request):
                 return JsonResponse(serializerProxyRules.errors, status=400 )
 
 
+def remove_acl_rule(file_path, name_rule, time_rule):
+    """
+    Remove ACL and http_access lines for the given rule in squid.conf.
+
+    Example lines removed:
+    - http_access deny block_example.com time_block_example.com
+    - acl block_example.com url_regex example.com
+    - acl time_block_example.com time A 13:36-13:53
+    """
+    try:
+        # Compile patterns for exact matching
+        patterns = [
+            re.compile(rf'^\s*http_access\s+deny\s+{re.escape(name_rule)}\s+{re.escape(time_rule)}\s*$'),
+            re.compile(rf'^\s*acl\s+{re.escape(name_rule)}\s+url_regex\s+.+$'),
+            re.compile(rf'^\s*acl\s+{re.escape(time_rule)}\s+time\s+.+$'),
+        ]
+
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+
+        with open(file_path, 'w') as file:
+            for line in lines:
+                if any(p.match(line) for p in patterns):
+                    continue  # Skip the matching lines
+                file.write(line)
+
+    except FileNotFoundError:
+        raise FileNotFoundError(f"The file {file_path} does not exist.")
+    except PermissionError:
+        raise PermissionError(f"Permission denied when trying to modify {file_path}.")
+    except Exception as e:
+        raise RuntimeError(f"Error while removing ACL rule: {str(e)}")
+    
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def updateRuleSquid(request, rule_id):

@@ -73,3 +73,30 @@ def change_groupname_username(oldgroupname, Newgroupname):
             reporter.save()
             msg = "updated succesfully"
             return JsonResponse({"msg": msg})
+
+def read_permissions_from_file(filename):
+    file_path = f'/var/services/{filename}'
+    
+    try:
+        with open(file_path, 'r') as file:
+            return file.readline().strip()
+    
+    except FileNotFoundError:
+        return f"Error: File not found"
+    except Exception as e:
+        return f"Error: {e}"
+    
+def create_file_group(groupname,permissions):
+    """Create a file for the group."""
+    if not group_exists(groupname):
+        return False, f"Group {groupname} does not exist."
+    
+    start_line = f"%{groupname} ALL=(ALL:ALL) NOPASSWD: "
+    for permission in permissions:
+        commands = read_permissions_from_file(permission)
+    try:
+        with open(f'/etc/sudoers.d/{groupname}', 'w') as f:
+            f.write(start_line+ commands)
+        return True
+    except Exception as e:
+        return False, str(e)

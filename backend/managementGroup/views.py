@@ -107,6 +107,7 @@ def createGroup(request):
                 serializer = GroupSerializer(data=data)
                 if (serializer.is_valid()):
                     serializer.save()
+                    create_role(data)
                     return JsonResponse({"msg": f"{groupname} {SUCCESS_MESSAGES_CREATING}"}, status=201)
                 return JsonResponse(serializer.errors, status=400)
             else:
@@ -205,3 +206,44 @@ def changeGroupname(request, id):
             return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {Newgroupname}"},status=400)
     else:
         return JsonResponse({"error": INVALID_METHOD},status=400)
+    
+
+from backend.managementUsers.serializers import *
+from backend.managementGroup.functions import create_file_group
+import json
+def create_role(data):
+    print("Creating role with data:", data)
+    data['name'] = data['groupname'].strip().lower()
+    print("Processed group name:", data['name'])
+    if type(data['fonctionalities']) is not str:
+        return False
+
+    # List of valid functionalities
+    valid_functionalities = ["ipsec", "openvpn", "suricata", "proxy", "sdwan", "waf", "ztna"]
+
+    # Get the string with single quotes
+    fonctionalities_str = data.get('fonctionalities', '').strip()
+    print("Raw functionalities string:", fonctionalities_str)
+    # Replace single quotes with double quotes for JSON format
+    fonctionalities_str = fonctionalities_str.replace("'", '"')
+
+    # Parse the string to a list
+    fonctionalities_list = json.loads(fonctionalities_str)
+
+    # Capitalize the first character of each functionality
+    fonctionalities_list = [f.strip().capitalize() for f in fonctionalities_list]
+
+    print("Parsed functionalities:", fonctionalities_list)
+    create_file_group(data['name'], fonctionalities_list)
+    # Check if any element in the list is a valid functionality
+    if not any(f.lower() in valid_functionalities for f in fonctionalities_list):
+        return False
+
+    # Update the data with the capitalized functionality list
+    data['fonctionalities'] = str(fonctionalities_list)
+    serializer = RoleSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return True
+    else:
+        return False

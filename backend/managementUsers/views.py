@@ -226,6 +226,7 @@ def create_role(request):
         - `SUCCESS_MESSAGES_CREATING`: A constant for the success message.
     """
     data = request.data
+    print({"data": data})
     data['name'] = data['name'].strip().lower()
     if type(data['fonctionalities']) is not str:
         return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_TYPE}"}, status=400)

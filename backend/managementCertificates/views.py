@@ -16,6 +16,7 @@ from backend.managementCertificates.constant_variables import PATH_CA_CRT, PATH_
 from backend.managementCertificates.list_certificates import get_list_all_cert_auth, get_list_all_certificates, get_one_cert_auth, get_one_certificate
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
+from backend.managementCertificates.utils import check_payload
 from backend.waf.models import ApplicationWaf
 from utils.errors_utils import CommandExecutionError
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
@@ -39,6 +40,7 @@ ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_EXPORTING = _("System error in exporting")
 ERROR_MESSAGES_DELETING_USED_ITEM = _("Unable to delete")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
 
 ##################################################
@@ -105,6 +107,10 @@ def create_cert_auth(request):
     """Creating a new Certificates Authority in system and adding it to the database"""
     try:
         data = request.data
+        
+        # Check payload validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
 
         # parse the incoming information
         data = request.data
@@ -318,7 +324,7 @@ def get_certificate(request, id):
         properties={
             'name': Schema(type=TYPE_STRING, example="cert_server"),
             'activation': Schema(type=TYPE_BOOLEAN, default=True),
-            'method': Schema(type=TYPE_OBJECT, required=['name_method'],
+            'method': Schema(type=TYPE_OBJECT, required=['method_name'],
             properties={
                 'method_name': Schema(type=TYPE_STRING, enum=["create", "import"]),
                 'certificate_type': Schema(type=TYPE_STRING, enum=["server", "client"]),
@@ -345,6 +351,11 @@ def create_certificate(request):
     try:
         # parse the incoming information
         data = request.data
+        
+        # Check payload validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
+        
         name = data.get('name', '')
         method = data.get('method', '')
         method_name = method.get("method_name", "")

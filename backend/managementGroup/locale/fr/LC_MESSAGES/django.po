@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 10:51+0000\n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,44 +24,44 @@ msgstr ""
 msgid "group name"
 msgstr "nom du groupe"
 
-#: backend/managementGroup/views.py:17
+#: backend/managementGroup/views.py:18
 msgid "Groupe name"
 msgstr "Nom du groupe"
 
-#: backend/managementGroup/views.py:18
+#: backend/managementGroup/views.py:19
 msgid "Groupe description"
 msgstr "Descriptif du groupe"
 
-#: backend/managementGroup/views.py:19
+#: backend/managementGroup/views.py:20
 msgid "Group with id"
 msgstr "Groupe avec id"
 
-#: backend/managementGroup/views.py:21
+#: backend/managementGroup/views.py:22
 msgid "is created"
 msgstr "est créé"
 
-#: backend/managementGroup/views.py:22
+#: backend/managementGroup/views.py:23
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/managementGroup/views.py:23
+#: backend/managementGroup/views.py:24
 msgid "is updated"
 msgstr "est mis à jour"
 
-#: backend/managementGroup/views.py:26
+#: backend/managementGroup/views.py:27
 msgid "Invalid"
 msgstr "invalide"
 
-#: backend/managementGroup/views.py:27
+#: backend/managementGroup/views.py:28
 msgid "Already exist"
 msgstr "Existe déjà"
 
-#: backend/managementGroup/views.py:28
+#: backend/managementGroup/views.py:29
 #, fuzzy
 #| msgid "Invalid"
 msgid "Invalid method"
 msgstr "Méthode invalide"
 
-#: backend/managementGroup/views.py:29
+#: backend/managementGroup/views.py:30
 msgid "does not exist"
 msgstr "n'existe pas"

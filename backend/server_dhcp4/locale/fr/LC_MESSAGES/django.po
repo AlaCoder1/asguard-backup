@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 20:39+0000\n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/server_dhcp4/functions.py:13 backend/server_dhcp4/views.py:16
+#: backend/server_dhcp4/functions.py:13 backend/server_dhcp4/views.py:17
 msgid "DHCP server"
 msgstr "Serveur DHCP"
 
@@ -42,26 +42,26 @@ msgstr "plage de"
 msgid "range to"
 msgstr "plage à"
 
-#: backend/server_dhcp4/views.py:17
+#: backend/server_dhcp4/views.py:18
 msgid "The specified range is outside the available range"
 msgstr "La plage spécifiée est en dehors des plages disponibles"
 
-#: backend/server_dhcp4/views.py:21
+#: backend/server_dhcp4/views.py:22
 msgid "is created"
 msgstr "est créé"
 
-#: backend/server_dhcp4/views.py:22
+#: backend/server_dhcp4/views.py:23
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/server_dhcp4/views.py:24
+#: backend/server_dhcp4/views.py:25
 msgid "does not found"
 msgstr "n'est pas trouvé"
 
-#: backend/server_dhcp4/views.py:25
+#: backend/server_dhcp4/views.py:26
 msgid "does not active"
 msgstr "n'est pas active"
 
-#: backend/server_dhcp4/views.py:26
+#: backend/server_dhcp4/views.py:27
 msgid "Already exist"
 msgstr "Existe déjà"

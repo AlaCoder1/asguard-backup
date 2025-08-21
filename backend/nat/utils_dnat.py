@@ -39,7 +39,7 @@ def input_create_dnat(
         destination["protocol"] = destination_protocol
         if destination_port_to:
             destination["port_forwarding"] = f'{destination_port_from}-{destination_port_to}'
-        if destination_port:
+        if destination_port and internal_address:
             destination["port"] = f' : {destination_port}'
 
     return source, destination

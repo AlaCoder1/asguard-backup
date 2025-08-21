@@ -192,7 +192,7 @@ EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
 
 # convert  to dhcp  connexion base and advanced
 def update_conn_dhcp_IPV4(config,ifname,uuid,aux_main):
-    #lancer la fonction de "remove old config"
+    
     commandes=[]
     cmd_final=[]
     if not aux_main:

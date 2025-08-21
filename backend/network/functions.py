@@ -4,6 +4,23 @@ from backend.network.validation import HostnameException, InvalidBooleanxception
 from .models import *
 from django.conf import settings
 import time
+def get_connection_uuid(connection_name=None):
+    """
+    Get the UUID of a network connection using nmcli.
+    If `connection_name` is provided, it finds the UUID for that connection.
+    Otherwise, returns the UUID of the first connection.
+    """
+    try:
+        output = subprocess.check_output(["nmcli", "-t", "-f", "NAME,UUID", "connection", "show"])
+        lines = output.decode().splitlines()
+        for line in lines:
+            name, uuid = line.strip().split(":")
+            if connection_name is None or name == connection_name:
+                return uuid,name
+        return None
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting UUID: {e}")
+        return None
 def validate_data_input(data,name_interface):
     try:
         setuptype_ip4 = data.get('setuptypeIP4')

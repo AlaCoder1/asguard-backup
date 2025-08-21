@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-21 16:08+0000\n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/vlan/functions.py:10 backend/vlan/views.py:15
+#: backend/vlan/functions.py:10 backend/vlan/views.py:16
 msgid "Configuration VLAN"
 msgstr "Configuration VLAN"
 
-#: backend/vlan/functions.py:13 backend/vlan/views.py:19
+#: backend/vlan/functions.py:13 backend/vlan/views.py:20
 msgid "Saved"
 msgstr "Sauvegardé"
 
@@ -54,22 +54,22 @@ msgstr "L'ID VLAN doit être compris entre "
 msgid "Invalid VLAN priority. Allowed values are: "
 msgstr "Priorité VLAN non valide. Les valeurs autorisées sont : "
 
-#: backend/vlan/views.py:16
+#: backend/vlan/views.py:17
 msgid "Interface VLAN"
 msgstr "Interface VLAN"
 
-#: backend/vlan/views.py:20
+#: backend/vlan/views.py:21
 msgid "is created"
 msgstr "est créé"
 
-#: backend/vlan/views.py:21
+#: backend/vlan/views.py:22
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/vlan/views.py:25
+#: backend/vlan/views.py:26
 msgid "Already exist"
 msgstr "Existe déjà"
 
-#: backend/vlan/views.py:26
+#: backend/vlan/views.py:27
 msgid "does not exist"
 msgstr "n'existe pas"

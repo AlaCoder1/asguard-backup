@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-24 08:36+0000\n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -131,34 +131,34 @@ msgstr ""
 "La valeur du délai d'attente est hors limites. Elle doit être comprise entre "
 "1 et 300 secondes"
 
-#: backend/network/views.py:22
+#: backend/network/views.py:24
 msgid "Interface"
 msgstr "Interface"
 
-#: backend/network/views.py:23
+#: backend/network/views.py:25
 msgid "Connection"
 msgstr "Connexion"
 
-#: backend/network/views.py:26
+#: backend/network/views.py:28
 msgid "is configured"
 msgstr "est configuré"
 
-#: backend/network/views.py:27
+#: backend/network/views.py:29
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/network/views.py:31
+#: backend/network/views.py:33
 msgid "is not active"
 msgstr "n'est pas active"
 
-#: backend/network/views.py:32
+#: backend/network/views.py:34
 msgid "Failed to configure"
 msgstr "Échec de la configuration de l'"
 
-#: backend/network/views.py:33
+#: backend/network/views.py:35
 msgid "Failed to delete"
 msgstr "Échec de la suppression de l'"
 
-#: backend/network/views.py:34
+#: backend/network/views.py:36
 msgid "You need to delete the interface and set it up again"
 msgstr "Vous devez supprimer l'interface et la configurer à nouveau"

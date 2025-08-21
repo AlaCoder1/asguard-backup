@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-31 11:41+0000\n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,54 +22,54 @@ msgstr ""
 msgid "name"
 msgstr "nom"
 
-#: backend/settings/views.py:79
+#: backend/settings/views.py:81
 msgid "System"
 msgstr "Système"
 
-#: backend/settings/views.py:80
+#: backend/settings/views.py:82
 msgid "Language"
 msgstr "Langue"
 
-#: backend/settings/views.py:81
+#: backend/settings/views.py:83
 msgid "Configuration"
 msgstr "Configuration"
 
-#: backend/settings/views.py:84
+#: backend/settings/views.py:86
 msgid "is created"
 msgstr "est créé"
 
-#: backend/settings/views.py:85
+#: backend/settings/views.py:87
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/settings/views.py:86
+#: backend/settings/views.py:88
 msgid "is updated"
 msgstr "est mis à jour"
 
-#: backend/settings/views.py:89
+#: backend/settings/views.py:91
 msgid "System error in creating"
 msgstr "Erreur système lors de la création"
 
-#: backend/settings/views.py:90 backend/settings/views.py:95
+#: backend/settings/views.py:92 backend/settings/views.py:97
 msgid "does not exist"
 msgstr "n'existe pas"
 
-#: backend/settings/views.py:91
+#: backend/settings/views.py:93
 msgid "Timezone with id"
 msgstr "Timezone avec id"
 
-#: backend/settings/views.py:92
+#: backend/settings/views.py:94
 msgid "Invalid"
 msgstr "Invalide"
 
-#: backend/settings/views.py:93
+#: backend/settings/views.py:95
 msgid "Already exist"
 msgstr "existe déjà"
 
-#: backend/settings/views.py:94
+#: backend/settings/views.py:96
 msgid "Invalid method"
 msgstr "Méthode invalide"
 
-#: backend/settings/views.py:96
+#: backend/settings/views.py:98
 msgid "Invalid data"
 msgstr "Données invalide"

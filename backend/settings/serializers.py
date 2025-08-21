@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from backend.settings.models import Network, ServerReseau, System, Timezone
+from backend.network.models import Interface
+from backend.settings.models import Network, ServerReseau, SettingInterface, System, Timezone,Settings
 
 
 class SystemSerializer(serializers.ModelSerializer):
@@ -26,3 +27,14 @@ class TimezoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Timezone
         fields =  ('name', )
+class SettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Settings
+        fields =  "__all__"
+
+class SettingsInterfaceSerializer(serializers.ModelSerializer):
+    interface = serializers.PrimaryKeyRelatedField(queryset=Interface.objects.all())
+      
+    class Meta:
+            model = SettingInterface
+            fields = '__all__'

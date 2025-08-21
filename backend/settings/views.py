@@ -51,26 +51,26 @@ Constants:
 
 """
 from django.http import JsonResponse
-# from backend.managementGroup.remoteFunctions import sudo
+from backend.settings.serializers import SystemSerializer
+from backend.gateway.models import Gateway
+from backend.settings.function import add_dns_servers, add_gateway_to_dns_servers, change_domain, change_hostname, execute_all_commandes, get_all_interfaces, manage_commandes, save_config_db, set_time_zone
+from backend.settings.models import Network, Settings, System, Timezone
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from backend.network.models import Interface
 from backend.waf.models import RulesWaf
-from .models import *
-from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import gettext_lazy as _
 import json
-from backend.authentification.views import *
-from backend.gateway.models import *
-import socket
-import datetime
-import subprocess
-import random
-from .function import *
+
 from django.core import serializers
 from collections import defaultdict
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import AllowAny
+from django.views.decorators.http import require_http_methods
 # Create your views here.
 
 
@@ -94,6 +94,8 @@ ERROR_MESSAGES_EXISTANT = _("Already exist")
 INVALID_METHOD = _("Invalid method")
 DOES_NOT_EXIST = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
+
+ERROR_MESSAGES_UPDATING = _("Error in updating settings")
 
 
 @swagger_auto_schema('PUT', responses={200: 'Updated', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
@@ -767,3 +769,107 @@ def change_language(request, id):
         return JsonResponse({"error": list(serializer_system.errors.values())[0][0]}, status=400)
     except System.DoesNotExist:
         return JsonResponse({"error":f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+@swagger_auto_schema(
+    method='PUT',
+    operation_summary="API TO UPDATE CONFIGURATION",
+    responses={200: "Updated", 400: "Bad Request"},
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        required=["tcp_port"],  # tcp_port is required
+        properties={
+            "enable_ssh": Schema(
+                type=TYPE_BOOLEAN,
+                default=True,
+                description="Enable SSH service (default: True)"
+            ),
+            "root_login": Schema(
+                type=TYPE_BOOLEAN,
+                default=True,
+                description="Allow root login via SSH (default: True)"
+            ),
+            "auth_method": Schema(
+                type=TYPE_STRING,
+                maxLength=800,
+                description="Authentication method (max_length=800, blank allowed)"
+            ),
+            "session_timeout": Schema(
+                type=TYPE_INTEGER,
+                nullable=True,
+                description="Session timeout in seconds (nullable)"
+            ),
+            "protocol_http": Schema(
+                type=TYPE_BOOLEAN,
+                default=True,
+                description="Enable HTTP protocol (default: True)"
+            ),
+            "certificat": Schema(
+                type=TYPE_INTEGER,
+                nullable=True,
+                description="Certificate foreign key (nullable, provide certificate ID)"
+            ),
+            "tcp_port": Schema(
+                type=TYPE_INTEGER,
+                description="TCP port number (required)"
+            ),
+            "login_message": Schema(
+                type=TYPE_BOOLEAN,
+                default=True,
+                description="Show login message (default: True)"
+            ),
+        },
+        example={   # 👈 Example JSON body
+            "enable_ssh": True,
+            "root_login": False,
+            "auth_method": "password",
+            "session_timeout": 600,
+            "protocol_http": True,
+            "certificat": 2,
+            "tcp_port": 22,
+            "login_message": True
+        }
+    )
+)
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_settings(request, id):
+    try:
+        if Settings.objects.filter(id=id).exists():
+            data=request.data
+            enable_ssh=data.get("enable_ssh",None)
+            root_login=data.get("root_login",None)
+            auth_method=data.get("auth_method",None)
+            session_timeout=data.get("session_timeout",None)
+            protocol_http=data.get("protocol_http",None)
+            certificat=data.get("certificat",None)
+            tcp_port=data.get("tcp_port",None)
+            login_message=data.get("login_message",None)
+            interface_ssh=data.get("interface_ssh",[])
+            interface_web=data.get("interface_web",[])
+            all_interfaces=get_all_interfaces()
+            data={
+                "enable_ssh":enable_ssh,
+                "root_login":root_login,
+                "auth_method":auth_method,
+                "session_timeout":session_timeout,
+                "protocol_http":protocol_http,
+                "certificat":certificat,
+                "tcp_port":tcp_port,
+                "login_message":login_message
+                }
+            all_commandes=manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message)
+            aux_commandes=execute_all_commandes(all_commandes)
+            if aux_commandes:
+              msg,status=save_config_db(data,id,interface_web,interface_ssh)
+            else:
+                msg=ERROR_MESSAGES_UPDATING
+                status=400
+        else:
+            msg=f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
+            status=404 
+        return JsonResponse({"msg":msg},status=status)
+        
+    except Settings.DoesNotExist:
+        return JsonResponse({"msg":f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

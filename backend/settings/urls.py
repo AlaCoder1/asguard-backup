@@ -18,6 +18,7 @@ urlpatterns = [
     path('getSystem/<int:id>', views.getSystem, name="getSystem"),
     path('getNetwork/<int:id>', views.getNetwork, name="getNetwork"),
     path('createSystem', views.create_system, name="createSystem"),
+    path('updateSettings/<int:id>', views.update_settings, name="updateSettings"),
     # path('createServerReseau', views.createServerReseau, name="createServer"),
     # path('createNetwork', views.createNetwork, name="createNetwork"),
     # # path('initDBtimeZone', views.initDB_by_timeZone, name="initDBtimeZone"),

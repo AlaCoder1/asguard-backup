@@ -197,7 +197,6 @@ export default {
     axios
       .get("/subscription/list_features_about_last_subscription")
       .then((response) => {
-        console.log(response.data.list_features);
         this.last_Subscription = response.data.list_features;
       });
     // setTimeout(() => {
@@ -220,7 +219,6 @@ export default {
         axios
           .post(`/ztna/${endpoint}`)
           .then((response) => {
-            console.log("response", response);
             this.snackbar = true;
             this.color = "success";
             this.textAlert = response.data.message;
@@ -251,7 +249,6 @@ export default {
   methods: {
     startStopServer(status) {
       const user = user_privilege("Ztna");
-      console.log("include");
       if (
         user &&
         user !== "viewer" &&
@@ -267,7 +264,6 @@ export default {
         axios
           .post(`/ztna/${endpoint}`)
           .then((response) => {
-            console.log("response", response);
             this.snackbar = true;
             this.color = "success";
             this.textAlert = response.data.message;

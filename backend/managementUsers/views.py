@@ -27,7 +27,7 @@ from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING,
 from django.core.exceptions import ObjectDoesNotExist
 
 from utils.utils_email import is_valid_email
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_USER = _("User")
@@ -70,6 +70,7 @@ ERROR_MESSAGES_GROUP_NOT_MATCHING = _('No group found matching the username')
                      operation_description="API TO GET LIST OF Users")
 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_users(request):
@@ -123,6 +124,7 @@ def get_all_users(request):
                      operation_description="API TO GET LIST OF roles")
 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_roles(request):
@@ -192,6 +194,7 @@ def get_all_roles(request):
 
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_role(request):
@@ -277,6 +280,7 @@ def create_role(request):
 )
 
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def modify_role(request,id):
@@ -357,6 +361,7 @@ def modify_role(request,id):
     responses={200: 'Role successfully deleted', 400: 'Bad Request'}, 
 )
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_role(request, id):
@@ -416,6 +421,7 @@ def delete_role(request, id):
     responses={200: 'User retrieved successfully', 400: 'Bad Request'}, 
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_user(request, id):
@@ -493,6 +499,7 @@ def get_user(request, id):
 )
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_user(request):
@@ -680,6 +687,7 @@ def create_user(request):
     responses={200: 'User and group deleted successfully', 400: 'Bad Request'}, 
 )
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_user(request, id):
     """
@@ -768,6 +776,7 @@ def delete_user(request, id):
 )
 
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def modify_user(request, id):
@@ -947,6 +956,7 @@ def modify_user(request, id):
 )
 
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_profile(request, id):
@@ -1068,6 +1078,7 @@ def update_profile(request, id):
 )
 
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def reset_password_by_admin(request, id):
@@ -1127,6 +1138,7 @@ def reset_password_by_admin(request, id):
 )
 
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_password(request):
@@ -1176,6 +1188,7 @@ def change_password(request):
     responses={200: 'Successfully retrieved the language', 400: 'Bad Request'}, 
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_profile_language(request, id):
@@ -1232,6 +1245,7 @@ def get_profile_language(request, id):
     responses={200: "Language updated successfully", 400: "Bad Request"},
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_language(request, id):

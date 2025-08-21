@@ -16,8 +16,8 @@ from .models import Gateway
 from .serializers import GatewaySerializer
 from .functions import add_gateway_db, update_gateway_db
 from backend.routing.models import Routing
-
-
+from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_GATEWAY = _("Gateway")
 # Success messages
@@ -51,6 +51,7 @@ ERROR_MESSAGES_EXISTANT = _("already exist")
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_all_gateways(request):
     """
@@ -97,6 +98,7 @@ def get_all_gateways(request):
 )
 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_all_static_gateways(request):
     """
@@ -152,6 +154,7 @@ def get_all_static_gateways(request):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_gateway_by_id(request, id):
     """
@@ -191,7 +194,7 @@ def get_gateway_by_id(request, id):
         type=openapi.TYPE_OBJECT,
         properties={
             'gwname': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the gateway', example='GWTest2'),
-            'gwaddress': openapi.Schema(type=openapi.TYPE_STRING, description='IP address of the gateway', example='10.1.15.1'),
+            'gwaddress': openapi.Schema(type=openapi.TYPE_STRING, description='IP address of the gateway', example=config('IP_ADDRESS')),
             'description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the gateway', example='just test'),
             'default_aux': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Indicates if this is the default auxiliary gateway', example=True),
             'far_aux': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Indicates if this is the far auxiliary gateway', example=False),
@@ -206,6 +209,7 @@ def get_gateway_by_id(request, id):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_static_gateway(request):
     """
@@ -259,6 +263,7 @@ def add_static_gateway(request):
     
 )
 @api_view(['DELETE'])
+@require_http_methods(["DELETE"])
 @authentication_classes([SessionAuthentication])
 def delete_gateway(request, id):
     """
@@ -305,7 +310,7 @@ def delete_gateway(request, id):
         type=openapi.TYPE_OBJECT,
         properties={
             'gwname': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the gateway', example='GWTest2'),
-            'gwaddress': openapi.Schema(type=openapi.TYPE_STRING, description='IP address of the gateway', example='10.1.15.1'),
+            'gwaddress': openapi.Schema(type=openapi.TYPE_STRING, description='IP address of the gateway', example=config('IP_ADDRESS')),
             'description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the gateway', example='just test'),
             'default_aux': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Indicates if this is the default auxiliary gateway', example=True),
             'far_aux': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Indicates if this is the far auxiliary gateway', example=False),
@@ -319,6 +324,7 @@ def delete_gateway(request, id):
     }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_gateway(request,id):
     """

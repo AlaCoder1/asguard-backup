@@ -78,16 +78,13 @@ export default {
       const parsedArray = JSON.parse(Array_String);
 
       // this.users = parsedArray;
-      // console.log("parsedarray :"+parsedArray)
 
       return parsedArray;
     },
     // ... other methods
   },
   // beforeMount: async function () {
-  //   console.log(
-  //     // "before mount data.users :" + JSON.stringify(this.$root.$data.users)
-  //   );
+
 
   //   //   parsing users data
   //   let parsedData = this.setData(this.$root.$data.users);
@@ -109,12 +106,10 @@ export default {
 
   // },
   beforeMount: async function () {
-    // console.log("before mount data.users :" + JSON.stringify(this.$root.$data.users));
 
     //   parsing users data
     let userData = document.getElementById("app").attributes["users"].value;
     let parsedData = this.setData(userData);
-    console.log("parsedData", parsedData);
 
     this.users = parsedData;
     //   parsing users data

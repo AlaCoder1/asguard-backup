@@ -34,17 +34,12 @@ export default {
             );
 
             this.socket.onopen = () => {
-                console.log("WebSocket connection opened.");
                 this.socket.send(JSON.stringify({
                     'id': 1
                 }));
             };
             this.socket.onmessage = (event) => {
-                // console.log('event', event.data)
                 const data = JSON.parse(event.data);
-                 console.log("aaaaaaaaaaaaaa",data)
-
-
             };
 
         }

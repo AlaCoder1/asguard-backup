@@ -104,8 +104,8 @@ ERROR_MESSAGES_UPDATING = _("Error in updating settings")
                                                              'domain': Schema(type=TYPE_STRING,example="asurad.com"),
                                                              'timezone': Schema(type=TYPE_STRING,example="Africa/Addis_Ababa"),
                                                              'dns_servers': Schema(type=TYPE_OBJECT,
-                                                                                properties={'dns_server': Schema(type=TYPE_STRING,example="1.1.1.2"),
-                                                                                            'gateway': Schema(type=TYPE_STRING,example="10.1.12.1"),
+                                                                                properties={'dns_server': Schema(type=TYPE_STRING,example=config('SERVER_DNS')),
+                                                                                            'gateway': Schema(type=TYPE_STRING,example=config('IP_ADDRESS')),
                                                                                             'interface_id': Schema(type=TYPE_INTEGER,example=1),
                                                                                             'metric': Schema(type=TYPE_INTEGER,example=20014)}),
                                                              },example={
@@ -113,18 +113,19 @@ ERROR_MESSAGES_UPDATING = _("Error in updating settings")
             "domain": "asguad.com",
             "timezone": "Africa/Addis_Ababa",
             "dns_servers": [{
-                "dns_server": "1.1.1.2",
-                "gateway": "10.1.12.1",
+                "dns_server": config('SERVER_DNS'),
+                "gateway": config('IP_ADDRESS'),
                 "interface_id": 3,
                 "metric": 20014
             }, {
-                "dns_server": "1.1.1.5",
-                "gateway": "192.168.189.172",
+                "dns_server": config('SERVER_DNS'),
+                "gateway": config('IP_ADDRESS'),
                 "interface_id": 5,
                 "metric": 20014
             }]
         }))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def generale_settings(request,id):
     """
@@ -244,6 +245,7 @@ def generale_settings(request,id):
     operation_description="Retrieve general system settings, including hostname, domain, and time zone."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def get_generale_settings(request,id):
@@ -311,6 +313,7 @@ def get_generale_settings(request,id):
     operation_description="Retrieve a list of available time zones with their ID, name, and offset."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def time_zones(request):
@@ -405,6 +408,7 @@ def time_zones(request):
     operation_description="Retrieve gateway information along with associated details, including DNS servers, interfaces, and metrics."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def gatways_information(request):
@@ -504,6 +508,7 @@ def gatways_information(request):
     operation_description="Retrieve system information by ID."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getSystem(request, id):
@@ -571,6 +576,7 @@ def getSystem(request, id):
     operation_description="Retrieve network information by ID."
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getNetwork(request, id):
@@ -656,6 +662,7 @@ def getNetwork(request, id):
     operation_description="Create a new system and store it in the database. A success message is returned upon successful creation."
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def create_system(request):
@@ -729,6 +736,7 @@ def create_system(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET SYSTEM LANGUAGE",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 # @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def get_language(request):
@@ -743,6 +751,7 @@ def get_language(request):
         operation_summary="API TO UPDATE SYSTEM LANGUAGE",
         request_body=Schema(type=TYPE_OBJECT, required=['language'], properties={'language': Schema(type=TYPE_STRING, enum=["en", "fr"])}))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_language(request, id):

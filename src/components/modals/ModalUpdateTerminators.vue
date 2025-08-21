@@ -164,7 +164,6 @@ export default {
     watch(
       () => selectedId.value,
       (val) => {
-        console.log(val);
         state.itemId = val;
       }
     );
@@ -176,10 +175,7 @@ export default {
       let routersObject;
       try {
         routersObject = JSON.parse(routersString);
-        console.log(routersObject);
-      } catch (error) {
-        console.error("Failed to parse routers string:", error);
-      }
+      } catch (error) {}
       routers.value = routersObject.data;
     };
 
@@ -204,7 +200,6 @@ export default {
           if (targetRouter) {
             requestBody.router = targetRouter.id;
           } else {
-            console.error("Router not found:", router.value);
           }
         }
         const proxyUrl = "https://asguard:3000";
@@ -215,15 +210,10 @@ export default {
             "Content-Type": "application/json",
           },
         });
-        console.log("here");
         setTimeout(() => {
           location.reload();
         }, 1000);
       } catch (error) {
-        console.error(
-          "Failed to update item:",
-          error.response ? error.response.data : error.message
-        );
       }
     };
 

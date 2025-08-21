@@ -16,7 +16,25 @@ from backend.routing.utils import check_gateway_address, create_gateway
 from backend.routing.utils_system import routing_in_system
 from utils.errors_utils import CommandExecutionError
 
-
+from django.views.decorators.http import require_http_methods
+from decouple import config
+request_body_routing=Schema(
+        type=TYPE_OBJECT, required=['destination_address', 'gateway_create', 'gateway'],
+        properties={
+            'destination_address': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="format of address"),
+            'gateway_create': Schema(type=TYPE_BOOLEAN, default=True, description="Sent True if the user want to create a new gateway"),
+            'gateway': Schema(
+                type=TYPE_OBJECT,
+                description="""If the user want to use an existent gateway then gateway will take the id of the gateway, like 1, 
+                but when creating a new gateway it will contains fields of the new gateway that the user wants to create it""",
+                properties={
+                    'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
+                    'gateway_address': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="format of address"),
+                    'metric': Schema(type=TYPE_INTEGER, example=20111)}),
+            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface related to the choosed gateway, only used when gateway_create is False (use an existent gateway)"),
+            'description': Schema(type=TYPE_STRING, example="Description of Route", description="description of the route"),
+            }
+            )
 # Constants
 CONSTANT_ROUTE = _("Route")
 CONSTANT_GATEWAY = _("Gateway")
@@ -40,6 +58,7 @@ ERROR_MESSAGES_INCORRECT_GATEWAY_CREATING = _("If you want to create a new gatew
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL ROUTINGS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_routing(request):
@@ -51,6 +70,7 @@ def get_all_routing(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET A ROUTING",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_routing(request, id):
@@ -62,6 +82,7 @@ def get_routing(request, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL GATEWAYS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_gateway(request):
@@ -73,6 +94,7 @@ def get_all_gateway(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET A GATEWAY",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_gateway(request, id):
@@ -84,24 +106,9 @@ def get_gateway(request, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE AN ROUTE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=['destination_address', 'gateway_create', 'gateway'],
-        properties={
-            'destination_address': Schema(type=TYPE_STRING, example="10.1.12.80", description="format of address"),
-            'gateway_create': Schema(type=TYPE_BOOLEAN, default=True, description="Sent True if the user want to create a new gateway"),
-            'gateway': Schema(
-                type=TYPE_OBJECT,
-                description="""If the user want to use an existent gateway then gateway will take the id of the gateway, like 1, 
-                but when creating a new gateway it will contains fields of the new gateway that the user wants to create it""",
-                properties={
-                    'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-                    'gateway_address': Schema(type=TYPE_STRING, example="10.1.15.1", description="format of address"),
-                    'metric': Schema(type=TYPE_INTEGER, example=20111)}),
-            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface related to the choosed gateway, only used when gateway_create is False (use an existent gateway)"),
-            'description': Schema(type=TYPE_STRING, example="Description of Route", description="description of the route"),
-            }
-            ))
+    request_body=request_body_routing)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_routing(request):
@@ -169,6 +176,7 @@ def create_routing(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE AN ROUTE",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_routing(request, id):
@@ -200,24 +208,9 @@ def delete_routing(request, id):
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE AN ROUTE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=['destination_address', 'gateway_create', 'gateway'],
-        properties={
-            'destination_address': Schema(type=TYPE_STRING, example="10.1.12.80", description="format of address"),
-            'gateway_create': Schema(type=TYPE_BOOLEAN, default=True, description="Sent True if the user want to create a new gateway"),
-            'gateway': Schema(
-                type=TYPE_OBJECT,
-                description="""If the user want to use an existent gateway then gateway will take the id of the gateway, like 1, 
-                but when creating a new gateway it will contains fields of the new gateway that the user wants to create it""",
-                properties={
-                    'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-                    'gateway_address': Schema(type=TYPE_STRING, example="10.1.15.1", description="format of address"),
-                    'metric': Schema(type=TYPE_INTEGER, example=20111)}),
-            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface related to the choosed gateway, only used when gateway_create is False (use an existent gateway)"),
-            'description': Schema(type=TYPE_STRING, example="Description of Route", description="description of the route"),
-            }
-            ))
+    request_body=request_body_routing)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_routing(request, id):

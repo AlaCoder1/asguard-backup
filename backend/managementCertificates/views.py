@@ -5,7 +5,7 @@ from django.db.models.deletion import ProtectedError
 from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import SessionAuthentication
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
+from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Parameter, IN_PATH
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from backend.ipsec.models import ServerIPsec
@@ -20,7 +20,7 @@ from backend.waf.models import ApplicationWaf
 from utils.errors_utils import CommandExecutionError
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 
-
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_CA = _("Certificate Authority")
 CONSTANT_OPENVPN_SERVER = _("openvpn server")
@@ -48,6 +48,7 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL CERTIFICATES AUTHORITY",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_cert_auth(request):
@@ -58,8 +59,10 @@ def get_all_cert_auth(request):
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET A CERTIFICATE AUTHORITY",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_cert_auth(request, id):
@@ -95,6 +98,7 @@ def get_cert_auth(request, id):
                 'certificate_key': Schema(type=TYPE_STRING, example="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCvRd5q47gBq+CR\ncIphwhPc1wOTEiiyMaXJQ4ClKSLvyWBBlfeY4W1Nc0T8Cx5tj8VqtN0u5xk/SHBb\nonJX0TVA7tP9Diokna9uQgKvNTNb2CvS8EVQCRwxRMS/03h90dSZTGS8jxRk32Bg\nmV0nOe+pLunPg7kgpeoYEgFGIdTiUO6C1n5i+4vuy3rKLCk8lejGbnbTRWLgkdid\nE8WOUP7/DEGlD08WywhGArbwfwl/DLy0yo7p9whO/I/Ad/LVN6XzD2R3msLBPi48\nW7M2csEOPF5ys+5MyAOdsPjfTTyJxWjJWZPQ1OSUe8wG1i4tzc0TrlRXyvh1Y164\nPcrx8d/FAgMBAAECggEAJpFUSOcE9XExwC8odCx1nHG/upwTUmq0VV5CL5Wmt2bz\nhFsQmZZ5K8LCmkeEEY3CXiGgThLSLmetOay8RnClrD0hbpywT1BXawahepZVT894\njTkLt3nZt0mvlZpd+Cm1A2qY/Bjr3up8VaVJpzkLcIn/LweINBPuOA+2Mg19v7K8\nH1NZO/k8tTIID8JBsV/2nlWwPUuKJ5n6S0/KfuOV2kL9PO8zRFj1dARvAAY5Fj0u\ny7Yw7h1JPMYm+sffbeHIqS4OJUsK4Cx/v8mYJgSc/Q/GfloA3E4colWPDlXXCUga\nmFeYc/8Q3q3IjIIgp88GpxG8bw7KdyclQ7JzLW6XvQKBgQDVbZyIj6/VdPKCpUc3\nOY+YRPH1lDC584o/mwJxZHh/1ps+C7wGGNfkRxk9CZ4JO3vP8OwnkRiVBv8uUPQg\nKw+Y02wHiGPpKg3c/2yaIWbvHGPwReNJFccr50FOvbQnYjzcrWWeL70+2NA/qbzm\n6DVXeLUgCSFh0V/1VCBsKOYNDwKBgQDSO+rLbZrEgpF+4nqV9QG8DyiifvlCvlcA\n9T/TCrmmBQLxh2NdYRKDARj2URWiJyiGf5PVmUTazyVPGV4dOhpNOe8Ilsnr3wYj\n5QVA44pWc1mDI0X/1TDc0Thp7K5zBjXqGPeeuSeb1QIaO0mB48VByTFGC4nf0KF3\nk99UYoPt6wKBgQC0FkhFxpBEmehjKpjb1Vr/zfUoFcHDtebKYr599Zvjqq7VfMtL\njbzlZsS6Bxptid6gCBcMD9dhMEUzzKUhW5ROjN8TwBcl0BFgj7oQl+ymCBufyyjM\nK28i8X/etB2GOdNHFZywDHIvzHxzq4K0h+0ygKy8elfLlQLWHAU7nor3KwKBgQC8\nx6Lpsu0T4m8F8hbDyzMYjMAfUkc/gK2dpZv/RRU5mCxxd/Jo6n719ilVHbCAYAtK\n4wp79lpW5UWKRqw1MHRnvkr/em+tByJ7Xu6duvUA9il90VHNDcIHtzOiIi7wCLan\nFG5eL8L6coalyXETWtVJYoGFdV0EBlLHjpgvLRtsqwKBgD0TpsksfShhJ62mlBeJ\nN8gHJJX7NRs3yHdWuZgRUfgCn7pF7zoGwJW6ymO2TUQJkDa78Vv1MhONk7LBeyZ1\nIGuQvos3kTrbHtgmpqqD0/RnF7DhGqY3kjsVQuLjc9EAq8qPSHvtFs1tnw/p/VsC\ng6T46uQDHG5mLBV1/uZiDetw\n-----END PRIVATE KEY-----", description="When name_method is import"),
                 'serial': Schema(type=TYPE_STRING, example="5622", description="Optional, when name_method is import"),}),}))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_cert_auth(request):
@@ -196,11 +200,13 @@ def create_cert_auth(request):
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DELETE CERTIFICATE AUTHORITY",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_cert_auth(request, id):
+def delete_cert_auth(_, id):
     """Deleting a Certificates Authority from system and then from database"""
     try:
         ca = CertificateAuthority.objects.get(id=id)
@@ -226,9 +232,11 @@ def delete_cert_auth(request, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO DOWNLOAD CERTIFICATE AUTHORITY",
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     request_body=Schema(type=TYPE_OBJECT, required=['type'],
     properties={"type": Schema(type=TYPE_STRING, enum=['certificate', 'private_key'])}))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def export_cert_auth(request, id):
@@ -250,11 +258,13 @@ def export_cert_auth(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DOWNLOAD REVOKACTION LIST OF A CERTIFICATE AUTHORITY",)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def export_cert_auth_list_rev(request, id):
+def export_cert_auth_list_rev(_, id):
     """Exporting a Certificate Authority"""
     try:
         ca = CertificateAuthority.objects.get(id=id)
@@ -274,6 +284,7 @@ def export_cert_auth_list_rev(request, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL CERTIFICATES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_certificates(request):
@@ -284,8 +295,10 @@ def get_all_certificates(request):
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET A CERTIFICATE",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_certificate(request, id):
@@ -324,6 +337,7 @@ def get_certificate(request, id):
                 'certificate_key': Schema(type=TYPE_STRING, example="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCvRd5q47gBq+CR\ncIphwhPc1wOTEiiyMaXJQ4ClKSLvyWBBlfeY4W1Nc0T8Cx5tj8VqtN0u5xk/SHBb\nonJX0TVA7tP9Diokna9uQgKvNTNb2CvS8EVQCRwxRMS/03h90dSZTGS8jxRk32Bg\nmV0nOe+pLunPg7kgpeoYEgFGIdTiUO6C1n5i+4vuy3rKLCk8lejGbnbTRWLgkdid\nE8WOUP7/DEGlD08WywhGArbwfwl/DLy0yo7p9whO/I/Ad/LVN6XzD2R3msLBPi48\nW7M2csEOPF5ys+5MyAOdsPjfTTyJxWjJWZPQ1OSUe8wG1i4tzc0TrlRXyvh1Y164\nPcrx8d/FAgMBAAECggEAJpFUSOcE9XExwC8odCx1nHG/upwTUmq0VV5CL5Wmt2bz\nhFsQmZZ5K8LCmkeEEY3CXiGgThLSLmetOay8RnClrD0hbpywT1BXawahepZVT894\njTkLt3nZt0mvlZpd+Cm1A2qY/Bjr3up8VaVJpzkLcIn/LweINBPuOA+2Mg19v7K8\nH1NZO/k8tTIID8JBsV/2nlWwPUuKJ5n6S0/KfuOV2kL9PO8zRFj1dARvAAY5Fj0u\ny7Yw7h1JPMYm+sffbeHIqS4OJUsK4Cx/v8mYJgSc/Q/GfloA3E4colWPDlXXCUga\nmFeYc/8Q3q3IjIIgp88GpxG8bw7KdyclQ7JzLW6XvQKBgQDVbZyIj6/VdPKCpUc3\nOY+YRPH1lDC584o/mwJxZHh/1ps+C7wGGNfkRxk9CZ4JO3vP8OwnkRiVBv8uUPQg\nKw+Y02wHiGPpKg3c/2yaIWbvHGPwReNJFccr50FOvbQnYjzcrWWeL70+2NA/qbzm\n6DVXeLUgCSFh0V/1VCBsKOYNDwKBgQDSO+rLbZrEgpF+4nqV9QG8DyiifvlCvlcA\n9T/TCrmmBQLxh2NdYRKDARj2URWiJyiGf5PVmUTazyVPGV4dOhpNOe8Ilsnr3wYj\n5QVA44pWc1mDI0X/1TDc0Thp7K5zBjXqGPeeuSeb1QIaO0mB48VByTFGC4nf0KF3\nk99UYoPt6wKBgQC0FkhFxpBEmehjKpjb1Vr/zfUoFcHDtebKYr599Zvjqq7VfMtL\njbzlZsS6Bxptid6gCBcMD9dhMEUzzKUhW5ROjN8TwBcl0BFgj7oQl+ymCBufyyjM\nK28i8X/etB2GOdNHFZywDHIvzHxzq4K0h+0ygKy8elfLlQLWHAU7nor3KwKBgQC8\nx6Lpsu0T4m8F8hbDyzMYjMAfUkc/gK2dpZv/RRU5mCxxd/Jo6n719ilVHbCAYAtK\n4wp79lpW5UWKRqw1MHRnvkr/em+tByJ7Xu6duvUA9il90VHNDcIHtzOiIi7wCLan\nFG5eL8L6coalyXETWtVJYoGFdV0EBlLHjpgvLRtsqwKBgD0TpsksfShhJ62mlBeJ\nN8gHJJX7NRs3yHdWuZgRUfgCn7pF7zoGwJW6ymO2TUQJkDa78Vv1MhONk7LBeyZ1\nIGuQvos3kTrbHtgmpqqD0/RnF7DhGqY3kjsVQuLjc9EAq8qPSHvtFs1tnw/p/VsC\ng6T46uQDHG5mLBV1/uZiDetw\n-----END PRIVATE KEY-----", description="When name_method is import"),
                 'serial': Schema(type=TYPE_STRING, example="5622", description="Optional, when name_method is import"),}),}))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_certificate(request):
@@ -440,12 +454,14 @@ def create_certificate(request):
 
 @swagger_auto_schema(
     'DELETE', request_body=CertificateSerializer, 
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO DELETE A CERTIFICATE AUTHORITY",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_certificate(request, id):
+def delete_certificate(_, id):
     """Deleting a Certificates from system and then from database"""
     try:
         cert = Certificate.objects.get(id=id)
@@ -481,12 +497,14 @@ def delete_certificate(request, id):
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO REVOKE A CERTIFICATE",
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     request_body=Schema(type=TYPE_OBJECT, required=['reason'],
     properties={"reason": Schema(type=TYPE_STRING, enum=[
         "No Status", "Unspecified", "key compromise", "CA compromise", "affiliation changed ", 
         "Supersed", "Cessation of Operation", "Certificate Hold ", "End of Validity Period ", 
         "Technical Issues"])}))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def revoke_certificate(request, id):
@@ -518,11 +536,13 @@ def revoke_certificate(request, id):
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO UNREVOKE A CERTIFICATE",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def unrevoke_certificate(request, id):
+def unrevoke_certificate(_, id):
     try:
         cert = Certificate.objects.get(id=id)
         ca = cert.certificate_authority
@@ -542,10 +562,12 @@ def unrevoke_certificate(request, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO DOWNLOAD A CERTIFICATE",
+    manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     request_body=Schema(type=TYPE_OBJECT, required=['download_type'],
     properties={"download_type": Schema(type=TYPE_STRING, enum=["certificate", "private_key", "p12"]),
                 "password": Schema(type=TYPE_STRING, example="password certificate", description="Required when download_type is p12")}))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def export_cert(request, id):

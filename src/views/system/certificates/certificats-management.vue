@@ -71,9 +71,7 @@ export default {
         (response) => {
           this.authoritesData = response.data;
         },
-        (error) => {
-          console.log(error);
-        }
+      
       );
     },
 
@@ -85,9 +83,7 @@ export default {
         (response) => {
           this.certifData = response.data;
         },
-        (error) => {
-          console.log(error);
-        }
+       
       );
     },
   },

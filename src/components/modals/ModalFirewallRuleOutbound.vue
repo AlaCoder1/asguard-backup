@@ -9,6 +9,9 @@
           <span class="headline" v-if="modalMode === 'edit'">
             {{ $t("firewall.update_rule") }}
           </span>
+           <span class="headline" v-if="modalMode === 'copy'">
+            {{ $t("firewall.clone") }}
+          </span>
         </v-card-title>
         <v-card-text>
           <v-select
@@ -139,6 +142,14 @@
                   >
                     {{ $t("buttons.create") }}</span
                   >
+
+                    <span
+                    class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'copy'"
+                  >
+                    {{ $t("firewall.cloneBTN") }}
+                  </span>
+
                   <span
                     class="text-white pr-3 pl-3"
                     v-if="modalMode === 'edit'"
@@ -181,6 +192,12 @@
                     >
                       {{ $t("buttons.create") }}
                     </span>
+                      <span
+                    class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'copy'"
+                  >
+                    {{ $t("firewall.cloneBTN") }}
+                  </span>
                     <span
                       class="text-white pr-3 pl-3"
                       v-if="modalMode === 'edit'"
@@ -503,7 +520,7 @@ export default {
       }
     };
     const populate = (data) => {
-      if (modalMode.value === "edit") {
+      if (modalMode.value === "edit" || modalMode.value === "copy") {
         state.id = data.id;
         let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
         let filtredProtocol = protocolList.value.filter(
@@ -550,7 +567,7 @@ export default {
           state.formData.protocol === "icmp type echo-reply"
         ) {
           payload = {
-            uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
+            uuid: modalMode.value === "create" || modalMode.value === "copy" ? uuidv4() : state.editValue,
             type_rule: "outbound",
             policy: state.formData.policy,
             rule_description: state.formData.rule_description,
@@ -559,11 +576,11 @@ export default {
             daddr: state.formData.daddr,
             id: modalMode.value === "edit" ? state.id : "",
             interUuid: state.interUuid,
-            status: modalMode.value === "create" ? "new" : "old",
+            status: modalMode.value === "create" || modalMode.value === "copy" ? "new" : "old",
           };
         } else {
           payload = {
-            uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
+            uuid: modalMode.value === "create" || modalMode.value === "copy" ? uuidv4() : state.editValue,
             type_rule: "outbound",
             policy: state.formData.policy,
             rule_description: state.formData.rule_description,
@@ -574,14 +591,13 @@ export default {
             dport: state.formData.dport,
             id: modalMode.value === "edit" ? state.id : "",
             interUuid: state.interUuid,
-            status: modalMode.value === "create" ? "new" : "old",
+            status: modalMode.value === "create" || modalMode.value === "copy" ? "new" : "old",
           };
         }
         if (modalMode.value === "edit") {
           // axios
           //   .put(`/rules/updateRule/${state.nameInter}`, payload)
           //   .then((response) => {
-          //     console.log("re", response);
           //     if (response.status == "200") {
           //       state.snackbar = true;
           //       state.color = "success";
@@ -592,18 +608,16 @@ export default {
           //     }
           //   })
           //   .catch((i) => {
-          //     console.log("res", i.response);
           //     state.snackbar = true;
           //     state.color = "red";
           //     state.textAlert = i.response.data.response;
           //   });
           emitter.emit("firewallRuleOutboundEdit", payload);
           emitter.emit("oldOutbound", editRow.value);
-        } else if (modalMode.value === "create") {
+        } else if (modalMode.value === "create" || modalMode.value === "copy") {
           // axios
           //   .post(`/rules/addRule/${state.nameInter}`, payload)
           //   .then((response) => {
-          //     console.log("re", response);
           //     if (response.status == "200") {
           //       state.snackbar = true;
           //       state.color = "success";
@@ -614,7 +628,6 @@ export default {
           //     }
           //   })
           //   .catch((i) => {
-          //     console.log("res", i.response);
           //     state.snackbar = true;
           //     state.color = "red";
           //     state.textAlert = i.response.data.response;
@@ -625,7 +638,7 @@ export default {
         closeModal();
         v$.value.$reset();
       } else {
-        console.log("error", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

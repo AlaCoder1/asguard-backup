@@ -160,7 +160,6 @@ export default {
     });
     const overlayMessage = computed(() => {
 current_user.value= user_privilege('Ztna') 
-console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("ZTNA")) {
@@ -537,7 +536,6 @@ console.log('current_user',current_user.value)
       try {
         IdentitiesObject = JSON.parse(IdentitiesString);
       } catch (error) {
-        console.error("Failed to parse Identities string:", error);
       }
 
       Identities.value = IdentitiesObject ? IdentitiesObject : [];
@@ -582,7 +580,6 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
     });
     const getCookie = (name) => {
       let cookieValue = null;
@@ -627,7 +624,6 @@ console.log('current_user',current_user.value)
           state.textAlert = "ZTNA is not running";
         }
       } else {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       }

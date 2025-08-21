@@ -40,17 +40,20 @@ class LogsStatsConsumer(AsyncWebsocketConsumer):
             logs_erializer.save()
        
     async def start_data_loop_global_chart(self):
-        while True:
-            list_data=[]
-            command = "sudo cat /var/log/openvpn/stats.log"
-            completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
-            output = completed_process.stdout.splitlines()
-            for x in output:
-                    data = {
-                        "log": x,
-                    }
-                    # print(data)
-                    list_data.append(data)
-                    await self.save_system_usage(data)
-                    await self.send(json.dumps(list_data))
-            await asyncio.sleep(900)
+        try:
+            while True:
+                list_data=[]
+                command = "sudo cat /var/log/openvpn/stats.log"
+                completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+                output = completed_process.stdout.splitlines()
+                for x in output:
+                        data = {
+                            "log": x,
+                        }
+                        # print(data)
+                        list_data.append(data)
+                        await self.save_system_usage(data)
+                        await self.send(json.dumps(list_data))
+                await asyncio.sleep(900)
+        except asyncio.CancelledError:
+            pass

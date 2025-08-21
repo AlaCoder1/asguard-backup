@@ -139,8 +139,6 @@ export default {
       .replace(/None/g, "null");
     let parsedArray = JSON.parse(validJsonString);
 
-    console.log('InterfacesFirewall : ', parsedArray)
-
     // let filtredInterface = parsedArray.filter(
     //   (i) => !i.ifname.startsWith("vlan")
     // );

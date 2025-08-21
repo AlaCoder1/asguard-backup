@@ -348,9 +348,9 @@ export default {
           ExpiredDays.value = Difference_In_Days;
         } else if (dateLocal < expireDate) {
           statusPackage.value = false;
-          console.log("Date Start is less than Date End");
+          // "Date Start is less than Date End"
         } else {
-          console.log("Date Start is equal to Date End");
+          // "Date Start is equal to Date End"
         }
       } else {
         subInfo.value = false;
@@ -364,7 +364,6 @@ export default {
       const allfeatures =
         document.getElementById("app").attributes["allfeature"].value;
       let all_features = JSON.parse(allfeatures);
-      console.log("all_features", all_features);
 
       let mappedService = all_features.map((e) => {
         return {
@@ -397,7 +396,6 @@ export default {
         axios
           .post("/subscription/license_key", payload)
           .then((response) => {
-            console.log("response", response);
             license.value = "";
 
             state.snackbar = true;
@@ -421,7 +419,6 @@ export default {
             }
           });
       }
-      console.log("Licence ajoutée:", license.value);
     };
 
     const resetForm = () => {

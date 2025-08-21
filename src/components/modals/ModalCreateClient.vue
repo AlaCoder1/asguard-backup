@@ -174,7 +174,6 @@ export default {
       () => editRow.value,
       (editRow) => {
         state.rowEditFilter = editRow;
-        console.log("rowFilter", state.rowEditFilter);
         state.id = editRow.id;
       }
     );
@@ -204,8 +203,6 @@ export default {
 
       axios.get("/certificates/getAllCertificates").then(
         (response) => {
-          console.log("response.data", response.data);
-
           let mapedListCertif = response.data.filter(
             (i) => i.certificate_type === "client"
           );
@@ -217,9 +214,6 @@ export default {
             };
           });
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -248,12 +242,10 @@ export default {
             client_cert: state.formData.clientCertificate?.name,
           };
         }
-        console.log("payl", payload);
 
         axios
           .post(`/openvpn/generateClientOpenvpn/${state.id}`, payload)
           .then((response) => {
-            console.log("response", response);
             if (response.status == "201") {
               state.openModal = false;
               state.snackbar = true;
@@ -277,7 +269,7 @@ export default {
             }
           });
       } else {
-        console.log("error", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

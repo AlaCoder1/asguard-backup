@@ -27,7 +27,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.gateway"
-                    label="Gateway *"
+                    :label="`${$t('dhcpV4.gateway')} *`"
                     item-title="name"
                     item-value="id"
                     :items="state.listGateway"
@@ -200,7 +200,6 @@ export default {
         .replace(/False/g, "false")
         .replace(/None/g, "null");
       const parsedArray = JSON.parse(validJsonString);
-      console.log("parsedArray", parsedArray);
 
       let gateway = parsedArray.map((i) => {
         return {
@@ -221,7 +220,6 @@ export default {
 
       axios.get("/network/AllInterfaces").then(
         (response) => {
-          console.log("interfaces :", response.data);
           let filtredInterface = response.data.filter(
             (i) =>
               !i.ifname.startsWith("tun_") &&
@@ -239,9 +237,7 @@ export default {
 
           state.listInterfaces = interfaces;
         },
-        (error) => {
-          console.log(error);
-        }
+      
       );
     };
 
@@ -386,7 +382,6 @@ export default {
         }
 
         if (modalMode.value === "edit") {
-          console.log("edit");
           axios
             .put(`/routing/updateRouting/${state.id}`, payload)
             .then((response) => {
@@ -438,7 +433,7 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

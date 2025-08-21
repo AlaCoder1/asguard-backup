@@ -384,7 +384,6 @@ export default {
           link.click();
           localStorage.removeItem("cert-name");
         } else {
-          console.log("error");
         }
       });
     },

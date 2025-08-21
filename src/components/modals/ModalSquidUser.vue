@@ -247,15 +247,11 @@ export default {
     );
     watch(
       () => editRow.value,
-      (val) => {
-        console.log("val", val);
-      }
+      (val) => {}
     );
     watch(
       () => modalMode.value,
-      (val) => {
-        console.log("modalMode", val);
-      }
+      (val) => {}
     );
     const closeModal = () => {
       emitter.emit("closeSquidUserModal");
@@ -290,16 +286,14 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();
-      console.log("result", result);
 
       if (result) {
-        console.log("state", state);
 
         let payload = {
           email: state.formData.email,
           username: state.formData.userName,
           password: state.formData.password,
-          user_id: id
+          user_id: id,
         };
 
         axios
@@ -327,7 +321,7 @@ export default {
             }
           });
       } else {
-        console.log("error", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

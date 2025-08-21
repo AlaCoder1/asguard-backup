@@ -55,7 +55,6 @@ export default {
     Footer,
   },
   mounted() {
-
     const searchParams = new URLSearchParams(window.location.search);
 
     let subId = searchParams.get("subscription_id");
@@ -77,9 +76,7 @@ export default {
             }, 3000);
           }
         })
-        .catch((i) => {
-          console.log("error : ", i);
-        });
+        .catch((i) => {});
     }
   },
 

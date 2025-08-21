@@ -154,7 +154,6 @@ export default {
     watch(
       () => selectedId.value,
       (val) => {
-        console.log(val);
         state.itemId = val;
       }
     );
@@ -184,15 +183,11 @@ export default {
             "Content-Type": "application/json",
           },
         });
-        console.log("here");
         setTimeout(() => {
           location.reload();
         }, 1000);
       } catch (error) {
-        console.error(
-          "Failed to update item:",
-          error.response ? error.response.data : error.message
-        );
+    
       }
     };
 

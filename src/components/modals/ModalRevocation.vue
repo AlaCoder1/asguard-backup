@@ -172,7 +172,6 @@ export default {
       axios
         .put(`/certificates/revokeCertificate/${id}`, payload)
         .then((response) => {
-          console.log("res", response);
 
           this.closeModal();
 

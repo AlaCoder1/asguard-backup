@@ -313,9 +313,6 @@ const getInterface = () => {
       });
       mapedInterface.value = interfaces;
     },
-    (error) => {
-      console.log(error);
-    }
   );
 };
 </script>

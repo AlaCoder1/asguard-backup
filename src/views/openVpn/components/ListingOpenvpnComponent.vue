@@ -217,7 +217,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege("Openvpn");
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -978,7 +977,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value);
       emitter.on("closeModalClient", () => {
         state.isModalOpenListView = false;
       });
@@ -1027,7 +1025,6 @@ export default {
 
         rowDataClients.value = parsedArrayClients;
       } catch (error) {
-        console.error("Error setting rowDataServers:", error);
       }
     });
 

@@ -42,8 +42,11 @@ def change_rule_one_to_one_nat_position_in_system(one_to_one_nat: OneToOneNat, n
     if next_rule_number:
         delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
         destination = input_create_one_to_one_nat(one_to_one_nat.destination_address)
+        interface_name = None
+        if one_to_one_nat.interface:
+            interface_name = one_to_one_nat.interface.ifname
         create_one_to_one_nat_rule_in_system(
-            one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination, 
+            interface_name, one_to_one_nat.source_address, destination, 
             one_to_one_nat.translation_address, next_rule_number)
 
 

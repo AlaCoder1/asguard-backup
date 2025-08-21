@@ -169,7 +169,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege("Ztna");
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -421,9 +420,7 @@ export default {
       }
       try {
         servicesObject = JSON.parse(servicesString);
-        console.log("servicesObject", servicesObject);
       } catch (error) {
-        console.error("Failed to parse services string:", error);
         servicesObject = { data: [] };
       }
 
@@ -432,7 +429,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(services.value);
       }
-      console.log("my services", services.value);
     };
 
     function onGridReady(params) {
@@ -448,7 +444,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value);
       fetchServices();
       emitter.on("closeServicesModal", () => {
         state.isModalOpen = false;

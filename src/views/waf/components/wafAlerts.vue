@@ -248,7 +248,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRules.value);
       } else {
-        console.error("Grid API.");
       }
     };
     const reloadData = () => {
@@ -264,7 +263,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataAttacks.value);
       } else {
-        console.error("Grid API.");
       }
     };
     const onGridReadyCountry = (params) => {
@@ -273,7 +271,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataCountry.value);
       } else {
-        console.error("Grid API.");
       }
     };
     onMounted(() => {

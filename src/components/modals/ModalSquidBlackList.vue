@@ -197,9 +197,7 @@ export default {
           .then((response) => {
             state.formData.originAclList = response.data.content;
           })
-          .catch((i) => {
-            console.log("i : ", i);
-          });
+          .catch((i) => {});
       }
     );
 
@@ -245,7 +243,7 @@ export default {
         const changeFormArray = state.formData.urlList.map(
           ({ url, status }) => ({
             url: url,
-            comment: status // If `status === true` means uncommented, `comment` should be false
+            comment: status, // If `status === true` means uncommented, `comment` should be false
           })
         );
 
@@ -278,7 +276,7 @@ export default {
             }
           });
       } else {
-        console.log("error", v$.value);
+        console.log("error :", v$.value);
       }
     };
     return {

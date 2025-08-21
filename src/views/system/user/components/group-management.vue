@@ -5,20 +5,37 @@
     <div style="height: 100%">
       <div style="display: flex; flex-direction: row; height: 100%">
         <div style="overflow: hidden; flex-grow: 1">
-          <ag-grid-vue domLayout="autoHeight" class="ag-theme-alpine mt-3 m-w-80" :columnDefs="columnDefs"
-            :rowData="rowData" :gridOptions="gridOptions" @grid-ready="onGridReady" :localeText="paginationLocalization"
-            :overlayNoRowsTemplate="overlayTemplate" />
+          <ag-grid-vue
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3 m-w-80"
+            :columnDefs="columnDefs"
+            :rowData="rowData"
+            :gridOptions="gridOptions"
+            @grid-ready="onGridReady"
+            :localeText="paginationLocalization"
+            :overlayNoRowsTemplate="overlayTemplate"
+          />
         </div>
       </div>
     </div>
 
     <div class="d-flex justify-end mb-15">
-      <v-btn color="asguard_primary_light" :rounded="true" class="mt-3 add-btn-group" @click="openModal">
+      <v-btn
+        color="asguard_primary_light"
+        :rounded="true"
+        class="mt-3 add-btn-group"
+        @click="openModal"
+      >
         <span class="text-white">{{ $t("button.addGroup") }}</span>
       </v-btn>
     </div>
-    <Modal_Group :editRow="rowEdit" :mode="modalMode" :isOpen="isModalOpen" :initialData="modalData"
-      @updateModalData="handleModalUpdate" />
+    <Modal_Group
+      :editRow="rowEdit"
+      :mode="modalMode"
+      :isOpen="isModalOpen"
+      :initialData="modalData"
+      @updateModalData="handleModalUpdate"
+    />
     <v-dialog v-model="deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{
@@ -36,7 +53,12 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
       {{ textAlert }}
     </v-snackbar>
   </div>
@@ -160,16 +182,13 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("group id :" + this.deletedRow.id);
-
       axios
         .delete(`/groups/deleteGroup/${this.deletedRow.id}`)
 
         .then((response) => {
           // Handle the successful response
           this.deleteDialog = false;
-          this.closeModal();
+          // this.closeModal();
 
           this.snackbar = true;
           this.color = "success";
@@ -198,26 +217,15 @@ export default {
     },
     // closeModal() {
     //   this.isModalOpen = false;
-    //   console.log('close',this.isModalOpen)
     //   // location.reload();
     // },
 
     handleModalUpdate(formData) {
-      console.log("formDataformDataformDataformData", formData);
       //
       this.modalData = formData;
-      console.log("formData", formData);
-      console.log("this.selectedRowIndex", this.rowData[this.selectedRowIndex]);
-
       // this.rowData[this.modalData.id - 1] = updatedData;
       if (this.modalMode === "update") {
-        console.log("update action ..." + JSON.stringify(this.rowData));
         this.update(formData, () => {
-          console.log(
-            "old DataList :" +
-            JSON.stringify(this.DataList[this.selectedRowIndex])
-          );
-
           this.$set(this.DataList, this.selectedRowIndex, {
             groupname: formData.groupname,
             description: formData.description,
@@ -231,13 +239,9 @@ export default {
           //   sudoers: formData.sudoers,
           // };
 
-          console.log("new formData :" + JSON.stringify(formData));
           // this.selectedRowIndex = null;
         });
       } else {
-        console.log("create action ...");
-
-        console.log("formData : " + JSON.stringify(formData));
         // Handle the data returned from the modal here
         this.Create(formData, () => {
           this.DataList.push(formData);
@@ -245,7 +249,7 @@ export default {
 
         // this.$set(this.rowData, this.rowData.length, formData);
       }
-      this.closeModal();
+      // this.closeModal();
     },
 
     actionCellRenderer(params) {
@@ -305,9 +309,6 @@ export default {
           this.rowEdit = rowData;
 
           this.getgroup(rowData.id, (data) => {
-            console.log("Edit clicked for row Group:", rowData);
-            console.log("response data local 1:", data);
-
             // this.modalData = {
             //   id: data?.id,
             //   gid: data?.gid,
@@ -322,7 +323,6 @@ export default {
           // Perform edit action
         }
         case "delete":
-          console.log("Delete clicked for row:", rowData);
           this.deleteDialog = true;
           this.deletedRow = rowData;
 
@@ -336,11 +336,9 @@ export default {
 
           break;
         case "update":
-          console.log("Update clicked for row:", rowData);
           // Perform update action
           break;
         case "cancel":
-          console.log("Cancel clicked for row:", rowData);
           // Perform cancel action
           break;
         default:
@@ -368,9 +366,6 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("DataList :" + JSON.stringify(this.DataList));
-
       // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
 
       const params = {
@@ -379,22 +374,17 @@ export default {
         sudoers: data.sudoers,
       };
 
-      console.log("params are : " + JSON.stringify(params));
-
       axios.post("/groups/createGroup", params).then(
         (response) => {
           callback();
-          console.log(response);
         },
         (err) => {
           if (err.response && err.response.status === 401) {
             const responseData = err.response.data; // Access the response data
-            console.log("401 Error Response:", responseData);
             // this.invalid = true ;
             this.message = responseData.message;
             // Handle the 401 error here
           } else {
-            console.error("Error occurred:", err);
             // Handle other errors
           }
         }
@@ -404,16 +394,12 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("group id :" + id);
-
       axios
         .delete(`/groups/deleteGroup/${id}`)
 
         .then((response) => {
           callback();
           // Handle the successful response
-          console.log("Resource deleted:", response.data);
         })
         .catch((error) => {
           if (error.response.status === 500) {
@@ -431,9 +417,6 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("DataList :" + JSON.stringify(data));
-
       axios
         .put(`/groups/groupChangeGroupname/${data.id}`, {
           Newgroupname: data.groupname,
@@ -441,7 +424,6 @@ export default {
         .then((response) => {
           callback();
           // Handle the successful response
-          console.log("Resource updated:", response.data);
         })
         .catch((error) => {
           if (error.response.status === 500) {
@@ -461,13 +443,9 @@ export default {
         .then((response) => {
           callback(response.data);
           // Handle the successful response
-          console.log("Data received:", response.data);
         })
         .catch((error) => {
           // Handle any errors that occur during the request
-          console.error("Error fetching data:", error);
-
-
         });
     },
     // Fetch APIs

@@ -1,6 +1,7 @@
 from backend.nat.models import DNat
 from backend.nat.utils_dnat import input_create_dnat
 from backend.nat.utils_system import add_nat_rule_in_system, delete_nat_rule_in_system, exist_change_rule_position_in_system, extract_list_rule_nat_from_system, get_added_nat_rule
+from utils.errors_utils import CommandExecutionError
 
 
 def create_dnat_rule_in_system(iifname, source, destination, protocol, next_rule_handle=0):
@@ -23,7 +24,10 @@ def delete_dnat_rule_in_system(handle_number):
 def update_dnat_rule_in_system(iifname, source, destination, protocol, handle_number, next_rule_handle):
     """Update an DNAT rule in system and return the new rule handle and content"""
     # Delete the DNAT rule in system with previous params
-    delete_nat_rule_in_system("prerouting", handle_number)
+    try:
+        delete_nat_rule_in_system("prerouting", handle_number)
+    except CommandExecutionError:
+        pass
 
     # Build the DNAT rule command
     command_dnat = build_command_create_dnat(
@@ -70,10 +74,10 @@ def build_command_create_dnat(iifname, source, destination, protocol, next_rule_
     outgoing_ip_address = []
     if iifname:
         iifname_command = ["oifname", iifname]
-    if source != "any":
+    if source["address"]:
         ip_addr_source = ["ip", "saddr", source["address"]]
-        if source['port']:
-            tcp_source = [source["source_protocol"], "sport", source["port"]]
+    if source['protocol'] and source['port']:
+        tcp_source = [source["protocol"], "sport", source["port"]]
     if destination["external_address"] != "":
         ip_addr_destination = ["ip", "daddr", destination["external_address"]]
     if destination["port_forwarding"]:

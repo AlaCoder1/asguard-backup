@@ -158,7 +158,6 @@ export default {
       this.listAuthRevoc = newValue;
 
       if (newValue) {
-        console.log("newValue", newValue);
         let infoRevocCertif = newValue.map((element) => {
           return {
             id: element.id,

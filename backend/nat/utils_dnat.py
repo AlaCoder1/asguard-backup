@@ -4,13 +4,20 @@ from utils.utils_address import is_valid_ipv4_with_mask, is_valid_ipv4_without_m
 def input_create_dnat(
         source_address, source_protocol, source_port, source_port_from, source_port_to, external_address, internal_address, 
         destination_protocol, destination_port_forwarding, destination_port_from, destination_port_to, destination_port):
-    """Create the input of a DNAT rule"""
-    source = "any"
+    """Create the input of a DNAT rule: Source and Destination"""
+    ### Source ###
+    # Source address
+    source = {"address": None,
+              "protocol": None,
+              "port": None,
+              }
     if source_address != "":
-        source = {"address": source_address}
+        source["address"] = source_address
+    # Source port
+    if source_protocol:
         # A unique port
+        source["protocol"] = source_protocol
         if source_port:
-            source["source_protocol"] = source_protocol
             source["port"] = source_port
         # A range port
         elif source_port_from:
@@ -18,6 +25,7 @@ def input_create_dnat(
             if source_port_to:
                 source["port"] += f"""-{source_port_to}"""
 
+    ### Destination ###
     destination = {"external_address": external_address,
                    "internal_address": internal_address,
                    "port_forwarding": None,

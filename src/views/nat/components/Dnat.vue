@@ -514,7 +514,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataDnat.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -523,6 +522,10 @@ export default {
       if (data.data.source_port_from || data.data.source_port_to) {
         eGui.innerHTML = `
       ${data.data.source_port_from}  -> ${data.data.source_port_to}
+        `;
+      } else if (data.data.source_port) {
+        eGui.innerHTML = `
+      ${data.data.source_port}
         `;
       } else {
         eGui.innerHTML = `
@@ -538,7 +541,13 @@ export default {
         eGui.innerHTML = `
       ${data.data.destination_port_from}  -> ${data.data.destination_port_to}
         `;
-      } else {
+      }
+      else if (data.data.destination_port_forwarding) {
+        eGui.innerHTML = `
+      ${data.data.destination_port_forwarding}
+        `;
+      }
+      else {
         eGui.innerHTML = `
       --
         `;
@@ -609,20 +618,16 @@ export default {
       switch (action) {
         case "show":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
-            console.log("show", rowData);
           }
           break;
         case "edit":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
-            console.log("edit", rowData);
             state.modalMode = "edit";
             state.isModalAreaOpen = true;
             state.editRow = rowData;
@@ -631,11 +636,9 @@ export default {
           break;
         case "delete":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
-            console.log("delete", rowData);
             state.deleteDialog = true;
             state.deletedRow = rowData;
           }
@@ -648,7 +651,6 @@ export default {
     const openModalAdd = () => {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -682,7 +684,6 @@ export default {
         .replace(/False/g, "false")
         .replace(/None/g, "null");
       const parsedArray = JSON.parse(validJsonString);
-      console.log("parsedArray", parsedArray);
 
       rowDataDnat.value = parsedArray;
     });
@@ -753,7 +754,6 @@ export default {
         .post(`/nat/deleteDNat`, payload)
         .then((response) => {
           const results = response.data;
-          console.log("results9", results);
           state.snackbarAlert = true;
           state.textAlertRow = results;
           deleteDialog.value = false;

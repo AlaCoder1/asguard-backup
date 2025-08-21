@@ -167,7 +167,10 @@
                     :label="$t('interface.IPV4SetupType')"
                     background-color="#f6f6f6"
                     v-model="setuptypeip4"
-                    :items="items.map((item) => item.value)"
+                    :items="items"
+                    item-value="id"
+                    item-title="value"
+                    return-object
                     class="ml-3"
                     :rules="[(v) => !!v || $t('interface.IPV4Required')]"
                     :no-data-text="$t('certificat.certificatlist')"
@@ -276,7 +279,7 @@
           </table>
         </v-col>
         <v-col cols="12" sm="6">
-          <div v-if="setuptypeip4 === 'static'">
+          <div v-if="setuptypeip4?.slug === 'static'">
             <v-card-title class="title-text" style="margin-left: -5px">{{
               $t("interface.staticIPV4AddressConfiguration")
             }}</v-card-title>
@@ -311,10 +314,10 @@
                   ></v-select>
                 </v-col>
                 <v-col align-self="center" cols="3">
-                  <label>IPV4 gateway</label>
+                  <label>{{ $t("interface.iPv4gateway") }}</label>
                   <small style="color: red">*</small>
                 </v-col>
-                <v-col cols="3" class="mb-n6 ml-3 mt-3"  >
+                <v-col cols="3" class="mb-n6 ml-3 mt-3">
                   <v-btn
                     :disabled="is_main"
                     color="#F6F6F6"
@@ -397,7 +400,7 @@
               </v-row>
             </div>
           </div>
-          <div v-if="setuptypeip4 === 'dhcp'">
+          <div v-if="setuptypeip4?.slug === 'dhcp'">
             <v-card-title class="title-text">{{
               $t("interface.configuringDHCP")
             }}</v-card-title>
@@ -954,7 +957,7 @@
                 </p>
                 <v-row>
                   <v-text-field
-                    label="Gateway IPV4 *"
+                    :label="`${$t('interface.iPv4gateway')} *`"
                     clsas="w-100"
                     v-model="gateway.gwaddress"
                   ></v-text-field>
@@ -996,7 +999,9 @@
                 </v-row>
                 <v-row>
                   <input type="checkbox" v-model="gateway.multiwan_aux" />
-                  <label class="ml-3">Multi-WAN Gateway</label>
+                  <label class="ml-3">{{
+                    $t("interface.multiWANGateway")
+                  }}</label>
                 </v-row>
               </v-container>
             </v-form>
@@ -1110,7 +1115,7 @@ export default {
       description: "",
       private_aux: false,
       bogon_aux: false,
-      setuptypeip4: "static",
+      setuptypeip4: { id: 1, value: this.$t("Static"), slug: "static" },
       addmac: "",
       mtuv: "",
       mssv: null,
@@ -1502,18 +1507,23 @@ export default {
     },
 
     addNetwork() {
-      if (!this.isValidTimeout && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidRetry && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidSelectTimeout && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidReboot && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidBackoff && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidInitialInterval && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidDhcp_client && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidLease_time && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidRequest && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidRequire && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidDomain_name && this.setuptypeip4 === "dhcp") return;
-      if (!this.isValidDomain_server && this.setuptypeip4 === "dhcp") return;
+      if (!this.isValidTimeout && this.setuptypeip4?.slug === "dhcp") return;
+      if (!this.isValidRetry && this.setuptypeip4?.slug === "dhcp") return;
+      if (!this.isValidSelectTimeout && this.setuptypeip4?.slug === "dhcp")
+        return;
+      if (!this.isValidReboot && this.setuptypeip4?.slug === "dhcp") return;
+      if (!this.isValidBackoff && this.setuptypeip4?.slug === "dhcp") return;
+      if (!this.isValidInitialInterval && this.setuptypeip4?.slug === "dhcp")
+        return;
+      if (!this.isValidDhcp_client && this.setuptypeip4?.slug === "dhcp")
+        return;
+      if (!this.isValidLease_time && this.setuptypeip4?.slug === "dhcp") return;
+      if (!this.isValidRequest && this.setuptypeip4?.slug === "dhcp") return;
+      if (!this.isValidRequire && this.setuptypeip4?.slug === "dhcp") return;
+      if (!this.isValidDomain_name && this.setuptypeip4?.slug === "dhcp")
+        return;
+      if (!this.isValidDomain_server && this.setuptypeip4?.slug === "dhcp")
+        return;
       if (!this.isValidMTU) return;
       if (!this.isValidMSS) return;
       if (!this.isValidAddmac) return;
@@ -1522,22 +1532,22 @@ export default {
         this.isValidIPV4Address &&
         this.interface.alias_add &&
         !this.interface.alias_mask &&
-        this.setuptypeip4 === "dhcp"
+        this.setuptypeip4?.slug === "dhcp"
       ) {
         return;
       }
 
-      if (!this.isValidHostname && this.setuptypeip4 === "dhcp") {
+      if (!this.isValidHostname && this.setuptypeip4?.slug === "dhcp") {
         this.messageValidHostnameAddress = this.$t("errors.validHostname");
         return;
       }
-      if (!this.isValidIPV4Address && this.setuptypeip4 === "dhcp") {
+      if (!this.isValidIPV4Address && this.setuptypeip4?.slug === "dhcp") {
         this.messageValidIPV4Address = this.$t(
           "errors.formatMustBeLikeAdresseIP"
         );
         return;
       }
-      if (!this.isValidRejectAddress && this.setuptypeip4 === "dhcp") {
+      if (!this.isValidRejectAddress && this.setuptypeip4?.slug === "dhcp") {
         this.messageRejectAddress = this.$t("errors.formatMustBeLikeAdresseIP");
         return;
       }
@@ -1546,7 +1556,7 @@ export default {
         /^(?!0\.0\.0\.0$)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
       if (
-        this.setuptypeip4 === "static" &&
+        this.setuptypeip4?.slug === "static" &&
         !ipRegex.test(this.value_setup_Ipv4.ip_address4)
       ) {
         return;
@@ -1562,7 +1572,7 @@ export default {
       }
       // todo: add network refactoring && optimization needed
       if (
-        this.setuptypeip4 === "static" &&
+        this.setuptypeip4?.slug === "static" &&
         this.value_setup_Ipv4?.ip_address4 &&
         this.value_setup_Ipv4?.netmask4
       ) {
@@ -1573,10 +1583,10 @@ export default {
           private_aux: this.private_aux,
           bogon_aux: this.bogon_aux,
           addmac: this.addmac,
-          mtuv: this.mtuv ? +this.mtuv : null ,
+          mtuv: this.mtuv ? +this.mtuv : null,
           mssv: this.mssv ? +this.mssv : null,
           speed_duplex: this.speed_duplex,
-          setuptypeIP4: this.setuptypeip4,
+          setuptypeIP4: this.setuptypeip4?.slug,
           value_setup_Ipv4: {
             ip_address4: this.value_setup_Ipv4.ip_address4,
             netmask4: this.value_setup_Ipv4.netmask4,
@@ -1616,7 +1626,7 @@ export default {
             }
           });
       }
-      if (this.setuptypeip4 === "dhcp") {
+      if (this.setuptypeip4?.slug === "dhcp") {
         const params = {
           name_interface: this.activeTab,
           device: this.device,
@@ -1627,7 +1637,7 @@ export default {
           mtuv: this.mtuv,
           mssv: this.mssv,
           speed_duplex: this.speed_duplex,
-          setuptypeIP4: this.setuptypeip4,
+          setuptypeIP4: this.setuptypeip4?.slug,
           value_setup_Ipv4: {
             typeDHCP4: this.typeDHCP4,
             alias_add: this.interface.alias_add,
@@ -1884,9 +1894,12 @@ export default {
       this.activeTab.startsWith("VXLAN") ||
       this.activeTab.startsWith("VLAN")
     ) {
-      this.items.push({ id: 1, value: "static" });
+      this.items.push({ id: 1, value: this.$t("Static"), slug: "static" });
     } else {
-      this.items.push({ id: 1, value: "static" }, { id: 2, value: "dhcp" });
+      this.items.push(
+        { id: 1, value: this.$t("Static"), slug: "static" },
+        { id: 2, value: "dhcp", slug: "dhcp" }
+      );
     }
 
     this.IPV4Config =
@@ -1910,9 +1923,16 @@ export default {
     this.mssv = this.IPV4Config.genericConfig.mssv;
     this.speed_duplex = this.IPV4Config.genericConfig.speed_duplex;
 
-    this.setuptypeip4 = this.IPV4Config
-      ? this.IPV4Config?.IPV4Config?.typeip4?.toLowerCase()
-      : "";
+    setTimeout(() => {
+      let filtredType = this.items.filter(
+        (i) => i.slug === this.IPV4Config?.IPV4Config?.typeip4?.toLowerCase()
+      );
+      this.setuptypeip4 = filtredType[0];
+    }, 1000);
+
+    // this.setuptypeip4 = this.IPV4Config
+    //   ? this.IPV4Config?.IPV4Config?.typeip4?.toLowerCase()
+    //   : "";
     this.value_setup_Ipv4.ip_address4 = this.IPV4Config.IPV4Config.ip_address;
     this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 

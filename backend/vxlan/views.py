@@ -13,7 +13,8 @@ from backend.vxlan.serializers import VxlanSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import re
-
+from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_VXLAN_CONFIG = _('Configuration VxLAN')
 CONSTANT_VXLAN_INTERFACE = _('Interface VxLAN')
@@ -27,7 +28,46 @@ SUCCESS_MESSAGES_DELETING = _("is deleted")
 # Error messages
 ERROR_MESSAGES_EXISTANT = _("Already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
-
+properties_vxlan={
+            'parent_interface': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='ID of the parent interface',
+                example=2
+            ),
+            'vxlan_interface_name': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Name of the VXLAN interface',
+                example='test_vxlan'
+            ),
+            'vxlan_id': openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description='VXLAN identifier',
+                example=80
+            ),
+            'vxlan_source_address': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                format='ipv4',
+                description='VXLAN source IP address (can be null)',
+                nullable=True,
+                example=config('IP_ADDRESS')
+            ),
+            'vxlan_destination_address': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                format='ipv4',
+                description='VXLAN destination IP address',
+                example=config('IP_ADDRESS')
+            ),
+            'vxlan_destination_port': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='VXLAN destination port',
+                example='4789'
+            ),
+            'vxlan_connection_uuid': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='UUID of the VXLAN connection',
+                example='vxlan_10'
+            ),
+        }
 @swagger_auto_schema(
     method='GET',
     operation_summary="API TO GET VXLAN",
@@ -53,6 +93,7 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vxlan(request):
     """
@@ -94,46 +135,7 @@ def get_vxlan(request):
     method='POST',
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        properties={
-            'parent_interface': openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                description='ID of the parent interface',
-                example=2
-            ),
-            'vxlan_interface_name': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description='Name of the VXLAN interface',
-                example='test_vxlan'
-            ),
-            'vxlan_id': openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                description='VXLAN identifier',
-                example=80
-            ),
-            'vxlan_source_address': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                format='ipv4',
-                description='VXLAN source IP address (can be null)',
-                nullable=True,
-                example="10.1.12.8"
-            ),
-            'vxlan_destination_address': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                format='ipv4',
-                description='VXLAN destination IP address',
-                example='10.1.12.98'
-            ),
-            'vxlan_destination_port': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description='VXLAN destination port',
-                example='4789'
-            ),
-            'vxlan_connection_uuid': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description='UUID of the VXLAN connection',
-                example='vxlan_10'
-            ),
-        },
+        properties=properties_vxlan,
         required=['parent_interface', 'vxlan_interface_name', 'vxlan_id', 'vxlan_destination_address', 'vxlan_destination_port', 'vxlan_connection_uuid']
     ),
     responses={
@@ -156,6 +158,7 @@ def get_vxlan(request):
 
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_vxlan(request):
     """
@@ -208,46 +211,7 @@ def add_vxlan(request):
             required=True
         ),
     ],
-        properties={
-            'parent_interface': openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                description='ID of the parent interface',
-                example=2
-            ),
-            'vxlan_interface_name': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description='Name of the VXLAN interface',
-                example='test_vxlan'
-            ),
-            'vxlan_id': openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                description='VXLAN identifier',
-                example=80
-            ),
-            'vxlan_source_address': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                format='ipv4',
-                description='VXLAN source IP address (can be null)',
-                nullable=True,
-                example="10.1.12.8"
-            ),
-            'vxlan_destination_address': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                format='ipv4',
-                description='VXLAN destination IP address',
-                example='10.1.12.98'
-            ),
-            'vxlan_destination_port': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description='VXLAN destination port',
-                example='4789'
-            ),
-            'vxlan_connection_uuid': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description='UUID of the VXLAN connection',
-                example='vxlan_10'
-            ),
-        },
+        properties=properties_vxlan,
         required=['parent_interface', 'vxlan_interface_name', 'vxlan_id', 'vxlan_destination_address', 'vxlan_destination_port', 'vxlan_connection_uuid']
     ),
     responses={
@@ -269,6 +233,7 @@ def add_vxlan(request):
 )
   
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vxlan(request,id):
     """
@@ -352,6 +317,7 @@ def update_vxlan(request,id):
 
 
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vxlan(request,id):
     """
@@ -403,6 +369,7 @@ vxlan_request_schema = openapi.Schema(
 )
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def assign_vxlan_interface(request):
     """API to assign vxlan to interface  and create new interface of vxlan to configure it
@@ -478,6 +445,7 @@ vxlan_request_schema_update = openapi.Schema(
     operation_summary="API TO update ASSIGN VXLAN Interface",
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vxlan_interface(request,id_interface):
     """
@@ -526,6 +494,7 @@ def update_vxlan_interface(request,id_interface):
     operation_summary="API DELETE VxLAN interface",
 )    
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vxlan_interface(request,id_interface):
     """
@@ -575,6 +544,7 @@ def delete_vxlan_interface(request,id_interface):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_vxlan_interface(request):
     """

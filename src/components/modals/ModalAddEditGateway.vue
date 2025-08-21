@@ -12,7 +12,6 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     :label="`${$t('settings.DNSServer')} *`"
-                    density="compact"
                     v-model="state.dns_server"
                   ></v-text-field>
                   <p
@@ -27,7 +26,6 @@
                   <v-select
                     v-model="state.gateway"
                     :label="`${$t('openvpn.Gateway')}`"
-                    density="compact"
                     item-title="address"
                     item-value="id"
                     return-object
@@ -271,7 +269,7 @@ export default {
         closeModal();
         v$.value.$reset();
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

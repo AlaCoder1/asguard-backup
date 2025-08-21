@@ -19,7 +19,6 @@ export default {
     };
   },
   beforeMount() {
-    console.log("befor");
     // this.protocols = this.params.values ?? [];
     if (this.params.data.type) {
       this.selectedProtocols = this.params.data.type ?? "";
@@ -30,22 +29,18 @@ export default {
   },
   methods: {
     getValue() {
-      console.log("valueGet****");
       return this.selectedProtocols;
     },
     // agInit(params) {
-    //   console.log("agInit");
     //   this.params = params;
     //   this.selectedProtocols = params.data.type ?? "";
     // },
     // refresh(params) {
-    //   console.log("refresh");
 
     //   this.params = params;
     //   this.selectedProtocols = params.data.type ?? "";
     // },
     // onSelectChange() {
-    //   console.log("onSelectChange");
 
     //   this.params.node.setDataValue("type", this.selectedProtocols);
     // },

@@ -511,15 +511,10 @@ export default defineComponent({
     //
 
     // const onRowDragStart = (event) => {
-    //   console.log("onRowDragStart", event.overIndex);
+    //  event.overIndex
     // };
     // const onRowDragEnd = (event) => {
-    //   console.log("id", event.node.data.id);
-    //   console.log("onRowDragEnd", event.overIndex);
-
-    //   setTimeout(() => {
-    //     console.log("rowData : ", rowData.value);
-    //   }, 1000);
+    // event.node.data.id
     // };
     //
     function formatedLineSport(data) {
@@ -632,6 +627,12 @@ export default defineComponent({
           >
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
+         <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
         <button
           class="action-button delete"
           data-action="delete"
@@ -646,6 +647,12 @@ export default defineComponent({
           data-action="update"
           >
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+           <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         <button
           class="action-button delete"
@@ -672,7 +679,6 @@ export default defineComponent({
       switch (action) {
         case "delete":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
@@ -684,7 +690,6 @@ export default defineComponent({
           break;
         case "update":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
@@ -693,6 +698,21 @@ export default defineComponent({
             state.modalMode = "edit";
             state.isModalOpen = true;
             state.editRow = rowDataTable;
+            emitter.emit("row-rules", rowData.value);
+          }
+
+          break;
+        case "copy":
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            mode.value = "copy";
+            state.modalData = {};
+            state.modalMode = "copy";
+            state.isModalOpen = true;
+            state.editRow = rowDataTable;
+            emitter.emit("interface-uuid", props.uuid);
             emitter.emit("row-rules", rowData.value);
           }
 
@@ -728,7 +748,6 @@ export default defineComponent({
     //     gridApi.value.setColumnDefs(columnDefs.value);
     //     gridApi.value.setColumnOrder(columnOrder.value);
     //   } else {
-    //     console.log("event.columns is undefined or null");
     //   }
     // };
     const handleRemove = () => {
@@ -821,13 +840,9 @@ export default defineComponent({
       // gridApi.value.setRowData(rowData.value);
 
       // hasSelection.value = false;
-
-      // console.log("id_list_selection.value", id_list_selection.value);
     };
 
     const confirmDelete = () => {
-      console.log("array", rowDataToDelete.value);
-
       if (!Array.isArray(array.value)) return;
 
       const idsToDelete = [];
@@ -873,7 +888,6 @@ export default defineComponent({
       if (gridApi.value) {
         gridApi.value.setRowData(rowData.value);
       } else {
-        console.error("Grid API.");
       }
 
       // Appel de l'API si au moins un ID est présent
@@ -883,8 +897,6 @@ export default defineComponent({
     };
 
     // const confirmDelete = () => {
-
-    //   console.log("array", array.value);
 
     //   if (oldRow.value.length === 0 && rowDataToDelete.value?.id) {
     //     const index = rowData.value.findIndex(
@@ -904,7 +916,7 @@ export default defineComponent({
     //       if (gridApi.value) {
     //         gridApi.value.setRowData(rowData.value);
     //       } else {
-    //         console.error("Grid API.");
+    //
     //       }
     //     }
     //   } else if (oldRow.value.length != 0 && rowDataToDelete.value.id) {
@@ -931,7 +943,7 @@ export default defineComponent({
 
     //         gridApi.value.setRowData(rowData.value);
     //       } else {
-    //         console.error("Grid API.");
+    //
     //       }
     //     }
     //   }
@@ -951,7 +963,7 @@ export default defineComponent({
     //       if (gridApi.value) {
     //         gridApi.value.setRowData(rowData.value);
     //       } else {
-    //         console.error("Grid API.");
+    //
     //       }
     //     }
     //   }
@@ -962,7 +974,6 @@ export default defineComponent({
     const saveRules = () => {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -987,8 +998,6 @@ export default defineComponent({
         axios
           .post(`/rules/saveRules/${props.activeTab}`, payload)
           .then((response) => {
-            console.log("responseresponse", response);
-
             state.snackbar = true;
             state.textAlert = response.data.response;
             state.Saverulesstate = false;
@@ -1008,10 +1017,10 @@ export default defineComponent({
               state.textAlert = i.response.data.response;
 
               state.Saverulesstate = false;
-              // setTimeout(() => {
-              //   state.textAlert = [];
-              //   location.reload();
-              // }, 3000);
+
+              setTimeout(() => {
+                state.textAlert = [];
+              }, 4000);
             }
           });
       }
@@ -1045,7 +1054,6 @@ export default defineComponent({
         if (gridApi.value) {
           gridApi.value.setRowData(rowData.value);
         } else {
-          console.error("Grid API.");
         }
       });
 
@@ -1055,7 +1063,6 @@ export default defineComponent({
       let parsedArray = JSON.parse(rulesAttribute);
 
       rules.value = parsedArray;
-      console.log("rules.value", rules.value);
 
       emitter.on("add-firewallRule", (data) => {
         if (data.interUuid === props.uuid) {
@@ -1077,12 +1084,10 @@ export default defineComponent({
             // position: data.position,
           };
           rowData.value.push(ruleInbound);
-          console.log("or", oldRow.value);
           changes.value = true;
           if (gridApi.value) {
             gridApi.value.setRowData(rowData.value);
           } else {
-            console.error("Grid API.");
           }
         }
       });
@@ -1145,7 +1150,6 @@ export default defineComponent({
         if (gridApi.value) {
           gridApi.value.setRowData(rowData.value);
         } else {
-          console.error("Grid API.");
         }
       });
     });
@@ -1196,8 +1200,6 @@ export default defineComponent({
     //   () => rowData.value,
     //   (newValue, oldValue) => {
     //     if (rowData.value.length) {
-    //       console.log("oldValue10", oldValue);
-    //       console.log("newValue10", newValue);
     //     }
     //   },
     //   { immediate: true }
@@ -1205,16 +1207,12 @@ export default defineComponent({
     // watch(
     //   () => rowData.value?.slice(),
     //   (newArray, oldArray) => {
-    //     // console.log("oldValue", oldArray);
-    //     // console.log("newValue", newArray);
     //     // oldRow.value = oldArray
     //   },
     //   { deep: true }
     // );
 
-    const onRowDragStart = (event) => {
-      console.log("event.overIndex", event.overIndex);
-    };
+    const onRowDragStart = (event) => {};
     const onRowDragEnd = (event) => {
       const api = event.api;
       const allRows = [];
@@ -1223,7 +1221,6 @@ export default defineComponent({
       api.forEachNodeAfterFilterAndSort((node) => {
         allRows.push(node.data);
       });
-      console.log("allRows", allRows);
 
       // Replace your rowData with the new order
       rowData.value = allRows;
@@ -1231,7 +1228,6 @@ export default defineComponent({
 
     const onSelectionChanged = () => {
       const selected = gridApi.value.getSelectedRows();
-      // console.log("sele", selected);
       hasSelection.value = selected.length > 0;
     };
 

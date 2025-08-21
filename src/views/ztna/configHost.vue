@@ -179,7 +179,6 @@ export default {
     });
     const overlayMessage = computed(() => {
 current_user.value= user_privilege('Ztna') 
-console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("ZTNA")) {
@@ -239,14 +238,11 @@ console.log('current_user',current_user.value)
       }
       try {
         configsObject = JSON.parse(configsString);
-        console.log("configsObjecthost", configsObject);
       } catch (error) {
-        console.error("Failed to parse configs string:", error);
         configsObject = { data: [] }; // Default to an empty array if parsing fails
       }
       // let filterHost = configsObject.filter((i) => i.addressId === "NH5p4FpGR")
       configsHost.value = configsObject;
-      console.log("host conf", configsHost.value);
     };
 
     const onGridReadyHost = (params) => {
@@ -413,7 +409,6 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
       emitter.on("closeInterceptModal", () => {
         state.isModalInterceptOpen = false;
         state.isOpen = false;

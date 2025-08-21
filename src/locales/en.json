@@ -14,13 +14,33 @@
     "LoginTime": "Login Time",
     "resetPassword": "Reset Password"
   },
-  "availableRange":"Available Range",
-  "needhelp":"Need help ?",
-  "license":"License",
-  "addlicense":"Add a license",
-  "keylicense":"The license key is in the confirmation email you received after your purchase.",
-  "licensekey":"License key",
+  "Static": "Static",
+  "keyPair": "Key Pair",
+  "createPrivateKey": "Create Private Key",
+  "createPublicKey": "Create Public Key",
+  "importPublicKey": "Import Public Key",
+  "doubleMask": {
+    "services": "Services : IP filter double mask",
+    "ask": "Do you really want to",
+    "activate": "activate",
+    "deactivate": "deactivate",
+    "option": "this option",
+    "no": "No",
+    "yes": "Yes",
+    "performanceGain": "Performance gain",
+    "initialRules": "Initial number of rules",
+    "currentRules": "Current number of rules",
+    "ratio": "COMPRESSION RATIO"
+  },
+
+  "availableRange": "Available Range",
+  "needhelp": "Need help ?",
+  "license": "License",
+  "addlicense": "Add a license",
+  "keylicense": "The license key is in the confirmation email you received after your purchase.",
+  "licensekey": "License key",
   "other": "Others",
+  "otherNat": "Other",
   "login": {
     "verifyYourAccount": "Verify Your Account",
     "send": "We sent a verification code to",
@@ -68,7 +88,7 @@
   },
 
   "errors": {
-    "formatRange":"Format must be X.X.X.X and the address must not be out of range",
+    "formatRange": "Format must be X.X.X.X and the address must not be out of range",
     "duplicated": "The source, translation, and destination fields must each contain a different address.",
     "endAddress": "Format must match IP address: X.X.X.X (last byte must not be 0 or 255)",
     "port": "Port must end with 443",
@@ -200,8 +220,9 @@
     "distinguishedname": "Distinguished name",
     "ListRevocation": "List Revocation per authority",
     "Listauthoriy": "list of certification authorities",
-    "certificat": "certificate",
-    "agGridOf": "of"
+    "certificat": "Certificate",
+    "agGridOf": "of",
+    "raison": "Reason"
   },
 
   "firewall": {
@@ -230,9 +251,17 @@
     "save": "Save",
     "add_rule": "Add new Rule",
     "update_rule": "Update Rule",
+    "clone": "Clone a rule",
+    "cloneBTN": "Clone",
     "remplirChamps": "Fill the fields with word 'ALL'"
   },
   "nat": {
+    "range": "Range",
+    "sourceProtocol": "Source Protocol",
+    "select": "Select",
+    "sourcePort": "Port source",
+    "destinationProtocol": "Destination Protocol",
+    "destinationPortForwarding": "Destination port forwarding",
     "msg_confirm_delete": "Are you sure you want to delete this Row ?",
     "interface": "Interface",
     "protocol": "Protocol",
@@ -330,6 +359,7 @@
     "gatewayName": "Enter Gateway Name",
     "GatewayDefault": "Default Gateway",
     "farGateway": "Far Gateway",
+    "multiWANGateway": "Multi-WAN Gateway",
     "descriptionRequired": "Description is required",
     "IPV4Required": "IPV4 Setup Type is required",
     "IPV4AddressRequired": "IPV4 address is required",
@@ -354,7 +384,8 @@
     "requiredOptions": "Required Options",
     "supersedeDomaineName": "Supersede domaine name",
     "prependDomainServer": "Prepend domain server",
-    "numberValidity": "Invalid format. Please enter whole numbers only."
+    "numberValidity": "Invalid format. Please enter whole numbers only.",
+    "iPv4gateway": "IPv4 gateway"
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Other Types of Interfaces",
@@ -458,7 +489,7 @@
     "editRange": "Edit Range"
   },
   "squid": {
-    "errorTime": "Start time and End time are identical",
+    "errorTime": "The start time cannot be the same as or later than the end time.",
     "restart": "Please restart the service for the modifications to take effect.",
     "proxyPort": "Proxy port",
     "etesVouSur": "Are you sure you want to",
@@ -1125,7 +1156,25 @@
     "Eventlogs": "Event logs",
     "Reset": "Reset",
     "Logfilesreset": "Log files have been reset",
-    "Excludeinterfaces": "Exclude interfaces"
+    "Excludeinterfaces": "Exclude interfaces",
+    "General": "General",
+    "Administration": "Administration",
+    "SystemAdministration": "System Administration",
+    "DetectedNetworkInterfacesSSH": "Detected network interfaces (SSH)",
+    "DetectedNetworkInterfacesWeb": "Detected network interfaces (Web Interface)",
+    "SecureShellServer": "Secure Shell Server",
+    "EnableSecureShell": "Enable Secure Shell",
+    "RootLogin": "Root Login",
+    "PermitRootUserLogin": "Permit root user login",
+    "AuthenticationMethod": "Authentication Method",
+    "PermitPasswordLogin": "Permit password login",
+    "SessionTimeout": "Session Timeout",
+    "Protocol": "Protocol",
+    "SSLCertificate": "SSL Certificate",
+    "TCPPort": "TCP Port",
+    "LoginMessages": "Login Messages",
+    "DisableWebGUISuccessfulLoginsLogging": "Disable logging of web GUI successful logins",
+    "PasswordLengthSetting": "Password length setting"
   },
   "profil": {
     "Personalinformations": "Personal informations",

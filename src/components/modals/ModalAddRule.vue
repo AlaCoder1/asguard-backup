@@ -13,145 +13,143 @@
       style="margin-top: 50px"
     >
       <form ref="myForm" @submit.prevent="submitForm">
-        <template v-if="modalModeRule === 'create'">
-          <v-row>
+        <v-row>
+          <v-col cols="12" class="mb-n6">
+            <v-text-field
+              :label="`${$t('sdwan.ruleName')} *`"
+              v-model="state.formData.ruleName"
+            ></v-text-field>
+            <p class="error-feedback mb-5" v-if="v$.formData.ruleName.$error">
+              {{ v$.formData.ruleName.$errors[0].$message }}
+            </p>
+          </v-col>
+        </v-row>
+        <v-row>
+          <template v-if="!state.formData.time">
             <v-col cols="12" class="mb-n6">
-              <v-text-field
-                :label="`${$t('sdwan.ruleName')} *`"
-                v-model="state.formData.ruleName"
-              ></v-text-field>
-              <p class="error-feedback mb-5" v-if="v$.formData.ruleName.$error">
-                {{ v$.formData.ruleName.$errors[0].$message }}
+              <v-select
+                :label="`${$t('squid.routageType')} *`"
+                v-model="state.formData.routageType"
+                item-title="name"
+                item-value="slug"
+                :items="routagType"
+                return-object
+              ></v-select>
+
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.formData.routageType.$error"
+              >
+                {{ v$.formData.routageType.$errors[0].$message }}
               </p>
             </v-col>
-          </v-row>
-          <v-row>
-            <template v-if="!state.formData.time">
-              <v-col cols="12" class="mb-n6">
-                <v-select
-                  :label="`${$t('squid.routageType')} *`"
-                  v-model="state.formData.routageType"
-                  item-title="name"
-                  item-value="slug"
-                  :items="routagType"
-                  return-object
-                ></v-select>
+          </template>
+          <template v-else>
+            <v-col cols="12" class="mb-n6">
+              <v-select
+                :label="`${$t('squid.routageType')} *`"
+                v-model="state.formData.routageTypeDomain"
+                item-title="name"
+                item-value="slug"
+                :items="routagTypeDomain"
+                return-object
+              ></v-select>
 
-                <p
-                  class="error-feedback mb-5"
-                  v-if="v$.formData.routageType.$error"
-                >
-                  {{ v$.formData.routageType.$errors[0].$message }}
-                </p>
-              </v-col>
-            </template>
-            <template v-else>
-              <v-col cols="12" class="mb-n6">
-                <v-select
-                  :label="`${$t('squid.routageType')} *`"
-                  v-model="state.formData.routageTypeDomain"
-                  item-title="name"
-                  item-value="slug"
-                  :items="routagTypeDomain"
-                  return-object
-                ></v-select>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.formData.routageTypeDomain.$error"
+              >
+                {{ v$.formData.routageTypeDomain.$errors[0].$message }}
+              </p>
+            </v-col>
+          </template>
+          <template v-if="state.formData.routageType.slug === 'subnet'">
+            <v-col cols="12" class="mb-n6">
+              <v-row>
+                <v-col cols="7">
+                  <v-text-field
+                    :label="$t('squid.value')"
+                    v-model="state.formData.value"
+                  ></v-text-field>
 
-                <p
-                  class="error-feedback mb-5"
-                  v-if="v$.formData.routageTypeDomain.$error"
-                >
-                  {{ v$.formData.routageTypeDomain.$errors[0].$message }}
-                </p>
-              </v-col>
-            </template>
-            <template v-if="state.formData.routageType.slug === 'subnet'">
-              <v-col cols="12" class="mb-n6">
-                <v-row>
-                  <v-col cols="7">
-                    <v-text-field
-                      :label="$t('squid.value')"
-                      v-model="state.formData.value"
-                    ></v-text-field>
-
-                    <p
-                      class="error-feedback mb-5"
-                      v-if="v$.formData.value.$errors.length"
-                    >
-                      {{ v$.formData.value.$errors?.[0].$message }}
-                    </p>
-                  </v-col>
-                  <v-col cols="1">
-                    <div class="ml-1 mt-5">/</div>
-                  </v-col>
-                  <v-col cols="4">
-                    <!-- <v-text-field
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.value.$errors.length"
+                  >
+                    {{ v$.formData.value.$errors?.[0].$message }}
+                  </p>
+                </v-col>
+                <v-col cols="1">
+                  <div class="ml-1 mt-5">/</div>
+                </v-col>
+                <v-col cols="4">
+                  <!-- <v-text-field
                       :label="$t('sdwan.prefix')"
                       v-model="state.formData.prefix"
                     ></v-text-field> -->
-                    <v-select
-                      v-model="state.formData.prefix"
-                      :label="$t('sdwan.prefix')"
-                      :no-data-text="$t('nat.msg_no_data')"
-                      :items="numberList"
-                    ></v-select>
-                    <p
-                      class="error-feedback mb-5"
-                      v-if="v$.formData.prefix.$errors.length"
-                    >
-                      {{ v$.formData.prefix.$errors?.[0].$message }}
-                    </p>
-                  </v-col>
-                </v-row>
-              </v-col>
-            </template>
+                  <v-select
+                    v-model="state.formData.prefix"
+                    :label="$t('sdwan.prefix')"
+                    :no-data-text="$t('nat.msg_no_data')"
+                    :items="numberList"
+                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.prefix.$errors.length"
+                  >
+                    {{ v$.formData.prefix.$errors?.[0].$message }}
+                  </p>
+                </v-col>
+              </v-row>
+            </v-col>
+          </template>
 
-            <template v-if="isDomains">
-              <v-col cols="12" class="mb-n6">
-                <v-text-field
-                  :label="$t('squid.value')"
-                  v-model="state.formData.value2"
-                ></v-text-field>
+          <template v-if="isDomains">
+            <v-col cols="12" class="mb-n6">
+              <v-text-field
+                :label="$t('squid.value')"
+                v-model="state.formData.value2"
+              ></v-text-field>
 
-                <p
-                  class="error-feedback mb-5"
-                  v-if="v$.formData.value2.$errors.length"
-                >
-                  {{ v$.formData.value2.$errors?.[0].$message }}
-                </p>
-              </v-col>
-            </template>
-            <template v-if="isIps">
-              <v-col cols="12" class="mb-n6">
-                <v-text-field
-                  :label="$t('squid.value')"
-                  v-model="state.formData.valueIp"
-                ></v-text-field>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.formData.value2.$errors.length"
+              >
+                {{ v$.formData.value2.$errors?.[0].$message }}
+              </p>
+            </v-col>
+          </template>
+          <template v-if="isIps">
+            <v-col cols="12" class="mb-n6">
+              <v-text-field
+                :label="$t('squid.value')"
+                v-model="state.formData.valueIp"
+              ></v-text-field>
 
-                <p
-                  class="error-feedback mb-5"
-                  v-if="v$.formData.valueIp.$errors.length"
-                >
-                  {{ v$.formData.valueIp.$errors?.[0].$message }}
-                </p>
-              </v-col>
-            </template>
-            <template v-if="isTimeAndDomains && state.formData.time">
-              <v-col cols="12" class="mb-n6">
-                <v-text-field
-                  :label="$t('squid.value')"
-                  v-model="state.formData.valueDomainTime"
-                ></v-text-field>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.formData.valueIp.$errors.length"
+              >
+                {{ v$.formData.valueIp.$errors?.[0].$message }}
+              </p>
+            </v-col>
+          </template>
+          <template v-if="isTimeAndDomains && state.formData.time">
+            <v-col cols="12" class="mb-n6">
+              <v-text-field
+                :label="$t('squid.value')"
+                v-model="state.formData.valueDomainTime"
+              ></v-text-field>
 
-                <p
-                  class="error-feedback mb-5"
-                  v-if="v$.formData.valueDomainTime.$errors.length"
-                >
-                  {{ v$.formData.valueDomainTime.$errors?.[0].$message }}
-                </p>
-              </v-col>
-            </template>
-          </v-row>
-        </template>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.formData.valueDomainTime.$errors.length"
+              >
+                {{ v$.formData.valueDomainTime.$errors?.[0].$message }}
+              </p>
+            </v-col>
+          </template>
+        </v-row>
 
         <v-row>
           <template v-if="!state.formData.time">
@@ -170,9 +168,7 @@
               <label class="ml-2">{{ $t("squid.activateRule") }}</label>
             </v-col>
           </template>
-          <template
-            v-if="!state.formData.allodwedAuth && modalModeRule === 'create'"
-          >
+          <template v-if="!state.formData.allodwedAuth">
             <v-col cols="6">
               <label>{{ $t("squid.byTime") }}</label>
             </v-col>
@@ -201,6 +197,7 @@
                 class="w-100"
                 size="large"
                 format="HH:mm"
+                value-format="HH:mm"
                 :placeholder="$t('squid.from')"
               />
             </v-col>
@@ -211,14 +208,11 @@
                 class="w-100"
                 size="large"
                 format="HH:mm"
+                value-format="HH:mm"
                 :placeholder="$t('squid.to')"
               />
             </v-col>
-
-            <p
-              class="error-feedback mb-5 ml-4"
-              v-if="state.formData.from && state.formData.from && isValidTime"
-            >
+            <p class="error-feedback mb-5 ml-4" v-if="isValidTime">
               {{ $t("squid.errorTime") }}
             </p>
           </template>
@@ -226,10 +220,7 @@
       </form>
       <template #footer>
         <div class="d-flex justify-content-between">
-          <div
-            class="text-start align-end mt-5"
-            v-if="modalModeRule === 'create'"
-          >
+          <div class="text-start align-end mt-5">
             <span class="text-sm">
               <span class="text-red text-lg">*</span>
               {{ $t("errors.oblig") }}</span
@@ -334,9 +325,9 @@ export default {
     const state = reactive({
       formData: {
         days: [],
-        time: null,
-        from: null,
-        to: null,
+        time: false,
+        from: "",
+        to: "",
         routageType: "",
         routageTypeDomain: "",
         value: "",
@@ -547,18 +538,28 @@ export default {
     });
 
     const isValidTime = computed(() => {
-      if (state.formData.time) {
-        let from = dayjs(state.formData.from).format("HH:mm");
-        let to = dayjs(state.formData.to).format("HH:mm");
-        return from === to;
+      if (!state.formData.from || !state.formData.to) {
+        return false;
       }
+
+      let from = state.formData.from;
+      let to = state.formData.to;
+
+      return from === to || from > to;
     });
 
     watch(
-      state,
-      () => {
-        if (state.formData.time) {
+      () => state.formData.time,
+      (newTime) => {
+        if (newTime) {
+          if (state.formData.value2) {
+            state.formData.valueDomainTime = state.formData.value2;
+          }
           v$.value.$reset();
+          state.formData.routageTypeDomain = {
+            name: "domains",
+            slug: "domain",
+          };
           state.formData.routageType = "";
           state.formData.status = false;
           state.formData.value = "";
@@ -566,27 +567,71 @@ export default {
           state.formData.valueIp = "";
           state.formData.prefix = "";
         } else {
+          v$.value.$reset();
           state.formData.valueDomainTime = "";
+          state.formData.days = [];
+          state.formData.from = "";
+          state.formData.to = "";
         }
       },
       { immediate: true }
     );
 
+    // watch(
+    //   state,
+    //   () => {
+    //     if (state.formData.time) {
+    //       v$.value.$reset();
+    //       state.formData.routageTypeDomain = {
+    //         name: "domains",
+    //         slug: "domain",
+    //       };
+    //       state.formData.routageType = "";
+    //       state.formData.status = false;
+    //       state.formData.value = "";
+    //       state.formData.value2 = "";
+    //       state.formData.valueIp = "";
+    //       state.formData.prefix = "";
+    //     } else {
+    //       v$.value.$reset();
+    //       state.formData.valueDomainTime = "";
+    //       state.formData.days = [];
+    //       state.formData.from = "";
+    //       state.formData.to = "";
+    //     }
+    //   },
+    //   { immediate: true }
+    // );
+
     watch(
       () => isDomains.value,
       (val) => {
+        if (val) {
+          state.formData.value = "";
+          state.formData.prefix = "";
+          state.formData.valueIp = "";
+        }
         v$.value.$reset();
       }
     );
     watch(
       () => isSubnet.value,
       (val) => {
+        if (val) {
+          state.formData.value2 = "";
+          state.formData.valueIp = "";
+        }
         v$.value.$reset();
       }
     );
     watch(
       () => isIps.value,
       (val) => {
+        if (val) {
+          state.formData.value2 = "";
+          state.formData.prefix = "";
+          state.formData.value = "";
+        }
         v$.value.$reset();
       }
     );
@@ -609,6 +654,18 @@ export default {
         if (val === "create") {
           state.formData.allodwedAuth = false;
           state.formData.status = false;
+          state.formData.days = [];
+          state.formData.time = false;
+          state.formData.from = "";
+          state.formData.to = "";
+          state.formData.routageType = "";
+          state.formData.routageTypeDomain = "";
+          state.formData.value = "";
+          state.formData.value2 = "";
+          state.formData.valueIp = "";
+          state.formData.prefix = "";
+          state.formData.valueDomainTime = "";
+          state.formData.ruleName = null;
         }
       }
     );
@@ -619,6 +676,50 @@ export default {
         state.formData.status = val.status === "Disable" ? false : true;
         state.formData.allodwedAuth =
           val.allow_by_auth === "Disable" ? false : true;
+        state.formData.ruleName = val?.rule_name;
+
+        let filtredRoutage = routagType.value.filter(
+          (i) => i.slug === val?.type
+        );
+
+        state.formData.routageType = filtredRoutage[0];
+
+        if (val?.type === "subnet") {
+          let addr = val?.value?.split("/");
+          if (addr) {
+            state.formData.value = addr[0];
+            state.formData.prefix = +addr[1];
+          }
+        } else if (val?.type === "ip") {
+          state.formData.valueIp = val?.value;
+        } else if (val?.type === "domain" && val?.time_from === "--") {
+          state.formData.value2 = val?.value;
+        } else if (val?.type === "domain" && val?.time_from != "--") {
+          let filtredR = routagTypeDomain.value.filter(
+            (i) => i.slug === val?.type
+          );
+
+          state.formData.routageTypeDomain = filtredR[0];
+          state.formData.valueDomainTime = val?.value;
+          state.formData.time = val?.time_from ? true : false;
+          state.formData.from = val?.time_from.substring(0, 5);
+          state.formData.to = val?.time_to.substring(0, 5);
+
+          let letters = val?.days?.split("");
+
+          if (letters) {
+            let array = [];
+
+            letters.forEach((i) => {
+              array = [
+                ...array,
+                ...daysArray.value.filter((e) => e.slug === i),
+              ];
+            });
+
+            state.formData.days = array;
+          }
+        }
       }
     };
 
@@ -626,19 +727,19 @@ export default {
       emitter.emit("closeAddRuleModal");
       v$.value.$reset();
 
-      if (modalModeRule.value === "create") {
-        state.formData.days = null;
-        state.formData.time = null;
-        state.formData.from = null;
-        state.formData.to = null;
-        state.formData.routageType = "";
-        state.formData.routageTypeDomain = "";
-        state.formData.value = "";
-        state.formData.value2 = "";
-        state.formData.valueIp = "";
-        state.formData.ruleName = null;
-        state.formData.prefix = "";
-      }
+      // if (modalModeRule.value === "create") {
+      state.formData.days = [];
+      state.formData.time = false;
+      state.formData.from = null;
+      state.formData.to = null;
+      state.formData.routageType = "";
+      state.formData.routageTypeDomain = "";
+      state.formData.value = "";
+      state.formData.value2 = "";
+      state.formData.valueIp = "";
+      state.formData.ruleName = null;
+      state.formData.prefix = "";
+      // }
     };
     const getCookie = (name) => {
       let cookieValue = null;
@@ -659,17 +760,72 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();
-      console.log("result", result);
 
       if (result) {
-        if (modalModeRule.value === "edit") {
-          let payload = {
+        // if (isValidTime) return;
+        let payload = {};
+        if (state.formData.routageType.slug == "subnet") {
+          payload = {
+            rule_name: state.formData.ruleName,
+            type: state.formData.routageType.slug,
+            value: `${state.formData.value}/${state.formData.prefix}`,
             status: state.formData.status,
             allow_by_auth: state.formData.allodwedAuth,
           };
+        }
+        if (state.formData.routageType.slug == "ip") {
+          payload = {
+            rule_name: state.formData.ruleName,
+            type: state.formData.routageType.slug,
+            value: state.formData.valueIp,
+            status: state.formData.status,
+            allow_by_auth: state.formData.allodwedAuth,
+          };
+        }
+        if (state.formData.routageType.slug == "domain") {
+          payload = {
+            rule_name: state.formData.ruleName,
+            type: state.formData.routageType?.slug,
+            value: state.formData.value2,
+            status: state.formData.status,
+            allow_by_auth: state.formData.allodwedAuth,
+            days: "",
+            time_from: "",
+            time_to: "",
+          };
+        }
+
+        if (state.formData.routageTypeDomain.slug == "domain") {
+          let from = state.formData.from;
+          let to = state.formData.to;
+
+          // let from = dayjs(state.formData.from).format("HH:mm");
+          // let to = dayjs(state.formData.to).format("HH:mm");
+
+          let mappedDays = state.formData.days.map((e) => e.slug);
+          let resultString = mappedDays.join("");
+
+          payload = {
+            rule_name: state.formData.ruleName,
+            type: state.formData.routageTypeDomain.slug,
+            value: state.formData.valueDomainTime,
+            status: true,
+            allow_by_auth: state.formData.allodwedAuth,
+            days: resultString,
+            time_from: from,
+            time_to: to,
+          };
+        }
+
+        payload = { ...payload, user_id: id };
+        if (modalModeRule.value === "edit") {
+          // let payload = {
+          //   status: state.formData.status,
+          //   allow_by_auth: state.formData.allodwedAuth,
+          // };
 
           axios
-            .put(`/proxy/updateStatusRule/${state.rowEdit.id}`, payload)
+            .put(`/proxy/updateRuleSquid/${state.rowEdit.id}`, payload)
             .then((response) => {
               if (response.status == "200") {
                 state.snackbar = true;
@@ -706,60 +862,6 @@ export default {
               }
             });
         } else {
-          let payload = {};
-          if (state.formData.routageType.slug == "subnet") {
-            payload = {
-              rule_name: state.formData.ruleName,
-              type: state.formData.routageType.slug,
-              value: `${state.formData.value}/${state.formData.prefix}`,
-              status: state.formData.status,
-              allow_by_auth: state.formData.allodwedAuth,
-            };
-          }
-          if (state.formData.routageType.slug == "ip") {
-            payload = {
-              rule_name: state.formData.ruleName,
-              type: state.formData.routageType.slug,
-              value: state.formData.valueIp,
-              status: state.formData.status,
-              allow_by_auth: state.formData.allodwedAuth,
-            };
-          }
-          if (state.formData.routageType.slug == "domain") {
-            payload = {
-              rule_name: state.formData.ruleName,
-              type: state.formData.routageType.slug,
-              value: state.formData.value2,
-              status: state.formData.status,
-              allow_by_auth: state.formData.allodwedAuth,
-              days: "",
-              time_from: "",
-              time_to: "",
-            };
-          }
-
-          if (state.formData.routageTypeDomain.slug == "domain") {
-            let from = dayjs(state.formData.from).format("HH:mm");
-            let to = dayjs(state.formData.to).format("HH:mm");
-
-            let mappedDays = state.formData.days.map((e) => e.slug);
-            let resultString = mappedDays.join("");
-
-            payload = {
-              rule_name: state.formData.ruleName,
-              type: state.formData.routageTypeDomain.slug,
-              value: state.formData.valueDomainTime,
-              status: true,
-              allow_by_auth: state.formData.allodwedAuth,
-              days: resultString,
-              time_from: from,
-              time_to: to,
-            };
-          }
-
-          payload = { ...payload, user_id: id };
-          console.log({ payload });
-
           axios
             .post("/proxy/addRuleSquid", payload)
             .then((response) => {
@@ -805,7 +907,7 @@ export default {
             });
         }
       } else {
-        console.log("error", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

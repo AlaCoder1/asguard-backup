@@ -146,7 +146,6 @@ export default {
       await axios
         .post("/auth/authentification", user)
         .then((response) => {
-          console.log("response", response);
           localStorage.setItem("user-info", JSON.stringify(response.data));
 
           this.message = response.data.message;
@@ -180,12 +179,10 @@ export default {
 
     async resendOtp() {
       this.otp = "";
-      console.log("resend");
 
       await axios
         .post(`/auth/resend_verification_code/${this.idUser}`)
         .then((response) => {
-          console.log("response", response);
 
           this.message = response.data.message;
 
@@ -201,8 +198,6 @@ export default {
         });
     },
     async verifyOtp() {
-      console.log("verifyOtp", this.otp);
-
       let payload = {
         verification_code: this.otp,
       };
@@ -210,7 +205,6 @@ export default {
       await axios
         .post(`/auth/verify_code/${this.idUser}`, payload)
         .then((response) => {
-          console.log("response**", response);
           if (response.status == "200") {
             this.message = response.data.message;
             setTimeout(() => {

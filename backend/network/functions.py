@@ -11,7 +11,7 @@ def get_connection_uuid(connection_name=None):
     Otherwise, returns the UUID of the first connection.
     """
     try:
-        output = subprocess.check_output(["nmcli", "-t", "-f", "NAME,UUID", "connection", "show"])
+        output = subprocess.check_output(["nmcli", "-t", "-f", "DEVICE,UUID", "connection", "show"])
         lines = output.decode().splitlines()
         for line in lines:
             name, uuid = line.strip().split(":")

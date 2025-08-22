@@ -51,12 +51,13 @@ Constants:
 
 """
 from django.http import JsonResponse
+from backend.managementCertificates.models import Certificate
 from backend.settings.serializers import SystemSerializer
 from backend.gateway.models import Gateway
-from backend.settings.function import add_dns_servers, add_gateway_to_dns_servers, change_domain, change_hostname, execute_all_commandes, get_all_interfaces, manage_commandes, save_config_db, set_time_zone
-from backend.settings.models import Network, Settings, System, Timezone
+from backend.settings.function import add_dns_servers, add_gateway_to_dns_servers, change_domain, change_hostname, execute_all_commandes, get_all_interfaces, manage_commandes, save_config_db, save_rules_settings, set_time_zone
+from backend.settings.models import Network, SettingInterface, Settings, System, Timezone
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from backend.network.models import Interface
+from backend.network.models import IP4Config, Interface
 from backend.waf.models import RulesWaf
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import gettext_lazy as _
@@ -71,6 +72,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny
 from django.views.decorators.http import require_http_methods
+from decouple import config
 # Create your views here.
 
 
@@ -96,7 +98,7 @@ DOES_NOT_EXIST = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
 ERROR_MESSAGES_UPDATING = _("Error in updating settings")
-
+ERROR_MESSAGE_HTTPS=_("If you choose HTTPS, you must select a certificate.")
 
 @swagger_auto_schema('PUT', responses={200: 'Updated', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
                      request_body=Schema(type=TYPE_OBJECT,  required=['hostname', 'domain', 'timezone', 'dns_servers'],
@@ -779,6 +781,14 @@ def change_language(request, id):
     except System.DoesNotExist:
         return JsonResponse({"error":f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
+interface_item_schema = Schema(
+    type=TYPE_OBJECT,
+    properties={
+        "id": Schema(type=TYPE_INTEGER, description="Interface ID"),
+        "address": Schema(type=TYPE_STRING, description="Interface IP address"),
+    },
+    required=["id", "address"],
+)
 @swagger_auto_schema(
     method='PUT',
     operation_summary="API TO UPDATE CONFIGURATION",
@@ -826,16 +836,33 @@ def change_language(request, id):
                 default=True,
                 description="Show login message (default: True)"
             ),
+            
+           "interface_ssh": Schema(
+                type=TYPE_ARRAY,
+                items=interface_item_schema,
+                default=[{"id": 1, "address": config("IP_ADDRESS")}],
+                description="List of interfaces allowed for SSH connections."
+            ),
+
+            "interface_web": Schema(
+                type=TYPE_ARRAY,
+                items=interface_item_schema,
+                default=[{"id": 1, "address": config("IP_ADDRESS")}],
+                description="List of interfaces allowed for web access."
+            ),
         },
-        example={   # 👈 Example JSON body
+        example={  
             "enable_ssh": True,
             "root_login": False,
             "auth_method": "password",
             "session_timeout": 600,
-            "protocol_http": True,
+            "protocol_http": False,
             "certificat": 2,
-            "tcp_port": 22,
-            "login_message": True
+            "tcp_port": 443,
+            "login_message": True,
+            "interface_ssh":[{"id":1,"address":config("IP_ADDRESS")}],
+            "interface_web":[{"id":1,"address":config("IP_ADDRESS")}],
+            
         }
     )
 )
@@ -858,23 +885,31 @@ def update_settings(request, id):
             interface_ssh=data.get("interface_ssh",[])
             interface_web=data.get("interface_web",[])
             all_interfaces=get_all_interfaces()
-            data={
-                "enable_ssh":enable_ssh,
-                "root_login":root_login,
-                "auth_method":auth_method,
-                "session_timeout":session_timeout,
-                "protocol_http":protocol_http,
-                "certificat":certificat,
-                "tcp_port":tcp_port,
-                "login_message":login_message
-                }
-            all_commandes=manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message)
-            aux_commandes=execute_all_commandes(all_commandes)
-            if aux_commandes:
-              msg,status=save_config_db(data,id,interface_web,interface_ssh)
+            if certificat is None and not protocol_http:
+                msg=ERROR_MESSAGE_HTTPS
+                status=400 
             else:
-                msg=ERROR_MESSAGES_UPDATING
-                status=400
+                certif=None
+                if certificat is not None:
+                    certif=Certificate.objects.get(id=certificat).name
+                data={
+                    "enable_ssh":enable_ssh,
+                    "root_login":root_login,
+                    "auth_method":auth_method,
+                    "session_timeout":session_timeout,
+                    "protocol_http":protocol_http,
+                    "certificat":certificat,
+                    "tcp_port":tcp_port,
+                    "login_message":login_message
+                    }
+                all_commandes,rules_web,rules_ssh=manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message,certif,session_timeout)
+                aux_commandes=execute_all_commandes(all_commandes)
+                if aux_commandes:
+                    msg,status=save_config_db(data,id,interface_web,interface_ssh)
+                    save_rules_settings(rules_ssh,rules_web)
+                else:
+                    msg=ERROR_MESSAGES_UPDATING
+                    status=400
         else:
             msg=f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
             status=404 
@@ -882,3 +917,49 @@ def update_settings(request, id):
         
     except Settings.DoesNotExist:
         return JsonResponse({"msg":f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET SETTINGS",)
+@api_view(['GET'])
+@require_http_methods(['GET'])
+@authentication_classes([SessionAuthentication])
+def get_settings(request):
+    if request.method == 'GET':
+        settings= Settings.objects.all()
+        settings_dict = serializers.serialize("json", settings)
+        res = json.loads(settings_dict)
+        list_settings=[]
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            settings_id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = settings_id
+            certif_id=res[i]['fields']['certificat']
+            certif_name=Certificate.objects.get(id=certif_id).name
+            res[i]['fields']['certificat']={
+                "id":certif_id,
+                "certif_name":certif_name
+            }
+            all_settings_interfaces=SettingInterface.objects.filter(setting=settings_id)
+            all_settings=[]
+            print(all_settings_interfaces)
+            for si in all_settings_interfaces:
+                info_settings_interface={
+                    "id":si.id,
+                    "interface_web":si.interface_web,
+                    "interface":{
+                        "id":si.interface.id,
+                        "name_interface":si.interface.name_interface,
+                        "address":IP4Config.objects.get(interface=si.interface.id).ip_address
+                            
+                    }
+                }
+                all_settings.append(info_settings_interface)
+            res[i]['fields']['interfaces']=all_settings
+          
+            
+            list_settings.append(res[i]['fields'])
+            
+        return JsonResponse({"data":list_settings}, status=400)
+      

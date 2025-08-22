@@ -60,7 +60,6 @@ def delete_rule(request):
     if (request.method == 'POST'):
         ids=request.data
         all_response=[]
-        print(ids)
         for id in ids:
             if (Rule.objects.filter(id=id).exists()):
                 rules = Rule.objects.get(id=id)
@@ -186,7 +185,7 @@ def save_rules(request,name_interface):
         dport = None if data.get('dport', None) == "ALL" else data.get('dport', None)
         protocol = None if data.get('protocol', None) == "ALL" else data.get('protocol', None)
         position = index+1
-        print({"position":position})
+        # print({"position":position})
         type_rule = data.get('type_rule', None)
         rule_description= None if data.get('rule_description', None) == "" else data.get('rule_description', None)
         if id_rule is None:

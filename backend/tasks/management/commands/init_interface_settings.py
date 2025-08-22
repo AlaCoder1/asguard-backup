@@ -11,7 +11,10 @@ class Command(BaseCommand):
         try:
             uuid,name=get_connection_uuid(connection_name=None)
             if uuid is not None:
-                cmd= f"sudo nmcli connection modify {uuid} ipv4.method manual ipv4.addresses '192.168.1.1/24' ipv4.gateway '' ipv4.route-metric '' "
+                cmd = f"""
+sudo nmcli connection modify {uuid} ipv4.method manual ipv4.addresses '192.168.1.1/24' ipv4.gateway '' ipv4.route-metric '' \
+&& sudo nmcli connection down {uuid} \
+&& sudo nmcli connection up {uuid}"""
                 _,error=execute_command(cmd)
                 if not error:
                     interface_data={
@@ -34,11 +37,11 @@ class Command(BaseCommand):
                             ip4_serializer.save()
                             
                         else:
-                            return ip4_serializer.errors
+                            return f"{ip4_serializer.errors}"
                     else:
-                        return interface_serializer.errors
+                        return f"{interface_serializer.errors}"
                 else: 
-                    return error
+                    return f"{error}"
             else:
                 return "You don't have active interface!"        
                 

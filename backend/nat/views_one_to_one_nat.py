@@ -1,11 +1,13 @@
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext_lazy as _
-from drf_yasg.openapi import Parameter, IN_PATH, TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
+from drf_yasg.openapi import Parameter, IN_PATH, TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from backend.nat.contant_variables import REQUEST_BODY_ONE_TO_ONE_NAT
 from backend.nat.models import OneToOneNat
 from backend.nat.serializers import OneToOneNatSerializer
 from backend.nat.utils import change_position_rule, get_next_nat_handle
@@ -15,8 +17,7 @@ from backend.nat.utils_one_to_one_nat_system import change_rule_one_to_one_nat_p
 from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
 from utils.utils_address import fix_ipv4_address
-from django.views.decorators.http import require_http_methods
-from decouple import config
+
 
 # Constants
 CONSTANT_ONE_TO_ONE_NAT_RULE = _("OneToOneNat rule")
@@ -39,15 +40,7 @@ ERROR_MESSAGES_CHANGING = _("System error in changing")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
-request_body_nat=Schema(
-        type=TYPE_OBJECT, required=['source_address', 'translation_address', 'destination_address'],
-        properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-                    'source_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask"),
-                    'destination_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask or blank for Any"),
-                    'translation_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask"),
-                    'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
-                    }
-                    )
+
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL OneToOneNat RULES",)
 @api_view(['GET'])
@@ -77,7 +70,7 @@ def get_one_to_one_nat(_, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE A OneToOneNat RULE", 
-    request_body=request_body_nat)
+    request_body=REQUEST_BODY_ONE_TO_ONE_NAT)
 @api_view(['POST'])
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -206,7 +199,7 @@ def delete_list_one_to_one_nat(request):
     'PUT', responses={200: 'Created', 400: 'Bad Request'},
     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     operation_summary="API TO CREATE A OneToOneNat RULE", 
-    request_body=request_body_nat)
+    request_body=REQUEST_BODY_ONE_TO_ONE_NAT)
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])

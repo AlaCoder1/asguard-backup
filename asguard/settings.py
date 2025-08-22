@@ -100,7 +100,7 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'backend.managementUsers.language_middleware.SetLanguageMiddleware',
-    # 'asguard.middleware.UvicornUserLoggingMiddleware',
+    'asguard.middleware.UvicornUserLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'asguard.urls'
@@ -222,7 +222,7 @@ SWAGGER_SETTINGS = {
 }
 
 # jwt_auth/settings.py
-# SESSION_COOKIE_AGE = 600
+SESSION_COOKIE_AGE = 600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE= True
 SESSION_COOKIE_HTTPONLY = True

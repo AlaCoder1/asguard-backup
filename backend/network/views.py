@@ -370,6 +370,7 @@ def AllInterfaces(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
+            res[i]["fields"]["ip_address"]=IP4Config.objects.get(interface=id).ip_address
             list_interface.append(res[i]['fields'])
         # return a Json response
         return JsonResponse(list_interface, safe=False)

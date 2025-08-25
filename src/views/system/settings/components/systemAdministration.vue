@@ -33,7 +33,7 @@
             item-value="id"
             return-object
             clearable
-            :items="state.interfaceSSHList"
+            :items="state.mapedInterface"
           ></v-select>
           <v-select
             :label="$t('settings.DetectedNetworkInterfacesWeb')"
@@ -42,7 +42,7 @@
             item-value="id"
             return-object
             clearable
-            :items="state.interfaceWEBList"
+            :items="state.mapedInterface"
           ></v-select>
           <v-row>
             <v-col cols="4">
@@ -100,14 +100,34 @@
             </v-col>
           </v-row>
 
-          <template v-if="state.protocol === 'HTTPS'">
-            <v-text-field
-              :label="$t('settings.SSLCertificate')"
-              v-model="state.sslCertificate"
-            ></v-text-field>
+          <template v-if="state.protocol === 'HTTP'">
             <v-text-field
               :label="$t('settings.TCPPort')"
+              v-model="state.tcpPortHttp"
+              placeholder="80"
+            ></v-text-field>
+          </template>
+
+          <template v-if="state.protocol === 'HTTPS'">
+            <!-- <v-text-field
+              :label="$t('settings.SSLCertificate')"
+              v-model="state.sslCertificate"
+            ></v-text-field> -->
+
+            <v-select
+              :label="`${$t('settings.SSLCertificate')} *`"
+              v-model="state.sslCertificate"
+              item-title="name"
+              item-value="id"
+              :items="state.certificatList"
+              :no-data-text="$t('certificat.certificatlist')"
+              return-object
+            ></v-select>
+
+            <v-text-field
+              :label="`${$t('settings.TCPPort')}`"
               v-model="state.tcpPort"
+              placeholder="443"
             ></v-text-field>
           </template>
 
@@ -177,6 +197,7 @@ import ModalAddEditGateway from "@/components/modals/ModalAddEditGateway.vue";
 import { v4 as uuidv4 } from "uuid";
 import useValidate from "@vuelidate/core";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
+import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
   name: "AdministrationSystem",
@@ -190,11 +211,28 @@ export default {
     const { t } = useI18n();
     const overlayTemplate = ref("");
     const emitter = inject("emitter");
+
+    onMounted(() => {
+      getCertif();
+      getInterface();
+
+      overlayTemplate.value = `
+      <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+     </svg></span>`;
+    });
+
     const state = reactive({
       protocolList: ["HTTP", "HTTPS"],
-      interfaceSSHList: [],
+      mapedInterface: [],
       interfaceWEBList: [],
-      numPassword: [16,17,18,19,20,21,22,23,24,25],
+      certificatList: [],
+      mapedInterface: [],
+      numPassword: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
       loading: false,
       isLoadingDialogue: false,
       snackbar: false,
@@ -210,87 +248,105 @@ export default {
       protocol: "HTTP",
       sslCertificate: "",
       tcpPort: "",
+      tcpPortHttp: "",
       loginMsg: false,
       password: null,
     });
 
-    const getCookie = (name) => {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
+    const getCertif = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/certificates/getAllCertificates").then((response) => {
+        state.certificatList = response.data;
+        console.log("state.certificatList", response.data);
+      });
     };
 
-    onMounted(() => {
-      overlayTemplate.value = `
-      <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
-      <path
-        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
-        style="fill: #E8EAF6"
-        data-name="Unbox"
-      />
-     </svg></span>`;
-    });
+    const getInterface = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/network/AllInterfaces").then((response) => {
+        console.log('response.dataInterf0',response.data)
+        let filtredInterface = response.data.filter(
+          (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+        );
+
+        let interfaces = filtredInterface.map((i) => {
+          return {
+            id: i.id,
+            name: i.name_interface,
+            address: i.address,
+          };
+        });
+
+        state.mapedInterface = interfaces;
+      });
+    };
 
     const submitForm = async () => {
       // const result = await v$.value.$validate();
       // if (result) {
-      //   const csrfToken = getCookie("csrftoken");
-      //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      //   let dns_server = rowDataGateway.value.map((i) => {
-      //     return {
-      //       dns_server: i.dns_server,
-      //       gateway: i.gateway ?? "",
-      //       interface_id: i.info.interface_id ?? i.info.interface ?? null,
-      //       name_interface:
-      //         i.info.name_interface ?? i.info.name_interface ?? "",
-      //       ...(i.gateway ? { metric: i.info.metric ?? "" } : {}),
-      //     };
-      //   });
-      //   let payload = {
-      //     hostname: state.hostName,
-      //     domain: `${state.domain}`,
-      //     timezone: state.timeZone.name,
-      //     dns_servers: dns_server,
-      //   };
-      //   state.loading = true;
-      //   state.isLoadingDialogue = true;
-      //   axios
-      //     .put(`/settings/generale_settings/1`, payload)
-      //     .then((response) => {
-      //       if (response.status == 200) {
-      //         state.loading = false;
-      //         state.isLoadingDialogue = false;
-      //         state.snackbar = true;
-      //         state.color = "success";
-      //         state.textAlert = response.data.msg;
-      //         setTimeout(() => {
-      //           state.snackbar = false;
-      //           location.reload();
-      //         }, 1000);
-      //       }
-      //     })
-      //     .catch((i) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let payload = {
+        enable_ssh: true,
+        root_login: false,
+        auth_method: "password",
+        session_timeout: 600,
+        protocol_http: false,
+        certificat: 4,
+        tcp_port: 443,
+        login_message: true,
+        interface_ssh: [
+          {
+            id: 1,
+            address: "10.1.22.69",
+          },
+        ],
+        interface_web: [
+          {
+            id: 1,
+            address: "10.1.22.69",
+          },
+        ],
+      };
+
+      console.log("payload", payload);
+
+      state.loading = true;
+      state.isLoadingDialogue = true;
+
+      // axios
+      //   .put(`/settings/updateSettings/${state.id}`, payload)
+      //   .then((response) => {
+      //     if (response.status == 200) {
       //       state.loading = false;
       //       state.isLoadingDialogue = false;
-      //       if (i.response.status === 500) {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = t("errors.errorServer");
-      //       } else {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = i.response.data.msg;
-      //       }
-      //     });
+      //       state.snackbar = true;
+      //       state.color = "success";
+      //       state.textAlert = response.data.msg;
+      //       setTimeout(() => {
+      //         state.snackbar = false;
+      //         location.reload();
+      //       }, 1000);
+      //     }
+      //   })
+      //   .catch((i) => {
+      //     state.loading = false;
+      //     state.isLoadingDialogue = false;
+      //     if (i.response.status === 500) {
+      //       state.snackbar = true;
+      //       state.color = "red";
+      //       state.textAlert = t("errors.errorServer");
+      //     } else {
+      //       state.snackbar = true;
+      //       state.color = "red";
+      //       state.textAlert = i.response.data.msg;
+      //     }
+      //   });
       // } else {
       //   console.log("error :", v$.value);
       // }
@@ -312,7 +368,6 @@ export default {
     return {
       v$,
       cancel,
-      getCookie,
       submitForm,
       state,
       emitter,

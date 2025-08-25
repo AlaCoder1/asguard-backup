@@ -5,6 +5,18 @@ from utils.commands_utils import execute_list_commands_with_arguments, write_fil
 from utils.commands_utils import execute_command_with_arguments, execute_command_without_arguments, execute_list_commands_without_arguments
 
 
+def check_payload(data: dict):
+    """Check the payload fileds"""
+    # Check the validity of method_name
+    try:
+        if data["method"]["method_name"] not in ["create", "import"]:
+            return False
+    except KeyError:
+        if data["method"]["name_method"] not in ["create", "import"]:
+            return False
+    return True
+
+
 def change_vars(current_dir, updated_field:dict):
     """This function takes some configurations of certificates and change vars file of the easyrsa"""
 

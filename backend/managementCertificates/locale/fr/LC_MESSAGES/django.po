@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-13 10:34+0000\n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,62 +22,66 @@ msgstr ""
 msgid "name"
 msgstr "nom"
 
-#: backend/managementCertificates/views.py:25
+#: backend/managementCertificates/views.py:26
 msgid "Certificate Authority"
 msgstr "Certificat d'authorité"
 
-#: backend/managementCertificates/views.py:26
+#: backend/managementCertificates/views.py:27
 msgid "openvpn server"
 msgstr "serveur openvpn"
 
-#: backend/managementCertificates/views.py:27
+#: backend/managementCertificates/views.py:28
 msgid "openvpn client"
 msgstr "client openvpn"
 
-#: backend/managementCertificates/views.py:28
+#: backend/managementCertificates/views.py:29
 msgid "IPsec"
 msgstr "IPsec"
 
-#: backend/managementCertificates/views.py:29
+#: backend/managementCertificates/views.py:30
 msgid "WAF"
 msgstr "WAF"
 
-#: backend/managementCertificates/views.py:30
+#: backend/managementCertificates/views.py:31
 msgid "revocation list"
 msgstr "liste de révocation"
 
-#: backend/managementCertificates/views.py:31
+#: backend/managementCertificates/views.py:32
 msgid "Certificate"
 msgstr "Certificat"
 
-#: backend/managementCertificates/views.py:32
+#: backend/managementCertificates/views.py:33
 msgid "it's used in"
 msgstr "elle est utilisée dans"
 
-#: backend/managementCertificates/views.py:34
+#: backend/managementCertificates/views.py:35
 msgid "is created"
 msgstr "est créé"
 
-#: backend/managementCertificates/views.py:35
+#: backend/managementCertificates/views.py:36
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/managementCertificates/views.py:37
+#: backend/managementCertificates/views.py:38
 msgid "System error in creating"
 msgstr "Erreur système lors de la création de"
 
-#: backend/managementCertificates/views.py:38
+#: backend/managementCertificates/views.py:39
 msgid "System error in deleting"
 msgstr "Erreur système lors de la suppression de"
 
-#: backend/managementCertificates/views.py:39
+#: backend/managementCertificates/views.py:40
 msgid "System error in exporting"
 msgstr "Erreur système lors de l'exportation de"
 
-#: backend/managementCertificates/views.py:40
+#: backend/managementCertificates/views.py:41
 msgid "Unable to delete"
 msgstr "Impossible de supprimer"
 
-#: backend/managementCertificates/views.py:41
+#: backend/managementCertificates/views.py:42
 msgid "does not exist"
 msgstr "n'existe pas"
+
+#: backend/managementCertificates/views.py:43
+msgid "Invalid data"
+msgstr "Données invalides"

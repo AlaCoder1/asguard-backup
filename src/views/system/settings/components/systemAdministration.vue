@@ -32,6 +32,7 @@
             item-title="name"
             item-value="id"
             return-object
+            multiple
             clearable
             :items="state.mapedInterface"
           ></v-select>
@@ -41,6 +42,7 @@
             item-title="name"
             item-value="id"
             return-object
+            multiple
             clearable
             :items="state.mapedInterface"
           ></v-select>
@@ -213,6 +215,12 @@ export default {
     const emitter = inject("emitter");
 
     onMounted(() => {
+      let adminSettings =
+        document.getElementById("app").attributes["admin_settings"].value;
+      const parsedArray = JSON.parse(adminSettings);
+
+      populate(parsedArray);
+
       getCertif();
       getInterface();
 
@@ -225,6 +233,23 @@ export default {
       />
      </svg></span>`;
     });
+
+    const populate = (dataAdmin) => {
+      console.log("data", dataAdmin);
+
+      let data = dataAdmin[0];
+
+      state.id = data.id;
+      state.secureShell = data.enable_ssh;
+      state.rootLogin = data.root_login;
+      state.authMethod = data.auth_method;
+      state.sessionTimeout = data.session_timeout;
+      state.protocol = data.protocol_http === true ? "HTTP" : "HTTPS";
+      state.password = data.password_length;
+      state.loginMsg = data.login_message;
+      state.networkInterfaceSSH = data.interface_ssh;
+      state.networkInterfaceWEB = data.interface_web;
+    };
 
     const state = reactive({
       protocolList: ["HTTP", "HTTPS"],
@@ -239,8 +264,8 @@ export default {
       color: "",
       textAlert: "",
       //Administration
-      networkInterfaceSSH: null,
-      networkInterfaceWEB: null,
+      networkInterfaceSSH: [],
+      networkInterfaceWEB: [],
       secureShell: false,
       rootLogin: false,
       authMethod: false,
@@ -251,6 +276,7 @@ export default {
       tcpPortHttp: "",
       loginMsg: false,
       password: null,
+      id: null,
     });
 
     const getCertif = () => {
@@ -259,7 +285,6 @@ export default {
 
       axios.get("/certificates/getAllCertificates").then((response) => {
         state.certificatList = response.data;
-        console.log("state.certificatList", response.data);
       });
     };
 
@@ -268,7 +293,6 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios.get("/network/AllInterfaces").then((response) => {
-        console.log('response.dataInterf0',response.data)
         let filtredInterface = response.data.filter(
           (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
         );
@@ -277,7 +301,7 @@ export default {
           return {
             id: i.id,
             name: i.name_interface,
-            address: i.address,
+            address: i.ip_address,
           };
         });
 
@@ -292,62 +316,76 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       let payload = {
-        enable_ssh: true,
-        root_login: false,
-        auth_method: "password",
-        session_timeout: 600,
-        protocol_http: false,
-        certificat: 4,
-        tcp_port: 443,
-        login_message: true,
-        interface_ssh: [
-          {
-            id: 1,
-            address: "10.1.22.69",
-          },
-        ],
-        interface_web: [
-          {
-            id: 1,
-            address: "10.1.22.69",
-          },
-        ],
+        enable_ssh: state.secureShell,
+        root_login: state.rootLogin,
+        auth_method: state.authMethod,
+        session_timeout: state.sessionTimeout,
+        protocol_http: state.protocol === "http" ? true : false,
+        password_length: state.password ?? "",
+        login_message: state.loginMsg,
+        interface_ssh: state.networkInterfaceSSH
+          ? state.networkInterfaceSSH?.map((i) => ({
+              id: i.id,
+              address: i.address,
+            }))
+          : [],
+
+        interface_web: state.networkInterfaceWEB
+          ? state.networkInterfaceWEB?.map((i) => ({
+              id: i.id,
+              address: i.address,
+            }))
+          : [],
       };
 
+      if (state.protocol === "HTTP") {
+        payload = { ...payload, tcp_port: state.tcpPortHttp };
+      }
+
+      if (state.protocol === "HTTPS") {
+        payload = {
+          ...payload,
+          certificat: state.sslCertificate ? state.sslCertificate.id : "",
+          tcp_port: state.tcpPort,
+        };
+      }
+
       console.log("payload", payload);
+      console.log("state.networkInterfaceSSH", state.networkInterfaceSSH);
 
       state.loading = true;
       state.isLoadingDialogue = true;
 
-      // axios
-      //   .put(`/settings/updateSettings/${state.id}`, payload)
-      //   .then((response) => {
-      //     if (response.status == 200) {
-      //       state.loading = false;
-      //       state.isLoadingDialogue = false;
-      //       state.snackbar = true;
-      //       state.color = "success";
-      //       state.textAlert = response.data.msg;
-      //       setTimeout(() => {
-      //         state.snackbar = false;
-      //         location.reload();
-      //       }, 1000);
-      //     }
-      //   })
-      //   .catch((i) => {
-      //     state.loading = false;
-      //     state.isLoadingDialogue = false;
-      //     if (i.response.status === 500) {
-      //       state.snackbar = true;
-      //       state.color = "red";
-      //       state.textAlert = t("errors.errorServer");
-      //     } else {
-      //       state.snackbar = true;
-      //       state.color = "red";
-      //       state.textAlert = i.response.data.msg;
-      //     }
-      //   });
-      // } else {
+      axios
+        .put(`/settings/updateSettings/${state.id}`, payload)
+        .then((response) => {
+          if (response.status == 200) {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+            setTimeout(() => {
+              state.snackbar = false;
+              location.reload();
+            }, 1000);
+          }
+        })
+        .catch((i) => {
+          state.loading = false;
+          state.isLoadingDialogue = false;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.msg;
+          }
+        });
+      // } 
+      // else {
       //   console.log("error :", v$.value);
       // }
     };

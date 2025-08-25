@@ -496,6 +496,47 @@ def get_alerts_from_database(request):
             alert_list.append(res[i]['fields'])
     return json.dumps(alert_list)
 
+############### Get Settings Params #################
+
+def get_settings(request):
+    if request.method == 'GET':
+        settings= Settings.objects.all()
+        settings_dict = serializers.serialize("json", settings)
+        res = json.loads(settings_dict)
+        list_settings=[]
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            settings_id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = settings_id
+            certif_id=res[i]['fields']['certificat']
+            certif_name=Certificate.objects.get(id=certif_id).name
+            res[i]['fields']['certificat']={
+                "id":certif_id,
+                "certif_name":certif_name
+            }
+            all_settings_interfaces=SettingInterface.objects.filter(setting=settings_id)
+            all_settings=[]
+            print(all_settings_interfaces)
+            for si in all_settings_interfaces:
+                info_settings_interface={
+                    "id":si.id,
+                    "interface_web":si.interface_web,
+                    "interface":{
+                        "id":si.interface.id,
+                        "name_interface":si.interface.name_interface,
+                        "address":IP4Config.objects.get(interface=si.interface.id).ip_address
+                            
+                    }
+                }
+                all_settings.append(info_settings_interface)
+            res[i]['fields']['interfaces']=all_settings
+            list_settings.append(res[i]['fields'])
+            
+        return list_settings
+
+
+
 
 @login_required(login_url='/')
 def user_managment_page(request):
@@ -654,7 +695,9 @@ def setting_page(request):
         network_info.append(i.server_dns)
     time_zone = time_zones(request)
     gateway=gatways_information(request)
-    context = {'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway)}
+    admin_settings=get_settings(request)
+    print({"admin_settings":admin_settings})
+    context = {'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway),"admin_settings":json.dumps(admin_settings)}
     return render(request, 'settings_page.html',context)
 
 

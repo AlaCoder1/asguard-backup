@@ -32,8 +32,9 @@
             item-title="name"
             item-value="id"
             return-object
+            multiple
             clearable
-            :items="state.interfaceSSHList"
+            :items="state.mapedInterface"
           ></v-select>
           <v-select
             :label="$t('settings.DetectedNetworkInterfacesWeb')"
@@ -41,8 +42,9 @@
             item-title="name"
             item-value="id"
             return-object
+            multiple
             clearable
-            :items="state.interfaceWEBList"
+            :items="state.mapedInterface"
           ></v-select>
           <v-row>
             <v-col cols="4">
@@ -100,14 +102,34 @@
             </v-col>
           </v-row>
 
-          <template v-if="state.protocol === 'HTTPS'">
-            <v-text-field
-              :label="$t('settings.SSLCertificate')"
-              v-model="state.sslCertificate"
-            ></v-text-field>
+          <template v-if="state.protocol === 'HTTP'">
             <v-text-field
               :label="$t('settings.TCPPort')"
+              v-model="state.tcpPortHttp"
+              placeholder="80"
+            ></v-text-field>
+          </template>
+
+          <template v-if="state.protocol === 'HTTPS'">
+            <!-- <v-text-field
+              :label="$t('settings.SSLCertificate')"
+              v-model="state.sslCertificate"
+            ></v-text-field> -->
+
+            <v-select
+              :label="`${$t('settings.SSLCertificate')} *`"
+              v-model="state.sslCertificate"
+              item-title="name"
+              item-value="id"
+              :items="state.certificatList"
+              :no-data-text="$t('certificat.certificatlist')"
+              return-object
+            ></v-select>
+
+            <v-text-field
+              :label="`${$t('settings.TCPPort')}`"
               v-model="state.tcpPort"
+              placeholder="443"
             ></v-text-field>
           </template>
 
@@ -177,6 +199,7 @@ import ModalAddEditGateway from "@/components/modals/ModalAddEditGateway.vue";
 import { v4 as uuidv4 } from "uuid";
 import useValidate from "@vuelidate/core";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
+import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
   name: "AdministrationSystem",
@@ -190,46 +213,17 @@ export default {
     const { t } = useI18n();
     const overlayTemplate = ref("");
     const emitter = inject("emitter");
-    const state = reactive({
-      protocolList: ["HTTP", "HTTPS"],
-      interfaceSSHList: [],
-      interfaceWEBList: [],
-      numPassword: [16,17,18,19,20,21,22,23,24,25],
-      loading: false,
-      isLoadingDialogue: false,
-      snackbar: false,
-      color: "",
-      textAlert: "",
-      //Administration
-      networkInterfaceSSH: null,
-      networkInterfaceWEB: null,
-      secureShell: false,
-      rootLogin: false,
-      authMethod: false,
-      sessionTimeout: "",
-      protocol: "HTTP",
-      sslCertificate: "",
-      tcpPort: "",
-      loginMsg: false,
-      password: null,
-    });
-
-    const getCookie = (name) => {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    };
 
     onMounted(() => {
+      let adminSettings =
+        document.getElementById("app").attributes["admin_settings"].value;
+      const parsedArray = JSON.parse(adminSettings);
+
+      populate(parsedArray);
+
+      getCertif();
+      getInterface();
+
       overlayTemplate.value = `
       <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
@@ -240,58 +234,158 @@ export default {
      </svg></span>`;
     });
 
+    const populate = (dataAdmin) => {
+      console.log("data", dataAdmin);
+
+      let data = dataAdmin[0];
+
+      state.id = data.id;
+      state.secureShell = data.enable_ssh;
+      state.rootLogin = data.root_login;
+      state.authMethod = data.auth_method;
+      state.sessionTimeout = data.session_timeout;
+      state.protocol = data.protocol_http === true ? "HTTP" : "HTTPS";
+      state.password = data.password_length;
+      state.loginMsg = data.login_message;
+      state.networkInterfaceSSH = data.interface_ssh;
+      state.networkInterfaceWEB = data.interface_web;
+    };
+
+    const state = reactive({
+      protocolList: ["HTTP", "HTTPS"],
+      mapedInterface: [],
+      interfaceWEBList: [],
+      certificatList: [],
+      mapedInterface: [],
+      numPassword: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
+      loading: false,
+      isLoadingDialogue: false,
+      snackbar: false,
+      color: "",
+      textAlert: "",
+      //Administration
+      networkInterfaceSSH: [],
+      networkInterfaceWEB: [],
+      secureShell: false,
+      rootLogin: false,
+      authMethod: false,
+      sessionTimeout: "",
+      protocol: "HTTP",
+      sslCertificate: "",
+      tcpPort: "",
+      tcpPortHttp: "",
+      loginMsg: false,
+      password: null,
+      id: null,
+    });
+
+    const getCertif = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/certificates/getAllCertificates").then((response) => {
+        state.certificatList = response.data;
+      });
+    };
+
+    const getInterface = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/network/AllInterfaces").then((response) => {
+        let filtredInterface = response.data.filter(
+          (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+        );
+
+        let interfaces = filtredInterface.map((i) => {
+          return {
+            id: i.id,
+            name: i.name_interface,
+            address: i.ip_address,
+          };
+        });
+
+        state.mapedInterface = interfaces;
+      });
+    };
+
     const submitForm = async () => {
       // const result = await v$.value.$validate();
       // if (result) {
-      //   const csrfToken = getCookie("csrftoken");
-      //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      //   let dns_server = rowDataGateway.value.map((i) => {
-      //     return {
-      //       dns_server: i.dns_server,
-      //       gateway: i.gateway ?? "",
-      //       interface_id: i.info.interface_id ?? i.info.interface ?? null,
-      //       name_interface:
-      //         i.info.name_interface ?? i.info.name_interface ?? "",
-      //       ...(i.gateway ? { metric: i.info.metric ?? "" } : {}),
-      //     };
-      //   });
-      //   let payload = {
-      //     hostname: state.hostName,
-      //     domain: `${state.domain}`,
-      //     timezone: state.timeZone.name,
-      //     dns_servers: dns_server,
-      //   };
-      //   state.loading = true;
-      //   state.isLoadingDialogue = true;
-      //   axios
-      //     .put(`/settings/generale_settings/1`, payload)
-      //     .then((response) => {
-      //       if (response.status == 200) {
-      //         state.loading = false;
-      //         state.isLoadingDialogue = false;
-      //         state.snackbar = true;
-      //         state.color = "success";
-      //         state.textAlert = response.data.msg;
-      //         setTimeout(() => {
-      //           state.snackbar = false;
-      //           location.reload();
-      //         }, 1000);
-      //       }
-      //     })
-      //     .catch((i) => {
-      //       state.loading = false;
-      //       state.isLoadingDialogue = false;
-      //       if (i.response.status === 500) {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = t("errors.errorServer");
-      //       } else {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = i.response.data.msg;
-      //       }
-      //     });
-      // } else {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let payload = {
+        enable_ssh: state.secureShell,
+        root_login: state.rootLogin,
+        auth_method: state.authMethod,
+        session_timeout: state.sessionTimeout,
+        protocol_http: state.protocol === "http" ? true : false,
+        password_length: state.password ?? "",
+        login_message: state.loginMsg,
+        interface_ssh: state.networkInterfaceSSH
+          ? state.networkInterfaceSSH?.map((i) => ({
+              id: i.id,
+              address: i.address,
+            }))
+          : [],
+
+        interface_web: state.networkInterfaceWEB
+          ? state.networkInterfaceWEB?.map((i) => ({
+              id: i.id,
+              address: i.address,
+            }))
+          : [],
+      };
+
+      if (state.protocol === "HTTP") {
+        payload = { ...payload, tcp_port: state.tcpPortHttp };
+      }
+
+      if (state.protocol === "HTTPS") {
+        payload = {
+          ...payload,
+          certificat: state.sslCertificate ? state.sslCertificate.id : "",
+          tcp_port: state.tcpPort,
+        };
+      }
+
+      console.log("payload", payload);
+      console.log("state.networkInterfaceSSH", state.networkInterfaceSSH);
+
+      state.loading = true;
+      state.isLoadingDialogue = true;
+
+      axios
+        .put(`/settings/updateSettings/${state.id}`, payload)
+        .then((response) => {
+          if (response.status == 200) {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+            setTimeout(() => {
+              state.snackbar = false;
+              location.reload();
+            }, 1000);
+          }
+        })
+        .catch((i) => {
+          state.loading = false;
+          state.isLoadingDialogue = false;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.msg;
+          }
+        });
+      // } 
+      // else {
       //   console.log("error :", v$.value);
       // }
     };
@@ -312,7 +406,6 @@ export default {
     return {
       v$,
       cancel,
-      getCookie,
       submitForm,
       state,
       emitter,

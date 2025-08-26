@@ -50,6 +50,7 @@ Constants:
 - System-related constants (`CONSTANT_SYSTEM`, etc.)
 
 """
+import subprocess
 from django.http import JsonResponse
 from backend.managementCertificates.models import Certificate
 from backend.settings.serializers import SystemSerializer
@@ -901,7 +902,7 @@ def update_settings(request, id):
                     "login_message" : login_message,
                     "password_length" : password_length
                     }
-                all_commandes,rules_web,rules_ssh=manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message,certif,session_timeout)
+                all_commandes,rules_web,rules_ssh=manage_commandes(all_interfaces, interface_ssh, interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message,certif,session_timeout)
                 aux_commandes=execute_all_commandes(all_commandes)
                 if aux_commandes:
                     msg,status=save_config_db(data,id,interface_web,interface_ssh)
@@ -913,9 +914,11 @@ def update_settings(request, id):
             msg=f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
             status=404 
         return JsonResponse({"msg":msg},status=status)
-        
+    
+    except subprocess.CalledProcessError:
+        return JsonResponse({"msg": ERROR_MESSAGES_UPDATING}, status=400)
     except Settings.DoesNotExist:
-        return JsonResponse({"msg":f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"msg": f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 

@@ -132,85 +132,86 @@ def init_settings_firewall():
     return commandes
 
 
-def add_rule_web(list_interface,interface_address):
-    rules_web=[]
-    commandes=[
-       f"sudo nft list chain inet settings input | grep -q 'ip saddr {interface_address[0]} accept' || sudo nft add rule inet settings input ip saddr {interface_address[0]} accept",
-    ]
+def add_rule_web(list_interface, interface_address):
+    rules_web = []
+    commandes = []
     try:
         interface_id = IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
-    except IP4Config.DoesNotExist:
-        interface_id = None
-    rules_web=[{
-        "rule" : f"ip saddr {interface_address[0]} accept",
-        "saddr" : interface_address[0],
-        "protocol" : "ALL",
-        "policy" : "accept",
-        "type_rule" : "inbound",
-        "interface" : interface_id
-    }]
-    for add in list_interface:
-        try:
-            interface_id = IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
-        except IP4Config.DoesNotExist:
-            interface_id = None
-        if add not in interface_address:
-            commandes.append(f"sudo nft list chain inet settings input | grep -q 'ip saddr {add} drop' || sudo nft add rule inet settings input ip saddr {add} drop")
-            rules_web.append({
-            "rule" : f"ip saddr {add} drop",
-            "saddr" : add,
+        commandes.append(f"sudo nft list chain inet settings input | grep -q 'ip saddr {interface_address[0]} accept' || sudo nft add rule inet settings input ip saddr {interface_address[0]} accept")
+        rules_web.append({
+            "rule" : f"ip saddr {interface_address[0]} accept",
+            "saddr" : interface_address[0],
             "protocol" : "ALL",
-            "policy" : "drop",
+            "policy" : "accept",
             "type_rule" : "inbound",
             "interface" : interface_id
-            })
+        })
+    except IP4Config.DoesNotExist:
+        pass
+
+    for add in list_interface:
+        try:
+            interface_id = IP4Config.objects.get(ip_address=add).interface.pk
+            if add not in interface_address:
+                commandes.append(f"sudo nft list chain inet settings input | grep -q 'ip saddr {add} drop' || sudo nft add rule inet settings input ip saddr {add} drop")
+                rules_web.append({
+                "rule" : f"ip saddr {add} drop",
+                "saddr" : add,
+                "protocol" : "ALL",
+                "policy" : "drop",
+                "type_rule" : "inbound",
+                "interface" : interface_id
+                })
+        except IP4Config.DoesNotExist:
+            pass
+        
     commandes += [
         f"sudo nft list table inet settings  > /etc/rules/settings/settings.conf"
     ]
    
-    return commandes,rules_web
+    return commandes, rules_web
 
 
 def add_rule_ssh(list_interface, interface_address):
     rules_ssh = []
-    commandes = [
-       f"sudo nft list chain inet settings input | grep -q 'ip saddr {interface_address[0]} tcp dport 22 accept' || sudo nft add rule inet settings input ip saddr {interface_address[0]} tcp dport 22 accept"
-    ]
+    commandes = []
     try:
         interface_id = IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
+        commandes.append(f"sudo nft list chain inet settings input | grep -q 'ip saddr {interface_address[0]} tcp dport 22 accept' || sudo nft add rule inet settings input ip saddr {interface_address[0]} tcp dport 22 accept")
+        rules_ssh.append({
+            "rule" : f"ip saddr {interface_address[0]} tcp dport 22 accept",
+            "saddr" : interface_address[0],
+            "policy" : "accept",
+            "type_rule" : "inbound",
+            "protocol" : "TCP",
+            "dport" : 22,
+            "interface" : interface_id
+        })
     except IP4Config.DoesNotExist:
-        interface_id = None
-    rules_ssh=[{
-        "rule" : f"ip saddr {interface_address[0]} tcp dport 22 accept",
-        "saddr" : interface_address[0],
-        "policy" : "accept",
-        "type_rule" : "inbound",
-        "protocol" : "TCP",
-        "dport" : 22,
-        "interface" : interface_id
-    }]
+        pass
     for add in list_interface:
         try:
             interface_id = IP4Config.objects.get(ip_address=add).interface.pk
+            if add not in interface_address:
+                commandes.append( f"sudo nft list chain inet settings input | grep -q 'ip saddr {add} tcp dport 22 drop' || sudo nft add rule inet settings input ip saddr {add} tcp dport 22 drop")
+                rules_ssh.append(
+                    {
+                    "rule" : f"ip saddr {add} tcp dport 22 drop",
+                    "saddr" : add,
+                    "policy" : "drop",
+                    "type_rule" : "inbound",
+                    "protocol" : "TCP",
+                    "dport" : 22,
+                    "interface": interface_id
+                    }
+                )
         except IP4Config.DoesNotExist:
-            interface_id = None
-        if add not in interface_address:
-            commandes.append( f"sudo nft list chain inet settings input | grep -q 'ip saddr {add} tcp dport 22 drop' || sudo nft add rule inet settings input ip saddr {add} tcp dport 22 drop")
-            rules_ssh.append(
-                {
-                "rule" : f"ip saddr {add} tcp dport 22 drop",
-                "saddr" : add,
-                "policy" : "drop",
-                "type_rule" : "inbound",
-                "protocol" : "TCP",
-                "dport" : 22,
-                "interface": interface_id
-                }
-            )
+            pass
+        
     commandes += [
         f"sudo nft list table inet settings  > /etc/rules/settings/settings.conf"
     ]
-    return commandes,rules_ssh
+    return commandes, rules_ssh
 
     
 def permit_user_ssh(root_login,passwd_login,enable_ssh):
@@ -349,19 +350,19 @@ class UvicornUserLoggingMiddleware:
     return commandes          
       
   
-def manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,passwd_login,enable_ssh,http_config,port,login_msg,certif,timeout):
-    all_interfaces_ssh=[x["address"] for x in all_interfaces if x not in interface_ssh ]
-    all_interfaces_web=[x["address"] for x in all_interfaces if x not in interface_web ]
-    interface_ssh=[x['address'] for x in interface_ssh ]
-    interface_web=[x['address'] for x in interface_web ]
-    init_firewall=init_settings_firewall()
+def manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, passwd_login, enable_ssh, http_config, port, login_msg, certif, timeout):
+    all_interfaces_ssh = [x["address"] for x in all_interfaces if x not in interface_ssh]
+    all_interfaces_web = [x["address"] for x in all_interfaces if x not in interface_web]
+    interface_ssh = [x['address'] for x in interface_ssh]
+    interface_web = [x['address'] for x in interface_web]
+    init_firewall = init_settings_firewall()
     command_web, rules_web = add_rule_web(all_interfaces_web, interface_web) if interface_web else ([], [])
-    commmand_ssh,rules_ssh=add_rule_ssh(all_interfaces_ssh,interface_ssh)if interface_ssh!=[] else ([],[])
-    command_user=permit_user_ssh(root_login,passwd_login,enable_ssh)
-    command_page_web=modify_web_page(http_config,port,certif)
-    command_login=modify_log_message(login_msg,timeout)
-    all_commandes=init_firewall+command_web+commmand_ssh+command_user+command_page_web+command_login
-    return all_commandes,rules_web,rules_ssh
+    commmand_ssh, rules_ssh = add_rule_ssh(all_interfaces_ssh,interface_ssh)if interface_ssh!=[] else ([],[])
+    command_user = permit_user_ssh(root_login,passwd_login,enable_ssh)
+    command_page_web = modify_web_page(http_config,port,certif)
+    command_login = modify_log_message(login_msg,timeout)
+    all_commandes = init_firewall+command_web+commmand_ssh+command_user+command_page_web+command_login
+    return all_commandes, rules_web, rules_ssh
 
 
 def execute_all_commandes(all_commandes):

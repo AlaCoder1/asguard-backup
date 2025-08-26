@@ -349,7 +349,7 @@ def delete_interface(request,id):
 @api_view(['GET'])
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])         
-def AllInterfaces(request):
+def AllInterfaces(_):
     """
     API to get all interfaces from the database.
 
@@ -361,19 +361,22 @@ def AllInterfaces(request):
     
     """
     list_interface = []
-    if (request.method == 'GET'):
-        interfaces = Interface.objects.all()
-        interfaceDict = serializers.serialize("json", interfaces)
-        res = json.loads(interfaceDict)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            res[i]["fields"]["ip_address"]=IP4Config.objects.get(interface=id).ip_address
-            list_interface.append(res[i]['fields'])
-        # return a Json response
-        return JsonResponse(list_interface, safe=False)
+    interfaces = Interface.objects.all()
+    interfaceDict = serializers.serialize("json", interfaces)
+    res = json.loads(interfaceDict)
+    for interface in res:
+        interface.pop('model')
+        id = interface['pk']
+        interface.pop('pk')
+        interface['fields']['id'] = id
+        try:
+            interface["fields"]["ip_address"] = IP4Config.objects.get(interface=id).ip_address
+        except IP4Config.DoesNotExist:
+                interface["fields"]["ip_address"] = None
+        list_interface.append(interface['fields'])
+    # return a Json response
+    return JsonResponse(list_interface, safe=False)
+         
     
 @require_http_methods(['GET'])
 def GetInformationsByInterface(request,name_interface):

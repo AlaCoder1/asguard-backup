@@ -29,6 +29,7 @@ from backend.proxy.views import *
 from backend.proxy.models import *
 from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
+from backend.settings.utils import get_list_settings
 from backend.subscription.models import plan, plansSubscription,plansFeatures,Features
 import ruamel.yaml
 from backend.settings.models import *
@@ -500,42 +501,8 @@ def get_alerts_from_database(request):
 
 def get_settings(request):
     if request.method == 'GET':
-        settings= Settings.objects.all()
-        settings_dict = serializers.serialize("json", settings)
-        res = json.loads(settings_dict)
-        list_settings=[]
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            settings_id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = settings_id
-            certif_id=res[i]['fields']['certificat']
-            certif_name=Certificate.objects.get(id=certif_id).name
-            res[i]['fields']['certificat']={
-                "id":certif_id,
-                "certif_name":certif_name
-            }
-            all_settings_interfaces=SettingInterface.objects.filter(setting=settings_id)
-            all_settings=[]
-            print(all_settings_interfaces)
-            for si in all_settings_interfaces:
-                info_settings_interface={
-                    "id":si.id,
-                    "interface_web":si.interface_web,
-                    "interface":{
-                        "id":si.interface.id,
-                        "name_interface":si.interface.name_interface,
-                        "address":IP4Config.objects.get(interface=si.interface.id).ip_address
-                            
-                    }
-                }
-                all_settings.append(info_settings_interface)
-            res[i]['fields']['interfaces']=all_settings
-            list_settings.append(res[i]['fields'])
-            
+        list_settings = get_list_settings()
         return list_settings
-
-
 
 
 @login_required(login_url='/')

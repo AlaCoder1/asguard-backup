@@ -1,6 +1,6 @@
 from backend.network.serializers import IP4ConfigSerializer, InterfaceSerializer
 from backend.network.functions import get_connection_uuid
-from backend.settings.function import execute_command
+from backend.settings.utils import execute_command
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 

@@ -30,6 +30,7 @@
                   <v-select
                     v-model="state.interfaces"
                     :label="$t('sdwan.listWAN')"
+                    :no-data-text="$t('certificat.certificatlist')"
                     item-title="name"
                     item-value="id"
                     multiple

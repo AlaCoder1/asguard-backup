@@ -1044,7 +1044,11 @@
     "Proxyport": "Proxy port",
     "Proxyauthenticationextraoptions": "Proxy authentication extra options",
     "AdvancedConfiguration": "Advanced Configuration",
-    "Remoteserver": "Remote Server"
+    "Remoteserver": "Remote Server",
+    "createNewClient":"Create New Client",
+    "clientCertificate":"Client Certificate",
+    "address":"Address",
+    "clientName":"Client Name"
   },
   "Clientsopenvpn": {
     "UserAuthenticationSettings": "User Authentication Settings",
@@ -1160,8 +1164,8 @@
     "General": "General",
     "Administration": "Administration",
     "SystemAdministration": "System Administration",
-    "DetectedNetworkInterfacesSSH": "Detected network interfaces (SSH)",
-    "DetectedNetworkInterfacesWeb": "Detected network interfaces (Web Interface)",
+    "DetectedNetworkInterfacesSSH": "Listen interfaces (SSH)",
+    "DetectedNetworkInterfacesWeb": "Listen interfaces (Web GUI)",
     "SecureShellServer": "Secure Shell Server",
     "EnableSecureShell": "Enable Secure Shell",
     "RootLogin": "Root Login",

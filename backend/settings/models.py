@@ -44,15 +44,16 @@ class ServerReseau(models.Model):
         
 
 class Settings(models.Model):
-    enable_ssh=models.BooleanField(default=True)
-    root_login=models.BooleanField(default=True)
-    auth_method=models.CharField(max_length=800, null=True)
-    session_timeout=models.IntegerField(null=True)
-    protocol_http=models.BooleanField(default=True)
-    certificat=models.ForeignKey(
-        Certificate, on_delete=models.CASCADE, null=True)
-    tcp_port=models.IntegerField(null=False)
-    login_message=models.BooleanField(default=True)
+    enable_ssh = models.BooleanField(default=True)
+    root_login = models.BooleanField(default=True)
+    auth_method = models.CharField(max_length=800, null=True)
+    session_timeout = models.IntegerField(null=True)
+    protocol_http = models.BooleanField(default=True)
+    certificat = models.ForeignKey(
+        Certificate, on_delete = models.CASCADE, null=True)
+    tcp_port = models.IntegerField(null=False)
+    login_message = models.BooleanField(default=True)
+    password_length = models.IntegerField(default=16)
     
     class Meta:
         db_table="settings"
@@ -61,7 +62,7 @@ class Settings(models.Model):
 class SettingInterface(models.Model):
     interface = models.ForeignKey(Interface, on_delete=models.CASCADE)
     setting = models.ForeignKey(Settings, on_delete=models.CASCADE)
-    interface_web=models.BooleanField(default=True)
+    interface_web = models.BooleanField(default=True)
     class Meta:
         db_table = 'setting_interface'    
 

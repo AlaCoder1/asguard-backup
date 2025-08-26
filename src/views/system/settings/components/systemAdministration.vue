@@ -126,6 +126,10 @@
               return-object
             ></v-select>
 
+            <p class="error-feedback mb-5" v-if="v$.sslCertificate.$error">
+              {{ v$.sslCertificate.$errors[0].$message }}
+            </p>
+
             <v-text-field
               :label="`${$t('settings.TCPPort')}`"
               v-model="state.tcpPort"
@@ -194,7 +198,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
 import VButton from "@/components/VButton.vue";
-import { reactive, onMounted, computed, ref, inject } from "vue";
+import { reactive, onMounted, computed, ref, inject, watch } from "vue";
 import ModalAddEditGateway from "@/components/modals/ModalAddEditGateway.vue";
 import { v4 as uuidv4 } from "uuid";
 import useValidate from "@vuelidate/core";
@@ -219,10 +223,10 @@ export default {
         document.getElementById("app").attributes["admin_settings"].value;
       const parsedArray = JSON.parse(adminSettings);
 
-      populate(parsedArray);
-
       getCertif();
       getInterface();
+
+      populate(parsedArray);
 
       overlayTemplate.value = `
       <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
@@ -249,6 +253,16 @@ export default {
       state.loginMsg = data.login_message;
       state.networkInterfaceSSH = data.interface_ssh;
       state.networkInterfaceWEB = data.interface_web;
+
+      setTimeout(() => {
+        const filtredCertif = state.certificatList.filter(
+          (cert) => cert.id === data?.certificat?.id
+        );
+        state.sslCertificate = filtredCertif[0];
+      }, 1000);
+
+      state.tcpPort = data.protocol_http === false ? data?.tcp_port : "";
+      state.tcpPortHttp = data.protocol_http === true ? data?.tcp_port : "";
     };
 
     const state = reactive({
@@ -278,6 +292,18 @@ export default {
       password: null,
       id: null,
     });
+
+    watch(
+      () => state.protocol,
+      (val) => {
+        if (val === "HTTP") {
+          state.sslCertificate = "";
+          state.tcpPort = "";
+        } else {
+          state.tcpPortHttp = "";
+        }
+      }
+    );
 
     const getCertif = () => {
       const csrfToken = getCookie("csrftoken");
@@ -309,99 +335,106 @@ export default {
       });
     };
 
-    const submitForm = async () => {
-      // const result = await v$.value.$validate();
-      // if (result) {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-      let payload = {
-        enable_ssh: state.secureShell,
-        root_login: state.rootLogin,
-        auth_method: state.authMethod,
-        session_timeout: state.sessionTimeout,
-        protocol_http: state.protocol === "http" ? true : false,
-        password_length: state.password ?? "",
-        login_message: state.loginMsg,
-        interface_ssh: state.networkInterfaceSSH
-          ? state.networkInterfaceSSH?.map((i) => ({
-              id: i.id,
-              address: i.address,
-            }))
-          : [],
-
-        interface_web: state.networkInterfaceWEB
-          ? state.networkInterfaceWEB?.map((i) => ({
-              id: i.id,
-              address: i.address,
-            }))
-          : [],
-      };
-
-      if (state.protocol === "HTTP") {
-        payload = { ...payload, tcp_port: state.tcpPortHttp };
-      }
-
-      if (state.protocol === "HTTPS") {
-        payload = {
-          ...payload,
-          certificat: state.sslCertificate ? state.sslCertificate.id : "",
-          tcp_port: state.tcpPort,
-        };
-      }
-
-      console.log("payload", payload);
-      console.log("state.networkInterfaceSSH", state.networkInterfaceSSH);
-
-      state.loading = true;
-      state.isLoadingDialogue = true;
-
-      axios
-        .put(`/settings/updateSettings/${state.id}`, payload)
-        .then((response) => {
-          if (response.status == 200) {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
-            setTimeout(() => {
-              state.snackbar = false;
-              location.reload();
-            }, 1000);
-          }
-        })
-        .catch((i) => {
-          state.loading = false;
-          state.isLoadingDialogue = false;
-          if (i.response.status === 500) {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = t("errors.errorServer");
-          } else {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.msg;
-          }
-        });
-      // } 
-      // else {
-      //   console.log("error :", v$.value);
-      // }
-    };
-
-    const cancel = () => {};
-    const Formatdomain = computed(() => {
-      return t("errors.Formatdomain");
-    });
-    const error = computed(() => {
+      const error = computed(() => {
       return t("errors.valueRequired");
     });
+
     const rules = computed(() => {
-      return {};
+      return {
+        sslCertificate: {
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.protocol === "HTTPS")
+          ),
+        },
+      };
     });
 
     const v$ = useValidate(rules, state);
+
+    const submitForm = async () => {
+      const result = await v$.value.$validate();
+      if (result) {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+        let payload = {
+          enable_ssh: state.secureShell,
+          root_login: state.rootLogin,
+          auth_method: state.authMethod,
+          session_timeout: state.sessionTimeout,
+          protocol_http: state.protocol === "HTTP" ? true : false,
+          password_length: state.password ?? "",
+          login_message: state.loginMsg,
+          interface_ssh: state.networkInterfaceSSH
+            ? state.networkInterfaceSSH?.map((i) => ({
+                id: i.id,
+                address: i.address,
+              }))
+            : [],
+
+          interface_web: state.networkInterfaceWEB
+            ? state.networkInterfaceWEB?.map((i) => ({
+                id: i.id,
+                address: i.address,
+              }))
+            : [],
+        };
+
+        if (state.protocol === "HTTP") {
+          payload = { ...payload, tcp_port: state.tcpPortHttp };
+        }
+
+        if (state.protocol === "HTTPS") {
+          payload = {
+            ...payload,
+            certificat: state.sslCertificate ? state.sslCertificate.id : "",
+            tcp_port: state.tcpPort,
+          };
+        }
+
+        console.log("payload", payload);
+        console.log("state.networkInterfaceSSH", state.networkInterfaceSSH);
+
+        // state.loading = true;
+        // state.isLoadingDialogue = true;
+
+        // axios
+        //   .put(`/settings/updateSettings/${state.id}`, payload)
+        //   .then((response) => {
+        //     if (response.status == 200) {
+        //       state.loading = false;
+        //       state.isLoadingDialogue = false;
+        //       state.snackbar = true;
+        //       state.color = "success";
+        //       state.textAlert = response.data.msg;
+        //       setTimeout(() => {
+        //         state.snackbar = false;
+        //         location.reload();
+        //       }, 5000);
+        //     }
+        //   })
+        //   .catch((i) => {
+        //     state.loading = false;
+        //     state.isLoadingDialogue = false;
+        //     if (i.response.status === 500) {
+        //       state.snackbar = true;
+        //       state.color = "red";
+        //       state.textAlert = t("errors.errorServer");
+        //     } else {
+        //       state.snackbar = true;
+        //       state.color = "red";
+        //       state.textAlert = i.response.data.msg;
+        //     }
+        //   });
+      } else {
+        console.log("error :", v$.value);
+      }
+    };
+
+    const cancel = () => {};
+
+  
 
     return {
       v$,
@@ -416,7 +449,7 @@ export default {
 </script>
 <style lang="scss">
 .error-feedback {
-  color: orange;
+  color: red;
   font-size: 0.85em;
 }
 

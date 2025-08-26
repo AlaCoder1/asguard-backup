@@ -873,19 +873,20 @@ interface_item_schema = Schema(
 def update_settings(request, id):
     try:
         if Settings.objects.filter(id=id).exists():
-            data=request.data
-            enable_ssh=data.get("enable_ssh",None)
-            root_login=data.get("root_login",None)
-            auth_method=data.get("auth_method",None)
-            session_timeout=data.get("session_timeout",None)
-            protocol_http=data.get("protocol_http",None)
-            certificat=data.get("certificat",None)
-            tcp_port=data.get("tcp_port",None)
-            login_message=data.get("login_message",None)
-            interface_ssh=data.get("interface_ssh",[])
-            interface_web=data.get("interface_web",[])
+            data = request.data
+            enable_ssh = data.get("enable_ssh",None)
+            root_login = data.get("root_login",None)
+            auth_method = data.get("auth_method",None)
+            session_timeout = data.get("session_timeout",None)
+            protocol_http = data.get("protocol_http",None)
+            certificat = data.get("certificat",None)
+            tcp_port = data.get("tcp_port",None)
+            login_message = data.get("login_message",None)
+            interface_ssh = data.get("interface_ssh",[])
+            interface_web = data.get("interface_web",[])
+            password_length = data.get("password_length", None)
             all_interfaces=get_all_interfaces()
-            if certificat is None and not protocol_http:
+            if not certificat and not protocol_http:
                 msg=ERROR_MESSAGE_HTTPS
                 status=400 
             else:
@@ -893,14 +894,15 @@ def update_settings(request, id):
                 if certificat is not None:
                     certif=Certificate.objects.get(id=certificat).name
                 data={
-                    "enable_ssh":enable_ssh,
-                    "root_login":root_login,
-                    "auth_method":auth_method,
-                    "session_timeout":session_timeout,
-                    "protocol_http":protocol_http,
-                    "certificat":certificat,
-                    "tcp_port":tcp_port,
-                    "login_message":login_message
+                    "enable_ssh" : enable_ssh,
+                    "root_login" : root_login,
+                    "auth_method" : auth_method,
+                    "session_timeout" : session_timeout,
+                    "protocol_http" : protocol_http,
+                    "certificat" : certificat,
+                    "tcp_port" : tcp_port,
+                    "login_message" : login_message,
+                    "password_length" : password_length
                     }
                 all_commandes,rules_web,rules_ssh=manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message,certif,session_timeout)
                 aux_commandes=execute_all_commandes(all_commandes)

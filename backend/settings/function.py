@@ -6,21 +6,26 @@ from backend.settings.serializers import SettingsInterfaceSerializer, SettingsSe
 from backend.settings.models import SettingInterface, Settings
 from backend.network.models import IP4Config, Interface
 from django.utils.translation import gettext_lazy as _
-import os
-SUCCES_MESSAGE=_("Configuration updated successfully!")
+
+
+SUCCES_MESSAGE = _("Configuration updated successfully!")
+
+
 def get_time_zone():
     command_output = subprocess.check_output(['timedatectl']).decode('utf-8')
     for line in command_output.split('\n'):
         if 'Time zone:' in line:
             return line.split(':')[-1].strip()
-        
+
+
 def set_time_zone(time_zone):
     try:
         subprocess.run(['timedatectl', 'set-timezone', time_zone], check=True)
         return True
     except subprocess.CalledProcessError:
         return False
-   
+
+
 def get_hostname():
     try:
         # Open the /etc/hostname file and read the hostname
@@ -30,6 +35,7 @@ def get_hostname():
     except Exception as e:
         print("Error:", e)
         return None     
+
 
 def change_hostname(new_hostname):
     try:
@@ -56,7 +62,8 @@ def change_domain(new_domain):
     # Write the modified content back to /etc/resolv.conf
     with open('/etc/resolv.conf', 'w') as file:
         file.writelines(resolv_conf_content)
-        
+
+
 def get_dns_servers():
     nameservers = []
     with open('/etc/resolv.conf', 'r') as file:
@@ -85,6 +92,7 @@ def add_gateway_to_dns_servers(nameserver,gateways_address,ifname,metric):
     error = completed_process.stderr
     return output,error
 
+
 def execute_command(command):
     """function to execute command"""
     completed_process = subprocess.run(command, shell=True, check=True,capture_output=True, text=True)
@@ -92,16 +100,22 @@ def execute_command(command):
     error = completed_process.stderr
     return output, error
 
+
 def get_all_interfaces():
     results = []
     for info in Interface.objects.all():
-        ip4config = IP4Config.objects.get(interface=info.pk)
+        try:
+            ip4config = IP4Config.objects.get(interface=info.pk)
+        except IP4Config.DoesNotExist:
+            ip4config = None
         results.append({
             "id":info.pk,
             "name_interface": info.name_interface,
             "address": ip4config.ip_address if ip4config else None
         })
-    return results  
+    return results
+
+
 def init_settings_firewall():
     commandes = [
     "sudo mkdir -p /etc/rules/settings/",
@@ -113,64 +127,84 @@ def init_settings_firewall():
 
     ]
     return commandes
+
+
 def add_rule_web(list_interface,interface_address):
     rules_web=[]
     commandes=[
        f"sudo nft list chain inet settings input | grep -q 'ip saddr {interface_address[0]} accept' || sudo nft add rule inet settings input ip saddr {interface_address[0]} accept",
     ]
+    try:
+        interface_id = IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
+    except IP4Config.DoesNotExist:
+        interface_id = None
     rules_web=[{
-        "rule":f"ip saddr {interface_address[0]} accept",
-        "saddr":interface_address[0],
-        "protocol":"ALL",
-        "policy":"accept",
-        "type_rule":"inbound",
-        "interface":IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
+        "rule" : f"ip saddr {interface_address[0]} accept",
+        "saddr" : interface_address[0],
+        "protocol" : "ALL",
+        "policy" : "accept",
+        "type_rule" : "inbound",
+        "interface" : interface_id
     }]
     for add in list_interface:
+        try:
+            interface_id = IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
+        except IP4Config.DoesNotExist:
+            interface_id = None
         if add not in interface_address:
             commandes.append(f"sudo nft list chain inet settings input | grep -q 'ip saddr {add} drop' || sudo nft add rule inet settings input ip saddr {add} drop")
             rules_web.append({
-            "rule":f"ip saddr {add} drop",
-            "saddr":add,
-            "protocol":"ALL",
-            "policy":"drop",
-            "type_rule":"inbound",
-            "interface":IP4Config.objects.get(ip_address=add).interface.pk
+            "rule" : f"ip saddr {add} drop",
+            "saddr" : add,
+            "protocol" : "ALL",
+            "policy" : "drop",
+            "type_rule" : "inbound",
+            "interface" : interface_id
             })
-    commandes+=[
+    commandes += [
         f"sudo nft list table inet settings  > /etc/rules/settings/settings.conf"
     ]
    
     return commandes,rules_web
-def add_rule_ssh(list_interface,interface_address):
-    rules_ssh=[]
-    commandes=[
+
+
+def add_rule_ssh(list_interface, interface_address):
+    rules_ssh = []
+    commandes = [
        f"sudo nft list chain inet settings input | grep -q 'ip saddr {interface_address[0]} tcp dport 22 accept' || sudo nft add rule inet settings input ip saddr {interface_address[0]} tcp dport 22 accept"
     ]
+    try:
+        interface_id = IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
+    except IP4Config.DoesNotExist:
+        interface_id = None
     rules_ssh=[{
-        "rule":f"ip saddr {interface_address[0]} tcp dport 22 accept",
-        "saddr":interface_address[0],
-        "policy":"accept",
-        "type_rule":"inbound",
-        "protocol":"TCP",
-        "dport":22,
-        "interface":IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
+        "rule" : f"ip saddr {interface_address[0]} tcp dport 22 accept",
+        "saddr" : interface_address[0],
+        "policy" : "accept",
+        "type_rule" : "inbound",
+        "protocol" : "TCP",
+        "dport" : 22,
+        "interface" : interface_id
     }]
     for add in list_interface:
+        try:
+            interface_id = IP4Config.objects.get(ip_address=add).interface.pk
+        except IP4Config.DoesNotExist:
+            interface_id = None
         if add not in interface_address:
             commandes.append( f"sudo nft list chain inet settings input | grep -q 'ip saddr {add} tcp dport 22 drop' || sudo nft add rule inet settings input ip saddr {add} tcp dport 22 drop")
             rules_ssh.append(
                 {
-                "rule":f"ip saddr {add} tcp dport 22 drop",
-                "saddr":add,
-                "policy":"drop",
-                "type_rule":"inbound",
-                "protocol":"TCP",
-                "dport":22,
-                "interface":IP4Config.objects.get(ip_address=add).interface.pk
+                "rule" : f"ip saddr {add} tcp dport 22 drop",
+                "saddr" : add,
+                "policy" : "drop",
+                "type_rule" : "inbound",
+                "protocol" : "TCP",
+                "dport" : 22,
+                "interface": interface_id
                 }
             )
-    commandes+=[
+    commandes += [
         f"sudo nft list table inet settings  > /etc/rules/settings/settings.conf"
     ]
     return commandes,rules_ssh
@@ -189,6 +223,7 @@ def permit_user_ssh(root_login,passwd_login,enable_ssh):
         commandes+=["sudo systemctl enable sshd && sudo systemctl restart sshd",
                     ]
     return commandes
+
 
 def modify_web_page(http_config,port,certif):
     commandes=[]
@@ -254,7 +289,9 @@ EOF'""".format(file_path,all_content),
     "sudo ln -sf /etc/nginx/sites-available/asguard.conf /etc/nginx/sites-enabled/asguard.conf",
     "sudo systemctl restart nginx"
 ]
-    return commandes       
+    return commandes
+
+
 def modify_log_message(login_msg: bool,timeout:int):
     MIDDELWARE_FILE="/asguard/asguard/asguard/middelware.py"
     SETTINGS_FILE= "/asguard/asguard/asguard/settings.py"
@@ -322,13 +359,15 @@ def manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,passw
     command_login=modify_log_message(login_msg,timeout)
     all_commandes=init_firewall+command_web+commmand_ssh+command_user+command_page_web+command_login
     return all_commandes,rules_web,rules_ssh
+
+
 def execute_all_commandes(all_commandes):
     for cmd in all_commandes:
         _,error=execute_command(cmd)
         # print({"cmd":cmd})
         if error :
             return error
-    return True 
+    return True
         
         
 def save_data_interface(list_interface,id,aux_web):
@@ -400,7 +439,8 @@ def save_config_db(data,id,interface_web,interface_ssh):
         msg=next(iter(settings_serializer.errors.values()))[0]
         status=400
     return msg, status
-     
+
+
 def save_rules_settings(rules_ssh,rules_web):
     all_rules=rules_ssh+rules_web
     for rule in all_rules:

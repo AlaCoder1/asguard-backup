@@ -54,12 +54,11 @@ from django.http import JsonResponse
 from backend.managementCertificates.models import Certificate
 from backend.settings.serializers import SystemSerializer
 from backend.gateway.models import Gateway
-from backend.settings.function import add_dns_servers, add_gateway_to_dns_servers, change_domain, change_hostname, execute_all_commandes, get_all_interfaces, manage_commandes, save_config_db, save_rules_settings, set_time_zone
-from backend.settings.models import Network, SettingInterface, Settings, System, Timezone
+from backend.settings.utils import add_dns_servers, add_gateway_to_dns_servers, change_domain, change_hostname, execute_all_commandes, get_all_interfaces, get_list_settings, manage_commandes, save_config_db, save_rules_settings, set_time_zone
+from backend.settings.models import Network, Settings, System, Timezone
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from backend.network.models import IP4Config, Interface
+from backend.network.models import Interface
 from backend.waf.models import RulesWaf
-from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import gettext_lazy as _
 import json
 
@@ -73,14 +72,13 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny
 from django.views.decorators.http import require_http_methods
 from decouple import config
-# Create your views here.
-
 
 
 # Constants
 CONSTANT_SYSTEM = _('System')
 CONSTANT_LANGUAGE = _('Language')
 CONSTANT_SYSTEM_CONFIG = _('Configuration')
+CONSTANT_TIMEZONE_WITH_ID = _('Timezone with id')
 
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
@@ -90,15 +88,11 @@ SUCCESS_MESSAGES_UPDATING = _("is updated")
 # Error messages
 ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
-TIMEZONE_WITH_ID = _('Timezone with id')
 ERROR_MESSAGES_INVALID = _("Invalid")
-ERROR_MESSAGES_EXISTANT = _("Already exist")
-INVALID_METHOD = _("Invalid method")
-DOES_NOT_EXIST = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
-
 ERROR_MESSAGES_UPDATING = _("Error in updating settings")
 ERROR_MESSAGE_HTTPS=_("If you choose HTTPS, you must select a certificate.")
+
 
 @swagger_auto_schema('PUT', responses={200: 'Updated', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
                      request_body=Schema(type=TYPE_OBJECT,  required=['hostname', 'domain', 'timezone', 'dns_servers'],
@@ -129,7 +123,7 @@ ERROR_MESSAGE_HTTPS=_("If you choose HTTPS, you must select a certificate.")
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
-def generale_settings(request,id):
+def generale_settings(request, id):
     """
     Updates the general system settings including hostname, domain, timezone, and DNS configurations.
 
@@ -179,7 +173,6 @@ def generale_settings(request,id):
             system_object.save()
             # if "dns_servers" in data:
             for i in data['dns_servers']:
-                print({"i"  : i})
                 dns_server = i['dns_server']       
                 gateway = i['gateway']            
                 interface_id = i['interface_id']   
@@ -204,12 +197,12 @@ def generale_settings(request,id):
             # data['dns_servers'][0]['name_interface'] = interface.name_interface
             # For adding if the table is empty
             if not Network.objects.exists():
-                Network.objects.create(server_dns=data['dns_servers'])  # Replace field1, field2, value1, value2 with your actual field names and values
+                Network.objects.create(server_dns=data['dns_servers'])
 
             # For updating if the table is not empty
             else:
-                instance, created = Network.objects.update_or_create(
-                    defaults={'server_dns': data['dns_servers']},  # Replace field1, field2, new_value1, new_value2 with your updated values
+                Network.objects.update_or_create(
+                    defaults={'server_dns': data['dns_servers']},
                 )
             msg = f"{CONSTANT_SYSTEM} {SUCCESS_MESSAGES_CREATING}"
             status = 200
@@ -217,6 +210,7 @@ def generale_settings(request,id):
             msg = ERROR_MESSAGES_CREATING
             status = 400
     return JsonResponse({"msg": msg}, status=status)
+
 
 @swagger_auto_schema(
     method='GET',
@@ -289,6 +283,7 @@ def get_generale_settings(request,id):
             }
         }
         return JsonResponse({"generale_settings":system_dict})
+
 
 @swagger_auto_schema(
     method='GET',
@@ -368,6 +363,7 @@ def time_zones(request):
             res[i]['fields']['id'] = id
             list_timezones.append(res[i]['fields'])
         return JsonResponse({"timezones": list_timezones})
+
 
 @swagger_auto_schema(
     method='GET',
@@ -486,6 +482,7 @@ def gatways_information(request):
         ]
         return JsonResponse({"gatways_information": output_data})
 
+
 @swagger_auto_schema(
     method='GET',
     responses={
@@ -558,6 +555,7 @@ def getSystem(request, id):
         systemJson = res[0]['fields']
         # return a no content response.
         return JsonResponse(systemJson)
+
 
 @swagger_auto_schema(
     method='GET',
@@ -709,7 +707,7 @@ def create_system(request):
         try:
             time_zone = Timezone.objects.get(id=data['time_zone'])
         except ObjectDoesNotExist:
-            return JsonResponse({"error": f"{TIMEZONE_WITH_ID} {data['time_zone']} {DOES_NOT_EXIST}"},status=400)
+            return JsonResponse({"error": f"{CONSTANT_TIMEZONE_WITH_ID} {data['time_zone']} {ERROR_MESSAGES_INEXISTANT}"},status=400)
         except ValueError:
             return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} id: {id}"},status=400)
         if data['language'] not in ['en', 'fr']:
@@ -732,7 +730,6 @@ def create_system(request):
             return JsonResponse({"msg": msg}, status=200 if existing_system else 201)
         
         return JsonResponse(serializerSystem.errors, status=400)
-
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -928,40 +925,5 @@ def update_settings(request, id):
 @authentication_classes([SessionAuthentication])
 def get_settings(request):
     if request.method == 'GET':
-        settings= Settings.objects.all()
-        settings_dict = serializers.serialize("json", settings)
-        res = json.loads(settings_dict)
-        list_settings=[]
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            settings_id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = settings_id
-            certif_id=res[i]['fields']['certificat']
-            certif_name=Certificate.objects.get(id=certif_id).name
-            res[i]['fields']['certificat']={
-                "id":certif_id,
-                "certif_name":certif_name
-            }
-            all_settings_interfaces=SettingInterface.objects.filter(setting=settings_id)
-            all_settings=[]
-            print(all_settings_interfaces)
-            for si in all_settings_interfaces:
-                info_settings_interface={
-                    "id":si.id,
-                    "interface_web":si.interface_web,
-                    "interface":{
-                        "id":si.interface.id,
-                        "name_interface":si.interface.name_interface,
-                        "address":IP4Config.objects.get(interface=si.interface.id).ip_address
-                            
-                    }
-                }
-                all_settings.append(info_settings_interface)
-            res[i]['fields']['interfaces']=all_settings
-          
-            
-            list_settings.append(res[i]['fields'])
-            
-        return JsonResponse({"data":list_settings}, status=400)
-      
+        list_settings = get_list_settings()
+        return list_settings

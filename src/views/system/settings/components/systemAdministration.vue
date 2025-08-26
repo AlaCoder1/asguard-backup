@@ -29,7 +29,7 @@
           <v-select
             :label="$t('settings.DetectedNetworkInterfacesSSH')"
             v-model="state.networkInterfaceSSH"
-            item-title="name"
+            item-title="name_interface"
             item-value="id"
             return-object
             multiple
@@ -39,7 +39,7 @@
           <v-select
             :label="$t('settings.DetectedNetworkInterfacesWeb')"
             v-model="state.networkInterfaceWEB"
-            item-title="name"
+            item-title="name_interface"
             item-value="id"
             return-object
             multiple
@@ -251,8 +251,10 @@ export default {
       state.protocol = data.protocol_http === true ? "HTTP" : "HTTPS";
       state.password = data.password_length;
       state.loginMsg = data.login_message;
-      state.networkInterfaceSSH = data.interface_ssh;
-      state.networkInterfaceWEB = data.interface_web;
+
+      state.networkInterfaceSSH = data.interfaces_ssh.map((i)=> i.interface);
+      state.networkInterfaceWEB = data.interfaces_web.map((i)=> i.interface);
+
 
       setTimeout(() => {
         const filtredCertif = state.certificatList.filter(
@@ -326,7 +328,7 @@ export default {
         let interfaces = filtredInterface.map((i) => {
           return {
             id: i.id,
-            name: i.name_interface,
+            name_interface: i.name_interface,
             address: i.ip_address,
           };
         });
@@ -393,40 +395,37 @@ export default {
           };
         }
 
-        console.log("payload", payload);
-        console.log("state.networkInterfaceSSH", state.networkInterfaceSSH);
+        state.loading = true;
+        state.isLoadingDialogue = true;
 
-        // state.loading = true;
-        // state.isLoadingDialogue = true;
-
-        // axios
-        //   .put(`/settings/updateSettings/${state.id}`, payload)
-        //   .then((response) => {
-        //     if (response.status == 200) {
-        //       state.loading = false;
-        //       state.isLoadingDialogue = false;
-        //       state.snackbar = true;
-        //       state.color = "success";
-        //       state.textAlert = response.data.msg;
-        //       setTimeout(() => {
-        //         state.snackbar = false;
-        //         location.reload();
-        //       }, 5000);
-        //     }
-        //   })
-        //   .catch((i) => {
-        //     state.loading = false;
-        //     state.isLoadingDialogue = false;
-        //     if (i.response.status === 500) {
-        //       state.snackbar = true;
-        //       state.color = "red";
-        //       state.textAlert = t("errors.errorServer");
-        //     } else {
-        //       state.snackbar = true;
-        //       state.color = "red";
-        //       state.textAlert = i.response.data.msg;
-        //     }
-        //   });
+        axios
+          .put(`/settings/updateSettings/${state.id}`, payload)
+          .then((response) => {
+            if (response.status == 200) {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                state.snackbar = false;
+                location.reload();
+              }, 5000);
+            }
+          })
+          .catch((i) => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+            }
+          });
       } else {
         console.log("error :", v$.value);
       }
@@ -461,9 +460,8 @@ export default {
   font-weight: 300;
   line-height: normal;
 }
-/* CSS to style the text */
 .text-xs {
-  font-size: 12px; /* Example font size for small text */
+  font-size: 12px; 
 }
 .container {
   height: 50px;

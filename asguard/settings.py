@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -222,7 +222,7 @@ SWAGGER_SETTINGS = {
 }
 
 # jwt_auth/settings.py
-SESSION_COOKIE_AGE = 600
+SESSION_COOKIE_AGE = 300
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE= True
 SESSION_COOKIE_HTTPONLY = True

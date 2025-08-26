@@ -504,38 +504,39 @@ def get_settings(request):
         settings_dict = serializers.serialize("json", settings)
         res = json.loads(settings_dict)
         list_settings=[]
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            settings_id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = settings_id
-            certif_id=res[i]['fields']['certificat']
+        for setting in res:
+            setting.pop('model')
+            settings_id = setting['pk']
+            setting.pop('pk')
+            setting['fields']['id'] = settings_id
+            certif_id=setting['fields']['certificat']
             certif_name=Certificate.objects.get(id=certif_id).name
-            res[i]['fields']['certificat']={
+            setting['fields']['certificat']={
                 "id":certif_id,
                 "certif_name":certif_name
             }
             all_settings_interfaces=SettingInterface.objects.filter(setting=settings_id)
             all_settings=[]
-            print(all_settings_interfaces)
             for si in all_settings_interfaces:
+                try:
+                    interface_ip4 = IP4Config.objects.get(interface=si.interface.id).ip_address
+                except IP4Config.DoesNotExist:
+                    interface_ip4 = None
                 info_settings_interface={
-                    "id":si.id,
-                    "interface_web":si.interface_web,
+                    "id": si.id,
+                    "interface_web": si.interface_web,
                     "interface":{
-                        "id":si.interface.id,
-                        "name_interface":si.interface.name_interface,
-                        "address":IP4Config.objects.get(interface=si.interface.id).ip_address
+                        "id": si.interface.id,
+                        "name_interface": si.interface.name_interface,
+                        "address": interface_ip4
                             
                     }
                 }
                 all_settings.append(info_settings_interface)
-            res[i]['fields']['interfaces']=all_settings
-            list_settings.append(res[i]['fields'])
-            
+            setting['fields']['interfaces_web']=[setting_web for setting_web in all_settings if setting_web["interface_web"]]
+            setting['fields']['interfaces_ssh']=[setting_web for setting_web in all_settings if not setting_web["interface_web"]]
+            list_settings.append(setting['fields'])
         return list_settings
-
-
 
 
 @login_required(login_url='/')

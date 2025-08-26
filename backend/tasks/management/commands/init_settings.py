@@ -1,6 +1,6 @@
 from backend.managementCertificates.models import Certificate
 from backend.managementCertificates.serializers import CertificateSerializer
-from backend.settings.function import create_config_db, execute_all_commandes, get_all_interfaces,manage_commandes, save_rules_settings
+from backend.settings.utils import create_config_db, execute_all_commandes, get_all_interfaces,manage_commandes, save_rules_settings
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 

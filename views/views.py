@@ -29,6 +29,7 @@ from backend.proxy.views import *
 from backend.proxy.models import *
 from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
+from backend.settings.utils import get_list_settings
 from backend.subscription.models import plan, plansSubscription,plansFeatures,Features
 import ruamel.yaml
 from backend.settings.models import *
@@ -500,42 +501,7 @@ def get_alerts_from_database(request):
 
 def get_settings(request):
     if request.method == 'GET':
-        settings= Settings.objects.all()
-        settings_dict = serializers.serialize("json", settings)
-        res = json.loads(settings_dict)
-        list_settings=[]
-        for setting in res:
-            setting.pop('model')
-            settings_id = setting['pk']
-            setting.pop('pk')
-            setting['fields']['id'] = settings_id
-            certif_id=setting['fields']['certificat']
-            certif_name=Certificate.objects.get(id=certif_id).name
-            setting['fields']['certificat']={
-                "id":certif_id,
-                "certif_name":certif_name
-            }
-            all_settings_interfaces=SettingInterface.objects.filter(setting=settings_id)
-            all_settings=[]
-            for si in all_settings_interfaces:
-                try:
-                    interface_ip4 = IP4Config.objects.get(interface=si.interface.id).ip_address
-                except IP4Config.DoesNotExist:
-                    interface_ip4 = None
-                info_settings_interface={
-                    "id": si.id,
-                    "interface_web": si.interface_web,
-                    "interface":{
-                        "id": si.interface.id,
-                        "name_interface": si.interface.name_interface,
-                        "address": interface_ip4
-                            
-                    }
-                }
-                all_settings.append(info_settings_interface)
-            setting['fields']['interfaces_web']=[setting_web for setting_web in all_settings if setting_web["interface_web"]]
-            setting['fields']['interfaces_ssh']=[setting_web for setting_web in all_settings if not setting_web["interface_web"]]
-            list_settings.append(setting['fields'])
+        list_settings = get_list_settings()
         return list_settings
 
 

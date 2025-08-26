@@ -95,7 +95,10 @@ def execute_command(command):
 def get_all_interfaces():
     results = []
     for info in Interface.objects.all():
-        ip4config = IP4Config.objects.get(interface=info.pk)
+        try:
+            ip4config = IP4Config.objects.get(interface=info.pk)
+        except IP4Config.DoesNotExist:
+            ip4config = None
         results.append({
             "id":info.pk,
             "name_interface": info.name_interface,
@@ -322,13 +325,15 @@ def manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,passw
     command_login=modify_log_message(login_msg,timeout)
     all_commandes=init_firewall+command_web+commmand_ssh+command_user+command_page_web+command_login
     return all_commandes,rules_web,rules_ssh
+
+
 def execute_all_commandes(all_commandes):
     for cmd in all_commandes:
         _,error=execute_command(cmd)
         # print({"cmd":cmd})
         if error :
             return error
-    return True 
+    return True
         
         
 def save_data_interface(list_interface,id,aux_web):

@@ -287,9 +287,9 @@ def modify_web_page(http_config,port,certif):
     all_content = contenu_http if http_config else contenu_https
         
     commandes+= [
-    """sudo sh -c 'cat <<EOF > {}
+    """cat <<EOF | sudo tee {} > /dev/null
 {}
-EOF'""".format(file_path,all_content),
+EOF""".format(file_path, all_content),
     "sudo ln -sf /etc/nginx/sites-available/asguard.conf /etc/nginx/sites-enabled/asguard.conf",
     "sudo systemctl restart nginx"
 ]

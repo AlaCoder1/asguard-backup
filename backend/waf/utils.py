@@ -1,7 +1,7 @@
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
 from backend.waf.constant_variables import PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
-from utils.commands_utils import execute_command_without_arguments, write_file_from_system
+from utils.commands_utils import write_file_from_system
 
 
 def convert_waf_rule_payload(rule_data: dict):
@@ -196,7 +196,3 @@ server {{
         config_reverse_proxy = config_reverse_proxy.replace("server_name _l;", 
                                                             f"server_name {application_value};")
     write_file_from_system(app_sites_available_config_path, config_reverse_proxy)
-
-
-def restart_nginx_in_system():
-    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])

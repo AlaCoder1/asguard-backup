@@ -781,7 +781,7 @@ export default {
     const restartNginx = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
+      axios.post("/settings/restartNginx");
     };
 
     const submitForm = async () => {

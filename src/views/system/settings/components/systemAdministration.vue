@@ -239,11 +239,7 @@ export default {
     });
 
     const populate = (dataAdmin) => {
-      console.log("data", dataAdmin);
-
-      let data = dataAdmin[0];
-
-      state.id = data.id;
+      let data = dataAdmin;
       state.secureShell = data.enable_ssh;
       state.rootLogin = data.root_login;
       state.authMethod = data.auth_method;
@@ -292,7 +288,6 @@ export default {
       tcpPortHttp: "",
       loginMsg: false,
       password: null,
-      id: null,
     });
 
     watch(
@@ -399,7 +394,7 @@ export default {
         state.isLoadingDialogue = true;
 
         axios
-          .put(`/settings/updateSettings/${state.id}`, payload)
+          .put(`/settings/updateSettings`, payload)
           .then((response) => {
             if (response.status == 200) {
               state.loading = false;

@@ -1,22 +1,25 @@
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
-from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
+from decouple import config
 
 from backend.managementCertificates.models import Certificate
 from backend.waf.list_waf import get_alerts, get_list_all_waf_rule, get_list_all_waf_application, get_one_waf_rule, get_one_waf_application, get_one_waf_config
 from backend.waf.models import ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.serializers import ApplicationWafSerializer, ConfigWafSerializer, RulesWafSerializer
-from backend.waf.utils import convert_waf_rule_payload, find_possible_id, restart_nginx_in_system
+from backend.waf.utils import convert_waf_rule_payload, find_possible_id
 from backend.waf.utils_application import create_application_waf_in_system, delete_application_waf_in_system, restore_previous_application, update_application_waf_in_system
 from backend.waf.utils_config import update_waf_configuration_in_system
 from backend.waf.utils_rules import create_rule_waf_in_system, create_rule_waf_str, delete_rule_waf_in_system, update_rule_waf_in_system
 from utils.errors_utils import CommandExecutionError
-from django.views.decorators.http import require_http_methods
-from decouple import config
+from utils.utils_command_system import restart_nginx_in_system
+
+
 # Constants
 CONSTANT_WAF_CONFIG = _("WAF Config")
 CONSTANT_WAF_RULE = _("WAF Rule")
@@ -573,15 +576,6 @@ def update_waf_application(request, id):
         return JsonResponse({"error": f"{CONSTANT_WAF_APPLICATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except Certificate.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_CERTIFICATE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
-
-
-@api_view(['POST'])
-@require_http_methods(['POST'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def restart_nginx(request):
-    restart_nginx_in_system()
-    return JsonResponse({"msg": ""}, status=200)
 
 
 ########################################

@@ -36,19 +36,6 @@ Endpoints:
 
 7. `createSystem(request) [POST]`
    - Creates a new system entry.
-
-Dependencies:
--------------
-- Django REST framework (`api_view`, `authentication_classes`)
-- Django Models: `System`, `Network`, `Gateway`, `Timezone`, `Interface`
-- JSON serialization for responses
-
-Constants:
-----------
-- Success messages (`SUCCESS_MESSAGES_CREATING`, etc.)
-- Error messages (`ERROR_MESSAGES_CREATING`, etc.)
-- System-related constants (`CONSTANT_SYSTEM`, etc.)
-
 """
 import subprocess
 from django.http import JsonResponse
@@ -73,6 +60,8 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny
 from django.views.decorators.http import require_http_methods
 from decouple import config
+
+from utils.utils_command_system import restart_nginx_in_system
 
 
 # Constants
@@ -739,45 +728,11 @@ def create_system(request):
 @require_http_methods(['GET'])
 # @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
-def get_language(request):
+def get_language(_):
     """Getting System language"""
     system = System.objects.all().first()
     return JsonResponse({"language": system.language})
 
-
-@swagger_auto_schema(
-        method='PUT', 
-        responses={200: 'Created', 400: 'Bad Request'}, 
-        operation_summary="API TO UPDATE SYSTEM LANGUAGE",
-        request_body=Schema(type=TYPE_OBJECT, required=['language'], properties={'language': Schema(type=TYPE_STRING, enum=["en", "fr"])}))
-@api_view(['PUT'])
-@require_http_methods(['PUT'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def change_language(request, id):
-    """Update System language"""
-    try:
-        data = request.data
-        system = System.objects.all().first()
-        serializer_system = SystemSerializer(system, data=data, partial=True)
-        if serializer_system.is_valid():
-            # Change language of rule waf description
-            if data.get("language", "") == "en":
-                for rule in RulesWaf.objects.filter(created=False):
-                    rule.description = rule.description_english
-                    rule.save()
-            elif data.get("language", "") == "fr":
-                for rule in RulesWaf.objects.filter(created=False):
-                    rule.description = rule.description_french
-                    rule.save()
-            else:
-                return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
-
-            serializer_system.save()
-            return JsonResponse({"msg":f"{CONSTANT_LANGUAGE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-        return JsonResponse({"error": list(serializer_system.errors.values())[0][0]}, status=400)
-    except System.DoesNotExist:
-        return JsonResponse({"error":f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 interface_item_schema = Schema(
     type=TYPE_OBJECT,
@@ -868,51 +823,48 @@ interface_item_schema = Schema(
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def update_settings(request, id):
+def update_settings(request):
     try:
-        if Settings.objects.filter(id=id).exists():
-            data = request.data
-            enable_ssh = data.get("enable_ssh",None)
-            root_login = data.get("root_login",None)
-            auth_method = data.get("auth_method",None)
-            session_timeout = data.get("session_timeout",None)
-            protocol_http = data.get("protocol_http",None)
-            certificat = data.get("certificat",None)
-            tcp_port = data.get("tcp_port",None)
-            login_message = data.get("login_message",None)
-            interface_ssh = data.get("interface_ssh",[])
-            interface_web = data.get("interface_web",[])
-            password_length = data.get("password_length", None)
-            all_interfaces=get_all_interfaces()
-            if not certificat and not protocol_http:
-                msg=ERROR_MESSAGE_HTTPS
-                status=400 
-            else:
-                certif=None
-                if certificat is not None:
-                    certif=Certificate.objects.get(id=certificat).name
-                data={
-                    "enable_ssh" : enable_ssh,
-                    "root_login" : root_login,
-                    "auth_method" : auth_method,
-                    "session_timeout" : session_timeout,
-                    "protocol_http" : protocol_http,
-                    "certificat" : certificat,
-                    "tcp_port" : tcp_port,
-                    "login_message" : login_message,
-                    "password_length" : password_length
-                    }
-                all_commandes,rules_web,rules_ssh=manage_commandes(all_interfaces, interface_ssh, interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message,certif,session_timeout)
-                aux_commandes=execute_all_commandes(all_commandes)
-                if aux_commandes:
-                    msg,status=save_config_db(data,id,interface_web,interface_ssh)
-                    save_rules_settings(rules_ssh,rules_web)
-                else:
-                    msg=ERROR_MESSAGES_UPDATING
-                    status=400
+        settings = Settings.objects.all().first()
+        data = request.data
+        enable_ssh = data.get("enable_ssh", None)
+        root_login = data.get("root_login", None)
+        auth_method = data.get("auth_method", None)
+        session_timeout = data.get("session_timeout", None)
+        protocol_http = data.get("protocol_http", None)
+        certificat = data.get("certificat", None)
+        tcp_port = data.get("tcp_port", None)
+        login_message = data.get("login_message", None)
+        interface_ssh = data.get("interface_ssh",[])
+        interface_web = data.get("interface_web",[])
+        password_length = data.get("password_length", None)
+        all_interfaces = get_all_interfaces()
+        if not certificat and not protocol_http:
+            msg = ERROR_MESSAGE_HTTPS
+            status = 400 
         else:
-            msg=f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
-            status=404 
+            certif = None
+            if certificat is not None:
+                certif = Certificate.objects.get(id=certificat).name
+            data={
+                "enable_ssh" : enable_ssh,
+                "root_login" : root_login,
+                "auth_method" : auth_method,
+                "session_timeout" : session_timeout,
+                "protocol_http" : protocol_http,
+                "certificat" : certificat,
+                "tcp_port" : tcp_port,
+                "login_message" : login_message,
+                "password_length" : password_length
+                }
+            all_commandes,rules_web,rules_ssh = manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, auth_method, enable_ssh, protocol_http, tcp_port, login_message, certif, session_timeout)
+            aux_commandes = execute_all_commandes(all_commandes)
+            if aux_commandes:
+                msg,status = save_config_db(data, settings.pk, interface_web, interface_ssh)
+                save_rules_settings(rules_ssh, rules_web)
+            else:
+                msg = ERROR_MESSAGES_UPDATING
+                status = 400
         return JsonResponse({"msg":msg},status=status)
     
     except subprocess.CalledProcessError:
@@ -930,3 +882,12 @@ def get_settings(request):
     if request.method == 'GET':
         list_settings = get_list_settings()
         return list_settings
+
+
+@api_view(['POST'])
+@require_http_methods(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def restart_nginx(_):
+    restart_nginx_in_system()
+    return JsonResponse({"msg": ""}, status=200)

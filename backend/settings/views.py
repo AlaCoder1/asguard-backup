@@ -41,7 +41,7 @@ import subprocess
 from django.http import JsonResponse
 from backend.managementCertificates.models import Certificate
 from backend.settings.serializers import SystemSerializer
-from backend.gateway.models import Gateway
+from backend.gateway.models import Gateway, GatewayInterface
 from backend.settings.utils import add_dns_servers, add_gateway_to_dns_servers, change_domain, change_hostname, execute_all_commandes, get_all_interfaces, get_list_settings, manage_commandes, save_config_db, save_rules_settings, set_time_zone
 from backend.settings.models import Network, Settings, System, Timezone
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -448,7 +448,7 @@ def gatways_information(request):
     """
     gatways_information=[]
     if (request.method == 'GET'):
-        gateway=GatewayInterface.objects.all()
+        gateway = GatewayInterface.objects.all()
         gatewayDict = serializers.serialize("json", gateway)
         res = json.loads(gatewayDict)
         for i in range(0, len(res)):

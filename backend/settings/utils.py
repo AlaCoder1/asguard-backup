@@ -229,7 +229,7 @@ def permit_user_ssh(root_login,passwd_login,enable_ssh):
     return commandes
 
 
-def modify_web_page(http_config,port,certif):
+def modify_web_page(http_config, port, certif):
     commandes=[]
     file_path="/etc/nginx/sites-available/asguard.conf"
     locations = f"""
@@ -286,12 +286,11 @@ def modify_web_page(http_config,port,certif):
     # choose based on flag
     all_content = contenu_http if http_config else contenu_https
         
-    commandes+= [
-    """sudo sh -c 'cat <<EOF > {}
+    commandes += [
+    """cat <<EOF | sudo tee {} > /dev/null
 {}
-EOF'""".format(file_path,all_content),
+EOF""".format(file_path, all_content),
     "sudo ln -sf /etc/nginx/sites-available/asguard.conf /etc/nginx/sites-enabled/asguard.conf",
-    "sudo systemctl restart nginx"
 ]
     return commandes
 
@@ -359,7 +358,7 @@ def manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, p
     command_web, rules_web = add_rule_web(all_interfaces_web, interface_web) if interface_web else ([], [])
     commmand_ssh, rules_ssh = add_rule_ssh(all_interfaces_ssh,interface_ssh)if interface_ssh!=[] else ([],[])
     command_user = permit_user_ssh(root_login,passwd_login,enable_ssh)
-    command_page_web = modify_web_page(http_config,port,certif)
+    command_page_web = modify_web_page(http_config, port, certif)
     command_login = modify_log_message(login_msg,timeout)
     all_commandes = init_firewall+command_web+commmand_ssh+command_user+command_page_web+command_login
     return all_commandes, rules_web, rules_ssh
@@ -374,16 +373,16 @@ def execute_all_commandes(all_commandes):
     return True
         
         
-def save_data_interface(list_interface,id,aux_web):
+def save_data_interface(list_interface, setting_id, aux_web):
     for inter in list_interface:
         if not SettingInterface.objects.filter(
                 interface=inter["id"],
-                setting=id,
+                setting=setting_id,
                 interface_web=aux_web
             ).exists():
             data={
                 "interface":inter['id'],
-                "setting":id,
+                "setting":setting_id,
                 "interface_web":aux_web
             }
             serialiser_inter=SettingsInterfaceSerializer(data=data)
@@ -394,7 +393,7 @@ def save_data_interface(list_interface,id,aux_web):
     return True
    
      
-def create_config_db(data,interface_web,interface_ssh):
+def create_config_db(data, interface_web, interface_ssh):
     if Settings.objects.all().count()==0:
         settings_serializer=SettingsSerializer(data=data)
         if settings_serializer.is_valid():
@@ -421,27 +420,27 @@ def create_config_db(data,interface_web,interface_ssh):
         status=400
     return msg, status
      
-def save_config_db(data,id,interface_web,interface_ssh):
-    object_setting=Settings.objects.get(id=id)
-    settings_serializer=SettingsSerializer(object_setting,data=data)
+def save_config_db(data, id, interface_web, interface_ssh):
+    object_setting = Settings.objects.all().first()
+    settings_serializer = SettingsSerializer(object_setting, data=data)
     if settings_serializer.is_valid():
         settings_serializer.save()
-        aux_web=save_data_interface(interface_web,id,True)
+        aux_web = save_data_interface(interface_web, id, True)
         if aux_web:
-            aux_ssh=save_data_interface(interface_ssh,id,False)
+            aux_ssh = save_data_interface(interface_ssh, id, False)
             if aux_ssh:
-                msg=SUCCES_MESSAGE
-                status=200
+                msg = SUCCES_MESSAGE
+                status = 200
             else:
-                msg=aux_ssh
-                status=400
+                msg = aux_ssh
+                status = 400
         else:
-            msg=aux_web
-            status=400
+            msg = aux_web
+            status = 400
                 
     else:
-        msg=next(iter(settings_serializer.errors.values()))[0]
-        status=400
+        msg = next(iter(settings_serializer.errors.values()))[0]
+        status = 400
     return msg, status
 
 
@@ -460,43 +459,40 @@ def save_rules_settings(rules_ssh,rules_web):
 
 
 def get_list_settings():
-    settings= Settings.objects.all()
+    settings = Settings.objects.all()
     settings_dict = serializers.serialize("json", settings)
     res = json.loads(settings_dict)
-    list_settings=[]
-    for setting in res:
-        setting.pop('model')
-        settings_id = setting['pk']
-        setting.pop('pk')
-        setting['fields']['id'] = settings_id
-        certif_id=setting['fields']['certificat']
+    setting = res[0]
+    setting.pop('model')
+    settings_id = setting['pk']
+    setting.pop('pk')
+    setting['fields']['id'] = settings_id
+    certif_id=setting['fields']['certificat']
+    try:
+        certif_name = Certificate.objects.get(id=certif_id).name
+    except Certificate.DoesNotExist:
+        certif_name = None
+    setting['fields']['certificat']={
+        "id":certif_id,
+        "certif_name":certif_name
+    }
+    all_settings_interfaces = SettingInterface.objects.filter(setting=settings_id)
+    all_settings = []
+    for si in all_settings_interfaces:
         try:
-            certif_name = Certificate.objects.get(id=certif_id).name
-        except Certificate.DoesNotExist:
-            certif_name = None
-        setting['fields']['certificat']={
-            "id":certif_id,
-            "certif_name":certif_name
-        }
-        all_settings_interfaces=SettingInterface.objects.filter(setting=settings_id)
-        all_settings=[]
-        for si in all_settings_interfaces:
-            try:
-                interface_ip4 = IP4Config.objects.get(interface=si.interface.id).ip_address
-            except IP4Config.DoesNotExist:
-                interface_ip4 = None
-            info_settings_interface={
-                "id": si.id,
-                "interface_web": si.interface_web,
-                "interface":{
-                    "id": si.interface.id,
-                    "name_interface": si.interface.name_interface,
-                    "address": interface_ip4
-                        
-                }
+            interface_ip4 = IP4Config.objects.get(interface=si.interface.id).ip_address
+        except IP4Config.DoesNotExist:
+            interface_ip4 = None
+        info_settings_interface = {
+            "id": si.id,
+            "interface_web": si.interface_web,
+            "interface":{
+                "id": si.interface.id,
+                "name_interface": si.interface.name_interface,
+                "address": interface_ip4
             }
-            all_settings.append(info_settings_interface)
-        setting['fields']['interfaces_web']=[setting_web for setting_web in all_settings if setting_web["interface_web"]]
-        setting['fields']['interfaces_ssh']=[setting_web for setting_web in all_settings if not setting_web["interface_web"]]
-        list_settings.append(setting['fields'])
-    return list_settings
+        }
+        all_settings.append(info_settings_interface)
+    setting['fields']['interfaces_web'] = [setting_web for setting_web in all_settings if setting_web["interface_web"]]
+    setting['fields']['interfaces_ssh'] = [setting_web for setting_web in all_settings if not setting_web["interface_web"]]
+    return setting['fields']

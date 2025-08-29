@@ -233,6 +233,13 @@ def modify_web_page(http_config, port, certif):
     commandes=[]
     file_path="/etc/nginx/sites-available/asguard.conf"
     locations = f"""
+    location /static/ {{
+        root /asguard/asguard;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+        allow all;
+    }}
+    
     location /ws/ {{
         proxy_pass http://127.0.0.1:8000;
         proxy_http_version 1.1;

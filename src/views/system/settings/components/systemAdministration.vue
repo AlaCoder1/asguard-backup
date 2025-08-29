@@ -332,6 +332,12 @@ export default {
       });
     };
 
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/settings/restartNginx");
+    };
+
       const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -348,12 +354,6 @@ export default {
     });
 
     const v$ = useValidate(rules, state);
-
-     const restartNginx = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
-    };
 
     const submitForm = async () => {
       const result = await v$.value.$validate();
@@ -403,16 +403,20 @@ export default {
           .put(`/settings/updateSettings`, payload)
           .then((response) => {
             if (response.status == 200) {
-              restartNginx();
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              setTimeout(() => {
-                state.snackbar = false;
-                location.reload();
-              }, 5000);
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  closeModal();
+                }, 5000);
+                setTimeout(() => {
+                  location.reload();
+                }, 5000);
             }
           })
           .catch((i) => {

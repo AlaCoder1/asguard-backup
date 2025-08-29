@@ -40,6 +40,7 @@ SUCCESS_MESSAGES_UP = _("is up")
 ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UP_CONFIG = _("System error in up ipsec")
+ERROR_MESSAGES_CHANGE_STATUS = _("System error in changing status of")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 request_body_ipsec={
@@ -595,6 +596,8 @@ def status_server_ipsec(request, id):
         return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
     except IP4Config.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CHANGE_STATUS} {CONSTANT_IPSEC_CONFIGURATION}"}, status=400)
 
 
 @swagger_auto_schema(

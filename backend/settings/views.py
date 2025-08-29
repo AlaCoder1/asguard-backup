@@ -789,6 +789,10 @@ interface_item_schema = Schema(
                 default=True,
                 description="Show login message (default: True)"
             ),
+            "password_length": Schema(
+                type=TYPE_INTEGER,
+                description="Password length setting (required)"
+            ),
             
            "interface_ssh": Schema(
                 type=TYPE_ARRAY,
@@ -813,6 +817,7 @@ interface_item_schema = Schema(
             "certificat": 2,
             "tcp_port": 443,
             "login_message": True,
+            "password_length": 16,
             "interface_ssh":[{"id":1,"address":config("IP_ADDRESS")}],
             "interface_web":[{"id":1,"address":config("IP_ADDRESS")}],
             

@@ -541,13 +541,11 @@ export default {
         eGui.innerHTML = `
       ${data.data.destination_port_from}  -> ${data.data.destination_port_to}
         `;
-      }
-      else if (data.data.destination_port_forwarding) {
+      } else if (data.data.destination_port_forwarding) {
         eGui.innerHTML = `
       ${data.data.destination_port_forwarding}
         `;
-      }
-      else {
+      } else {
         eGui.innerHTML = `
       --
         `;
@@ -596,6 +594,12 @@ export default {
                 data-action="edit" title="Edit Server">
                    <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
+                        <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
                 <button
                 class="action-button delete"
                 data-action="delete" title="Delete ">
@@ -641,6 +645,17 @@ export default {
           } else {
             state.deleteDialog = true;
             state.deletedRow = rowData;
+          }
+          break;
+        case "copy":
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            state.modalData = {};
+            state.modalMode = "copy";
+            state.isModalAreaOpen = true;
+            state.editRow = rowData;
           }
           break;
         default:

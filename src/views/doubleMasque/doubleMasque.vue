@@ -1,5 +1,38 @@
 <template>
   <v-container>
+    <v-overlay v-model="state.viewModal">
+      <v-dialog
+        v-model="state.isviewModal"
+        persistent
+        :scrim="false"
+        width="auto"
+      >
+        <v-card color="#193286" class="alert-box">
+          <v-card-title class="img-containter">
+            <img
+              src="@/assets/images/view.png"
+              alt="logo"
+              class="img-view"
+              width="100"
+              height="100"
+          /></v-card-title>
+          <v-card-text v-html="overlayMessage"> </v-card-text>
+
+          <div class="mr-3 mb-5 d-flex justify-end">
+            <VButton
+              rounded
+              outlined
+              color="#ffffff"
+              label-color="#213E9F"
+              :label="$t('buttons.close')"
+              :isLarge="true"
+              @click="close"
+            />
+          </div>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
+
     <v-overlay v-model="state.loading">
       <v-dialog
         v-model="state.isLoadingDialogue"
@@ -58,7 +91,9 @@
               class="ml-2"
               @click="cancelSwitch"
             >
-              <span style="color: #213e9f" class="pr-3 pl-3">{{ $t("doubleMask.no") }}</span>
+              <span style="color: #213e9f" class="pr-3 pl-3">{{
+                $t("doubleMask.no")
+              }}</span>
             </v-btn>
             <v-btn
               rounded
@@ -70,7 +105,9 @@
               class="ml-2"
               @click="confirmEnable"
             >
-              <span class="text-white pr-3 pl-3"> {{ $t("doubleMask.yes") }}</span>
+              <span class="text-white pr-3 pl-3">
+                {{ $t("doubleMask.yes") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -95,7 +132,9 @@
 
       <!-- Performance Info -->
       <v-alert variant="outlined" type="info" color="#213E9F">
-        <div>{{ chartOptions.series[0] }}% {{ $t("doubleMask.performanceGain") }}</div>
+        <div>
+          {{ chartOptions.series[0] }}% {{ $t("doubleMask.performanceGain") }}
+        </div>
         <v-expansion-panels>
           <v-expansion-panel>
             <v-expansion-panel-title
@@ -105,7 +144,7 @@
           </v-expansion-panel>
           <v-expansion-panel>
             <v-expansion-panel-title
-              >{{ $t("doubleMask.currentRules") }}  :
+              >{{ $t("doubleMask.currentRules") }} :
               {{ actualRules }}</v-expansion-panel-title
             >
           </v-expansion-panel>
@@ -154,10 +193,11 @@
 
 <script>
 import { useI18n } from "vue-i18n";
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import axios from "axios";
 import { getCookie } from "@/mixins/csrftoken.js";
 import VueApexCharts from "vue3-apexcharts";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "DoubleMaskComponent",
@@ -166,11 +206,13 @@ export default {
   },
 
   setup() {
-
     const { t } = useI18n();
-    
     onMounted(() => {
       getInfo();
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
     });
 
     const getInfo = () => {
@@ -185,8 +227,7 @@ export default {
           actualRules.value = response.data.msg?.n_actuel;
           initialRules.value = response.data.msg?.n_init;
         })
-        .catch((e) => {
-        });
+        .catch((e) => {});
     };
 
     const changeStatus = (status) => {
@@ -226,10 +267,23 @@ export default {
     const enabled = ref(false);
     const dialog = ref(false);
     const tempValue = ref(false);
+    const current_user = ref();
+    const last_Subscription = ref([]);
 
     const confirmSwitch = () => {
-      tempValue.value = !enabled.value;
-      dialog.value = true;
+      const user = user_privilege("Double Masque");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("Double Masque")
+      ) {
+        tempValue.value = !enabled.value;
+        dialog.value = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const confirmEnable = () => {
@@ -316,7 +370,7 @@ export default {
         dashArray: 4,
         // lineCap: 'round'
       },
-      labels: [t('doubleMask.ratio')],
+      labels: [t("doubleMask.ratio")],
     });
 
     const state = reactive({
@@ -325,9 +379,38 @@ export default {
       snackbar: false,
       color: "",
       textAlert: "",
+      isviewModal: false,
+      viewModal: false,
+    });
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
+    const overlayMessage = computed(() => {
+      current_user.value = user_privilege("Double Masque");
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("Double Masque")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/license/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+       
+      }
     });
 
     return {
+      overlayMessage,
+      close,
       confirmEnable,
       cancelSwitch,
       confirmSwitch,

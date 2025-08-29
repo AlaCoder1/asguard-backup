@@ -10,6 +10,9 @@
             <span class="headline" v-if="modalMode === 'edit'">
               {{ $t("nat.update_msg_snat") }}</span
             >
+             <span class="headline" v-if="modalMode === 'copy'">
+            {{ $t("firewall.clone") }}
+          </span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -276,6 +279,12 @@
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
                 {{ $t("buttons.create") }}</span
               >
+                <span
+                    class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'copy'"
+                  >
+                    {{ $t("firewall.cloneBTN") }}
+                  </span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
                 {{ $t("buttons.update") }}</span
               >
@@ -438,7 +447,7 @@ export default {
       }
     );
     const populate = (data) => {
-      if (modalMode.value === "edit") {
+      if (modalMode.value === "edit" || modalMode.value === "copy") {
         state.id = data.id;
         let filtredInterface = state.mapedInterface.filter(
           (i) => i.id === data?.interface

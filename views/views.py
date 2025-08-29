@@ -843,8 +843,10 @@ def logrotate_page(request):
 
 @login_required(login_url='/')
 def double_masque(request):
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'last_subscription':json.dumps(last_subscription)}
     # list_double=get_double_mask(request)
-    return render(request, 'double_masque.html')
+    return render(request, 'double_masque.html',context)
     # return render(request, 'double_mask.html',list_double)
 
 ################## generale information ##################

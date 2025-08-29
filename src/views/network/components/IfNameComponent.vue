@@ -1115,7 +1115,7 @@ export default {
       description: "",
       private_aux: false,
       bogon_aux: false,
-      setuptypeip4: { id: 1, value: this.$t("Static"), slug: "static" },
+      setuptypeip4: "",
       addmac: "",
       mtuv: "",
       mssv: null,
@@ -1895,6 +1895,7 @@ export default {
       this.activeTab.startsWith("VLAN")
     ) {
       this.items.push({ id: 1, value: this.$t("Static"), slug: "static" });
+      this.setuptypeip4 = { id: 1, value: this.$t("Static"), slug: "static" };
     } else {
       this.items.push(
         { id: 1, value: this.$t("Static"), slug: "static" },
@@ -1927,7 +1928,8 @@ export default {
       let filtredType = this.items.filter(
         (i) => i.slug === this.IPV4Config?.IPV4Config?.typeip4?.toLowerCase()
       );
-      this.setuptypeip4 = filtredType[0];
+      this.setuptypeip4 = filtredType[0] ? filtredType[0] : { id: 1, value: this.$t("Static"), slug: "static" };
+      console.log('filtredType',filtredType[0])
     }, 1000);
 
     // this.setuptypeip4 = this.IPV4Config

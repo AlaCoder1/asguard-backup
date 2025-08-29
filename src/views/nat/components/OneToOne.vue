@@ -87,7 +87,7 @@
             <ag-grid-vue
               id="grid-wrapper"
               domLayout="autoHeight"
-              class="ag-theme-alpine "
+              class="ag-theme-alpine"
               style="width: 100%"
               @grid-ready="onGridReady"
               :columnDefs="columnOneTowOne"
@@ -479,6 +479,12 @@ export default {
                 data-action="edit" title="Edit Server">
                    <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
+                          <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
                 <button
                 class="action-button delete"
                 data-action="delete" title="Delete ">
@@ -527,6 +533,18 @@ export default {
             state.deletedRow = rowData;
           }
 
+          break;
+
+        case "copy":
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            state.modalData = {};
+            state.modalMode = "copy";
+            state.isModalAreaOpen = true;
+            state.editRow = rowData;
+          }
           break;
         default:
           break;

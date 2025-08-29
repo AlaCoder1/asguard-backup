@@ -522,6 +522,12 @@ export default {
               data-action="edit" title="Edit Server">
                  <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
               </button>
+                <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
               <button
               class="action-button delete"
               data-action="delete" title="Delete ">
@@ -561,6 +567,18 @@ export default {
             state.viewModal = true;
           }
           break;
+
+            case "copy":
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            state.modalData = {};
+            state.modalMode = "copy";
+            state.isModalAreaOpen = true;
+            state.editRow = rowData;
+          }
+          break;
         default:
           break;
       }
@@ -570,22 +588,20 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/network/AllInterfaces").then(
-        (response) => {
-          let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
-          );
+      axios.get("/network/AllInterfaces").then((response) => {
+        let filtredInterface = response.data.filter(
+          (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+        );
 
-          let interfaces = filtredInterface.map((i) => {
-            return {
-              id: i.id,
-              name: i.name_interface,
-            };
-          });
+        let interfaces = filtredInterface.map((i) => {
+          return {
+            id: i.id,
+            name: i.name_interface,
+          };
+        });
 
-          state.mapedInterface = interfaces;
-        },
-      );
+        state.mapedInterface = interfaces;
+      });
     };
 
     const openModalAdd = () => {

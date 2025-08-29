@@ -354,6 +354,12 @@ export default {
 
     const v$ = useValidate(rules, state);
 
+     const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
+    };
+
     const submitForm = async () => {
       const result = await v$.value.$validate();
       if (result) {
@@ -402,6 +408,7 @@ export default {
           .put(`/settings/updateSettings/${state.id}`, payload)
           .then((response) => {
             if (response.status == 200) {
+              restartNginx();
               state.loading = false;
               state.isLoadingDialogue = false;
               state.snackbar = true;

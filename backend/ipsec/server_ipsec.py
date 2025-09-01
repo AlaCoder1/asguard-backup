@@ -117,7 +117,10 @@ def disable_conn(server:ServerIPsec):
     comment_line_in_secrets_file(server)
     
     # Delete the postrouting NAT rule of the IPsec configuration
-    delete_nat_rule_in_system("postrouting", server.postrouting_rule_handle)
+    try:
+        delete_nat_rule_in_system("postrouting", server.postrouting_rule_handle)
+    except CommandExecutionError:
+        pass
 
 
 def change_status_ipsec_in_system(status="start"):

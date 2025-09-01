@@ -36,8 +36,6 @@ get_lang();
 
 (async () => {
   const locale = await get_lang();
-  console.log('****************',locale)
-
   const i18n = new createI18n({
     legacy: false,
     locale,

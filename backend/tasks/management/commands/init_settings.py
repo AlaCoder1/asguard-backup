@@ -1,6 +1,6 @@
 from backend.managementCertificates.models import Certificate
 from backend.managementCertificates.serializers import CertificateSerializer
-from backend.settings.function import create_config_db, execute_all_commandes, get_all_interfaces,manage_commandes, save_rules_settings
+from backend.settings.utils import create_config_db, execute_all_commandes, get_all_interfaces,manage_commandes, save_rules_settings
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 
@@ -16,6 +16,7 @@ class Command(BaseCommand):
             certificat_id=None
             tcp_port=443
             login_message=True
+            password_length = 20
             interface_ssh=[]
             interface_web=[]
             all_interfaces=get_all_interfaces()
@@ -58,17 +59,18 @@ class Command(BaseCommand):
                     certificat_id = certificat.id  
                     certif=certificat.name 
                     print(certificat_serializer.errors)
-                data={
-                    "enable_ssh":enable_ssh,
-                    "root_login":root_login,
-                    "auth_method":auth_method,
-                    "session_timeout":session_timeout,
-                    "protocol_http":protocol_http,
-                    "certificat":certificat_id,
-                    "tcp_port":tcp_port,
-                    "login_message":login_message
+                data = {
+                    "enable_ssh": enable_ssh,
+                    "root_login": root_login,
+                    "auth_method": auth_method,
+                    "session_timeout": session_timeout,
+                    "protocol_http": protocol_http,
+                    "certificat": certificat_id,
+                    "tcp_port": tcp_port,
+                    "login_message": login_message,
+                    "password_length": password_length
                     }
-                commandes,rules_web,rules_ssh=manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message,certif,session_timeout)
+                commandes,rules_web,rules_ssh = manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message,certif,session_timeout)
                 
                 print({"all_commandes":commandes})
                 aux_commandes=execute_all_commandes(commandes)
@@ -81,9 +83,6 @@ class Command(BaseCommand):
             else:
                 return aux_ssl
             return msg
-      
-     
-                            
-                
+        
         except IntegrityError as e:
             return "Error: " + str(e)

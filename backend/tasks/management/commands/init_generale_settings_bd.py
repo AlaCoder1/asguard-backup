@@ -1,7 +1,7 @@
 import re
 from django.core.management.base import BaseCommand
 from backend.settings.models import System, Timezone, Network
-from backend.settings.function import get_time_zone,get_hostname,get_dns_servers
+from backend.settings.utils import get_time_zone,get_hostname,get_dns_servers
 from django.db import IntegrityError
 
 class Command(BaseCommand):

@@ -1,12 +1,14 @@
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
+from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_OBJECT, TYPE_INTEGER
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 
+from backend.nat.contant_variables import REQUEST_BODY_DNAT
 from backend.nat.utils_dnat import check_payload
 
 from .utils_dnat import input_create_dnat
@@ -20,8 +22,8 @@ from .utils_dnat_system import change_rule_dnat_position_in_system, create_dnat_
 from backend.network.models import Interface
 from utils.errors_utils import CommandExecutionError
 from utils.utils_address import fix_ipv4_address
-from django.views.decorators.http import require_http_methods
-from decouple import config
+
+
 # Constants
 CONSTANT_DNAT_RULE = _("DNAT rule")
 CONSTANT_DNAT_RULE_POSITION = _("DNAT rule position")
@@ -43,36 +45,14 @@ ERROR_MESSAGES_CHANGING = _("System error in changing")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 
-request_body_dnat=Schema(type=TYPE_OBJECT, required=[
-        'interface', 'tcp_ip', 'protocol', 'source_address', 'source_port_from', 'source_port_to', 
-        'external_address', 'internal_address', 'port_forwarding'],
-    properties={
-        'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface, can take value null"),
-        'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6", ""]),
-        'protocol': Schema(type=TYPE_STRING, enum=["", "udp", "tcp"]),
-        'source_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="Format of address/mask or blank for Any"),
-        'source_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""]),
-        'source_port': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
-        'source_port_from': Schema(type=TYPE_STRING, example="80", description="Can be blank"),
-        'source_port_to': Schema(type=TYPE_STRING, example="443", description="Can be blank"),
-        'external_address': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Format of address or blank for Any"),
-        'internal_address': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Format of address or blank for Any"),
-        'port_forwarding': Schema(type=TYPE_BOOLEAN, default=False),
-        'destination_protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp", ""], description="used when selecting Port Forwarding"),
-        'destination_port_forwarding': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
-        'destination_port_from': Schema(type=TYPE_STRING, example="80", description="used when selecting Port Forwarding"),
-        'destination_port_to': Schema(type=TYPE_STRING, example="443", description="used when selecting Port Forwarding"),
-        'destination_port': Schema(type=TYPE_STRING, example="5000", description="used when selecting Port Forwarding"),
-        'description': Schema(type=TYPE_STRING, example="Description DNAT", description="description of DNAT rule"),
-        }
-        )
+
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL DNAT RULES",)
 @api_view(['GET'])
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_all_dnat(request):
+def get_all_dnat(_):
     """Getting all dnat from database"""
     list_dnat = []
     list_dnat = get_list_all_dnat()
@@ -85,7 +65,7 @@ def get_all_dnat(request):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_dnat(request, id):
+def get_dnat(_, id):
     """Getting dnat by id from database"""
     dnat = get_one_dnat(id)
     return JsonResponse(dnat, safe=False)
@@ -94,7 +74,7 @@ def get_dnat(request, id):
 @swagger_auto_schema(
     'POST', responses={201: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO CREATE A DNAT RULE", 
-    request_body=request_body_dnat)
+    request_body=REQUEST_BODY_DNAT)
 @api_view(['POST'])
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -225,7 +205,7 @@ def delete_list_dnat(request):
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
     operation_summary="API TO CREATE A DNAT RULE", 
-    request_body=request_body_dnat)
+    request_body=REQUEST_BODY_DNAT)
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])

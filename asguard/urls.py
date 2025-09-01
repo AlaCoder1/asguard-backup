@@ -57,7 +57,6 @@ urlpatterns = [
     path('system/user-management', user_managment_page),
     path('system/certificat-management', certificate_managment_page),
     path('firewall/rules', firewall_page),
-    # path('settings/', settings_page),
     path('openvpn/', openvpn_page),
     path('asguard/license/', subscription_page),
     path('', include('backend.tasks.urls')),

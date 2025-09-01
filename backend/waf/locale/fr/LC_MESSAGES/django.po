@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-06 08:56+0000\n"
+"POT-Creation-Date: 2025-08-29 23:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,55 +26,55 @@ msgstr "nom"
 msgid "rule id"
 msgstr "id règle"
 
-#: backend/waf/views.py:21
+#: backend/waf/views.py:24
 msgid "WAF Config"
 msgstr "Config WAF"
 
-#: backend/waf/views.py:22
+#: backend/waf/views.py:25
 msgid "WAF Rule"
 msgstr "Règle WAF"
 
-#: backend/waf/views.py:23
+#: backend/waf/views.py:26
 msgid "WAF Application"
 msgstr "Application WAF"
 
-#: backend/waf/views.py:24
+#: backend/waf/views.py:27
 msgid "WAF Alert"
 msgstr "Règle WAF"
 
-#: backend/waf/views.py:25
+#: backend/waf/views.py:28
 msgid "Certificate"
 msgstr "Certificat"
 
-#: backend/waf/views.py:27
+#: backend/waf/views.py:30
 msgid "is created"
 msgstr "est créé"
 
-#: backend/waf/views.py:28
+#: backend/waf/views.py:31
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/waf/views.py:29
+#: backend/waf/views.py:32
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/waf/views.py:31
+#: backend/waf/views.py:34
 msgid "System error in creating"
 msgstr "Erreur système lors de la création de"
 
-#: backend/waf/views.py:32
+#: backend/waf/views.py:35
 msgid "System error in deleting"
 msgstr "Erreur système lors de la suppression de"
 
-#: backend/waf/views.py:33
+#: backend/waf/views.py:36
 msgid "System error in updating"
 msgstr "Erreur système lors de la modification de"
 
-#: backend/waf/views.py:34
+#: backend/waf/views.py:37
 msgid "does not exist"
 msgstr "n'existe pas"
 
-#: backend/waf/views.py:35
+#: backend/waf/views.py:38
 msgid "Cannot deleting or updating one of the modsecurity rule"
 msgstr ""
 "Impossible de supprimer ou de mettre à jour l'une des règles de modsecurity"

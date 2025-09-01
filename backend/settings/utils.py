@@ -132,7 +132,7 @@ def init_settings_firewall():
     return commandes
 
 
-def add_rule_web(list_interface, interface_address):
+def add_rule_web(list_interface_drop, interface_address):
     rules_web = []
     commandes = []
     try:
@@ -149,7 +149,7 @@ def add_rule_web(list_interface, interface_address):
     except IP4Config.DoesNotExist:
         pass
 
-    for add in list_interface:
+    for add in list_interface_drop:
         try:
             interface_id = IP4Config.objects.get(ip_address=add).interface.pk
             if add not in interface_address:
@@ -172,7 +172,7 @@ def add_rule_web(list_interface, interface_address):
     return commandes, rules_web
 
 
-def add_rule_ssh(list_interface, interface_address):
+def add_rule_ssh(list_interface_drop, interface_address):
     rules_ssh = []
     commandes = []
     try:
@@ -189,7 +189,7 @@ def add_rule_ssh(list_interface, interface_address):
         })
     except IP4Config.DoesNotExist:
         pass
-    for add in list_interface:
+    for add in list_interface_drop:
         try:
             interface_id = IP4Config.objects.get(ip_address=add).interface.pk
             if add not in interface_address:
@@ -239,7 +239,7 @@ def modify_web_page(http_config, port, certif):
         add_header Cache-Control "public, max-age=2592000";
         allow all;
     }}
-    
+
     location /ws/ {{
         proxy_pass http://127.0.0.1:8000;
         proxy_http_version 1.1;
@@ -357,16 +357,16 @@ class UvicornUserLoggingMiddleware:
       
   
 def manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, passwd_login, enable_ssh, http_config, port, login_msg, certif, timeout):
-    all_interfaces_ssh = [x["address"] for x in all_interfaces if x not in interface_ssh]
-    all_interfaces_web = [x["address"] for x in all_interfaces if x not in interface_web]
+    all_interfaces_drop_ssh = [x["address"] for x in all_interfaces if x not in interface_ssh]
+    all_interfaces_drop_web = [x["address"] for x in all_interfaces if x not in interface_web]
     interface_ssh = [x['address'] for x in interface_ssh]
     interface_web = [x['address'] for x in interface_web]
     init_firewall = init_settings_firewall()
-    command_web, rules_web = add_rule_web(all_interfaces_web, interface_web) if interface_web else ([], [])
-    commmand_ssh, rules_ssh = add_rule_ssh(all_interfaces_ssh,interface_ssh)if interface_ssh!=[] else ([],[])
-    command_user = permit_user_ssh(root_login,passwd_login,enable_ssh)
+    command_web, rules_web = add_rule_web(all_interfaces_drop_web, interface_web) if interface_web else ([], [])
+    commmand_ssh, rules_ssh = add_rule_ssh(all_interfaces_drop_ssh, interface_ssh) if interface_ssh !=[] else ([],[])
+    command_user = permit_user_ssh(root_login, passwd_login, enable_ssh)
     command_page_web = modify_web_page(http_config, port, certif)
-    command_login = modify_log_message(login_msg,timeout)
+    command_login = modify_log_message(login_msg, timeout)
     all_commandes = init_firewall+command_web+commmand_ssh+command_user+command_page_web+command_login
     return all_commandes, rules_web, rules_ssh
 

@@ -1,15 +1,32 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text v-html="overlayMessage">
-        </v-card-text>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -17,11 +34,20 @@
   <div class="mt-3 ml-3 mr-3">
     <v-row>
       <v-overlay v-model="loading">
-        <v-dialog v-model="isLoadingDialogue" :scrim="false" persistent width="auto">
+        <v-dialog
+          v-model="isLoadingDialogue"
+          :scrim="false"
+          persistent
+          width="auto"
+        >
           <v-card color="#193286">
             <v-card-text>
               {{ $t("requiredfield.attente") }}
-              <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+              <v-progress-linear
+                indeterminate
+                color="white"
+                class="mb-0"
+              ></v-progress-linear>
             </v-card-text>
           </v-card>
         </v-dialog>
@@ -30,21 +56,46 @@
       <v-col cols="12">
         <h4 class="mb-1">
           IPSEC PEERS
-          <i class="mdi mdi-play-circle mr-1 ml-1" style="color: #4caf50; font-size: 20px; cursor: pointer"
-            @click="startStopServer('start')"></i>
-          <i v-if="status" class="mdi mdi-stop-circle" style="color: #b00020; font-size: 20px; cursor: pointer"
-            @click="startStopServer('stop')"></i>
+          <i
+            class="mdi mdi-play-circle mr-1 ml-1"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            @click="startStopServer('start')"
+          ></i>
+          <i
+            v-if="status"
+            class="mdi mdi-stop-circle"
+            style="color: #b00020; font-size: 20px; cursor: pointer"
+            @click="startStopServer('stop')"
+          ></i>
         </h4>
 
         <v-divider></v-divider>
         <div class="mt-3" style="display: flex; flex-direction: column">
-          <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3 mb-3" :columnDefs="columns"
-            :rowData="rowData.value" :gridOptions="gridOptions" :defaultColDef="defaultColDef"
-            :overlayNoRowsTemplate="overlayTemplate" :rowGroupPanelShow="rowGroupPanelShow" @grid-ready="onGridReady"
-            style="width: 100%; height: 100%" :localeText="paginationLocalization" />
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3 mb-3"
+            :columnDefs="columns"
+            :rowData="rowData.value"
+            :gridOptions="gridOptions"
+            :defaultColDef="defaultColDef"
+            :overlayNoRowsTemplate="overlayTemplate"
+            :rowGroupPanelShow="rowGroupPanelShow"
+            @grid-ready="onGridReady"
+            style="width: 100%; height: 100%"
+            :localeText="paginationLocalization"
+          />
           <div class="justify-end d-flex mr-3 mt-3 mb-3">
-            <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('PageIpsec.addnewpeer')"
-              :isLarge="true" class="ml-2" @click="addServer" />
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              :label="$t('PageIpsec.addnewpeer')"
+              :isLarge="true"
+              class="ml-2"
+              @click="addServer"
+            />
           </div>
           <br />
           <br />
@@ -52,7 +103,12 @@
         </div>
       </v-col>
     </v-row>
-    <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
       {{ textAlert }}
 
       <template v-slot:actions> </template>
@@ -66,10 +122,10 @@
       <v-card-actions>
         <v-btn color="error" text @click="deleteItem">{{
           $t("buttons.delete")
-          }}</v-btn>
+        }}</v-btn>
         <v-btn text @click="dialogDelete = false">{{
           $t("buttons.cancel")
-          }}</v-btn>
+        }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -104,7 +160,7 @@ export default {
     const state = reactive({
       isviewModal: false,
       viewModal: false,
-    })
+    });
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
@@ -118,13 +174,21 @@ export default {
       return t("PageIpsec.remotegateway");
     });
     const overlayMessage = computed(() => {
-      current_user.value = user_privilege('Ipscec')
+      current_user.value = user_privilege("Ipscec");
       if (current_user.value === "viewer" || current_user.value === "default") {
-        return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
       } else if (!last_Subscription.value.includes("VPN IPSEC")) {
-        return `${t("firewall.msg_subscription")}<br /><a href="/asguard/license/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/license/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
       } else {
-        return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
       }
     });
     const Phase1Proposal = computed(() => {
@@ -229,50 +293,70 @@ export default {
     ]);
 
     function checkboxRender(params) {
+      const user = user_privilege("Ipsec");
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      // return `<input type="checkbox" ${params.value ? "checked" : ""} />`;
       var input = document.createElement("input");
       input.type = "checkbox";
-      params.value = params.data.server_status;
-      input.checked = params.value;
-
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN IPSEC")
+      ) {
+        params.value = params.data.server_status;
+        input.checked = params.value;
+      }
       input.style.margin = "10px";
       input.style.width = "20px";
       input.style.height = "18px";
       input.style.cursor = "pointer";
 
       input.addEventListener("click", function (event) {
-        params.value = !params.value;
-        params.data.server_status = params.value;
-        let payload = {
-          enable: params.value,
-        };
+        if (
+          user &&
+          user !== "viewer" &&
+          user !== "default" &&
+          last_Subscription.value.includes("VPN IPSEC")
+        ) {
+          //
+          params.value = !params.value;
+          params.data.server_status = params.value;
+          let payload = {
+            enable: params.value,
+          };
 
-        axios
-          .put(`/ipsec/statusServerIPsec/${params.data.id}`, payload)
-          .then((response) => {
-            if (response.status == "200") {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            if (i.response.status === 500) {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = t("errors.errorServer");
-            } else {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-            }
-          });
+          axios
+            .put(`/ipsec/statusServerIPsec/${params.data.id}`, payload)
+            .then((response) => {
+              if (response.status == "200") {
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              if (i.response.status === 500) {
+                snackbar.value = true;
+                color.value = "red";
+                textAlert.value = t("errors.errorServer");
+              } else {
+                snackbar.value = true;
+                color.value = "red";
+                textAlert.value = i.response.data.error;
+              }
+            });
+
+          //
+        } else {
+          state.isviewModal = true;
+          state.viewModal = true;
+        }
       });
+      console.log("params,params", params);
       return input;
     }
 
@@ -328,7 +412,7 @@ export default {
 
       eGui.innerHTML = `
           ${data.data.encryption_algorithm_ph1} <br/>
-          ${uppercaseData(data.data.hash_algorithm_ph1)} <br/> DH Group 
+          ${uppercaseData(data.data.hash_algorithm_ph1)} <br/> DH Group
           ${extractDHKey(data.data.dh_key_group)}
           `;
       eGui.style.lineHeight = "2";
@@ -432,18 +516,18 @@ export default {
       });
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
-          <button  
+          <button
             class="action-button update"
             data-action="update">
-                update  
+                update
           </button>
-          <button  
+          <button
             class="action-button cancel"
             data-action="cancel">
                 cancel
           </button>
           `;
-      } else if(status.value===false){
+      } else if (status.value === false) {
         eGui.innerHTML = `
             <button
             class="action-button up"
@@ -461,7 +545,7 @@ export default {
             data-action="delete">
               <i class="mdi mdi-delete" style="color: #086EAE; font-size: 20px;"></i>
             </button>
-           
+
         `;
       } else {
         eGui.innerHTML = `
@@ -480,7 +564,7 @@ export default {
             data-action="delete">
               <i class="mdi mdi-delete" style="color: #086EAE; font-size: 20px;"></i>
             </button>
-           
+
         `;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -492,14 +576,18 @@ export default {
       return eGui;
     }
     const handleAction = (action, rowData) => {
-      const user = user_privilege('Ipsec');
+      const user = user_privilege("Ipsec");
 
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "edit":
-          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
-
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN IPSEC")
+          ) {
             emitter.emit("add-serverIpsec");
 
             setTimeout(() => {
@@ -508,27 +596,35 @@ export default {
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "delete":
-          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
-
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN IPSEC")
+          ) {
             currentRowToDelete.value = rowData;
             dialogDelete.value = true;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "up":
-          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
-
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN IPSEC")
+          ) {
             let id = rowData.id;
             upServer(id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         default:
           break;
@@ -561,7 +657,6 @@ export default {
           timeoutPromise,
         ]);
 
-
         if (response) {
           snackbar.value = true;
           color.value = "success";
@@ -587,9 +682,9 @@ export default {
           textAlert.value = "The request is taking longer than expected...";
           loading.value = false;
           isLoadingDialogue.value = false;
-          setTimeout(()=>{
+          setTimeout(() => {
             snackbar.value = false;
-          },3000)
+          }, 3000);
         } else {
           snackbar.value = true;
           color.value = "red";
@@ -600,13 +695,18 @@ export default {
       }
     };
     const addServer = () => {
-      const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
+      const user = user_privilege("Ipsec");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN IPSEC")
+      ) {
         emitter.emit("add-serverIpsec");
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
     const deleteItem = () => {
       // Perform delete action when confirmed
@@ -643,7 +743,6 @@ export default {
       }
     };
     onMounted(async () => {
-
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
@@ -666,23 +765,28 @@ export default {
 
         const statusAttribute =
           document.getElementById("app").attributes["status"].value;
-        
 
         status.value = statusAttribute === "False" ? false : true;
 
-        setTimeout(()=>{
-    if(!last_Subscription.value.includes("VPN IPSEC") && status.value===true ){
-      startStopServer("stop")
-    } 
-  },1000)
-      } catch (error) {
-      }
+        setTimeout(() => {
+          if (
+            !last_Subscription.value.includes("VPN IPSEC") &&
+            status.value === true
+          ) {
+            startStopServer("stop");
+          }
+        }, 1000);
+      } catch (error) {}
     });
 
     const startStopServer = (data) => {
-      const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
-
+      const user = user_privilege("Ipsec");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN IPSEC")
+      ) {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -715,12 +819,12 @@ export default {
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
-
+      }
     };
     const close = () => {
       state.isviewModal = false;
       state.viewModal = false;
+      location.reload();
     };
 
     return {

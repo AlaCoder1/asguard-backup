@@ -24,11 +24,12 @@ def get_list_all_server_openvpn():
         serv['fields']['id'] = serv_id
         serv['fields']['client_management_password'] = ''
         try:
-            certificate = Certificate.objects.get(name=serv['fields']['cert_name'])
-            cert_status = certificate.activation
+            certificate = Certificate.objects.get(id=serv['fields']['cert_name'])
+            serv['fields']['ca_name'] = certificate.certificate_authority.name
+            serv['fields']['cert_name'] = certificate.name
+            serv['fields']['cert_status'] = certificate.activation
         except Certificate.DoesNotExist:
-            cert_status = False
-        serv['fields']['cert_status'] = cert_status
+            serv['fields']['cert_status'] = False
         # Add the TLS content of the server
         try:
             serv['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(serv["fields"]["name"]))
@@ -53,11 +54,12 @@ def get_one_server_openvpn(id):
     res[0]['fields']['id'] = serv_id
     res[0]['fields']['client_management_password'] = ''
     try:
-        certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
-        cert_status = certificate.activation
+        certificate = Certificate.objects.get(id=res[0]['fields']['cert_name'])
+        res[0]['fields']['ca_name'] = certificate.certificate_authority.name
+        res[0]['fields']['cert_name'] = certificate.name
+        res[0]['fields']['cert_status'] = certificate.activation
     except Certificate.DoesNotExist:
-        cert_status = False
-    res[0]['fields']['cert_status'] = cert_status
+        res[0]['fields']['cert_status'] = False
     # Add the TLS content of the server
     try:
         res[0]['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(res[0]["fields"]["name"]))
@@ -80,11 +82,12 @@ def get_list_all_client_openvpn():
         cli['fields']['proxy_auth_password'] = ''
         cli['fields']['password'] = ''
         try:
-            certificate = Certificate.objects.get(name=cli['fields']['cert_name'])
-            cert_status = certificate.activation
+            certificate = Certificate.objects.get(id=cli['fields']['cert_name'])
+            cli['fields']['ca_name'] = certificate.certificate_authority.name
+            cli['fields']['cert_name'] = certificate.name
+            cli['fields']['cert_status'] = certificate.activation
         except Certificate.DoesNotExist:
-            cert_status = False
-        cli['fields']['cert_status'] = cert_status
+            cli['fields']['cert_status'] = False
         try:
             cli['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(cli["fields"]["name"]))
         except CommandExecutionError:
@@ -114,11 +117,12 @@ def get_one_client_openvpn(id):
     res[0]['fields']['proxy_auth_password'] = ''
     res[0]['fields']['password'] = ''
     try:
-        certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
-        cert_status = certificate.activation
+        certificate = Certificate.objects.get(id=res[0]['fields']['cert_name'])
+        res[0]['fields']['ca_name'] = certificate.certificate_authority.name
+        res[0]['fields']['cert_name'] = certificate.name
+        res[0]['fields']['cert_status'] = certificate.activation
     except Certificate.DoesNotExist:
-        cert_status = False
-    res[0]['fields']['cert_status'] = cert_status
+        res[0]['fields']['cert_status'] = False
     try:
         res[0]['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(res[0]["fields"]["name"]))
     except CommandExecutionError:

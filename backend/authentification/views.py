@@ -272,117 +272,116 @@ def logout_view(request):
     logout(request)
     return JsonResponse({"msg": SUCCESS_MESSAGES_LOGOUT})
  
-@swagger_auto_schema(
-    'POST', 
+# @swagger_auto_schema(
+#     'POST', 
 
-    responses={200: 'subscrpition successfully', 400: 'Bad Request'}, 
-    security=[{"session_auth": []}],  # Specify the security requirement
-    operation_summary="subscrpition API",
-    operation_description="Create a Stripe checkout session for subscription plans.",
-    request_body=Schema(
-        type=TYPE_OBJECT, required=['features', 'status', 'price'],
-        properties={
-            "features": Schema(type=TYPE_ARRAY,items=Schema(type=TYPE_STRING), example=["squid","ZTNA"]),
-            "status": Schema(type=TYPE_STRING, example="True"),
-            "price": Schema(type=TYPE_INTEGER, example=1199)
-        }
-    )
- )
-@api_view(['POST'])
-@require_http_methods(['POST'])
-@authentication_classes([SessionAuthentication])
-def create_checkout_session(request):
-    """
-    Creates a Stripe checkout session for processing subscription payments.
+#     responses={200: 'subscrpition successfully', 400: 'Bad Request'}, 
+#     security=[{"session_auth": []}],  # Specify the security requirement
+#     operation_summary="subscrpition API",
+#     operation_description="Create a Stripe checkout session for subscription plans.",
+#     request_body=Schema(
+#         type=TYPE_OBJECT, required=['features', 'status', 'price'],
+#         properties={
+#             "features": Schema(type=TYPE_ARRAY,items=Schema(type=TYPE_STRING), example=["squid","ZTNA"]),
+#             "status": Schema(type=TYPE_STRING, example="True"),
+#             "price": Schema(type=TYPE_INTEGER, example=1199)
+#         }
+#     )
+#  )
+# @api_view(['POST'])
+# @authentication_classes([SessionAuthentication])
+# def create_checkout_session(request):
+#     """
+#     Creates a Stripe checkout session for processing subscription payments.
 
-    This function initializes a payment session based on the selected subscription 
-    plan and price provided in the request data. It integrates with Stripe to 
-    generate a checkout URL.
+#     This function initializes a payment session based on the selected subscription 
+#     plan and price provided in the request data. It integrates with Stripe to 
+#     generate a checkout URL.
 
-    Args:
-        request (HttpRequest): The HTTP request containing subscription details.
+#     Args:
+#         request (HttpRequest): The HTTP request containing subscription details.
 
-    Returns:
-        Response: A Stripe checkout session URL on success.
-        JsonResponse: An error message if the session creation fails.
+#     Returns:
+#         Response: A Stripe checkout session URL on success.
+#         JsonResponse: An error message if the session creation fails.
 
-    Workflow:
-        1. Extracts `features`, `status`, and `price` from request data.
-        2. Determines the subscription plan based on selected features:
-            - "Basic" → Retrieves `Basic` plan from the database.
-            - "Full" → Retrieves `Full` plan from the database.
-            - Otherwise, matches features to a plan using `group_descriptions_by_plan()`.
-        3. Sets Stripe API key and prepares checkout session parameters.
-        4. Creates a Stripe checkout session with:
-            - Payment method (`card`).
-            - Subscription details (plan, price, and metadata).
-            - Success and cancellation URLs.
-        5. Returns the checkout session response.
+#     Workflow:
+#         1. Extracts `features`, `status`, and `price` from request data.
+#         2. Determines the subscription plan based on selected features:
+#             - "Basic" → Retrieves `Basic` plan from the database.
+#             - "Full" → Retrieves `Full` plan from the database.
+#             - Otherwise, matches features to a plan using `group_descriptions_by_plan()`.
+#         3. Sets Stripe API key and prepares checkout session parameters.
+#         4. Creates a Stripe checkout session with:
+#             - Payment method (`card`).
+#             - Subscription details (plan, price, and metadata).
+#             - Success and cancellation URLs.
+#         5. Returns the checkout session response.
 
-    HTTP Status:
-        - 200: Checkout session successfully created.
-        - 400: Error in processing the request.
+#     HTTP Status:
+#         - 200: Checkout session successfully created.
+#         - 400: Error in processing the request.
 
-    Dependencies:
-        - `stripe`: Stripe API for payment processing.
-        - `plan`: Model storing subscription plans.
-        - `group_descriptions_by_plan()`: Groups plan descriptions for selection.
-        - `get_plan_ids_by_descriptions()`: Matches selected features to a plan.
-        - `show_url(request)`: Retrieves the base URL for success/cancel redirection.
+#     Dependencies:
+#         - `stripe`: Stripe API for payment processing.
+#         - `plan`: Model storing subscription plans.
+#         - `group_descriptions_by_plan()`: Groups plan descriptions for selection.
+#         - `get_plan_ids_by_descriptions()`: Matches selected features to a plan.
+#         - `show_url(request)`: Retrieves the base URL for success/cancel redirection.
 
-    Raises:
-        - Exception: Catches any errors during session creation and returns an error response.
-    """
-    data = request.data
-    list_features = data['features']
-    if "Basic"in list_features:
-        subscription_plan = plan.objects.get(slug="Basic")
-        plan_id = subscription_plan.pk
-    elif "Full" in list_features:
-        subscription_plan = plan.objects.get(slug="Full")
-        plan_id = subscription_plan.pk
-    else:
-        grouped_data = group_descriptions_by_plan()
-        plan_id = get_plan_ids_by_descriptions(list_features, grouped_data)
+#     Raises:
+#         - Exception: Catches any errors during session creation and returns an error response.
+#     """
+#     data = request.data
+#     list_features = data['features']
+#     if "Basic"in list_features:
+#         subscription_plan = plan.objects.get(slug="Basic")
+#         plan_id = subscription_plan.pk
+#     elif "Full" in list_features:
+#         subscription_plan = plan.objects.get(slug="Full")
+#         plan_id = subscription_plan.pk
+#     else:
+#         grouped_data = group_descriptions_by_plan()
+#         plan_id = get_plan_ids_by_descriptions(list_features, grouped_data)
  
-    status = data['status']
-    price = data['price']
-    card_type = 'card'
-    stripe.api_key = STRIPE_SECRET_KEY
-    try:
-        url=show_url(request)
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=[card_type],  # Specify the payment method type (e.g., card)
-            line_items=[
-                {
-                    'price_data': {
-                        'currency': 'eur',
-                        'unit_amount': int(price * 100),  # Convert price to cents
-                        'product_data': {
-                            'name': 'Asguard Subscription',
-                            'images': ['https://www.numeryx.fr/wp-content/themes/numeryx/assets/images/bg-Asguard.jpg'],
-                            'description': 'Asguard Subscription',
-                            'metadata': {
-                                'subscription_id': plan_id,
-                                'status': status,
-                            }
-                        },
-                    },
-                    'quantity': 1,
-                },
-            ],
-                metadata = {
-                'subscription_id': plan_id,
-                'status': status,
-            },
-            mode='payment',
-            success_url = f'{url}/success/?subscription_id={plan_id}',
-            cancel_url= f'{url}/asguard/subscription/'
-        )
+#     status = data['status']
+#     price = data['price']
+#     card_type = 'card'
+#     stripe.api_key = STRIPE_SECRET_KEY
+#     try:
+#         url=show_url(request)
+#         checkout_session = stripe.checkout.Session.create(
+#             payment_method_types=[card_type],  # Specify the payment method type (e.g., card)
+#             line_items=[
+#                 {
+#                     'price_data': {
+#                         'currency': 'eur',
+#                         'unit_amount': int(price * 100),  # Convert price to cents
+#                         'product_data': {
+#                             'name': 'Asguard Subscription',
+#                             'images': ['https://www.numeryx.fr/wp-content/themes/numeryx/assets/images/bg-Asguard.jpg'],
+#                             'description': 'Asguard Subscription',
+#                             'metadata': {
+#                                 'subscription_id': plan_id,
+#                                 'status': status,
+#                             }
+#                         },
+#                     },
+#                     'quantity': 1,
+#                 },
+#             ],
+#                 metadata = {
+#                 'subscription_id': plan_id,
+#                 'status': status,
+#             },
+#             mode='payment',
+#             success_url = f'{url}/success/?subscription_id={plan_id}',
+#             cancel_url= f'{url}/asguard/subscription/'
+#         )
  
-        return Response(checkout_session)
-    except Exception as e:
-        return JsonResponse({'error': str(e)})
+#         return Response(checkout_session)
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)})
 
  
 # @csrf_exempt

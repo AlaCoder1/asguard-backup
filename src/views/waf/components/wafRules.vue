@@ -164,7 +164,7 @@ export default {
       modalData: {},
       isModalOpen: false,
       isOpen: null,
-      editRow: {},
+      editRow: null,
       modalMode: "create",
       deletedRow: null,
       loading: false,
@@ -467,19 +467,19 @@ export default {
       state.isModalOpen = false;
       state.isOpen = false;
       state.modalMode = "";
-      state.editRow = {};
+      state.editRow = null;
     });
     emitter.on("closeModalSHOW", () => {
       state.isModalShowAppOpen = false;
       state.isOpen = false;
       state.modalMode = "";
-      state.editRow = {};
+      state.editRow = null;
     });
     emitter.on("closeModalSHOWDescription", () => {
       state.isModalShowDescOpen = false;
       state.isOpen = false;
       state.modalMode = "";
-      state.editRow = {};
+      state.editRow = null;
     });
 
     const restartNginx = () => {

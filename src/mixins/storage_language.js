@@ -13,6 +13,7 @@ async function get_lang() {
   try {
     let res = await axios.get(`/users/getLanguage/${id}`);
     lang = res.data.language;
+    localStorage.setItem("lang", lang.toLowerCase());
     return lang;
   } catch (error) {
     console.error(error);

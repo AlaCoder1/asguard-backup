@@ -15,7 +15,7 @@ from backend.ztna.serializers import RelaysSerializer, RelaysSerializerUpdate
 from backend.ztna.utils import get_ztna_token_from_system, get_status_ztna_service
 from backend.ztna.utils_routers import change_ports_router_yaml_file, change_status_router, create_router, delete_router, get_router_from_ziti, get_status_router_from_system, update_router_in_system
 from utils.errors_utils import CommandExecutionError
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_RELAY = _('Relay')
@@ -38,6 +38,7 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA ROUTERS FROM OPENZITI API",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_routers_from_openziti(request):
@@ -55,6 +56,7 @@ def get_routers_from_openziti(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA ROUTERS")
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_routers(request):
@@ -85,6 +87,7 @@ def get_all_routers(request):
             )
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_routers(request):
@@ -135,6 +138,7 @@ def add_routers(request):
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'},
                      operation_summary="API TO DELETE A ZTNA RELAY",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_routers(request, id):
@@ -176,6 +180,7 @@ def delete_routers(request, id):
             )
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_routers(request, id):
@@ -217,6 +222,7 @@ def update_routers(request, id):
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO START A ZTNA ROUTER")
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_routers(request, id):
@@ -237,6 +243,7 @@ def start_routers(request, id):
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO STOP A ZTNA ROUTER")
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_routers(request, id):

@@ -174,9 +174,7 @@ export default {
           name: identity.name,
         }));
 
-        console.log("SerRelPolicies.value", SerRelPolicies.value);
       } catch (error) {
-        console.error("Failed to fetch SerRelPolicies:", error);
         SerRelPolicies.value = [];
       }
     };
@@ -210,7 +208,6 @@ export default {
       try {
         servicesObject = JSON.parse(servicesString);
       } catch (error) {
-        console.error("Failed to parse services string:", error);
       }
 
       ServList.value = servicesObject;
@@ -256,7 +253,6 @@ export default {
         name.value = data.name;
         selectedsemantic.value = data.semantic;
         name_description.value = data.description;
-        console.log("namcription", name_description.value);
 
         let relay = "";
         let service = "";
@@ -292,7 +288,6 @@ export default {
           serviceRoles: [serviceAttribute],
           Description: name_description.value,
         };
-        console.log(payload)
 
         let token = document.getElementById("app").getAttribute("token");
         state.loading = true;

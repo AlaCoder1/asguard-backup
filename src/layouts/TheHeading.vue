@@ -219,7 +219,6 @@ export default {
         window.location.href = "/";
         localStorage.removeItem("href-path");
       } catch (error) {
-        console.error("Error during logout:", error);
       }
     };
     const getUserById = async (userId) => {
@@ -231,9 +230,7 @@ export default {
         .then((response) => {
           state.imageURL = response.data.profile.photo_url;
         })
-        .catch((e) => {
-          console.log("e", e.response);
-        });
+        .catch((e) => {});
     };
 
     return {
@@ -265,9 +262,7 @@ export default {
         axios
           .put(`/users/modifyLanguage/${this.state.currentInfo.id}`, payload)
           .then((response) => {})
-          .catch((i) => {
-            console.log("resp", i.response);
-          });
+          .catch((i) => {});
       }
     },
   },

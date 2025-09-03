@@ -103,7 +103,6 @@ export default {
     watch(
       () => selectedId.value,
       (val) => {
-        console.log('valeur', val);
         state.itemId = val;
       }
     );

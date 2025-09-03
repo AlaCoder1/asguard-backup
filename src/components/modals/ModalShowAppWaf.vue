@@ -220,7 +220,6 @@ export default {
 
     const populate = (data) => {
       if (modalMode.value === "show") {
-        console.log("datashow79", data);
         rowApplication.value = data.application;
       }
     };

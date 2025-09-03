@@ -421,7 +421,6 @@ export default {
       document.getElementById("app").attributes["last_subscription"].value;
     let parsedArraySubscription = JSON.parse(lastSubscription);
     last_Subscription.value = parsedArraySubscription;
-    console.log("last_Subscription", last_Subscription.value);
     const cancel = () => {
       const user = user_privilege("Waf");
       if (
@@ -598,7 +597,7 @@ export default {
     const restartNginx = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
+      axios.post("/settings/restartNginx");
     };
     const submitForm = async () => {
       const user = user_privilege("Waf");
@@ -665,7 +664,7 @@ export default {
               }
             });
         } else {
-          console.log("error", v$.value);
+          console.log("error :", v$.value);
         }
       } else {
         state.isviewModal = true;

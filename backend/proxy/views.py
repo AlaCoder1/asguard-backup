@@ -19,6 +19,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import translation
 from utils.utils_email import is_valid_email
 from backend.managementUsers.models import Profile
+from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_SQUID = _('Squid')
 CONSTANT_PATTERN = _('Pattern')
@@ -116,6 +118,7 @@ def run_command(command):
     },
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def restart(request):
     """
@@ -158,6 +161,7 @@ def restart(request):
     },
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def start(request):
     """
@@ -196,6 +200,7 @@ def start(request):
     },
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def stop(request):
     """
@@ -234,6 +239,7 @@ def stop(request):
     },
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def allRuleSquid(request):
     """
@@ -370,7 +376,7 @@ def enable_by_time():
             'value': Schema(
                 type=TYPE_STRING,
                 description="The IP, domain, or subnet to be blocked or allowed.",
-                example="192.168.1.100"
+                example=config('IP_ADDRESS')
             ),
             'status': Schema(
                 type=TYPE_BOOLEAN,
@@ -418,6 +424,7 @@ def enable_by_time():
     },
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def addRuleSquid(request):
     """
@@ -537,11 +544,10 @@ def addRuleSquid(request):
             else:
                 return JsonResponse(serializerProxyRules.errors, status=400 )
 
-
 def remove_acl_rule(file_path, name_rule, time_rule):
     """
     Remove ACL and http_access lines for the given rule in squid.conf.
-
+ 
     Example lines removed:
     - http_access deny block_example.com time_block_example.com
     - acl block_example.com url_regex example.com
@@ -554,16 +560,16 @@ def remove_acl_rule(file_path, name_rule, time_rule):
             re.compile(rf'^\s*acl\s+{re.escape(name_rule)}\s+url_regex\s+.+$'),
             re.compile(rf'^\s*acl\s+{re.escape(time_rule)}\s+time\s+.+$'),
         ]
-
+ 
         with open(file_path, 'r') as file:
             lines = file.readlines()
-
+ 
         with open(file_path, 'w') as file:
             for line in lines:
                 if any(p.match(line) for p in patterns):
                     continue  # Skip the matching lines
                 file.write(line)
-
+ 
     except FileNotFoundError:
         raise FileNotFoundError(f"The file {file_path} does not exist.")
     except PermissionError:
@@ -572,6 +578,7 @@ def remove_acl_rule(file_path, name_rule, time_rule):
         raise RuntimeError(f"Error while removing ACL rule: {str(e)}")
     
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def updateRuleSquid(request, rule_id):
     """
@@ -587,7 +594,8 @@ def updateRuleSquid(request, rule_id):
     except ProxyRules.DoesNotExist:
         return JsonResponse({"error": _("La règle spécifiée n'existe pas.")}, status=404)
 
-    data = request.data
+    # data = request.data
+    data = json.loads(request.body)
     write_in_file = True
     new_value = data['value']
     old_value = existing_rule.value
@@ -672,6 +680,7 @@ def updateRuleSquid(request, rule_id):
     },
 ) 
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def deleteRuleSquid(request,id):
     """
@@ -803,6 +812,7 @@ def get_squid_status():
     },
 ) 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_generale_info(request):
     """
@@ -896,6 +906,7 @@ def get_generale_info(request):
     }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_generale_info(request):
     """
@@ -986,6 +997,7 @@ def update_generale_info(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def disable_auth(request):
     """
@@ -1097,6 +1109,7 @@ def disable_auth(request):
 )
   
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def change_auth_status(request):
     """
@@ -1216,6 +1229,7 @@ def change_auth_status(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def enable_auth(request):
     """
@@ -1296,6 +1310,7 @@ def enable_auth(request):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def status_enable_auth(request):
     """
@@ -1390,6 +1405,7 @@ def status_enable_auth(request):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def allProxyUsers(request):
     """
@@ -1488,6 +1504,7 @@ def allProxyUsers(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def change_pwd(request):
     """
@@ -1601,6 +1618,7 @@ def change_pwd(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_user_squid(request):
     """
@@ -1665,7 +1683,7 @@ def add_user_squid(request):
             else:
                 translated_msg = _("Erreur d'intégrité de la base de données.")
 
-            return JsonResponse({"msg": translated_msg}, status=400)
+            return JsonResponse({"error": translated_msg}, status=400)
 
         except Exception as e:
             translated_msg = _(f"{ERROR_MESSAGES_OCCURRED}: {e}")
@@ -1707,6 +1725,7 @@ def add_user_squid(request):
     }
 )
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_user_squid(request, id):
     """
@@ -1842,6 +1861,7 @@ def get_line_from_file(file_path, target_line):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def allGroups(request):
     """
@@ -1952,6 +1972,7 @@ def allGroups(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def changeStausGroup(request):
     """
@@ -2049,6 +2070,7 @@ def changeStausGroup(request):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def readFromFile(request):
     """
@@ -2173,6 +2195,7 @@ def readFromFile(request):
 )
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def changeStausElementsInGroup(request):
     """
@@ -2371,8 +2394,6 @@ def addElement(type, allow_by_auth, status, value):
     file_path = file_selected(allow_by_auth, type)
     if  status == False:
         value = '#'+value
-    else:
-        value = value
     try:
         with open(file_path, 'a') as file:
             file.write(value + '\n')
@@ -2437,6 +2458,7 @@ def addElement(type, allow_by_auth, status, value):
     }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def updateStatusRule(request, id):
     """
@@ -2635,6 +2657,7 @@ def file_selected(status, type):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def allACLFilesWithStatusOfAllElements(request):
     """

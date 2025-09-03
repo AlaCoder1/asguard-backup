@@ -23,8 +23,8 @@ from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
 from .utils import json_to_str_client, json_to_str_server
 from .server_openvpn import install_server_openvpn_in_system, delete_server_openvpn_in_system, update_server_openvpn_in_system
 from .client_openvpn import delete_client_openvpn_in_system, export_client_in_system, install_client_openvpn_in_system, update_client_openvpn_in_system
-
-
+from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_OPENVPN_SERVER = _('openvpn server')
 CONSTANT_OPENVPN_CLIENT = _('openvpn client')
@@ -54,39 +54,7 @@ ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ########################################
 ################ Server ################
 ########################################
-
-@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO GET LIST OF ALL OPENVPN SERVERS",)
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def get_all_server_openvpn(request):
-    """Getting all servers from database"""
-    list_server_openvpn = []
-    if (request.method == 'GET'):
-        list_server_openvpn = get_list_all_server_openvpn()
-        return JsonResponse(list_server_openvpn, safe=False)
-    
-
-@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
-                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
-                     operation_summary="API TO GET AN OPENVPN SERVER",)
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def get_server_openvpn(request, id):
-    """Getting server by id from database"""
-    if (request.method == 'GET'):
-        server = get_one_server_openvpn(id)
-        if server:
-            return JsonResponse(server, safe=False)
-        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
-
-
-@swagger_auto_schema(
-    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
-    operation_summary="API TO CREATE AN OPENVPN SERVER",
-    request_body=Schema(type=TYPE_OBJECT, required=[
+common_request_body=Schema(type=TYPE_OBJECT, required=[
         'name', 'server_mode', 'protocol', 'device_mode', 'interface', 'local_port', 'tls_auth', 
         'ca_name', 'server_cert', 'dh_params_length', 'encryption_algorithm', 
         'auth_digest_algorithm', 'gateway', 'bridge', 'compression', 'type_of_service',
@@ -111,16 +79,16 @@ def get_server_openvpn(request, id):
         'dh_params_length': Schema(type=TYPE_STRING, enum=["2048", "4096"]),
         'encryption_algorithm': Schema(type=TYPE_STRING, example="AES-256-GCM"),
         'auth_digest_algorithm': Schema(type=TYPE_STRING, example="SHA256", pattern=r'\bSHA\d+', description="start with SHA like SHA256"),
-        'ipv4_tunnel_network': Schema(type=TYPE_STRING, example="192.168.10.0/24", description="Tunnel IPv4 address in format address/mask like 10.8.1.0/24"),
+        'ipv4_tunnel_network': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="Tunnel IPv4 address in format address/mask like 10.8.1.0/24"),
         'gateway': Schema(type=TYPE_BOOLEAN, default=True),
         'bridge': Schema(type=TYPE_OBJECT, description="Bridge block only appears if the device mode is TAP", required=['bridge_select'],
                          properties={
                              'bridge_select': Schema(type=TYPE_BOOLEAN, default=False),
                              'bridge_interface': Schema(type=TYPE_INTEGER, example=1, description="ID of the interface bridge, required when selecting bridge"),
-                             'bridge_start_dhcp': Schema(type=TYPE_STRING, example="192.168.10.10", description="Address start of the interface bridge like 192.168.10.254, required when selecting bridge"),
-                             'bridge_end_dhcp': Schema(type=TYPE_STRING, example="192.168.10.30", description="Address end of the interface bridge like 192.168.1.3, required when selecting bridge"),}),
-        'ipv4_local_network': Schema(type=TYPE_STRING, example="10.8.1.0/24", description="IPv4 local network address in format address/mask like 192.168.10.0/24"),
-        'ipv4_remote_network': Schema(type=TYPE_STRING, example="192.168.60.0/24", description="IPv4 remote network address in format address/mask like 192.168.10.0/24"),
+                             'bridge_start_dhcp': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Address start of the interface bridge like 192.168.10.254, required when selecting bridge"),
+                             'bridge_end_dhcp': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Address end of the interface bridge like 192.168.1.3, required when selecting bridge"),}),
+        'ipv4_local_network': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="IPv4 local network address in format address/mask like 192.168.10.0/24"),
+        'ipv4_remote_network': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="IPv4 remote network address in format address/mask like 192.168.10.0/24"),
         'concurrent_connections': Schema(type=TYPE_STRING, example="8", description="Number of concurrent connections"),
         'compression': Schema(type=TYPE_STRING, enum=["no_preference", "disabled", "enabled", "adaptive"]),
         'type_of_service': Schema(type=TYPE_BOOLEAN, default=False),
@@ -130,23 +98,23 @@ def get_server_openvpn(request, id):
         'address_pool': Schema(type=TYPE_OBJECT, description="Address pool block", required=['address_pool_select'],
                                properties={
                                    'address_pool_select': Schema(type=TYPE_BOOLEAN, default=False),
-                                   'address_pool_start': Schema(type=TYPE_STRING, example="10.8.0.2", description="Address pool start required when selecting address pool"),
-                                   'address_pool_end': Schema(type=TYPE_STRING, example="10.8.0.250", description="Address pool end required when selecting address pool"),}),
+                                   'address_pool_start': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Address pool start required when selecting address pool"),
+                                   'address_pool_end': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Address pool end required when selecting address pool"),}),
         'dynamic_ip': Schema(type=TYPE_BOOLEAN, default=False),
         'dns_default_domain': Schema(type=TYPE_OBJECT, description="DNS default domain block", required=['dns_default_domain_select'],
                                      properties={
                                         'dns_default_domain_select': Schema(type=TYPE_BOOLEAN, default=False),
-                                        'dns_default_domain_server': Schema(type=TYPE_STRING, example="8.8.8.8", description="Address default domain server like 8.8.8.8, required when selecting DNS default domain")}),
+                                        'dns_default_domain_server': Schema(type=TYPE_STRING, example=config('SERVER_DNS'), description="Address default domain server like 8.8.8.8, required when selecting DNS default domain")}),
         'dns_servers': Schema(type=TYPE_OBJECT, description="DNS servers block", required=['dns_servers_select'], 
                               properties={
                                   'dns_servers_select': Schema(type=TYPE_BOOLEAN, default=False),
-                                  'dns_server1': Schema(type=TYPE_STRING, example="8.8.8.8", description="Address of DNS server1 required when selecting DNS servers"),
-                                  'dns_server2': Schema(type=TYPE_STRING, example="8.8.4.4", description="Address of DNS server2 Optionally you can set the second DNS server afer setting the first DNS server"),}),
+                                  'dns_server1': Schema(type=TYPE_STRING, example=config('SERVER_DNS'), description="Address of DNS server1 required when selecting DNS servers"),
+                                  'dns_server2': Schema(type=TYPE_STRING, example=config('SERVER_DNS'), description="Address of DNS server2 Optionally you can set the second DNS server afer setting the first DNS server"),}),
         'force_dns_cache_update': Schema(type=TYPE_BOOLEAN, default=False),
         'ntp_servers': Schema(type=TYPE_OBJECT, description="NTP servers block", required=['ntp_servers_select'],
                               properties={
                                   'ntp_servers_select': Schema(type=TYPE_BOOLEAN, default=False),
-                                  'ntp_server1': Schema(type=TYPE_STRING, example="146.185.130.223", description="Address of NTP server1 like 8.8.8.8, required when selecting NTP servers"),
+                                  'ntp_server1': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Address of NTP server1 like 8.8.8.8, required when selecting NTP servers"),
                                   'ntp_server2': Schema(type=TYPE_STRING, example="", description="Address of NTP server2 like 8.8.4.4, Optionally you can set the second NTP server afer setting the first NTP server"),}),
         'client_management': Schema(type=TYPE_OBJECT, description="Client Management Port block", required=['client_management_select'],
                                     properties={
@@ -155,8 +123,45 @@ def get_server_openvpn(request, id):
                                         "password": Schema(type=TYPE_STRING, example="aaaaaAAAAAAAAAAA5452-1123-affdfdfsszhGJMGFKY")}),
         'verbosity_level': Schema(type=TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
         }
-        ))
+        )
+    
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL OPENVPN SERVERS",)
+@api_view(['GET'])
+@require_http_methods(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_server_openvpn(request):
+    """Getting all servers from database"""
+    list_server_openvpn = []
+    if (request.method == 'GET'):
+        list_server_openvpn = get_list_all_server_openvpn()
+        return JsonResponse(list_server_openvpn, safe=False)
+    
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
+                     operation_summary="API TO GET AN OPENVPN SERVER",)
+@api_view(['GET'])
+@require_http_methods(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_server_openvpn(request, id):
+    """Getting server by id from database"""
+    if (request.method == 'GET'):
+        server = get_one_server_openvpn(id)
+        if server:
+            return JsonResponse(server, safe=False)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+
+
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE AN OPENVPN SERVER",
+    request_body=common_request_body)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_server_openvpn(request):
@@ -306,6 +311,7 @@ def create_server_openvpn(request):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DELETE AN OPENVPN SERVER",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_server_openvpn(_, id):
@@ -344,77 +350,9 @@ def delete_server_openvpn(_, id):
     'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     operation_summary="API TO CREATE AN OPENVPN SERVER",
-    request_body=Schema(type=TYPE_OBJECT, required=[
-        'name', 'server_mode', 'protocol', 'device_mode', 'interface', 'local_port', 'tls_auth', 
-        'ca_name', 'server_cert', 'dh_params_length', 'encryption_algorithm', 
-        'auth_digest_algorithm', 'gateway', 'bridge', 'compression', 'type_of_service',
-        'duplicate_connections', 'ipv6', 'inter_clients', 'address_pool', 'dynamic_ip',
-        'dns_default_domain', 'dns_servers', 'force_dns', 'ntp_servers'],
-    properties={
-        'name': Schema(type=TYPE_STRING, example="server_tun"),
-        'description': Schema(type=TYPE_STRING, example="Description of server openvpn"),
-        'server_mode': Schema(type=TYPE_OBJECT, required=['mode'], 
-                              properties={
-                                  'mode': Schema(type=TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
-        'protocol': Schema(type=TYPE_STRING, enum=["udp4", "udp6", "tcp4", "tcp6"]),
-        'device_mode': Schema(type=TYPE_STRING, enum=["tun", "tap"]),
-        'interface': Schema(type=TYPE_STRING, example="WAN", description="Interface name like LAN or WAN or Any"),
-        'local_port': Schema(type=TYPE_STRING, example="1111", description="port number with 4 digits"),
-        'tls_auth': Schema(type=TYPE_OBJECT, description="importing tls key or generating it", required=['generate'], 
-                           properties={
-                               'generate': Schema(type=TYPE_BOOLEAN, default=True),
-                               'tls_key': Schema(type=TYPE_STRING, example="096ed822f21f5a93b4fec867cf0a62be\n34804e5eba4068e75d5f35941cf7d729\n1d7cf01e363fa842928bc2fae30d8dd9\n70893ec134aa7390c24efdf1b6e3ec36\n8e08cc7fcb5714f5a1d11a905f250c90\n09616a0eb77557456a3cf1ea5d843255\n347a9288a290ea5532ee70a39b092079\n9252ab0808c836bc93a9dd4a7be39c7a\n09a29d1aa7c400d92d95edfeac228e50\nb4402d393c8f58f5f32fd805c21d511e\n5207b8a4f1fa47e9d65b24dee4a5a766\na3e26c7008ec4299f4eb798742c929ef\nfae2add7ac94effb8c81603c90478867\n9e48c6f8d1280b78d9c30a84da48c7e8\n64bd18ef83a40c3ac6e9bf71c4d67abf\n81ba92fbc2055eb9c7eba33d3807c9cf", description="tls_key only when generate is false")}),
-        'ca_name': Schema(type=TYPE_STRING, example="ca_create", description="Certificate authority name"),
-        'server_cert': Schema(type=TYPE_STRING, example="cert_server", description="Certificate name"),
-        'dh_params_length': Schema(type=TYPE_STRING, enum=["2048", "4096"]),
-        'encryption_algorithm': Schema(type=TYPE_STRING, example="AES-256-GCM"),
-        'auth_digest_algorithm': Schema(type=TYPE_STRING, example="SHA256", pattern=r'\bSHA\d+', description="start with SHA like SHA256"),
-        'ipv4_tunnel_network': Schema(type=TYPE_STRING, example="192.168.10.0/24", description="Tunnel IPv4 address in format address/mask like 10.8.1.0/24"),
-        'gateway': Schema(type=TYPE_BOOLEAN, default=True),
-        'bridge': Schema(type=TYPE_OBJECT, description="Bridge block only appears if the device mode is TAP", required=['bridge_select'],
-                         properties={
-                             'bridge_select': Schema(type=TYPE_BOOLEAN, default=False),
-                             'bridge_interface': Schema(type=TYPE_INTEGER, example=1, description="ID of the interface bridge, required when selecting bridge"),
-                             'bridge_start_dhcp': Schema(type=TYPE_STRING, example="192.168.10.10", description="Address start of the interface bridge like 192.168.10.254, required when selecting bridge"),
-                             'bridge_end_dhcp': Schema(type=TYPE_STRING, example="192.168.10.30", description="Address end of the interface bridge like 192.168.1.3, required when selecting bridge"),}),
-        'ipv4_local_network': Schema(type=TYPE_STRING, example="10.8.1.0/24", description="IPv4 local network address in format address/mask like 192.168.10.0/24"),
-        'ipv4_remote_network': Schema(type=TYPE_STRING, example="192.168.60.0/24", description="IPv4 remote network address in format address/mask like 192.168.10.0/24"),
-        'concurrent_connections': Schema(type=TYPE_STRING, example="8", description="Number of concurrent connections"),
-        'compression': Schema(type=TYPE_STRING, enum=["no_preference", "disabled", "enabled", "adaptive"]),
-        'type_of_service': Schema(type=TYPE_BOOLEAN, default=False),
-        'duplicate_connections': Schema(type=TYPE_BOOLEAN, default=False),
-        'ipv6': Schema(type=TYPE_BOOLEAN, default=False),
-        'inter_clients': Schema(type=TYPE_BOOLEAN, default=False),
-        'address_pool': Schema(type=TYPE_OBJECT, description="Address pool block", required=['address_pool_select'],
-                               properties={
-                                   'address_pool_select': Schema(type=TYPE_BOOLEAN, default=False),
-                                   'address_pool_start': Schema(type=TYPE_STRING, example="10.8.0.2", description="Address pool start required when selecting address pool"),
-                                   'address_pool_end': Schema(type=TYPE_STRING, example="10.8.0.250", description="Address pool end required when selecting address pool"),}),
-        'dynamic_ip': Schema(type=TYPE_BOOLEAN, default=False),
-        'dns_default_domain': Schema(type=TYPE_OBJECT, description="DNS default domain block", required=['dns_default_domain_select'],
-                                     properties={
-                                        'dns_default_domain_select': Schema(type=TYPE_BOOLEAN, default=False),
-                                        'dns_default_domain_server': Schema(type=TYPE_STRING, example="8.8.8.8", description="Address default domain server like 8.8.8.8, required when selecting DNS default domain")}),
-        'dns_servers': Schema(type=TYPE_OBJECT, description="DNS servers block", required=['dns_servers_select'], 
-                              properties={
-                                  'dns_servers_select': Schema(type=TYPE_BOOLEAN, default=False),
-                                  'dns_server1': Schema(type=TYPE_STRING, example="8.8.8.8", description="Address of DNS server1 required when selecting DNS servers"),
-                                  'dns_server2': Schema(type=TYPE_STRING, example="8.8.4.4", description="Address of DNS server2 Optionally you can set the second DNS server afer setting the first DNS server"),}),
-        'force_dns_cache_update': Schema(type=TYPE_BOOLEAN, default=False),
-        'ntp_servers': Schema(type=TYPE_OBJECT, description="NTP servers block", required=['ntp_servers_select'],
-                              properties={
-                                  'ntp_servers_select': Schema(type=TYPE_BOOLEAN, default=False),
-                                  'ntp_server1': Schema(type=TYPE_STRING, example="146.185.130.223", description="Address of NTP server1 like 8.8.8.8, required when selecting NTP servers"),
-                                  'ntp_server2': Schema(type=TYPE_STRING, example="", description="Address of NTP server2 like 8.8.4.4, Optionally you can set the second NTP server afer setting the first NTP server"),}),
-        'client_management': Schema(type=TYPE_OBJECT, description="Client Management Port block", required=['client_management_select'],
-                                    properties={
-                                        "client_management_select": Schema(type=TYPE_BOOLEAN, default=False),
-                                        "port": Schema(type=TYPE_STRING, example="585", description="Port number like 17562"),
-                                        "password": Schema(type=TYPE_STRING, example="aaaaaAAAAAAAAAAA5452-1123-affdfdfsszhGJMGFKY")}),
-        'verbosity_level': Schema(type=TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
-        }
-        ))
+    request_body=common_request_body)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_server_openvpn(request, id):
@@ -552,6 +490,7 @@ def update_server_openvpn(request, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO Start AN OPENVPN SERVER",)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_server_openvpn(_, id):
@@ -572,6 +511,7 @@ def start_server_openvpn(_, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO Restart AN OPENVPN SERVER",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def restart_server_openvpn(_, id):
@@ -592,6 +532,7 @@ def restart_server_openvpn(_, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO STOP AN OPENVPN SERVER",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_server_openvpn(_, id):
@@ -615,6 +556,7 @@ def stop_server_openvpn(_, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL OPENVPN CLIENTS",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_client_openvpn(request):
@@ -628,6 +570,7 @@ def get_all_client_openvpn(request):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET AN OPENVPN CLIENT",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_client_openvpn(request, id):
@@ -655,7 +598,7 @@ def get_client_openvpn(request, id):
         'protocol': Schema(type=TYPE_STRING, enum=["udp4", "udp6", "tcp4", "tcp6"]),
         'device_mode': Schema(type=TYPE_STRING, enum=["tun", "tap"]),
         'resolv_retry': Schema(type=TYPE_BOOLEAN, default=False),
-        'proxy_host': Schema(type=TYPE_STRING, example="10.1.12.249", description="address of poxy like 10.1.12.249"),
+        'proxy_host': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="address of poxy like 10.1.12.249"),
         'proxy_port': Schema(type=TYPE_STRING, example="1195", pattern=r"\d\d\d\d", default="1194", desciption="port number of 4 digits"),
         'proxy_authentication': Schema(type=TYPE_OBJECT, description="Additional options for proxy authentication", required=['option'],
                                        properties={
@@ -674,8 +617,8 @@ def get_client_openvpn(request, id):
         'dh_params_length': Schema(type=TYPE_STRING, enum=["2048", "4096"]),
         'encryption_algorithm': Schema(type=TYPE_STRING, example="AES-256-GCM"),
         'auth_digest_algorithm': Schema(type=TYPE_STRING, example="SHA256", pattern=r'\bSHA\d+', description="start with SHA like SHA256"),
-        'ipv4_tunnel_network': Schema(type=TYPE_STRING, example="192.168.8.0/24", description="Tunnel IPv4 address in format address/mask"),
-        'ipv4_remote_network': Schema(type=TYPE_STRING, example="192.168.8.0/24", description="IPv4 remote network address in format address/mask"),
+        'ipv4_tunnel_network': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="Tunnel IPv4 address in format address/mask"),
+        'ipv4_remote_network': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="IPv4 remote network address in format address/mask"),
         'limit_outgoing_bandwidth': Schema(type=TYPE_STRING, example="100", description="Number of limit outgoing bandwith"),
         'compression': Schema(type=TYPE_STRING, enum=["no_preference", "disabled", "enabled", "adaptive"]),
         'type_of_service': Schema(type=TYPE_BOOLEAN, default=False),
@@ -685,12 +628,13 @@ def get_client_openvpn(request, id):
         'verbosity_level': Schema(type=TYPE_STRING, example="3", pattern=r'\d', default="3", description="Set a number of verbosity level"),
         'server_remote': Schema(type=TYPE_ARRAY, description="Set the list of servers remote",
                                 items=Schema(type=TYPE_OBJECT, required=['host', 'port'],
-                                             properties={'host': Schema(type=TYPE_STRING, example="10.1.12.37"),
+                                             properties={'host': Schema(type=TYPE_STRING, example=config('IP_ADDRESS')),
                                                          'port': Schema(type=TYPE_INTEGER, example=1194),
                                                         },)),
         }
         ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_client_openvpn(request):
@@ -797,6 +741,7 @@ def create_client_openvpn(request):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)], 
                      operation_summary="API TO DELETE AN OPENVPN CLIENT",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_client_openvpn(_, id):
@@ -835,7 +780,7 @@ def delete_client_openvpn(_, id):
         'protocol': Schema(type=TYPE_STRING, enum=["udp4", "udp6", "tcp4", "tcp6"]),
         'device_mode': Schema(type=TYPE_STRING, enum=["tun", "tap"]),
         'resolv_retry': Schema(type=TYPE_BOOLEAN, default=False),
-        'proxy_host': Schema(type=TYPE_STRING, example="10.1.12.249", description="address of poxy like 10.1.12.249"),
+        'proxy_host': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="address of poxy like 10.1.12.249"),
         'proxy_port': Schema(type=TYPE_STRING, example="1195", pattern=r"\d\d\d\d", default="1194", desciption="port number of 4 digits"),
         'proxy_authentication': Schema(type=TYPE_OBJECT, description="Additional options for proxy authentication", required=['option'],
                                        properties={
@@ -854,8 +799,8 @@ def delete_client_openvpn(_, id):
         'dh_params_length': Schema(type=TYPE_STRING, enum=["2048", "4096"]),
         'encryption_algorithm': Schema(type=TYPE_STRING, example="AES-256-GCM"),
         'auth_digest_algorithm': Schema(type=TYPE_STRING, example="SHA256", pattern=r'\bSHA\d+', description="start with SHA like SHA256"),
-        'ipv4_tunnel_network': Schema(type=TYPE_STRING, example="192.168.8.0/24", description="Tunnel IPv4 address in format address/mask"),
-        'ipv4_remote_network': Schema(type=TYPE_STRING, example="192.168.8.0/24", description="IPv4 remote network address in format address/mask"),
+        'ipv4_tunnel_network': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="Tunnel IPv4 address in format address/mask"),
+        'ipv4_remote_network': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="IPv4 remote network address in format address/mask"),
         'limit_outgoing_bandwidth': Schema(type=TYPE_STRING, example="100", description="Number of limit outgoing bandwith"),
         'compression': Schema(type=TYPE_STRING, enum=["no_preference", "disabled", "enabled", "adaptive"]),
         'type_of_service': Schema(type=TYPE_BOOLEAN, default=False),
@@ -865,12 +810,13 @@ def delete_client_openvpn(_, id):
         'verbosity_level': Schema(type=TYPE_STRING, example="3", pattern=r'\d', default="3", description="Set a number of verbosity level"),
         'server_remote': Schema(type=TYPE_ARRAY, description="Set the list of servers remote",
                                 items=Schema(type=TYPE_OBJECT, required=['host', 'port'],
-                                             properties={'host': Schema(type=TYPE_STRING, example="10.1.12.37"),
+                                             properties={'host': Schema(type=TYPE_STRING, example=config('IP_ADDRESS')),
                                                          'port': Schema(type=TYPE_INTEGER, example=1194),
                                                         },)),
         }
         ))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_client_openvpn(request, id):
@@ -963,6 +909,7 @@ def update_client_openvpn(request, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO EXPORT A CLIENT OPENVPN FROM A SERVER",)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def export_client_openvpn(_, id):
@@ -989,9 +936,10 @@ def export_client_openvpn(_, id):
                         properties={
                             'name': Schema(type=TYPE_STRING, example="gen_client1"),
                             'client_cert': Schema(type=TYPE_STRING, example="cert_client", description="Certificate name from Certificates list with type client"),
-                            'interface_address': Schema(type=TYPE_STRING, example="10.1.12.91", description="Set an interface address for the client to connect to it if the server is configured on interface Any")}
+                            'interface_address': Schema(type=TYPE_STRING, example=config('IP_ADDRESS'), description="Set an interface address for the client to connect to it if the server is configured on interface Any")}
                                                              ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def generate_client_openvpn(request, id):

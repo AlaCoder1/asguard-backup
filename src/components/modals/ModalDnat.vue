@@ -10,6 +10,9 @@
             <span class="headline" v-if="modalMode === 'edit'">
               {{ $t("nat.update_msg_dnat") }}</span
             >
+               <span class="headline" v-if="modalMode === 'copy'">
+            {{ $t("firewall.clone") }}
+          </span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -455,6 +458,12 @@
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
                 {{ $t("buttons.create") }}</span
               >
+                <span
+                    class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'copy'"
+                  >
+                    {{ $t("firewall.cloneBTN") }}
+                  </span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
                 {{ $t("buttons.update") }}</span
               >
@@ -758,9 +767,7 @@ export default {
     );
 
     const populate = (data) => {
-      if (modalMode.value === "edit") {
-        console.log("data*", data);
-
+      if (modalMode.value === "edit" || modalMode.value === "copy") {
         state.id = data.id;
 
         //
@@ -942,9 +949,6 @@ export default {
 
           state.mapedInterface = interfaces;
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -1112,7 +1116,6 @@ export default {
         // }
 
         if (modalMode.value === "edit") {
-          console.log("payload", payload);
           axios
             .put(`/nat/updateDNat/${state.id}`, payload)
             .then((response) => {
@@ -1162,7 +1165,7 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
     const error = computed(() => {

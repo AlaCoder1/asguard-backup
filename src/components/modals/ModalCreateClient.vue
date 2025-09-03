@@ -4,14 +4,14 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> Create New Client </span>
+            <span class="text-h5"> {{$t('openvpn.createNewClient')}} </span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Client Name"
+                    :label="$t('openvpn.clientName')"
                     v-model="state.formData.userName"
                   ></v-text-field>
                   <p
@@ -23,7 +23,8 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
-                    label="Client Certificate"
+                    :label="$t('openvpn.clientCertificate')"
+                    :no-data-text="$t('certificat.certificatlist')"
                     v-model="state.formData.clientCertificate"
                     item-title="name"
                     item-value="id"
@@ -40,7 +41,7 @@
                 <template v-if="addressAny">
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                      label="Address"
+                      :label="$t('openvpn.address')"
                       v-model="state.formData.address"
                     ></v-text-field>
                     <p
@@ -66,7 +67,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Close</span>
+              <span class="text-white pr-3 pl-3">{{
+                              $t("buttons.close")
+                            }}</span>
             </v-btn>
 
             <v-btn
@@ -80,7 +83,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Create</span>
+              <span class="text-white pr-3 pl-3">{{ $t("buttons.create") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -141,6 +144,13 @@ export default {
       rowEditFilter: null,
       id: "",
     });
+
+ const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+  const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
     const rules = computed(() => {
       return {
         formData: {
@@ -148,11 +158,11 @@ export default {
           clientCertificate: { required },
           address: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+             error,
               requiredIf(() => state.rowEditFilter.interface === "Any")
             ),
             isValidlAddress: helpers.withMessage(
-              `Format must be like adresse IP : X.X.X.X`,
+              formaaddress,
               helpers.regex(
                 /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
               )
@@ -174,7 +184,6 @@ export default {
       () => editRow.value,
       (editRow) => {
         state.rowEditFilter = editRow;
-        console.log("rowFilter", state.rowEditFilter);
         state.id = editRow.id;
       }
     );
@@ -204,8 +213,6 @@ export default {
 
       axios.get("/certificates/getAllCertificates").then(
         (response) => {
-          console.log("response.data", response.data);
-
           let mapedListCertif = response.data.filter(
             (i) => i.certificate_type === "client"
           );
@@ -217,9 +224,6 @@ export default {
             };
           });
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -248,12 +252,10 @@ export default {
             client_cert: state.formData.clientCertificate?.name,
           };
         }
-        console.log("payl", payload);
 
         axios
           .post(`/openvpn/generateClientOpenvpn/${state.id}`, payload)
           .then((response) => {
-            console.log("response", response);
             if (response.status == "201") {
               state.openModal = false;
               state.snackbar = true;
@@ -277,7 +279,7 @@ export default {
             }
           });
       } else {
-        console.log("error", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

@@ -267,7 +267,6 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("dataService", data);
 
         serviceId.value = data.id;
         let filtredServ = ServList.value.filter((i) => i.id === data.serviceId);
@@ -295,7 +294,6 @@ export default {
       try {
         servicesObject = JSON.parse(servicesString);
       } catch (error) {
-        console.error("Failed to parse services string:", error);
       }
 
       ServList.value = servicesObject;
@@ -308,9 +306,7 @@ export default {
       let routersObject;
       try {
         routersObject = JSON.parse(routersString);
-        console.log(routersObject);
       } catch (error) {
-        console.error("Failed to parse routers string:", error);
       }
       RouteList.value = routersObject;
     };
@@ -428,7 +424,6 @@ export default {
         //   let routerId = selectedRouter.id;
 
         //   let fullAddress = `${selectedTitle.value}:${address.value}:${port.value}`;
-        //   console.log(serviceId, fullAddress);
         //   const proxyUrl = "https://asguard:3000";
         //   const apiUrl = "/edge/management/v1/terminators";
         //   const response = await axios.post(
@@ -452,7 +447,6 @@ export default {
         //   }, 1000);
         //   emitter.emit("closeTerminatorsModal");
         // } catch (error) {
-        //   console.error("Failed to submit form !!:", error);
         // }
       }
     };

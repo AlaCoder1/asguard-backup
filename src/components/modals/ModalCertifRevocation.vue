@@ -92,8 +92,8 @@ export default {
       modalData: {},
       isModalOpen: false,
       columnCertificats: [
-        { headerName: "certificat", field: "certif", minWidth: 150 },
-        { headerName: "raison", field: "raison", minWidth: 250 },
+        { headerName: this.$t("agGrid.certificat"), field: "certif", minWidth: 150 },
+        { headerName: this.$t("agGrid.raison"), field: "raison", minWidth: 250 },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,

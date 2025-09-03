@@ -147,7 +147,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowData.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -204,13 +203,11 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       switch (action) {
         case "edit":
-          console.log("edit", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           break;
         case "delete":
-          console.log("delete", rowData);
           state.deleteDialog = true;
           state.deletedRow = rowData;
 
@@ -260,7 +257,6 @@ export default {
       axios
         .delete(`/ldap/deleteldap_Server/${state.deletedRow.id}`)
         .then((response) => {
-          console.log("response.data", response.data);
           state.snackbar = true;
           state.color = "success";
           state.textAlert = response.data.msg;

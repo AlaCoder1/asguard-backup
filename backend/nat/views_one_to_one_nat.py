@@ -1,11 +1,13 @@
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext_lazy as _
-from drf_yasg.openapi import Parameter, IN_PATH, TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
+from drf_yasg.openapi import Parameter, IN_PATH, TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from backend.nat.contant_variables import REQUEST_BODY_ONE_TO_ONE_NAT
 from backend.nat.models import OneToOneNat
 from backend.nat.serializers import OneToOneNatSerializer
 from backend.nat.utils import change_position_rule, get_next_nat_handle
@@ -42,6 +44,7 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL OneToOneNat RULES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_one_to_one_nat(_):
@@ -55,6 +58,7 @@ def get_all_one_to_one_nat(_):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO GET AN OneToOneNat RULE",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_one_to_one_nat(_, id):
@@ -66,28 +70,21 @@ def get_one_to_one_nat(_, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE A OneToOneNat RULE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=['source_address', 'translation_address', 'destination_address'],
-        properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask"),
-                    'destination_address': Schema(type=TYPE_STRING, example="51.51.51.0/24", description="format of address/mask or blank for Any"),
-                    'translation_address': Schema(type=TYPE_STRING, example="51.32.100.5/32", description="format of address/mask"),
-                    'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
-                    }
-                    ))
+    request_body=REQUEST_BODY_ONE_TO_ONE_NAT)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_one_to_one_nat(request):
     """Creating a new OneToOneNat rule and adding it to the database"""
     try:
         data = request.data
-        # Check data validity
-        if not check_payload(data):
-            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
         data["source_address"], data["destination_address"], data["translation_address"] = fix_ipv4_address(
             [data["source_address"], data["destination_address"], data["translation_address"]])
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
 
         serializer_one_to_one_nat = OneToOneNatSerializer(data=data)
         if serializer_one_to_one_nat.is_valid():
@@ -127,9 +124,10 @@ def create_one_to_one_nat(request):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO DELETE AN OneToOneNat RULE",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_one_to_one_nat(request, id):
+def delete_one_to_one_nat(_, id):
     """Deleting an one_to_one_nat from database"""
     try:
         one_to_one_nat = OneToOneNat.objects.get(id=id)
@@ -164,6 +162,7 @@ def delete_one_to_one_nat(request, id):
                                 items=Schema(type=TYPE_INTEGER, example=1)),
             }))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_list_one_to_one_nat(request):
@@ -196,32 +195,26 @@ def delete_list_one_to_one_nat(request):
             list_responses.append({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}", "status": 404})
     return JsonResponse(list_responses, safe=False)
 
+
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'},
     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
     operation_summary="API TO CREATE A OneToOneNat RULE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=['source_address', 'translation_address', 'destination_address'],
-        properties={'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-                    'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask"),
-                    'destination_address': Schema(type=TYPE_STRING, example="51.51.51.0/24", description="format of address/mask or blank for Any"),
-                    'translation_address': Schema(type=TYPE_STRING, example="51.32.100.5/32", description="format of address/mask"),
-                    'description': Schema(type=TYPE_STRING, example="Description of One To One NAT", description="description of OneToOneNat rule"),
-                    }
-                    ))
+    request_body=REQUEST_BODY_ONE_TO_ONE_NAT)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_one_to_one_nat(request, id):
     """Updating an OneToOneNat rule"""
     try:
         data = request.data
-        # Check data validity
-        if not check_payload(data):
-            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
         data["source_address"], data["destination_address"], data["translation_address"] = fix_ipv4_address(
             [data["source_address"], data["destination_address"], data["translation_address"]])
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
 
         one_to_one_nat = OneToOneNat.objects.get(id=id)
 
@@ -271,6 +264,7 @@ def update_one_to_one_nat(request, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO START A ONE TO ONE NAT RULE",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_one_to_one_nat(_, id):
@@ -311,6 +305,7 @@ def start_one_to_one_nat(_, id):
                      manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
                      operation_summary="API TO STOP A ONE TO ONE NAT RULE",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_one_to_one_nat(_, id):
@@ -345,6 +340,7 @@ def stop_one_to_one_nat(_, id):
         type=TYPE_OBJECT, required=["new_position"], properties={
             "new_position": Schema(type=TYPE_INTEGER, example="4", description="New position of One To One NAT rule after changing its position")}))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_one_to_one_nat_position(request, id):

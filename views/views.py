@@ -29,6 +29,7 @@ from backend.proxy.views import *
 from backend.proxy.models import *
 from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
+from backend.settings.utils import get_list_settings
 from backend.subscription.models import plan, plansSubscription,plansFeatures,Features
 import ruamel.yaml
 from backend.settings.models import *
@@ -496,6 +497,13 @@ def get_alerts_from_database(request):
             alert_list.append(res[i]['fields'])
     return json.dumps(alert_list)
 
+############### Get Settings Params #################
+
+def get_settings(request):
+    if request.method == 'GET':
+        list_settings = get_list_settings()
+        return list_settings
+
 
 @login_required(login_url='/')
 def user_managment_page(request):
@@ -654,7 +662,9 @@ def setting_page(request):
         network_info.append(i.server_dns)
     time_zone = time_zones(request)
     gateway=gatways_information(request)
-    context = {'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway)}
+    admin_settings=get_settings(request)
+    print({"admin_settings":admin_settings})
+    context = {'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway),"admin_settings":json.dumps(admin_settings)}
     return render(request, 'settings_page.html',context)
 
 
@@ -833,8 +843,10 @@ def logrotate_page(request):
 
 @login_required(login_url='/')
 def double_masque(request):
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'last_subscription':json.dumps(last_subscription)}
     # list_double=get_double_mask(request)
-    return render(request, 'double_masque.html')
+    return render(request, 'double_masque.html',context)
     # return render(request, 'double_mask.html',list_double)
 
 ################## generale information ##################

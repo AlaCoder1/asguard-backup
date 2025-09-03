@@ -87,7 +87,7 @@
             <ag-grid-vue
               id="grid-wrapper"
               domLayout="autoHeight"
-              class="ag-theme-alpine "
+              class="ag-theme-alpine"
               style="width: 100%"
               @grid-ready="onGridReady"
               :columnDefs="columnOneTowOne"
@@ -439,7 +439,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataOneTowOne.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -480,6 +479,12 @@ export default {
                 data-action="edit" title="Edit Server">
                    <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
+                          <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
                 <button
                 class="action-button delete"
                 data-action="delete" title="Delete ">
@@ -503,20 +508,16 @@ export default {
       switch (action) {
         case "show":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
-            console.log("show", rowData);
           }
           break;
         case "edit":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
-            console.log("edit", rowData);
             state.modalMode = "edit";
             state.isModalAreaOpen = true;
             state.editRow = rowData;
@@ -525,15 +526,25 @@ export default {
           break;
         case "delete":
           if (user === "viewer") {
-            console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
-            console.log("delete", rowData);
             state.deleteDialog = true;
             state.deletedRow = rowData;
           }
 
+          break;
+
+        case "copy":
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            state.modalData = {};
+            state.modalMode = "copy";
+            state.isModalAreaOpen = true;
+            state.editRow = rowData;
+          }
           break;
         default:
           break;
@@ -543,7 +554,6 @@ export default {
     const openModalAdd = () => {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -578,7 +588,6 @@ export default {
         .replace(/False/g, "false")
         .replace(/None/g, "null");
       const parsedArray = JSON.parse(validJsonString);
-      console.log("parsedArrayOne", parsedArray);
 
       rowDataOneTowOne.value = parsedArray;
     });
@@ -649,7 +658,6 @@ export default {
         .post(`/nat/deleteOneToOneNat`, payload)
         .then((response) => {
           const results = response.data;
-          console.log("results9", results);
           state.snackbarAlert = true;
           state.textAlertRow = results;
           deleteDialog.value = false;

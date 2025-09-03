@@ -11,6 +11,8 @@ from backend.rules.serializers import RuleSerializer
 from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_UPDATING
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.views.decorators.http import require_http_methods
+from decouple import config
 @swagger_auto_schema(
     method='post',
     operation_summary="API to delete a rule",
@@ -40,6 +42,7 @@ from drf_yasg import openapi
 )
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def delete_rule(request):
     """
@@ -57,7 +60,6 @@ def delete_rule(request):
     if (request.method == 'POST'):
         ids=request.data
         all_response=[]
-        print(ids)
         for id in ids:
             if (Rule.objects.filter(id=id).exists()):
                 rules = Rule.objects.get(id=id)
@@ -106,8 +108,8 @@ def delete_rule(request):
                     enum=["drop", "accept", "reject"],  
                     default="drop"
                     ),
-                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example="10.1.12.69/32"),
-                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example="10.1.12.25/32"),
+                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example=config('IP_ADDRESS')),
+                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example=config('IP_ADDRESS')),
                 'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port',example=22),
                 'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port',example=22,),
                 'protocol': openapi.Schema(
@@ -154,6 +156,7 @@ def delete_rule(request):
 
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def save_rules(request,name_interface):
   """
@@ -182,7 +185,7 @@ def save_rules(request,name_interface):
         dport = None if data.get('dport', None) == "ALL" else data.get('dport', None)
         protocol = None if data.get('protocol', None) == "ALL" else data.get('protocol', None)
         position = index+1
-        print({"position":position})
+        # print({"position":position})
         type_rule = data.get('type_rule', None)
         rule_description= None if data.get('rule_description', None) == "" else data.get('rule_description', None)
         if id_rule is None:
@@ -203,8 +206,8 @@ add_rule_schema = openapi.Schema(
                     enum=["drop", "accept", "reject"],  
                     default="drop"
                     ),
-                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example="10.1.12.69/32"),
-                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example="10.1.12.25/32"),
+                'saddr': openapi.Schema(type=openapi.TYPE_STRING, description='Source address',example=config('IP_ADDRESS')),
+                'daddr': openapi.Schema(type=openapi.TYPE_STRING, description='Destination address',example=config('IP_MASK')),
                 'sport': openapi.Schema(type=openapi.TYPE_STRING, description='Source port',example=22),
                 'dport': openapi.Schema(type=openapi.TYPE_STRING, description='Destination port',example=22,),
                 'protocol': openapi.Schema(
@@ -244,6 +247,7 @@ add_rule_schema = openapi.Schema(
 
 
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_rule(request,name_interface):
     """
@@ -328,6 +332,7 @@ responses={
   },
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_rule(request,name_interface):
     """

@@ -163,7 +163,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege("Waf");
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -310,7 +309,6 @@ export default {
             user !== "default" &&
             last_Subscription.value.includes("WAF")
           ) {
-            console.log("edit", rowData);
             state.modalMode = "edit";
             state.isModalOpen = true;
             state.editRow = rowData;
@@ -361,7 +359,6 @@ export default {
       document.getElementById("app").attributes["last_subscription"].value;
     let parsedArraySubscription = JSON.parse(lastSubscription);
     last_Subscription.value = parsedArraySubscription;
-    console.log("last_Subscription", last_Subscription.value);
 
     emitter.on("closeWafApplicationModal", () => {
       state.isModalOpen = false;
@@ -382,7 +379,6 @@ export default {
         state.modalMode = "create";
         state.isModalOpen = true;
       } else {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       }
@@ -391,7 +387,7 @@ export default {
     const restartNginx = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post(`/waf/restartNginx`);
+      axios.post(`/settings/restartNginx`);
     };
 
     const cancelDelete = () => {

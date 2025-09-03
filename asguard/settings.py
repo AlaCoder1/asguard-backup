@@ -15,6 +15,7 @@ from pathlib import Path
 import os
 import mimetypes
 import warnings
+from decouple import config
 warnings.filterwarnings("ignore")
 mimetypes.add_type("text/css", ".css", True)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -34,7 +35,7 @@ ALLOWED_HOSTS = ['*']
 
 ##appel function to update CSRF_TRUSTED_ORIGINS
 CORS_ALLOWED_ORIGINS = ['https://*']
-GLOBAL_PATH = f'http://{ALLOWED_HOSTS[0]}:8000/'
+GLOBAL_PATH = f'https://{ALLOWED_HOSTS[0]}:8000/'
 # Application definition
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Application definition
@@ -99,6 +100,7 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'backend.managementUsers.language_middleware.SetLanguageMiddleware',
+    'asguard.middleware.UvicornUserLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'asguard.urls'
@@ -125,15 +127,15 @@ ASGI_APPLICATION = 'asguard.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'RouiT?159753?',
-        'HOST': 'localhost',
-        'PORT': 5391,
-        # 'ATOMIC_REQUESTS': True,
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default=5432, cast=int),
     }
 }
 
@@ -220,7 +222,7 @@ SWAGGER_SETTINGS = {
 }
 
 # jwt_auth/settings.py
-# SESSION_COOKIE_AGE = 600
+SESSION_COOKIE_AGE = 30000
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE= True
 SESSION_COOKIE_HTTPONLY = True
@@ -243,12 +245,11 @@ load_dotenv()
 ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
 
-EMAIL_HOST = 'smtp.office365.com'
-EMAIL_PORT = 587
-# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
-# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-EMAIL_HOST_USER = 'it@numeryx.fr' 
-EMAIL_HOST_PASSWORD = 'Dn2k00+5409sut+'
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.office365.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = True  
 
 # Celery configuration
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
@@ -261,3 +262,38 @@ CELERY_TIMEZONE = 'UTC'
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "colored": {
+            "()": "colorlog.ColoredFormatter",
+            "format": "%(log_color)s[%(asctime)s] %(levelname)s | %(message)s",
+            "log_colors": {
+                "DEBUG": "cyan",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red",
+                "CRITICAL": "bold_red",
+            },
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "colored",
+        },
+    },
+    "loggers": {
+        "user_activity": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}

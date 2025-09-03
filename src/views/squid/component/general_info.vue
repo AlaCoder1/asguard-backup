@@ -160,6 +160,7 @@ import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { user_privilege } from "@/mixins/user_privilege.js";
+import { id } from "@/mixins/storage_language.js";
 
 export default {
   components: {
@@ -196,7 +197,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege();
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -254,6 +254,7 @@ export default {
 
           let payload = {
             port: state.proxyPort,
+            user_id: id,
           };
 
           axios
@@ -285,7 +286,7 @@ export default {
               }
             });
         } else {
-          console.log("error", v$.value);
+          console.log("error :", v$.value);
         }
       } else {
         state.isviewModal = true;
@@ -364,7 +365,6 @@ export default {
         document.getElementById("app").attributes["generalInfo"].value;
       const generalInfo = JSON.parse(generalInfoAttribute);
       state.enableState = generalInfo.status;
-      console.log("generalInfo.status", generalInfo.status);
       state.proxyPort = generalInfo.Port;
     };
     onMounted(() => {
@@ -373,7 +373,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value);
     });
 
     const close = () => {

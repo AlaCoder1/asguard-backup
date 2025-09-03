@@ -5,15 +5,20 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("sdwan.createNewArea") }}</span>
+              {{ $t("sdwan.createNewArea") }}</span
+            >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("sdwan.updateArea") }}</span>
+              {{ $t("sdwan.updateArea") }}</span
+            >
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field :label="`${$t('sdwan.enterAreaName')} *`" v-model="state.areaName"></v-text-field>
+                  <v-text-field
+                    :label="`${$t('sdwan.enterAreaName')} *`"
+                    v-model="state.areaName"
+                  ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.areaName.$error">
                     {{ v$.areaName.$errors[0].$message }}
                   </p>
@@ -22,13 +27,25 @@
 
               <v-row class="mt-3">
                 <v-col>
-                  <v-select v-model="state.interfaces" :label="$t('sdwan.listWAN')" item-title="name" item-value="id"
-                    multiple clearable return-object :items="state.mapedInterface"></v-select>
+                  <v-select
+                    v-model="state.interfaces"
+                    :label="$t('sdwan.listWAN')"
+                    :no-data-text="$t('certificat.certificatlist')"
+                    item-title="name"
+                    item-value="id"
+                    multiple
+                    clearable
+                    return-object
+                    :items="state.mapedInterface"
+                  ></v-select>
 
                   <p class="error-feedback mb-5" v-if="v$.interfaces.$error">
                     {{ v$.interfaces.$errors[0].$message }}
                   </p>
-                  <p class="error-feedback mb-5" v-if="state.interfaces.length && !isMoreThanTwo">
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="state.interfaces.length && !isMoreThanTwo"
+                  >
                     {{ $t("sdwan.minimumTwoInterfaces") }}
                   </p>
                 </v-col>
@@ -40,30 +57,56 @@
             <div class="text-start ml-6 mt-3">
               <span class="text-sm">
                 <span class="text-red text-lg">*</span>
-                {{ $t("errors.oblig") }}</span>
+                {{ $t("errors.oblig") }}</span
+              >
             </div>
             <span></span>
             <v-spacer></v-spacer>
-            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F"
-              variant="outlined" @click="closeModal" class="mt-3 btn-add">
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              variant="outlined"
+              @click="closeModal"
+              class="mt-3 btn-add"
+            >
               <span class="pr-3 pl-3" style="color: #213e9f">{{
                 $t("buttons.close")
-                }}</span>
+              }}</span>
             </v-btn>
 
-            <v-btn large rounded outlined label-color="#213E9F" type="submit" color="indigo-darken-3" :rounded="true"
-              variant="flat" class="mt-3 btn-add">
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              type="submit"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 btn-add"
+            >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span>
+                {{ $t("buttons.create") }}</span
+              >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span>
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
 
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -175,9 +218,6 @@ export default {
 
           state.mapedInterface = interfaces;
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -201,8 +241,6 @@ export default {
           name: state.areaName,
           members: nameInterface,
         };
-        console.log("payload", payload);
-
         if (modalMode.value === "edit") {
           axios
             .put(`/sdwan/updateArea/${state.id}`, payload)
@@ -255,7 +293,7 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

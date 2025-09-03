@@ -16,7 +16,7 @@ import string
 import qrcode
 import os
 
-
+import secrets
 # Constants
 CONSTANT_VERIFIFCATION_CODE = _("verification code")
 # Success messages
@@ -66,14 +66,14 @@ def exist_user_email(username):
 
 def show_url(request):
     host = request.get_host()
-    if host.startswith("127"):
-        url="http://"+host
-    else:
-        url="https://"+host
+    # if host.startswith("127"):
+    #     url="https://"+host
+    # else:
+    url="https://"+host
     return url
 
 def generate_verification_code():
-    return ''.join(random.choices(string.digits, k=6))
+    return ''.join(secrets.choice(string.digits) for _ in range(6))
 
 def send_email_to_user(email, code, username):
     qr = qrcode.QRCode(

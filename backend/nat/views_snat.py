@@ -1,11 +1,13 @@
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext_lazy as _
-from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING, Schema
+from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from backend.nat.contant_variables import REQUEST_BODY_SNAT
 from backend.nat.models import SNat
 from backend.nat.serializers import SNatSerializer
 from backend.nat.utils import change_position_rule, get_next_nat_handle
@@ -42,6 +44,7 @@ ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL SNAT RULES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_snat(_):
@@ -54,6 +57,7 @@ def get_all_snat(_):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET AN SNAT RULE",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_snat(_, id):
@@ -65,35 +69,20 @@ def get_snat(_, id):
 @swagger_auto_schema(
     'POST', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE AN SNAT RULE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=[
-            'source_address', 'source_port', 'destination_address', 'destination_port', 
-            'snat_type'],
-        properties={
-            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-            'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
-            'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"], description="required when choosing Static"),
-            'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
-            'source_port': Schema(type=TYPE_STRING, example="80"),
-            'destination_address': Schema(type=TYPE_STRING, example="192.168.30.0/24", description="format of address/mask or blank for Any"),
-            'destination_port': Schema(type=TYPE_STRING, example="443"),
-            'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
-            'translation_address_from': Schema(type=TYPE_STRING, example="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
-            'translation_address_to': Schema(type=TYPE_STRING, example="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
-            'translation_port': Schema(type=TYPE_STRING, example="100", description="Optional when choosing Static"),
-            'description': Schema(type=TYPE_STRING, example="Description of SNAT", description="description of SNAT rule"),
-            }
-            ))
+    request_body=REQUEST_BODY_SNAT)
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_snat(request):
     """Creating a new SNAT rule and adding it to the database"""
     try:
         data = request.data
+        
         # Check data validity
         if not check_payload(data):
             return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
+        
         # Apply correction for ipv4 addresses
         data["source_address"], data["destination_address"] = fix_ipv4_address(
             [data["source_address"], data["destination_address"]])
@@ -151,6 +140,7 @@ def create_snat(request):
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO DELETE AN SNAT RULE",)
 @api_view(['Delete'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_snat(_, id):
@@ -189,6 +179,7 @@ def delete_snat(_, id):
                                 items=Schema(type=TYPE_INTEGER, example=1)),
             }))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_list_snat(request):
@@ -225,26 +216,9 @@ def delete_list_snat(request):
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API TO CREATE AN SNAT RULE", 
-    request_body=Schema(
-        type=TYPE_OBJECT, required=[
-            'source_address', 'source_port', 'destination_address', 'destination_port', 
-            'snat_type'],
-        properties={
-            'interface': Schema(type=TYPE_INTEGER, example=1, description="Id of the interface"),
-            'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
-            'protocol': Schema(type=TYPE_STRING, enum=["udp", "tcp"], description="required when choosing Static"),
-            'source_address': Schema(type=TYPE_STRING, example="10.1.12.0/24", description="format of address/mask or blank for Any"),
-            'source_port': Schema(type=TYPE_STRING, example="80"),
-            'destination_address': Schema(type=TYPE_STRING, example="192.168.30.0/24", description="format of address/mask or blank for Any"),
-            'destination_port': Schema(type=TYPE_STRING, example="443"),
-            'snat_type': Schema(type=TYPE_STRING, enum=["MASQ", "static"]),
-            'translation_address_from': Schema(type=TYPE_STRING, example="51.51.51.5", description="required when choosing Static, format of address like 51.32.100.5"),
-            'translation_address_to': Schema(type=TYPE_STRING, example="51.51.51.10", description="Optional when choosing Static, format of address like 51.32.100.10"),
-            'translation_port': Schema(type=TYPE_STRING, example="100", description="Optional when choosing Static"),
-            'description': Schema(type=TYPE_STRING, example="Description of SNAT", description="description of SNAT rule"),
-            }
-            ))
+    request_body=REQUEST_BODY_SNAT)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_snat(request, id):
@@ -318,6 +292,7 @@ def update_snat(request, id):
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO START AN SNAT RULE",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_snat(_, id):
@@ -338,8 +313,12 @@ def start_snat(_, id):
         if len(list_next_snat) > 0:
             next_snat = list_next_snat.order_by('db_position')[0]
             position_insert = next_snat.rule_number
+        
+        interface_ifname = None
+        if snat.interface:
+            interface_ifname = snat.interface.ifname
         rule_number, _ = create_snat_rule_in_system(
-            snat.interface.ifname, source, destination, snat.protocol, masking, position_insert)
+            interface_ifname, source, destination, snat.protocol, masking, position_insert)
         snat.rule_number = int(rule_number)
 
         snat.rule_status = True
@@ -356,6 +335,7 @@ def start_snat(_, id):
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO STOP AN SNAT RULE",)
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_snat(_, id):
@@ -387,6 +367,7 @@ def stop_snat(_, id):
         type=TYPE_OBJECT, required=["new_position"], properties={
             "new_position": Schema(type=TYPE_INTEGER, example="4", description="New position of SNAT rule after changing its position")}))
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def change_snat_position(request, id):

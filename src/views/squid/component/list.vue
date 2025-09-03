@@ -164,7 +164,6 @@ export default {
     });
     const overlayMessage = computed(() => {
 current_user.value= user_privilege() 
-console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("Proxy")) {
@@ -271,7 +270,6 @@ console.log('current_user',current_user.value)
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRules.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -284,7 +282,7 @@ console.log('current_user',current_user.value)
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
 
-      if (params.data.time_from === "--") {
+      // if (params.data.time_from === "--") {
         eGui.innerHTML = `
         <button
       class="action-button edit"
@@ -298,15 +296,15 @@ console.log('current_user',current_user.value)
           <i class="fas fa-times" style="color: #086eae;"></i>
       </button>
       `;
-      } else {
-        eGui.innerHTML = `
-      <button
-        class="action-button delete"
-        data-action="delete">
-          <i class="fas fa-times" style="color: #086eae;"></i>
-      </button>
-      `;
-      }
+      // else {
+      //   eGui.innerHTML = `
+      // <button
+      //   class="action-button delete"
+      //   data-action="delete">
+      //     <i class="fas fa-times" style="color: #086eae;"></i>
+      // </button>
+      // `;
+      // }
 
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -375,7 +373,6 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
       emitter.on("closeAddRuleModal", () => {
         state.isModalOpenRule = false;
         state.modalDataRule = {};

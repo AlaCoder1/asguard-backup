@@ -28,11 +28,10 @@ class Command(BaseCommand):
             role = kwargs['role']
             if name and pw and role:
                 username = f'{name}'
-                password = f'{pw}'
+                password = kwargs.get('pw') 
                 role = f'{role}'
             role_db = Roles.objects.get(name=role)
             user=User.objects.create(username=username, password=make_password(password), role = role_db)
-            # user=User.objects.create(username=username, password=make_password(password), role = 'root')
             Profile.objects.create(user=user)
             return "user added succesffuly"
         except IntegrityError as e:

@@ -148,7 +148,6 @@ export default {
     initialData(newValue) {
       // React to prop changes
       this.formData = newValue;
-      console.log("Prop changed:", newValue);
     },
     editRow(newValue) {
       this.populate(newValue);
@@ -193,8 +192,6 @@ export default {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-        console.log("token :" + csrfToken);
-        console.log("DataList :" + JSON.stringify(this.DataList));
 
         // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
 
@@ -205,7 +202,6 @@ export default {
         };
 
         if (this.mode == "create") {
-          console.log("params are : " + JSON.stringify(params));
 
           axios
             .post("/groups/createGroup", params)
@@ -228,18 +224,15 @@ export default {
                   setTimeout(() => {
                     location.reload();
                   }, 2000);
-                  console.log(response);
                 }
               },
               (err) => {
                 if (err.response && err.response.status === 401) {
                   const responseData = err.response.data; // Access the response data
-                  console.log("401 Error Response:", responseData);
                   // this.invalid = true ;
                   this.message = responseData.message;
                   // Handle the 401 error here
                 } else {
-                  console.error("Error occurred:", err);
                   // Handle other errors
                 }
               }
@@ -265,7 +258,6 @@ export default {
             .put(`/groups/groupChangeGroupname/${this.groupId}`, payload)
             .then((response) => {
               // if(this.groupNameCheck == this.formData.groupname){
-              //   console.log("response", response);
               //   this.textAlertDanger = ''
               //   this.textAlert = "Group Updated Successfully";
               //   setTimeout(() => {
@@ -293,8 +285,6 @@ export default {
                 }, 2000);
               }
 
-              // Handle the successful response
-              console.log("Resource updated:", response.data);
             })
             .catch((i) => {
               if (i.response.status === 500) {
@@ -309,7 +299,6 @@ export default {
             });
         }
 
-        console.log("submitForm :", this.state.formData);
       }
     },
   },

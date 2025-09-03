@@ -164,7 +164,7 @@ export default {
       modalData: {},
       isModalOpen: false,
       isOpen: null,
-      editRow: {},
+      editRow: null,
       modalMode: "create",
       deletedRow: null,
       loading: false,
@@ -178,7 +178,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege("Waf");
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -237,7 +236,6 @@ export default {
     ]);
 
     // function actionDescription(data) {
-    //   console.log('data', data.data)
     //   const longString = data.data.description;
     //   const chunks = longString.match(/.{1,66}/g);
 
@@ -418,7 +416,6 @@ export default {
             user !== "default" &&
             last_Subscription.value.includes("WAF")
           ) {
-            console.log("description");
             state.isModalShowDescOpen = true;
             state.editRow = rowData;
             state.modalMode = "show";
@@ -465,31 +462,30 @@ export default {
       document.getElementById("app").attributes["last_subscription"].value;
     let parsedArraySubscription = JSON.parse(lastSubscription);
     last_Subscription.value = parsedArraySubscription;
-    console.log("last_Subscription", last_Subscription.value);
 
     emitter.on("closeWafRuleModal", () => {
       state.isModalOpen = false;
       state.isOpen = false;
       state.modalMode = "";
-      state.editRow = {};
+      state.editRow = null;
     });
     emitter.on("closeModalSHOW", () => {
       state.isModalShowAppOpen = false;
       state.isOpen = false;
       state.modalMode = "";
-      state.editRow = {};
+      state.editRow = null;
     });
     emitter.on("closeModalSHOWDescription", () => {
       state.isModalShowDescOpen = false;
       state.isOpen = false;
       state.modalMode = "";
-      state.editRow = {};
+      state.editRow = null;
     });
 
     const restartNginx = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
+      axios.post("/settings/restartNginx");
     };
 
     const openModalAdd = () => {

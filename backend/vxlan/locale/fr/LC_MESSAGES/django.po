@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-15 09:56+0100\n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/vxlan/functions.py:7 backend/vxlan/views.py:18
+#: backend/vxlan/functions.py:7 backend/vxlan/views.py:19
 msgid "Configuration VxLAN"
 msgstr "Configuration VxLAN"
 
-#: backend/vxlan/functions.py:8 backend/vxlan/views.py:22
+#: backend/vxlan/functions.py:8 backend/vxlan/views.py:23
 msgid "Saved"
 msgstr "Sauvegardé"
 
@@ -66,22 +66,22 @@ msgstr "L'ID VXLAN doit être un entier."
 msgid "VXLAN ID must be between "
 msgstr "L'ID VXLAN doit être compris entre "
 
-#: backend/vxlan/views.py:19
+#: backend/vxlan/views.py:20
 msgid "Interface VxLAN"
 msgstr "Interface VxLAN"
 
-#: backend/vxlan/views.py:23
+#: backend/vxlan/views.py:24
 msgid "is created"
 msgstr "est créé"
 
-#: backend/vxlan/views.py:24
+#: backend/vxlan/views.py:25
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/vxlan/views.py:28
+#: backend/vxlan/views.py:29
 msgid "Already exist"
 msgstr "Existe déjà"
 
-#: backend/vxlan/views.py:29
+#: backend/vxlan/views.py:30
 msgid "does not exist"
 msgstr "n'existe pas"

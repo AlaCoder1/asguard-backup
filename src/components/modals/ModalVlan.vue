@@ -235,9 +235,6 @@ export default {
 
           state.listInterfaces = interfaces;
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -268,7 +265,6 @@ export default {
           vlan_priority: state.vlanPriority,
           description: state.description,
         };
-        console.log("payload", payload);
 
         if (modalMode.value === "edit") {
           axios
@@ -322,7 +318,7 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

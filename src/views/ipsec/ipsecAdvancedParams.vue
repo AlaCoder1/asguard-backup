@@ -677,7 +677,6 @@ export default {
     });
     const overlayMessage = computed(() => {
       current_user.value = user_privilege("Ipsec");
-      console.log("current_user", current_user.value);
       if (current_user.value === "viewer" || current_user.value === "default") {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
@@ -994,9 +993,6 @@ export default {
           let resultObject = interfaces.filter((i) => i.name === "WAN");
           state.generalinterface = resultObject[0];
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
     const getPublickKey = () => {
@@ -1040,9 +1036,6 @@ export default {
 
           CertificateList.value = certif.filter((i) => i.is_private_key);
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -1075,9 +1068,6 @@ export default {
           var combinedArray = [...listInter, ...interfaces];
           mapedInterfaceType.value = combinedArray;
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -1086,14 +1076,12 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value);
       getInterface();
       getPublickKey();
       getAllCertif();
       getInterfaceType();
 
       emitter.on("edit-serverIpsec", (data) => {
-        console.log("data", data);
         if (data) state.isEditState = "edit";
         state.id = data.id;
         //General information Phase 1
@@ -1284,7 +1272,6 @@ export default {
 
         state.lifetimeExchange = data.lifetime_ph2;
 
-        console.log("state", state);
       });
     });
 
@@ -1384,7 +1371,6 @@ export default {
           state.isDefaultRemote = false;
         }
         if (state.mode?.slug === "Transport") {
-          console.log("Transport oui0");
 
           state.typeRemoteNetwork = "";
           state.type = "";
@@ -1579,7 +1565,6 @@ export default {
           state.loading = true;
           state.isLoadingDialogue = true;
           if (state.isEditState === "edit") {
-            console.log("payload", payload);
             axios
               .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
               .then((response) => {
@@ -1641,7 +1626,7 @@ export default {
               });
           }
         } else {
-          console.log("error", v$.value);
+          console.log("error :", v$.value);
         }
       } else {
         state.isviewModal = true;

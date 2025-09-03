@@ -487,7 +487,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataSnat.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -523,6 +522,12 @@ export default {
               data-action="edit" title="Edit Server">
                  <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
               </button>
+                <button
+          class="action-button copy"
+          data-action="copy"
+          >
+            <i class="mdi mdi-content-duplicate" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
               <button
               class="action-button delete"
               data-action="delete" title="Delete ">
@@ -545,7 +550,6 @@ export default {
       switch (action) {
         case "edit":
           if (user !== "viewer") {
-            console.log("edit", rowData);
             state.modalMode = "edit";
             state.isModalAreaOpen = true;
             state.editRow = rowData;
@@ -556,12 +560,23 @@ export default {
           break;
         case "delete":
           if (user !== "viewer") {
-            console.log("delete", rowData);
             state.deleteDialog = true;
             state.deletedRow = rowData;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
+          }
+          break;
+
+            case "copy":
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            state.modalData = {};
+            state.modalMode = "copy";
+            state.isModalAreaOpen = true;
+            state.editRow = rowData;
           }
           break;
         default:
@@ -573,25 +588,20 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/network/AllInterfaces").then(
-        (response) => {
-          let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
-          );
+      axios.get("/network/AllInterfaces").then((response) => {
+        let filtredInterface = response.data.filter(
+          (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+        );
 
-          let interfaces = filtredInterface.map((i) => {
-            return {
-              id: i.id,
-              name: i.name_interface,
-            };
-          });
+        let interfaces = filtredInterface.map((i) => {
+          return {
+            id: i.id,
+            name: i.name_interface,
+          };
+        });
 
-          state.mapedInterface = interfaces;
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+        state.mapedInterface = interfaces;
+      });
     };
 
     const openModalAdd = () => {
@@ -723,7 +733,6 @@ export default {
         .post(`/nat/deleteSNat`, payload)
         .then((response) => {
           const results = response.data;
-          console.log("results9", results);
           state.snackbarAlert = true;
           state.textAlertRow = results;
           deleteDialog.value = false;

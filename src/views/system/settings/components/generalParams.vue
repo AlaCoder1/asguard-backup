@@ -32,19 +32,16 @@
 
           <v-text-field
             :label="$t('settings.Hostname')"
-            density="compact"
             v-model="state.hostName"
           ></v-text-field>
 
           <v-text-field
             :label="$t('settings.Domain')"
-            density="compact"
             v-model="state.domain"
           ></v-text-field>
-       
+
           <v-select
             :label="$t('settings.Timezone')"
-            density="compact"
             v-model="state.timeZone"
             item-title="name"
             item-value="id"
@@ -256,7 +253,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataGateway.value);
       } else {
-        console.error("Grid API.");
       }
 
       state.timeZoneList = parsedArray;
@@ -288,7 +284,6 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataGateway.value);
         } else {
-          console.error("Grid API.");
         }
       });
 
@@ -323,7 +318,6 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataGateway.value);
         } else {
-          console.error("Grid API.");
         }
       });
     });
@@ -395,7 +389,7 @@ export default {
             }
           });
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 
@@ -405,7 +399,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataGateway.value);
       } else {
-        console.error("Grid API.");
       }
     };
 
@@ -446,7 +439,7 @@ export default {
           break;
         case "delete":
           const index = rowDataGateway.value.findIndex(
-            (item) => item.id === rowData.id
+            (item) => item.uuid === rowData.uuid
           );
 
           if (index !== -1) {
@@ -454,7 +447,6 @@ export default {
             if (gridApi.value) {
               gridApi.value.setRowData(rowDataGateway.value);
             } else {
-              console.error("Grid API.");
             }
           }
           break;
@@ -476,9 +468,7 @@ export default {
       return t("errors.valueRequired");
     });
     const rules = computed(() => {
-      return {
-    
-      };
+      return {};
     });
 
     const v$ = useValidate(rules, state);

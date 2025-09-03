@@ -669,9 +669,6 @@ export default {
             (i) => i.is_private_key
           );
         },
-        (error) => {
-          console.log(error);
-        }
       );
     };
 
@@ -737,7 +734,6 @@ export default {
         state.type = data.application_type;
         state.applicationName = data.name;
         state.value = data.application_value;
-        console.log("application_value***", data.application_value);
         state.description = data.description;
         state.port = data.application_port;
 
@@ -785,7 +781,7 @@ export default {
     const restartNginx = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios.post("/waf/restartNginx");
+      axios.post("/settings/restartNginx");
     };
 
     const submitForm = async () => {
@@ -929,7 +925,6 @@ export default {
     const getAllcountryCode = async (countries) => {
       // await axios.get("https://countriesnow.space/api/v0.1/countries/iso").then(
       //   (response) => {
-      //     console.log("re", response);
 
       //     let countryList = response.data.data.map((element) => {
       //       return {
@@ -942,9 +937,6 @@ export default {
       //     );
       //     state.countriesList = countryList;
       //   },
-      //   (error) => {
-      //     console.log(error);
-      //   }
       // );
 
       let countryList = countries.map((element) => {

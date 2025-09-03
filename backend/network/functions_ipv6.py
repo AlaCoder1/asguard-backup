@@ -103,8 +103,8 @@ rdm,keyname,royaume,keyid,secret,expire):
         id_assoc_statement_prefix = "id-assoc pd "
         if id_assoc_pd.isdigit():
             id_assoc_statement_prefix += id_assoc_pd
-        else:
-            id_assoc_statement_prefix += id_assoc_pd
+        # else:
+        #     id_assoc_statement_prefix += id_assoc_pd
         id_assoc_statement_prefix += " {\n"
         if ipv6_prefix is not None and plifetime.isdigit() or plifetime == 'infinity':
             id_assoc_statement_prefix += " prefix " + ipv6_prefix +" "+ plifetime
@@ -119,7 +119,7 @@ rdm,keyname,royaume,keyid,secret,expire):
         if re.search(r'(hmac(-)?md5|HMAC(-)?MD5)',algorithm):
            authentication_statement+= " algorithm {};\n".format(algorithm)
         if rdm=="monocounter":
-            authentication_statement+" rdm {};\n".format(rdm)
+            authentication_statement+=" rdm {};\n".format(rdm)
         authentication_statement+="};\n"    
     
     key_info_statement=""

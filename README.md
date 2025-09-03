@@ -79,3 +79,9 @@ python manage.py init_logrotate_timer
 
 ### init cron for logs firewall
 python manage.py init_log_firewall
+
+### init default interface configuration 
+python manage.py init_interface_settings
+
+### init settings general
+python manage.py init_settings

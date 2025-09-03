@@ -13,7 +13,7 @@ from backend.ztna.models import Identities, Relays, RelaysPolicy, Services, Serv
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES
 from backend.ztna.serializers import RelaysPolicySerializer, RelaysPolicySerializerUpdate, ServicesPolicySerializer, ServicesPolicySerializerUpdate, ServicesRelaysPolicySerializer, ServicesRelaysPolicySerializerUpdate
 from backend.ztna.utils import get_ztna_token_from_system
-
+from django.views.decorators.http import require_http_methods
 
 # Constants
 CONSTANT_EDGE_ROUTER_POLICIE = _('Relay Policy')
@@ -35,6 +35,7 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA EDGE ROUTERS POLICIES FROM OPENZITI API",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_edge_routers_policies_from_openziti(request):
@@ -52,6 +53,7 @@ def get_edge_routers_policies_from_openziti(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA EDGE ROUTERS POLICIES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_edge_routers_policies(request):
@@ -83,6 +85,7 @@ def get_edge_routers_policies(request):
             )
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_edge_routers_policies(request):
@@ -126,6 +129,7 @@ def add_edge_routers_policies(request):
                         relay_policy_serializer.save()
                         return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
                     return JsonResponse({"error": list(relay_policy_serializer.errors.values())[0][0]}, status=400)
+            return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
@@ -134,6 +138,7 @@ def add_edge_routers_policies(request):
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'},
                      operation_summary="API TO DELETE A ZTNA EDGE ROUTER POLICY",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_edge_routers_policies(request, id):
@@ -172,6 +177,7 @@ def delete_edge_routers_policies(request, id):
             )
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_edge_routers_policies(request, id):
@@ -221,6 +227,7 @@ def update_edge_routers_policies(request, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA SERVICES POLICIES FROM OPENZITI API",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_services_policies_from_openziti(request):
@@ -238,6 +245,7 @@ def get_services_policies_from_openziti(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA SERVICES POLICIES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_services_policies(request):
@@ -271,6 +279,7 @@ def get_services_policies(request):
             )
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_services_policies(request):
@@ -321,6 +330,7 @@ def add_services_policies(request):
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'},
                      operation_summary="API TO DELETE A ZTNA ROUTERS POLICIES",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_services_policies(request, id):
@@ -360,6 +370,7 @@ def delete_services_policies(request, id):
             )
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_services_policies(request, id):
@@ -412,6 +423,7 @@ def update_services_policies(request, id):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA SERVICES EDGE ROUTERS POLICIES FROM OPENZITI API",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_services_edge_routers_policies_from_openziti(request):
@@ -429,6 +441,7 @@ def get_services_edge_routers_policies_from_openziti(request):
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
                      operation_summary="API TO GET LIST OF ALL ZTNA SERVICES EDGE ROUTERS POLICIES",)
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_services_edge_routers_policies(request):
@@ -461,6 +474,7 @@ def get_services_edge_routers_policies(request):
             )
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_services_edge_routers_policies(request):
@@ -511,6 +525,7 @@ def add_services_edge_routers_policies(request):
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'},
                      operation_summary="API TO DELETE A ZTNA SERVICES EDGE ROUTERS POLICIES",)
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_services_edge_routers_policies(request, id):
@@ -549,6 +564,7 @@ def delete_services_edge_routers_policies(request, id):
             )
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_services_edge_routers_policies(request, id):

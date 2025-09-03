@@ -9,7 +9,7 @@ from drf_yasg import openapi
 from rest_framework.authentication import SessionAuthentication
 from django.http import JsonResponse
 from .functions import get_compr_ratio, get_nft_ip_addresses, is_address_in_subnet, run_command
-
+from django.views.decorators.http import require_http_methods
 
 CONSTANT_DOUBLE=_("Double Mask")
 SUCCESS_MESSAGES_ACTIVE=_("is activated.")
@@ -26,6 +26,7 @@ SUCCESS_MESSAGES_DEACTIVE=_("is deactivated.")
     }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def activate_double_mask(request):
     """
@@ -59,6 +60,7 @@ def activate_double_mask(request):
     }
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def deactivate_double_mask(request):
     """
@@ -90,6 +92,7 @@ def deactivate_double_mask(request):
 
 
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_double_mask(request):
     """

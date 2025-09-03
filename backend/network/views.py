@@ -18,6 +18,8 @@ from django.core import serializers
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.views.decorators.http import require_http_methods
+from decouple import config
 # Constants
 CONSTANT_INTERFACE_NETWORK = _('Interface')
 CONSTANT_INTERFACE_CONNECTION = _('Connection')
@@ -79,7 +81,7 @@ WARNING_CONNECTION=_("You need to delete the interface and set it up again")
                     'ip_address4': openapi.Schema(
                         type=openapi.FORMAT_IPV4,
                         description='IPv4 address (STATIC only)',
-                        example='10.1.12.70'
+                        example=config('IP_ADDRESS')
                     ),
                     'netmask4': openapi.Schema(
                         type=openapi.TYPE_INTEGER,
@@ -92,7 +94,7 @@ WARNING_CONNECTION=_("You need to delete the interface and set it up again")
                             'value': openapi.Schema(
                                 type=openapi.FORMAT_IPV4,
                                 description='IPv4 gateway address (STATIC only)',
-                                example='10.1.12.1'
+                                example=config('IP_ADDRESS')
                             )
                         }
                     ),
@@ -106,7 +108,7 @@ WARNING_CONNECTION=_("You need to delete the interface and set it up again")
                     'alias_add': openapi.Schema(
                         type=openapi.FORMAT_IPV4,
                         description='Alias IPv4 address (DHCP only)',
-                        example='192.5.5.215'
+                        example=config('IP_ADDRESS')
                     ),
                     'alias_mask': openapi.Schema(
                         type=openapi.TYPE_INTEGER,
@@ -116,7 +118,7 @@ WARNING_CONNECTION=_("You need to delete the interface and set it up again")
                     'reject': openapi.Schema(
                         type=openapi.FORMAT_IPV4,
                         description='Rejected IPv4 address (DHCP only)',
-                        example='192.33.137.209'
+                        example=config('IP_ADDRESS')
                     ),
                     'hostname': openapi.Schema(
                         type=openapi.TYPE_STRING,
@@ -200,6 +202,7 @@ WARNING_CONNECTION=_("You need to delete the interface and set it up again")
 
 
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 def conf(request,name_interface): 
     """ API to configure interface 
@@ -296,6 +299,7 @@ def conf(request,name_interface):
     }
 )
 @api_view(['DELETE'])
+@require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_interface(request,id):
     """
@@ -343,8 +347,9 @@ def delete_interface(request,id):
     }
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])         
-def AllInterfaces(request):
+def AllInterfaces(_):
     """
     API to get all interfaces from the database.
 
@@ -356,19 +361,24 @@ def AllInterfaces(request):
     
     """
     list_interface = []
-    if (request.method == 'GET'):
-        interfaces = Interface.objects.all()
-        interfaceDict = serializers.serialize("json", interfaces)
-        res = json.loads(interfaceDict)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            list_interface.append(res[i]['fields'])
-        # return a Json response
-        return JsonResponse(list_interface, safe=False)
+    interfaces = Interface.objects.all()
+    interfaceDict = serializers.serialize("json", interfaces)
+    res = json.loads(interfaceDict)
+    for interface in res:
+        interface.pop('model')
+        id = interface['pk']
+        interface.pop('pk')
+        interface['fields']['id'] = id
+        try:
+            interface["fields"]["ip_address"] = IP4Config.objects.get(interface=id).ip_address
+        except IP4Config.DoesNotExist:
+                interface["fields"]["ip_address"] = None
+        list_interface.append(interface['fields'])
+    # return a Json response
+    return JsonResponse(list_interface, safe=False)
+         
     
+@require_http_methods(['GET'])
 def GetInformationsByInterface(request,name_interface):
     """" function to get infomation about each interface"""
     info={}

@@ -13,6 +13,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.decorators.http import require_http_methods
 # Constants
 CONSTANT_GROUPE_NAME= _('Groupe name')
 CONSTANT_GROUPE_DESCRIPTION= _('Groupe description')
@@ -34,6 +35,7 @@ DOES_NOT_EXIST = _("does not exist")
     responses={200: openapi.Response("List of groups", GroupSerializer(many=True))}
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getAllGroups(request):
@@ -58,6 +60,7 @@ def getAllGroups(request):
     responses={200: openapi.Response("Group details", GroupSerializer())}
 )
 @api_view(['GET'])
+@require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getGroup(request, id):
@@ -92,6 +95,7 @@ def getGroup(request, id):
     }
 )
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def createGroup(request):
@@ -121,6 +125,7 @@ def createGroup(request):
                      operation_summary="API TO DELETE Group",)
 # API to delete group
 @api_view(['DELETE'])
+@require_http_methods(['DELTE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def deleteGroup(request, id):
@@ -172,6 +177,7 @@ def deleteGroup(request, id):
     },
 )
 @api_view(['PUT'])
+@require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def changeGroupname(request, id):

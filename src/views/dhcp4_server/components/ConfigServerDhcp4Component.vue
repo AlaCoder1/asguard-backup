@@ -424,7 +424,6 @@ export default {
     state.subnet_addr = props.configInfo.subnet_addr;
     state.subnet_mask = props.configInfo.subnet_mask;
     state.available_range = props.configInfo.available_range;
-    console.log("state.available_range", state.available_range);
     state.range_from = props.configInfo.range_from;
     state.range_to = props.configInfo.range_to;
     state.dns_server = props.configInfo.dns_server;
@@ -449,7 +448,6 @@ export default {
     const addRow = () => {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -461,7 +459,6 @@ export default {
     const removeRow = (index) => {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -502,7 +499,7 @@ export default {
           if (gridApi.value) {
             gridApi.value.setRowData(rowDataRanges.value);
           } else {
-            console.error("Grid API.");
+            
           }
         }
       });
@@ -534,7 +531,7 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataRanges.value);
         } else {
-          console.error("Grid API.");
+          
         }
       });
 
@@ -563,7 +560,7 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRanges.value);
       } else {
-        console.error("Grid API.");
+        
       }
     });
 
@@ -609,7 +606,6 @@ export default {
     const openModalAdd = () => {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -629,7 +625,7 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRanges.value);
       } else {
-        console.error("Grid API.");
+        
       }
     };
 
@@ -659,7 +655,6 @@ export default {
         switch (action) {
           case "edit":
             if (user === "viewer") {
-              console.log("View Mode");
               state.isviewModal = true;
               state.viewModal = true;
             } else {
@@ -676,7 +671,6 @@ export default {
             break;
           case "delete":
             if (user === "viewer") {
-              console.log("View Mode");
               state.isviewModal = true;
               state.viewModal = true;
             } else {
@@ -689,7 +683,7 @@ export default {
                 if (gridApi.value) {
                   gridApi.value.setRowData(rowDataRanges.value);
                 } else {
-                  console.error("Grid API.");
+                  
                 }
               }
             }
@@ -722,7 +716,6 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (user === "viewer") {
-        console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
       } else {
@@ -752,7 +745,6 @@ export default {
             return;
           }
           let dup = hasDuplicates(state.rows);
-          console.log("dup", dup);
           if (dup) {
             // state.snackbar = true;
             // state.color = "error";
@@ -820,7 +812,6 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "error";
-                console.log("i.response.data.msg", i.response.data.msg);
                 state.textAlert = i.response.data.msg;
                 setTimeout(() => {
                   state.snackbar = false;
@@ -828,7 +819,7 @@ export default {
               }
             });
         } else {
-          console.log("error", v$.value);
+          console.log("error :", v$.value);
 
           var hasEmptyElement = state.rows.some(hasEmptyProperty);
 

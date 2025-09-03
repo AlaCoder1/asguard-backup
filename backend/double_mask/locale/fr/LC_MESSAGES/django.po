@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-26 14:02+0000\n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,10 +30,10 @@ msgstr "est activé."
 msgid "is deactivated."
 msgstr "est désactivé."
 
-#: backend/double_mask/views.py:49
+#: backend/double_mask/views.py:50
 msgid "An error occurred while activating Double Mask."
 msgstr "Une erreur s'est produite lors de l'activation du Double Masque."
 
-#: backend/double_mask/views.py:87
+#: backend/double_mask/views.py:89
 msgid "An error occurred while deactivating Double Mask."
 msgstr "Une erreur s'est produite lors de la désactivation du Double Masque."

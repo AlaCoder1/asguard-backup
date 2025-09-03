@@ -167,7 +167,6 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("daatta", data);
         state.id = data.id;
         state.roles = data.name;
         state.privileges = "";
@@ -207,7 +206,6 @@ export default {
           name: state.roles,
           fonctionalities: JSON.stringify(state.privileges).replace(/"/g, "'"),
         };
-        console.log("payload", payload);
         if (modalMode.value === "edit") {
           axios
             .put(`/users/modifyRole/${state.id}`, payload)
@@ -259,7 +257,7 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
+        console.log("error :", v$.value);
       }
     };
 

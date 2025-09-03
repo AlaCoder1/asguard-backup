@@ -60,7 +60,7 @@ Example Usage:
 
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.decorators import api_view,permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import login, logout
 from django.conf import settings
@@ -85,7 +85,8 @@ from .models import VerificationCode
 from backend.managementUsers.models import User, Profile, Roles
 from backend.LdapServer.models import ADServer
 from backend.subscription.models import plan
- 
+from django.views.decorators.http import require_http_methods
+
 # Constants
 CONSTANT_USER_EMAIL = _("Email")
 CONSTANT_VERIFIFCATION_CODE = _("verification code")
@@ -117,6 +118,7 @@ ERROR_MESSAGES_EXPIRED = _("has expired")
         }
                      ))
 @api_view(['POST'])
+@require_http_methods(['POST'])
 @permission_classes([AllowAny])
 def authentication(request):
     """
@@ -240,7 +242,8 @@ def authentication(request):
                      security=[{"session_auth": []}],  # Specify the security requirement
                      operation_summary="Summary of your API endpoint",
                      operation_description="Description of your API endpoint")
-@api_view(['GET'])
+@api_view(['GET'])  
+@require_http_methods(['GET'])
 @permission_classes([AllowAny])
 def logout_view(request):
     """
@@ -259,7 +262,7 @@ def logout_view(request):
         - 200: Logout successful.
 
     Decorators:
-        - `@api_view(['GET'])`: Restricts the view to handle only GET requests.
+        - `@require_http_methods(['GET'])`: Restricts the view to handle only GET requests.
         - `@permission_classes([AllowAny])`: Allows access to all users, authenticated or not.
 
     Dependencies:
@@ -381,7 +384,8 @@ def logout_view(request):
 #         return JsonResponse({'error': str(e)})
 
  
-@csrf_exempt
+# @csrf_exempt
+@require_http_methods(["POST"])
 def verify_code(request,id):
     """
     Verifies a user's authentication code and logs them in if valid.
@@ -440,7 +444,8 @@ def verify_code(request,id):
             return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@csrf_exempt
+# @csrf_exempt
+@require_http_methods(["POST"])
 def resend_verification_code(request,id):
     """
     Resends a new verification code to the user's email.

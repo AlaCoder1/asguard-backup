@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 14:26+0000\n"
+"POT-Creation-Date: 2025-08-29 23:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -95,9 +95,15 @@ msgid "System error in up ipsec"
 msgstr "Erreur système lors de up IPsec"
 
 #: backend/ipsec/views.py:43
+#, fuzzy
+#| msgid "System error in creating"
+msgid "System error in changing status of"
+msgstr "Erreur système lors de la changement de status de"
+
+#: backend/ipsec/views.py:44
 msgid "does not exist"
 msgstr "n'existe pas"
 
-#: backend/ipsec/views.py:44
+#: backend/ipsec/views.py:45
 msgid "Invalid data"
 msgstr "Données invalides"

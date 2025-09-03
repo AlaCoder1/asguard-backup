@@ -81,7 +81,6 @@ export default {
   },
   mounted(){
     // let test = this.$el.attributes['users'] ? this.$el.attributes['users'].value : '';
-    console.log('isd',document.getElementById('app').attributes['users'].value)
   },
   methods: {
     navigateUrl() {

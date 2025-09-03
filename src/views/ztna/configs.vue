@@ -174,7 +174,6 @@ export default {
     });
     const overlayMessage = computed(() => {
 current_user.value= user_privilege('Ztna') 
-console.log('current_user',current_user.value)
   if (current_user.value === "viewer" || current_user.value === "default") {
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("ZTNA")) {
@@ -242,7 +241,6 @@ console.log('current_user',current_user.value)
       try {
         configsObject = JSON.parse(configsString);
       } catch (error) {
-        console.error("Failed to parse configs string:", error);
         configsObject = { data: [] };
       }
       configs.value = configsObject;
@@ -421,7 +419,6 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
       emitter.on("closeInterceptModal", () => {
         state.isModalInterceptOpen = false;
         state.isOpen = false;

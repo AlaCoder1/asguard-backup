@@ -256,7 +256,6 @@ export default {
       getInterface();
 
       emitter.on("list-Interface", (data) => {
-        console.log("data", data);
         state.rowList = data;
       });
     });
@@ -330,37 +329,30 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/network/AllInterfaces").then(
-        (response) => {
-          let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
-          );
+      axios.get("/network/AllInterfaces").then((response) => {
+        let filtredInterface = response.data.filter(
+          (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+        );
 
-          let interfaces = filtredInterface.map((i) => {
-            return {
-              id: i.id,
-              name: i.name_interface,
-              ifname: i.ifname,
-            };
-          });
+        let interfaces = filtredInterface.map((i) => {
+          return {
+            id: i.id,
+            name: i.name_interface,
+            ifname: i.ifname,
+          };
+        });
 
-          state.mapedInterface = interfaces;
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+        state.mapedInterface = interfaces;
+      });
     };
 
     // watchEffect(() => {
     //   state.rowList = rowDataList.value;
-    //   console.log("state.rowList ", state.rowList);
     // });
 
     // watch(
     //   () => rowDataList.value,
     //   (val) => {
-    //     console.log("valList", val);
     //   },
     //   { immediate: true },
     //   { deep: true }
@@ -491,8 +483,6 @@ export default {
 
         closeModal();
         v_interface$.value.$reset();
-      } else {
-        console.log("v_interface$", v_interface$.value);
       }
     };
 

@@ -198,11 +198,13 @@ import axios from "axios";
 import { getCookie } from "@/mixins/csrftoken.js";
 import VueApexCharts from "vue3-apexcharts";
 import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "DoubleMaskComponent",
   components: {
     apexchart: VueApexCharts,
+    VButton,
   },
 
   setup() {
@@ -404,7 +406,6 @@ export default {
         return ` ${t("profil.NoPermission")} <br /> ${t(
           "profil.ContactAdmin"
         )}`;
-       
       }
     });
 

@@ -734,7 +734,7 @@
     "servicerouterpolUpdated": "Service relay policy updated successfully",
     "ztnadate": "Date",
     "ztnatime": "Time",
-    "namerelay": "Relay name must follow the format: relay_name.relay"
+    "namerelay": "Relay name must follow the format: exemple.relay"
   },
 
   "titleAgGrid": {

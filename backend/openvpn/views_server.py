@@ -343,56 +343,52 @@ def update_server_openvpn(request, id):
         ntp_servers = data.get('ntp_servers', '')
         client_management = data.get('client_management')
         server.verb = data.get('verbosity_level', '')
+
         if server.interface != "Any":
             server.interface = Interface.objects.get(name_interface=server.interface)
             interface_address = IP4Config.objects.get(interface_id=server.interface)
             data["interface_address"] = interface_address.ip_address
 
+        server.bridge_interface = None
+        server.bridge_start_dhcp = None
+        server.bridge_end_dhcp = None
         if bridge.get('bridge_select', ''):
             server.bridge_interface = bridge.get('bridge_interface', '')
             server.bridge_start_dhcp = bridge.get('bridge_start_dhcp', '')
             server.bridge_end_dhcp = bridge.get('bridge_end_dhcp', '')
             bridge_interface_address = IP4Config.objects.get(interface_id=server.bridge_interface)
             data["bridge_interface_address"] = f'{bridge_interface_address.ip_address}/{bridge_interface_address.netmask}'
-        else:
-            server.bridge_interface = None
-            server.bridge_start_dhcp = None
-            server.bridge_end_dhcp = None
-
+        
+        server.address_pool_start = None
+        server.address_pool_end = None
         if address_pool.get('address_pool_select'):
             server.address_pool_start = address_pool.get('address_pool_start')
             server.address_pool_end = address_pool.get('address_pool_end')
-        else:
-            server.address_pool_start = None
-            server.address_pool_end = None
 
+        server.dns_default_domain_server = None
         if dns_default_domain.get('dns_default_domain_select', ''):
             server.dns_default_domain_server = dns_default_domain.get('dns_default_domain_server', '')
-        else:
-            server.dns_default_domain_server = None
-
+        
+        server.dns_server1 = None
+        server.dns_server2 = None
         if dns_servers.get('dns_servers_select', ''):
             server.dns_server1 = dns_servers.get('dns_server1', '')
             server.dns_server2 = dns_servers.get('dns_server2', '')
-        else:
-            server.dns_server1 = None
-            server.dns_server2 = None
 
+        server.ntp_server1 = None
+        server.ntp_server2 = None
         if ntp_servers.get('ntp_servers_select', ''):
             server.ntp_server1 = ntp_servers.get('ntp_server1', '')
             server.ntp_server2 = ntp_servers.get('ntp_server2', '')
-        else:
-            server.ntp_server1 = None
-            server.ntp_server2 = None
+        
+        server.client_management_port = None
+        server.client_management_password = None
         if client_management.get('client_management_select') and client_management.get('password'):
             server.client_management_port = client_management.get('port')
             if server.client_management_password and not check_password(client_management.get('password'), server.client_management_password):
                 return JsonResponse({"error": "error previous password"}, status=400)
             server.client_management_password = make_password(client_management.get('new_password'))
             data["client_management"]["password"] = server.client_management_password
-        else:
-            server.client_management_port = None
-            server.client_management_password = None
 
         data['server_mode'] = server.server_mode
         serializer_server = ServerOpenvpnSerializer(server, data=data)

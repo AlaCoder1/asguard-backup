@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from backend.managementCertificates.models import Certificate, CertificateAuthority
+
 
 class ServerOpenvpn(models.Model):
     name = models.CharField(max_length=100, default=None, null=True, blank=True, unique=True, verbose_name=_("name"))
@@ -10,8 +12,8 @@ class ServerOpenvpn(models.Model):
     dev = models.CharField(max_length=10, default="tun", null=True, blank=True)
     interface = models.CharField(max_length=100, default=None, null=True, blank=True)
     port = models.CharField(max_length=10, default="1194", null=True, blank=True, unique=True)
-    ca_name = models.CharField(max_length=300, default=None, null=True, blank=True)
-    cert_name = models.CharField(max_length=300, default=None, null=True, blank=True)
+    ca_name = models.ForeignKey(CertificateAuthority, on_delete=models.PROTECT, default=None, null=True)
+    cert_name = models.ForeignKey(Certificate, on_delete=models.PROTECT, default=None, null=True)
     dh = models.CharField(max_length=100, default=None, null=True, blank=True)
     cipher = models.CharField(max_length=100, default="AES-256-CBC", null=True, blank=True)
     auth = models.CharField(max_length=100, default="SHA256", null=True, blank=True)
@@ -62,8 +64,8 @@ class ClientOpenvpn(models.Model):
     username = models.CharField(max_length=100, default=None, null=True, blank=True)
     password = models.CharField(max_length=100, default=None, null=True, blank=True)
     renegotiate_time = models.CharField(max_length=100, default=None, null=True, blank=True)
-    ca_name = models.CharField(max_length=300, default=None, null=True, blank=True)
-    cert_name = models.CharField(max_length=300, default=None, null=True, blank=True)
+    ca_name = models.ForeignKey(CertificateAuthority, on_delete=models.PROTECT, default=None, null=True)
+    cert_name = models.ForeignKey(Certificate, on_delete=models.PROTECT, default=None, null=True)
     cipher = models.CharField(max_length=100, default=None, null=True, blank=True)
     auth = models.CharField(max_length=100, default=None, null=True, blank=True)
     ipv4_tunnel_network = models.CharField(max_length=300, default=None, blank=True, null=True)

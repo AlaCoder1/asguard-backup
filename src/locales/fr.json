@@ -14,6 +14,8 @@
     "LoginTime": "Temps de connexion",
     "resetPassword": "Réinitialisation du mot de passe"
   },
+  "Valid":"Valide",
+  "Revoqued":"Révoqué",
   "Static": "Statique",
   "keyPair": "Paire de clés",
   "createPrivateKey": "Créer une clé privée",

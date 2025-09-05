@@ -14,6 +14,8 @@
     "LoginTime": "Login Time",
     "resetPassword": "Reset Password"
   },
+  "Valid":"Valid",
+  "Revoqued":"Revoqued",
   "Static": "Static",
   "keyPair": "Key Pair",
   "createPrivateKey": "Create Private Key",

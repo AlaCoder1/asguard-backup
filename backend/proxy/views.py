@@ -523,24 +523,53 @@ def addRuleSquid(request):
                     except IntegrityError as e:
                         error_msg = str(e)
                         if "proxy_rules_rule_name" in error_msg:
-                            translated_msg = _("Une règle avec ce nom existe déjà")  
+                            if language =='fr':
+                                translated_msg = _("Une règle avec ce nom existe déjà")  
+                            else:
+                                translated_msg = _("A rule with this name already exists") 
                         elif "proxy_rules_value_key" in error_msg:
-                            translated_msg = _("Une règle avec cette valeur est déjà utilisée.")
+                            if language =='fr':
+                                translated_msg = _("Une règle avec cette valeur est déjà utilisée.")
+                            else:
+                                translated_msg = _("A rule with this value is already in use.")
                         else:
-                            translated_msg = _("Erreur d'intégrité de la base de données.")
-                        return JsonResponse({"error": translated_msg}, status=400)
+                            if language =='fr':
+                                translated_msg = _("Erreur d'intégrité de la base de données.")
+                            else:
+                                translated_msg = _("Database integrity error.")
+                        return JsonResponse({"error": str(e)}, status=400)
                 else:
                     return JsonResponse(serializerProxyRules.errors, status=400 )
             except Exception as e:
                 return JsonResponse({"error": str(e)}, status=400)
         else:
             language = Profile.objects.get(id=data['user_id']).language
+            print({"language":language})
             translation.activate(language)
             serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
             if (serializerProxyRules.is_valid()):
-                serializerProxyRules.save()
-                msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
-                return JsonResponse({"msg": msg}, status=200)
+                try:
+                    serializerProxyRules.save()
+                    msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
+                    return JsonResponse({"msg": msg}, status=200)
+                except IntegrityError as e:
+                    error_msg = str(e)
+                    if "proxy_rules_rule_name" in error_msg:
+                        if language =='fr':
+                            translated_msg = _("Une règle avec ce nom existe déjà")  
+                        else:
+                            translated_msg = _("A rule with this name already exists") 
+                    elif "proxy_rules_value_key" in error_msg:
+                        if language =='fr':
+                            translated_msg = _("Une règle avec cette valeur est déjà utilisée.")
+                        else:
+                            translated_msg = _("A rule with this value is already in use.")
+                    else:
+                        if language =='fr':
+                            translated_msg = _("Erreur d'intégrité de la base de données.")
+                        else:
+                            translated_msg = _("Database integrity error.")
+                    return JsonResponse({"error": translated_msg}, status=400)
             else:
                 return JsonResponse(serializerProxyRules.errors, status=400 )
 

@@ -1,10 +1,19 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -20,30 +29,74 @@
             <v-container>
               <v-row>
                 <v-col cols="12">
-                  <v-text-field v-model="date" :label="$t('ztna.ztnadate')" prepend-icon="mdi-calendar" type="date"
-                    :rules="dateRules"></v-text-field>
+                  <v-text-field
+                    v-model="date"
+                    :label="`${$t('ztna.ztnadate')}*`"
+                    prepend-icon="mdi-calendar"
+                    type="date"
+                    :rules="dateRules"
+                  ></v-text-field>
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field v-model="time" :label="$t('ztna.ztnatime')" prepend-icon="mdi-clock" type="time"
-                    :rules="timeRules" class="ml-1"></v-text-field>
+                  <v-text-field
+                    v-model="time"
+                    :label="`${$t('ztna.ztnatime')}*`"
+                    prepend-icon="mdi-clock"
+                    type="time"
+                    :rules="timeRules"
+                    class="ml-1"
+                  ></v-text-field>
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
             <v-spacer></v-spacer>
-            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
-              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span></v-btn>
-            <VBtn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
-              class="mt-3 ml-2 btn-add" type="submit">
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              variant="flat"
+              class="mt-3 btn-add"
+              text
+              @click="cancel"
+              ><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span
+              ></v-btn
+            >
+            <VBtn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 ml-2 btn-add"
+              type="submit"
+            >
               {{ $t("buttons.create") }}
             </VBtn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -54,7 +107,6 @@ import axios from "axios";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { toRefs, ref, watch, reactive, inject } from "vue";
 import { useI18n } from "vue-i18n";
-
 
 export default {
   props: {
@@ -90,7 +142,7 @@ export default {
       itemId: null,
       snackbar: false,
       color: null,
-      textAlert: ""
+      textAlert: "",
     });
 
     watch(
@@ -115,7 +167,7 @@ export default {
         const enteredDate = new Date(date.value);
 
         const currentTime = new Date().getHours();
-        const enteredHour = parseInt(value.split(':')[0]);
+        const enteredHour = parseInt(value.split(":")[0]);
 
         currentDate.setHours(0, 0, 0, 0);
         enteredDate.setHours(0, 0, 0, 0);
@@ -130,9 +182,8 @@ export default {
           return t("ztna.timeCheck");
         }
         return true;
-      }
+      },
     ];
-
 
     const dateRules = [
       (value) => !!value || t("ztna.enterDate"),
@@ -173,8 +224,8 @@ export default {
         let payload = {
           expiresAt: dateTime,
           method: "ott",
-          identityId: state.itemId
-        }
+          identityId: state.itemId,
+        };
         axios
           .post("/ztna/add_enrollments", payload, {
             headers: {
@@ -190,7 +241,6 @@ export default {
               setTimeout(() => {
                 location.reload();
               }, 1000);
-
             }
           })
           .catch((i) => {
@@ -221,7 +271,7 @@ export default {
 
     const cancel = () => {
       date.value = null;
-      time.value = null
+      time.value = null;
       emitter.emit("closeEnrollmentModal");
     };
 

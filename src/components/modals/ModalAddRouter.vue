@@ -38,7 +38,7 @@
                   <v-text-field
                     id="RouterName"
                     v-model="RouterName"
-                    :placeholder="$t('ztna.relayName')"
+                    :placeholder="`${$t('ztna.relayName')}*`"
                     :rules="rulesName"
                     persistent-placeholder
                   />
@@ -48,7 +48,7 @@
                   <v-text-field
                     id="RouterAttribute"
                     v-model="RouterAttribute"
-                    :placeholder="$t('ztna.relayAttribute')"
+                    :placeholder="`${$t('ztna.relayAttribute')}*`"
                     :rules="rulesatt"
                     persistent-placeholder
                   />
@@ -66,6 +66,13 @@
           </v-card-text>
 
           <v-card-actions>
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
             <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"
@@ -265,10 +272,10 @@ export default {
       const isattValid = rulesatt.every(
         (rule) => rule(RouterAttribute.value) === true
       );
-      console.log('isFieldValid',isFieldValid)
-      console.log('isattValid',isattValid)
-      
-      if ((isFieldValid && isattValid)) {
+      console.log("isFieldValid", isFieldValid);
+      console.log("isattValid", isattValid);
+
+      if (isFieldValid && isattValid) {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 

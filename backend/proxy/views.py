@@ -51,6 +51,7 @@ SUCCESS_MESSAGES_RESTARTING = _("is restarted")
 SUCCESS_MESSAGES_STOPING = _("is stoped")
 SUCCESS_MESSAGES_CHANGE_STATUS = _("is changed")
 # Error messages
+PROFLE_NOT_EXIST = _("Profile doesn't exist")
 ERROR_MESSAGES_STARTING = _("System error in starting")
 ERROR_MESSAGES_RESTARTING = _("System error in restarting")
 ERROR_MESSAGES_STOPING = _("System error in stoping")
@@ -85,7 +86,6 @@ def run_command(command):
     output = completed_process.stdout
     error = completed_process.stderr
     return output, error
-
 
 @swagger_auto_schema(
     method='POST',
@@ -276,7 +276,6 @@ def allRuleSquid(request):
         list_proxyRules.append(res[i]['fields'])
     return JsonResponse({"list_proxyRules":list_proxyRules})
 
-
 def add_line_after_pattern(file_path, pattern, new_line):
     """
     Inserts a new line in a file immediately after the first occurrence of a given pattern.
@@ -310,7 +309,6 @@ def add_line_after_pattern(file_path, pattern, new_line):
 
     with open(file_path, 'w') as file:
         file.writelines(lines)
-
 
 def enable_by_time():
     """
@@ -361,6 +359,11 @@ def enable_by_time():
                 type=TYPE_STRING,
                 description="The rule name.",
                 example="rule1"
+            ),
+            'user_id': Schema(
+                type=TYPE_INTEGER,
+                description="The Id of current user.",
+                example="1"
             ),
             'allow_by_auth': Schema(
                 type=TYPE_BOOLEAN,
@@ -509,7 +512,10 @@ def addRuleSquid(request):
             try:
                 with open(file_path, 'a') as file:
                     file.write(value + '\n')
-                language = Profile.objects.get(id=data['user_id']).language
+                try:
+                    language = Profile.objects.get(id=data['user_id']).language
+                except Profile.DoesNotExist:
+                    return JsonResponse({"error": PROFLE_NOT_EXIST}, status=400 )
                 translation.activate(language)
                 serializerProxyRules = ProxyRulesSerializer(data=data)
                 if (serializerProxyRules.is_valid()):
@@ -537,14 +543,16 @@ def addRuleSquid(request):
                                 translated_msg = _("Erreur d'intégrité de la base de données.")
                             else:
                                 translated_msg = _("Database integrity error.")
-                        return JsonResponse({"error": str(e)}, status=400)
+                        return JsonResponse({"error": translated_msg}, status=400)
                 else:
                     return JsonResponse(serializerProxyRules.errors, status=400 )
             except Exception as e:
                 return JsonResponse({"error": str(e)}, status=400)
         else:
-            language = Profile.objects.get(id=data['user_id']).language
-            print({"language":language})
+            try:
+                language = Profile.objects.get(id=data['user_id']).language
+            except Profile.DoesNotExist:
+                return JsonResponse({"error": PROFLE_NOT_EXIST}, status=400 )
             translation.activate(language)
             serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
             if (serializerProxyRules.is_valid()):
@@ -605,7 +613,91 @@ def remove_acl_rule(file_path, name_rule, time_rule):
         raise PermissionError(f"Permission denied when trying to modify {file_path}.")
     except Exception as e:
         raise RuntimeError(f"Error while removing ACL rule: {str(e)}")
-    
+
+@swagger_auto_schema(
+    method='PUT',
+    operation_summary="Update Blocking or Allowing Rule to Squid Configuration",
+    operation_description=(
+        "This API endpoint update a blocking or allowing rule to the Squid configuration based on "
+        "the provided request data. It determines the appropriate file path based on the rule type (IP, domain, or subnet), "
+        "and if time-based restrictions are provided, it applies them in the Squid configuration. "
+        "The rule is then saved in the database and the server status is updated."
+    ),
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        required=['allow_by_auth', 'type', 'value', 'status'],
+        properties={
+            'rule_name': Schema(
+                type=TYPE_STRING,
+                description="The rule name.",
+                example="rule1"
+            ),
+            'user_id': Schema(
+                type=TYPE_INTEGER,
+                description="The Id of current user.",
+                example="1"
+            ),
+            'allow_by_auth': Schema(
+                type=TYPE_BOOLEAN,
+                description="Indicates whether the rule applies to authenticated users.",
+                example=True
+            ),
+            'type': Schema(
+                type=TYPE_STRING,
+                description="The rule type (e.g., 'ip', 'domain', 'subnet').",
+                enum=["ip", "domain", "subnet"],
+                example="ip"
+            ),
+            'value': Schema(
+                type=TYPE_STRING,
+                description="The IP, domain, or subnet to be blocked or allowed.",
+                example=config('IP_ADDRESS')
+            ),
+            'status': Schema(
+                type=TYPE_BOOLEAN,
+                description="Whether the rule is enabled or disabled.",
+                example=True
+            ),
+            'time_from': Schema(
+                type=TYPE_STRING,
+                description="Start time for blocking (optional, required for time-based rules).",
+                example="08:00"
+            ),
+            'time_to': Schema(
+                type=TYPE_STRING,
+                description="End time for blocking (optional, required for time-based rules).",
+                example="18:00"
+            ),
+            'days': Schema(
+                type=TYPE_STRING,
+                description="Days when the time-based rule applies (optional).",
+                example="Monday,Tuesday,Wednesday"
+            ),
+        },
+    ),
+    responses={
+        200: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                'msg': Schema(
+                    type=TYPE_STRING,
+                    description="Success message indicating that the rule was successfully added.",
+                    example="ip 192.168.1.100 blocked successfully."
+                ),
+            }
+        ),
+        400: Schema(
+            type=TYPE_OBJECT,
+            properties={
+                'msg': Schema(
+                    type=TYPE_STRING,
+                    description="Error message indicating validation or other issues.",
+                    example="Validation error: Invalid IP address format."
+                ),
+            }
+        ),
+    },
+)    
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -673,24 +765,67 @@ def updateRuleSquid(request, rule_id):
                     else:
                         file.write(line)
 
-            language = Profile.objects.get(id=data['user_id']).language
+            try:
+                language = Profile.objects.get(id=data['user_id']).language
+            except Profile.DoesNotExist:
+                return JsonResponse({"error": PROFLE_NOT_EXIST}, status=400 )
             translation.activate(language)
-
             serializer = ProxyRulesSerializer(existing_rule, data=data, partial=True)
             if serializer.is_valid():
-                serializer.save()
-                return JsonResponse({"msg": f"{data['type']} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+                try:
+                    serializer.save()
+                    return JsonResponse({"msg": f"{data['type']} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+                except IntegrityError as e:
+                    error_msg = str(e)
+                    if "proxy_rules_rule_name" in error_msg:
+                        if language =='fr':
+                            translated_msg = _("Une règle avec ce nom existe déjà")  
+                        else:
+                            translated_msg = _("A rule with this name already exists") 
+                    elif "proxy_rules_value_key" in error_msg:
+                        if language =='fr':
+                            translated_msg = _("Une règle avec cette valeur est déjà utilisée.")
+                        else:
+                            translated_msg = _("A rule with this value is already in use.")
+                    else:
+                        if language =='fr':
+                            translated_msg = _("Erreur d'intégrité de la base de données.")
+                        else:
+                            translated_msg = _("Database integrity error.")
+                    return JsonResponse({"error": translated_msg}, status=400)
             else:
                 return JsonResponse(serializer.errors, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
     else:
-        language = Profile.objects.get(id=data['user_id']).language
+        try:
+            language = Profile.objects.get(id=data['user_id']).language
+        except Profile.DoesNotExist:
+            return JsonResponse({"error": PROFLE_NOT_EXIST}, status=400 )
         translation.activate(language)
         serializer = ProxyRulesByTimeSerializer(existing_rule, data=data, partial=True)
         if serializer.is_valid():
-            serializer.save()
-            return JsonResponse({"msg": f"{data['type']} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+            try:
+                serializer.save()
+                return JsonResponse({"msg": f"{data['type']} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+            except IntegrityError as e:
+                error_msg = str(e)
+                if "proxy_rules_rule_name" in error_msg:
+                    if language =='fr':
+                        translated_msg = _("Une règle avec ce nom existe déjà")  
+                    else:
+                        translated_msg = _("A rule with this name already exists") 
+                elif "proxy_rules_value_key" in error_msg:
+                    if language =='fr':
+                        translated_msg = _("Une règle avec cette valeur est déjà utilisée.")
+                    else:
+                        translated_msg = _("A rule with this value is already in use.")
+                else:
+                    if language =='fr':
+                        translated_msg = _("Erreur d'intégrité de la base de données.")
+                    else:
+                        translated_msg = _("Database integrity error.")
+                return JsonResponse({"error": translated_msg}, status=400)
         else:
             return JsonResponse(serializer.errors, status=400)
 

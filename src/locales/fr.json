@@ -632,6 +632,7 @@
   },
 
   "ztna": {
+    "RelayPolicy":"Politique de relais",
     "identities": "IDENTITES",
     "configurations": "CONFIGURATIONS",
     "services": "Services",

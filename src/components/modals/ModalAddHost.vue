@@ -1,10 +1,19 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -15,23 +24,30 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addHostConfig") }}</span>
+              {{ $t("ztna.addHostConfig") }}</span
+            >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateHostConfig") }}</span>
+              {{ $t("ztna.updateHostConfig") }}</span
+            >
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="ConfigName" v-model="ConfigName" :placeholder="$t('ztna.configName')"
-                    :rules="rulesName" persistent-placeholder />
+                  <v-text-field
+                    id="ConfigName"
+                    v-model="ConfigName"
+                    :placeholder="`${$t('ztna.configName')}*`"
+                    :rules="rulesName"
+                    persistent-placeholder
+                  />
                 </v-col>
 
                 <v-col cols="12">
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.protocol")
-                      }}</label>
+                    }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -41,10 +57,14 @@
                         </template>
 
                         <v-list>
-                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
+                          <v-list-item
+                            v-for="(item, index) in items"
+                            :key="index"
+                            @click="selectItem(item)"
+                          >
                             <v-list-item-title>{{
                               item.title
-                              }}</v-list-item-title>
+                            }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -53,39 +73,88 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="adress" v-model="adress" :placeholder="$t('ztna.address')" :rules="rulesaddress"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="adress"
+                    v-model="adress"
+                    :placeholder="$t('ztna.address')"
+                    :rules="rulesaddress"
+                    persistent-placeholder
+                  />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PORT" v-model="portHigh" placeholder="PORT" :rules="rulesNumber"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="PORT"
+                    v-model="portHigh"
+                    placeholder="PORT*"
+                    :rules="rulesNumber"
+                    persistent-placeholder
+                  />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="Description"
+                    v-model="Description"
+                    placeholder="Description"
+                    persistent-placeholder
+                  />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
             <v-spacer></v-spacer>
-            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
-              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span></v-btn>
-            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
-              class="mt-3 ml-2 btn-add" type="submit">
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              variant="flat"
+              class="mt-3 btn-add"
+              text
+              @click="cancel"
+              ><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span
+              ></v-btn
+            >
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 ml-2 btn-add"
+              type="submit"
+            >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span>
+                {{ $t("buttons.create") }}</span
+              >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span>
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -94,9 +163,8 @@
 <script>
 import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
-import { toRefs, ref, watch, reactive, inject, onMounted } from "vue";
+import { toRefs, ref, watch, reactive, inject, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
-
 
 export default {
   props: {
@@ -134,22 +202,30 @@ export default {
         return t("ztna.enterValue");
       },
     ];
+
+    const nbre = computed(() => {
+      return t("Waf.nombreMustBe");
+    });
+    const and = computed(() => {
+      return t("Waf.and");
+    });
+
     const rulesNumber = [
       (value) => {
         if (!value) return t("ztna.enterValue");
+        const num = Number(value);
+        const isValidRange = !isNaN(num) && num >= 1 && num <= 65535;
+        return isValidRange || `${nbre.value} 1 ${and.value} 65535`;
+        // const integerPattern = /^-?[1-9]\d*$/;
 
-        const integerPattern = /^-?[1-9]\d*$/;
-
-        return integerPattern.test(value) || t("ztna.holeNumber");
-      }
+        // return integerPattern.test(value) || t("ztna.holeNumber");
+      },
     ];
 
     const rulesaddress = [
       (value) => {
         if (!value) return true;
-        return isValidIpOrHostname(value)
-          ? true
-          : t("ztna.validName");
+        return isValidIpOrHostname(value) ? true : t("ztna.validName");
       },
     ];
     const rulesName = [
@@ -162,8 +238,10 @@ export default {
     ];
 
     function existingName(value) {
-      const existingintercept = intercept.value.find(config => config.name === value);
-      const existinghost = Host.value.find(config => config.name === value);
+      const existingintercept = intercept.value.find(
+        (config) => config.name === value
+      );
+      const existinghost = Host.value.find((config) => config.name === value);
 
       if (existingintercept || existinghost) {
         return true;
@@ -173,13 +251,18 @@ export default {
     }
     const fetchintercept = async () => {
       try {
-        const interceptString = await document.getElementById("app").getAttribute("interceptconfigs");
+        const interceptString = await document
+          .getElementById("app")
+          .getAttribute("interceptconfigs");
         const interceptObject = JSON.parse(interceptString);
 
-        const interceptArray = Array.isArray(interceptObject) ? interceptObject : [];
+        const interceptArray = Array.isArray(interceptObject)
+          ? interceptObject
+          : [];
 
-        intercept.value = interceptArray.map(identity => ({ name: identity.name }));
-
+        intercept.value = interceptArray.map((identity) => ({
+          name: identity.name,
+        }));
       } catch (error) {
         intercept.value = [];
       }
@@ -194,7 +277,6 @@ export default {
         const HostArray = Array.isArray(HostObject) ? HostObject : [];
 
         Host.value = HostArray.map((identity) => ({ name: identity.name }));
-
       } catch (error) {
         Host.value = [];
       }
@@ -229,8 +311,6 @@ export default {
       return Number.isFinite(parsedInt);
     }
 
-
-
     function isValidIpOrHostname(value) {
       // Regular expression for IPv4
       const ipv4Pattern =
@@ -241,7 +321,8 @@ export default {
         /([a-fA-F0-9]{1,4}:){7,7}[a-fA-F0-9]{1,4}|([a-fA-F0-9]{1,4}:){1,7}:|([a-fA-F0-9]{1,4}:){1,6}:[a-fA-F0-9]{1,4}|([a-fA-F0-9]{1,4}:){1,5}(:[a-fA-F0-9]{1,4}){1,2}|([a-fA-F0-9]{1,4}:){1,4}(:[a-fA-F0-9]{1,4}){1,3}|([a-fA-F0-9]{1,4}:){1,3}(:[a-fA-F0-9]{1,4}){1,4}|([a-fA-F0-9]{1,4}:){1,2}(:[a-fA-F0-9]{1,4}){1,5}|[a-fA-F0-9]{1,4}:((:[a-fA-F0-9]{1,4}){1,6})$/;
 
       // Regular expression for valid hostnames (no pure numeric strings)
-      const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+      const hostnamePattern =
+        /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
 
       // Check if value is a valid IPv4, IPv6, or a hostname (and not a pure number)
       if (
@@ -318,10 +399,19 @@ export default {
     };
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(ConfigName.value) === true);
-      const isnumberValid = rulesNumber.every(rule => rule(portHigh.value) === true);
-      const isaddressValid = rulesaddress.every(rule => rule(adress.value) === true);
-      if (isFieldValid && isnumberValid && isaddressValid || modalMode.value === "edit") {
+      const isFieldValid = rulesName.every(
+        (rule) => rule(ConfigName.value) === true
+      );
+      const isnumberValid = rulesNumber.every(
+        (rule) => rule(portHigh.value) === true
+      );
+      const isaddressValid = rulesaddress.every(
+        (rule) => rule(adress.value) === true
+      );
+      if (
+        (isFieldValid && isnumberValid && isaddressValid) ||
+        modalMode.value === "edit"
+      ) {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 

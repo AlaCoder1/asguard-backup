@@ -37,7 +37,7 @@
                   <v-text-field
                     id="ConfigName"
                     v-model="ConfigName"
-                    :placeholder="$t('ztna.configName')"
+                    :placeholder="`${$t('ztna.configName')}*`"
                     :rules="rulesName"
                     persistent-placeholder
                   />
@@ -84,7 +84,7 @@
                   <v-text-field
                     id="portLow"
                     v-model="portLow"
-                    :placeholder="$t('ztna.lowPorts')"
+                    :placeholder="`${$t('ztna.lowPorts')}*`"
                     :rules="rulesNumber"
                     persistent-placeholder
                     outlined
@@ -96,7 +96,7 @@
                   <v-text-field
                     id="portHigh"
                     v-model="portHigh"
-                    :placeholder="$t('ztna.highPorts')"
+                     :placeholder="`${$t('ztna.highPorts')}*`"
                     :rules="rulesNumber"
                     persistent-placeholder
                     outlined
@@ -117,6 +117,13 @@
             </v-container>
           </v-card-text>
           <v-card-actions>
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
             <v-spacer></v-spacer>
             <v-btn
               color="indigo-darken-3"

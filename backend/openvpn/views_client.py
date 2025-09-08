@@ -267,8 +267,10 @@ def update_client_openvpn(request, id):
         tls_auth = data.get('tls_auth', '')
         ca_name = data.get('ca_name', '')
         cert_name = data.get('client_cert', '')
-        client.ca_name = CertificateAuthority.objects.get(name=ca_name).pk
-        client.cert_name = Certificate.objects.get(name=cert_name).pk
+        ca_name = CertificateAuthority.objects.get(name=ca_name)
+        cert_name = Certificate.objects.get(name=cert_name)
+        client.ca_name = ca_name
+        client.cert_name = cert_name
         client.cipher = data.get('encryption_algorithm', '')
         client.auth = data.get('auth_digest_algorithm', '')
         client.ipv4_tunnel_network = data.get('ipv4_tunnel_network', '')
@@ -292,10 +294,13 @@ def update_client_openvpn(request, id):
                 client.proxy_auth_password = make_password(proxy_authentication.get('password', ''))
             data["proxy_authentication"]["password"] = client.proxy_auth_password
 
-        data['server_mode'] = client.server_mode
-        data['server_remote'] = client.server_remote
+        client_data = data.copy()
+        client_data['server_mode'] = client.server_mode
+        client_data['server_remote'] = client.server_remote
+        client_data["ca_name"] = ca_name.pk
+        client_data["cert_name"] = cert_name.pk
 
-        client_serializer = ClientOpenvpnSerializer(client, data=data)
+        client_serializer = ClientOpenvpnSerializer(client, data=client_data)
         if client_serializer.is_valid():
             data['server_remote'] = servers_list
             # Update the client config

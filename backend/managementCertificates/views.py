@@ -478,8 +478,8 @@ def delete_certificate(_, id):
         cert = Certificate.objects.get(id=id)
 
         # Test if this certificate is used in OpenVPN, IPsec or WAF
-        list_server_vpn = len(ServerOpenvpn.objects.filter(cert_name=cert.name))
-        list_client_vpn = len(ClientOpenvpn.objects.filter(cert_name=cert.name))
+        list_server_vpn = len(ServerOpenvpn.objects.filter(cert_name=cert))
+        list_client_vpn = len(ClientOpenvpn.objects.filter(cert_name=cert))
         list_server_ipsec = len(ServerIPsec.objects.filter(cert=cert.name))
         list_waf = len(ApplicationWaf.objects.filter(certificate_name=cert.name))
 

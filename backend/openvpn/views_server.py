@@ -320,8 +320,10 @@ def update_server_openvpn(request, id):
         tls_auth = data.get('tls_auth', '')
         ca_name = data.get('ca_name', '')
         cert_name = data.get('server_cert', '')
-        server.ca_name = CertificateAuthority.objects.get(name=ca_name).pk
-        server.cert_name = Certificate.objects.get(name=cert_name).pk
+        ca_name = CertificateAuthority.objects.get(name=ca_name)
+        cert_name = Certificate.objects.get(name=cert_name)
+        server.ca_name = ca_name
+        server.cert_name = cert_name
         server.dh = data.get('dh_params_length', '')
         server.cipher = data.get('encryption_algorithm', '')
         server.auth = data.get('auth_digest_algorithm', '')
@@ -389,9 +391,12 @@ def update_server_openvpn(request, id):
                 return JsonResponse({"error": "error previous password"}, status=400)
             server.client_management_password = make_password(client_management.get('new_password'))
             data["client_management"]["password"] = server.client_management_password
-
-        data['server_mode'] = server.server_mode
-        serializer_server = ServerOpenvpnSerializer(server, data=data)
+        
+        server_data = data.copy()
+        server_data['server_mode'] = server.server_mode
+        server_data["ca_name"] = ca_name.pk
+        server_data["cert_name"] = cert_name.pk
+        serializer_server = ServerOpenvpnSerializer(server, data=server_data)
         if serializer_server.is_valid():
 
             # Update the server config
@@ -411,7 +416,6 @@ def update_server_openvpn(request, id):
             service.save()
 
             return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
-        
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
     except ServerOpenvpn.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=404)

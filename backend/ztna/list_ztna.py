@@ -107,12 +107,23 @@ def get_edge_router_policies():
     relay_policy = RelaysPolicy.objects.all()
     relay_policy_dict = serializers.serialize("json", relay_policy)
     res = json.loads(relay_policy_dict)
-    for i in range(0, len(res)):
-        res[i].pop('model')
-        relay_id = res[i]['pk']
-        res[i].pop('pk')
-        res[i]['fields']['id'] = relay_id
-        list_relay_policies.append(res[i]['fields'])
+    for relay_policy in res:
+        relay_policy.pop('model')
+        relay_id = relay_policy['pk']
+        relay_policy.pop('pk')
+        relay_policy['fields']['id'] = relay_id
+        
+        # Get the relay and identity attribute if exists
+        try:
+            relay_policy['fields']["relay_attribute"] = Relays.objects.get(id=relay_policy['fields']["relay"]).attribute_relay
+        except Relays.DoesNotExist:
+            relay_policy['fields']["relay_attribute"] = ""
+        try:
+            relay_policy['fields']["identity_attribute"] = Identities.objects.get(id=relay_policy['fields']["identity"]).attribute_identitie
+        except Identities.DoesNotExist:
+            relay_policy['fields']["identity_attribute"] = ""
+        
+        list_relay_policies.append(relay_policy['fields'])
     return list_relay_policies
 
 

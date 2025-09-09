@@ -207,7 +207,6 @@ export default {
 
     axios.get("/ztna/status_ztna").then((response) => {
       this.status = response.data.data;
-      console.log("this.status", this.status);
     });
 
     setTimeout(() => {

@@ -568,6 +568,11 @@ export default {
           state.formData.prefix = "";
         } else {
           v$.value.$reset();
+          state.formData.routageType = { name: "domains", slug: "domain" };
+          if (state.formData.valueDomainTime) {
+            state.formData.value2 = state.formData.valueDomainTime;
+          }
+
           state.formData.valueDomainTime = "";
           state.formData.days = [];
           state.formData.from = "";

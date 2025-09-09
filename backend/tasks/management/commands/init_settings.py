@@ -71,8 +71,7 @@ class Command(BaseCommand):
                     "password_length": password_length
                     }
                 commandes,rules_web,rules_ssh = manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message,certif,session_timeout)
-                
-                print({"all_commandes":commandes})
+                commandes+=['sudo systemctl restart nginx', "sudo systemctl restart uvicorn"]
                 aux_commandes=execute_all_commandes(commandes)
                 if aux_commandes:
                     msg,_=create_config_db(data,interface_web,interface_ssh)

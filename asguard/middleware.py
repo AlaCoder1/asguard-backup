@@ -1,3 +1,4 @@
+
 # yourapp/middleware.py
 
 import logging
@@ -26,3 +27,4 @@ class UvicornUserLoggingMiddleware:
         logger.info(f"[ACCESS] {ip} - {method} {path} ({status}) | user={username}")
 
         return response
+

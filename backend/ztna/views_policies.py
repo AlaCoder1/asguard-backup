@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated
 import json
 
+from backend.ztna.list_ztna import get_edge_router_policies
 from backend.ztna.models import Identities, Relays, RelaysPolicy, Services, ServicesPolicy, ServicesRelaysPolicy
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES
 from backend.ztna.serializers import RelaysPolicySerializer, RelaysPolicySerializerUpdate, ServicesPolicySerializer, ServicesPolicySerializerUpdate, ServicesRelaysPolicySerializer, ServicesRelaysPolicySerializerUpdate
@@ -56,11 +57,11 @@ def get_edge_routers_policies_from_openziti(request):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_edge_routers_policies(request):
+def get_edge_routers_policies(_):
     """Getting all edge routers from database"""
     try:
-        relay_policy = RelaysPolicy.objects.all()
-        return JsonResponse(list(relay_policy.values()), safe=False)
+        list_relay_policy = get_edge_router_policies()
+        return JsonResponse(list_relay_policy, safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
@@ -99,6 +100,7 @@ def add_edge_routers_policies(request):
         response = requests.post(PATH_ZTNA_EDGE_ROUTERS_POLICIES, headers=headers, json=data_without_description, verify=False)
         response_dict = json.loads(response.text)
         relay_policy_id = response_dict.get('data', {}).get('id')
+        print("response.status_code= ", response.status_code)
         if response.status_code == 201:
             now = datetime.now()
             formatted_now = now.strftime("%Y-%m-%d %H:%M")
@@ -106,33 +108,32 @@ def add_edge_routers_policies(request):
                      "name": data['name'],
                      "semantic": data['semantic'],
                      "description": None,
-                     "relay_attribute": None,
-                     "identity_attribute": None,
+                     "relay_id": None,
+                     "identity_id": None,
                      "date_creation": formatted_now,
                      }
             relay_att = data['edgeRouterRoles'][0]
             identity_att = data['identityRoles'][0]
             if relay_att.startswith('#'):
-                payload["relay_attribute"] = relay_att[1:]
+                relay_att = relay_att[1:]
+                relay = Relays.objects.filter(attribute_relay=relay_att)
+                if relay.exists():
+                    payload["relay_id"] = relay[0].pk
             if identity_att.startswith('#'):
-                payload["identity_attribute"] = identity_att[1:]
+                identity_att = identity_att[1:]
+                identity = Identities.objects.filter(attribute_identitie=identity_att)
+                if identity.exists():
+                    payload["identity_id"] = identity[0].pk
             if 'Description' in data:
                 payload['description'] = data['Description']
-            relay = Relays.objects.filter(attribute_relay=payload['relay_attribute'])
-            identity = Identities.objects.filter(attribute_identitie=payload['identity_attribute'])
-            for rel in relay:
-                for id in identity:
-                    payload['relay_id'] = rel.pk
-                    payload['identity_id'] = id.pk
-                    relay_policy_serializer = RelaysPolicySerializer(data=payload, partial=True)
-                    if relay_policy_serializer.is_valid():
-                        relay_policy_serializer.save()
-                        return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
-                    return JsonResponse({"error": list(relay_policy_serializer.errors.values())[0][0]}, status=400)
-            return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+            relay_policy_serializer = RelaysPolicySerializer(data=payload)
+            if relay_policy_serializer.is_valid():
+                relay_policy_serializer.save()
+                return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+            return JsonResponse({"error": list(relay_policy_serializer.errors.values())[0][0]}, status=400)
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
     except requests.exceptions.ConnectionError:
-        return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'},

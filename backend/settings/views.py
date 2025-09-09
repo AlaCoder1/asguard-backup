@@ -860,7 +860,7 @@ def update_settings(request):
                 "login_message" : login_message,
                 "password_length" : password_length
                 }
-            all_commandes= manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, auth_method, enable_ssh, tcp_port, login_message, certif, session_timeout)
+            all_commandes= manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, auth_method, enable_ssh, tcp_port, login_message, certif, session_timeout,password_length)
             aux_commandes = execute_all_commandes(all_commandes)
             if aux_commandes:
                 msg,status = save_config_db(data, settings.pk, interface_web, interface_ssh)

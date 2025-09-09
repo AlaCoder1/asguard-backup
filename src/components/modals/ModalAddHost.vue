@@ -76,7 +76,7 @@
                   <v-text-field
                     id="adress"
                     v-model="adress"
-                    :placeholder="$t('ztna.address')"
+                    :placeholder="`${$t('ztna.address')}*`"
                     :rules="rulesaddress"
                     persistent-placeholder
                   />

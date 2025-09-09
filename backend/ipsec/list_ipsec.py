@@ -9,8 +9,10 @@ from utils.errors_utils import CommandExecutionError
 def get_status_ipsec():
     """Getting IPsec status from system"""
     try:
-        execute_command_without_arguments(['sudo', 'ipsec', 'status'])
-        return True
+        command_status_ipsec = execute_command_without_arguments(['sudo', 'ipsec', 'status'])
+        if command_status_ipsec.stdout:
+            return True
+        return False
     except CommandExecutionError:
         return False
 

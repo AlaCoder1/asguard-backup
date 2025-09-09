@@ -79,12 +79,12 @@ def create_one_to_one_nat(request):
     """Creating a new OneToOneNat rule and adding it to the database"""
     try:
         data = request.data
-        # Check data validity
-        if not check_payload(data):
-            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
         data["source_address"], data["destination_address"], data["translation_address"] = fix_ipv4_address(
             [data["source_address"], data["destination_address"], data["translation_address"]])
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
 
         serializer_one_to_one_nat = OneToOneNatSerializer(data=data)
         if serializer_one_to_one_nat.is_valid():
@@ -127,7 +127,7 @@ def create_one_to_one_nat(request):
 @require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_one_to_one_nat(request, id):
+def delete_one_to_one_nat(_, id):
     """Deleting an one_to_one_nat from database"""
     try:
         one_to_one_nat = OneToOneNat.objects.get(id=id)
@@ -195,6 +195,7 @@ def delete_list_one_to_one_nat(request):
             list_responses.append({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}", "status": 404})
     return JsonResponse(list_responses, safe=False)
 
+
 @swagger_auto_schema(
     'PUT', responses={200: 'Created', 400: 'Bad Request'},
     manual_parameters=[Parameter('id', IN_PATH, type=TYPE_INTEGER, required=True)],
@@ -208,12 +209,12 @@ def update_one_to_one_nat(request, id):
     """Updating an OneToOneNat rule"""
     try:
         data = request.data
-        # Check data validity
-        if not check_payload(data):
-            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
         # Apply correction for ipv4 addresses
         data["source_address"], data["destination_address"], data["translation_address"] = fix_ipv4_address(
             [data["source_address"], data["destination_address"], data["translation_address"]])
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
 
         one_to_one_nat = OneToOneNat.objects.get(id=id)
 

@@ -1,11 +1,9 @@
 <template>
   <div class="cert-status-render">
-    <v-chip color="green" text-color="white" v-if="params.data.cert_status"
-      >Valid</v-chip
-    >
-    <v-chip color="red" text-color="white" v-else>
-      Revoqued</v-chip
-    >
+    <v-chip color="green" text-color="white" v-if="params.data.cert_status">{{
+      $t("Valid")
+    }}</v-chip>
+    <v-chip color="red" text-color="white" v-else> {{ $t("Revoqued") }}</v-chip>
   </div>
 </template>
 

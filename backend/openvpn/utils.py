@@ -1,6 +1,56 @@
 from backend.managementCertificates.constant_variables import PATH_CA_CRL_PEM, PATH_CA_CRT, PATH_CLIENT_CERT_CRT, PATH_CLIENT_CERT_KEY, PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
+from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.openvpn.constant_variables import CONSTANT_COMP_LZO, CONSTANT_COMPRESS_MIGRATE, PATH_CLIENT_PAS, PATH_CLIENT_STATIC, PATH_CLIENT_UP, PATH_LOG_OPENVPN_LOG, PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD, PATH_SERVER_DH, PATH_SERVER_STATIC, PATH_STATUS_LOG
 from utils.commands_utils import execute_command_without_arguments, write_file_from_system
+
+
+def check_validity_server(data: dict):
+    """Check validity of server payload"""
+    # Check fields validity used in both server and client
+    if not check_validity_vpn(data):
+        return False
+    
+    server_mode = data["server_mode"]["mode"]
+    if server_mode != "remote_access":
+        return False
+    
+    # check if certifs exists and the server certificate is created with the authority
+    ca_name = data.get('ca_name', '')
+    cert_server_name = data.get('server_cert', '')
+    ca = CertificateAuthority.objects.get(name=ca_name)
+    cert_server = Certificate.objects.get(name=cert_server_name)
+    if (cert_server.certificate_type != "server") or (ca != cert_server.certificate_authority):
+        return False
+    return True
+
+
+def check_validity_client(data: dict):
+    """Check validity of server payload"""
+    # Check fields validity used in both server and client
+    if not check_validity_vpn(data):
+        return False
+    
+    server_mode = data["server_mode"]["mode"]
+    if server_mode != "peer_to_peer":
+        return False
+    
+    # check if certifs exists and the client certificate is created with the authority
+    ca_name = data.get('ca_name', '')
+    cert_client_name = data.get('client_cert', '')
+    ca = CertificateAuthority.objects.get(name=ca_name)
+    cert_client = Certificate.objects.get(name=cert_client_name)
+    if (cert_client.certificate_type != "client") or (ca != cert_client.certificate_authority):
+        return False
+    return True
+
+
+def check_validity_vpn(data: dict):
+    """Check the validity of the config OpenVPN used for server and client"""
+    if data.get('protocol', '') not in ["udp4", "tcp4"]:
+        return False
+    if data.get('device_mode', '') not in ["tun", "tap"]:
+        return False
+    return True
 
 
 def create_tls_file(tls_auth, path_tls):

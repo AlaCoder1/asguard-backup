@@ -14,6 +14,8 @@
     "LoginTime": "Temps de connexion",
     "resetPassword": "Réinitialisation du mot de passe"
   },
+  "Valid":"Valide",
+  "Revoqued":"Révoqué",
   "Static": "Statique",
   "keyPair": "Paire de clés",
   "createPrivateKey": "Créer une clé privée",
@@ -630,6 +632,7 @@
   },
 
   "ztna": {
+    "RelayPolicy":"Politique de relais",
     "identities": "IDENTITES",
     "configurations": "CONFIGURATIONS",
     "services": "Services",
@@ -732,7 +735,7 @@
     "servicerouterpolUpdated": "Politique de relais de service mise à jour avec succès",
     "ztnadate": "Date",
     "ztnatime": "Temps",
-    "namerelay": "Nom du relais doit suivre le format: nom_relay.relay"
+    "namerelay": "Nom du relais doit suivre le format: exemple.relay"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

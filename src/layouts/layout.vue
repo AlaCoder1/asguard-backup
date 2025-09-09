@@ -78,13 +78,13 @@
             <label>{{ title }}</label>
             <div v-if="ztnaTab">
               <i
-                v-if="!status"
+                v-if="status === false"
                 class="mdi mdi-play-circle mr-1 ml-1"
                 style="color: #4caf50; font-size: 20px; cursor: pointer"
                 @click="startStopServer('start')"
               ></i>
               <i
-                v-if="status"
+                v-if="status === true"
                 class="mdi mdi-stop-circle"
                 style="color: #b00020; font-size: 20px; cursor: pointer"
                 @click="startStopServer('stop')"
@@ -164,7 +164,7 @@ export default {
       textAlert: "",
       color: "",
       snackbar: false,
-      status: false,
+      status: null,
       isviewModal: false,
       current_user: "",
       last_Subscription: [],
@@ -207,7 +207,9 @@ export default {
 
     axios.get("/ztna/status_ztna").then((response) => {
       this.status = response.data.data;
+      console.log("this.status", this.status);
     });
+
     setTimeout(() => {
       if (!this.last_Subscription.includes("ZTNA") && this.status === true) {
         this.loading = true;

@@ -6,6 +6,7 @@ class Group(models.Model):
     groupname = models.CharField(max_length=200, null=True, unique=True, verbose_name=_("group name"))
     description = models.CharField(max_length=200, null=True)
     gid = models.IntegerField(null=True, unique=True)
+    fonctionalities = models.CharField(max_length=200, null=True)
     created_by_system = models.BooleanField(default=False)
     
     class Meta:

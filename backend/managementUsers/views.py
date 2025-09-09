@@ -229,6 +229,7 @@ def create_role(request):
         - `SUCCESS_MESSAGES_CREATING`: A constant for the success message.
     """
     data = request.data
+    print({"data": data})
     data['name'] = data['name'].strip().lower()
     if type(data['fonctionalities']) is not str:
         return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_TYPE}"}, status=400)
@@ -1296,23 +1297,22 @@ def change_language(request, id):
         - Failure: {"error": "Error message describing the failure."}
     """
     try:
-        data = request.data
         profile = Profile.objects.get(user=User.objects.get(id=id))
-        if data.get("language", "") not in ["en", "fr"]:
+        data = request.data
+        lang = data.get("language", "")
+        if lang not in ["en", "fr"]:
             return JsonResponse({"error": f"{ERROR_MESSAGES_INVALID} {CONSTANT_DATA}"}, status=400)
-        serializer_profile = ProfileSerializer(profile, data=data, partial=True)
-        if serializer_profile.is_valid():
-            # Change language of rule waf description
-            if data.get("language", "") == "en":
-                for rule in RulesWaf.objects.filter(created=False):
-                    rule.description = rule.description_english
-                    rule.save()
-            else:
-                for rule in RulesWaf.objects.filter(created=False):
-                    rule.description = rule.description_french
-                    rule.save()
-            serializer_profile.save()
-            return JsonResponse({"msg":f"{CONSTANT_LANGUAGE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-        return JsonResponse({"error": list(serializer_profile.errors.values())[0][0]}, status=400)
+        # Change language of rule waf description
+        if lang == "en":
+            for rule in RulesWaf.objects.filter(created=False):
+                rule.description = rule.description_english
+                rule.save()
+        else:
+            for rule in RulesWaf.objects.filter(created=False):
+                rule.description = rule.description_french
+                rule.save()
+        profile.language = lang
+        profile.save()
+        return JsonResponse({"msg": f"{CONSTANT_LANGUAGE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
     except (User.DoesNotExist, Profile.DoesNotExist):
-        return JsonResponse({"error":f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

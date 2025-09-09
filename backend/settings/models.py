@@ -48,7 +48,6 @@ class Settings(models.Model):
     root_login = models.BooleanField(default=True)
     auth_method = models.CharField(max_length=800, null=True)
     session_timeout = models.IntegerField(null=True)
-    protocol_http = models.BooleanField(default=True)
     certificat = models.ForeignKey(
         Certificate, on_delete = models.CASCADE, null=True)
     tcp_port = models.IntegerField(null=False)

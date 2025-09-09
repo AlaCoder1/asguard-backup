@@ -236,11 +236,7 @@ def permit_user_ssh(root_login,passwd_login,enable_ssh):
     return commandes
 
 
-def modify_location(http):
-    locations = f"""
 
-"""
-    return locations
 def modify_web_page( port, certif):
     commandes=[]
     file_path="/etc/nginx/sites-available/asguard.conf"
@@ -351,19 +347,23 @@ class UvicornUserLoggingMiddleware:
 
     return commandes          
       
+def modify_password_length(passwd_length):
+    commandes=[f"sudo sed -i 's/^minlen\\s*=.*/minlen = {passwd_length}/' /etc/security/pwquality.conf"]
+    return commandes
   
-def manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, passwd_login, enable_ssh, port, login_msg, certif, timeout):
+def manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, passwd_login, enable_ssh, port, login_msg, certif, timeout,password_length):
     all_interfaces_drop_ssh = [x["address"] for x in all_interfaces if x not in interface_ssh]
     all_interfaces_drop_web = [x["address"] for x in all_interfaces if x not in interface_web]
     interface_ssh = [x['address'] for x in interface_ssh]
     interface_web = [x['address'] for x in interface_web]
     init_firewall = init_settings_firewall()
-    command_web = add_rule_web(all_interfaces_drop_web, interface_web) if interface_web else ([], [])
-    commmand_ssh = add_rule_ssh(all_interfaces_drop_ssh, interface_ssh) if interface_ssh !=[] else ([],[])
+    command_web = add_rule_web(all_interfaces_drop_web, interface_web) if interface_web else []
+    commmand_ssh = add_rule_ssh(all_interfaces_drop_ssh, interface_ssh) if interface_ssh !=[] else []
     command_user = permit_user_ssh(root_login, passwd_login, enable_ssh)
     command_page_web = modify_web_page(port, certif)
     command_login = modify_log_message(login_msg, timeout)
-    all_commandes = init_firewall+command_web+commmand_ssh+command_user+command_page_web+command_login
+    commandes_password=modify_password_length(password_length)
+    all_commandes = init_firewall+command_web+commmand_ssh+command_user+command_page_web+command_login+commandes_password
     return all_commandes
 
 

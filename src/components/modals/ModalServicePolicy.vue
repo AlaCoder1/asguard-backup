@@ -1,10 +1,19 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -15,17 +24,24 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addServicesPolicy") }}</span>
+              {{ $t("ztna.addServicesPolicy") }}</span
+            >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateServicePolicy") }}</span>
+              {{ $t("ztna.updateServicePolicy") }}</span
+            >
           </v-card-title>
 
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rulesName"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="PolicyName"
+                    v-model="name"
+                    :placeholder="`${$t('ztna.policyName')}*`"
+                    :rules="rulesName"
+                    persistent-placeholder
+                  />
                 </v-col>
 
                 <v-col cols="12">
@@ -40,10 +56,12 @@
                         </template>
 
                         <v-list>
-                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
-                            <v-list-item-title>{{
-                              item
-                            }}</v-list-item-title>
+                          <v-list-item
+                            v-for="(item, index) in items"
+                            :key="index"
+                            @click="selectItem(item)"
+                          >
+                            <v-list-item-title>{{ item }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -65,10 +83,12 @@
                         </template>
 
                         <v-list>
-                          <v-list-item v-for="(item, index) in semantic" :key="index" @click="selectsemantic(item)">
-                            <v-list-item-title>{{
-                              item
-                            }}</v-list-item-title>
+                          <v-list-item
+                            v-for="(item, index) in semantic"
+                            :key="index"
+                            @click="selectsemantic(item)"
+                          >
+                            <v-list-item-title>{{ item }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -79,46 +99,115 @@
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
-                  <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact"
-                    item-title="attribute_service" item-value="id" return-object :rules="rules" :items="ServList.filter((item, index, self) =>
-                      index === self.findIndex((t) => t.attribute_service === item.attribute_service)
-                    )" background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
+                  <v-select
+                    v-model="serviceRA"
+                    :label="`${$t('ztna.serviceRoleAttribute')}*`"
+                    item-title="attribute_service"
+                    item-value="id"
+                    return-object
+                    :rules="rules"
+                    :items="
+                      ServList.filter(
+                        (item, index, self) =>
+                          index ===
+                          self.findIndex(
+                            (t) =>
+                              t.attribute_service === item.attribute_service
+                          )
+                      )
+                    "
+                    background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')"
+                  >
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
-                  <v-select v-model="identityatt" :label="$t('ztna.identityRoleAttribute')" density="compact"
-                    item-title="attribute_identitie" item-value="id" return-object :rules="rules" :items="identityList.filter((item, index, self) =>
-                      index === self.findIndex((t) => t.attribute_identitie === item.attribute_identitie)
-                    )" background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
+                  <v-select
+                    v-model="identityatt"
+                    :label="`${$t('ztna.identityRoleAttribute')}*`"
+                    item-title="attribute_identitie"
+                    item-value="id"
+                    return-object
+                    :rules="rules"
+                    :items="
+                      identityList.filter(
+                        (item, index, self) =>
+                          index ===
+                          self.findIndex(
+                            (t) =>
+                              t.attribute_identitie === item.attribute_identitie
+                          )
+                      )
+                    "
+                    background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')"
+                  >
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="Description"
+                    v-model="Description"
+                    placeholder="Description"
+                    persistent-placeholder
+                  />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
             <v-spacer></v-spacer>
-            <v-btn color="indigo-darken-3" :rounded="true" large outlined label-color="#213E9F" variant="flat"
-              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span></v-btn>
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              outlined
+              label-color="#213E9F"
+              variant="flat"
+              class="mt-3 btn-add"
+              text
+              @click="cancel"
+              ><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span
+              ></v-btn
+            >
 
-            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" variant="flat"
-              class="mt-3 ml-2 btn-add" type="submit">
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              color="indigo-darken-3"
+              variant="flat"
+              class="mt-3 ml-2 btn-add"
+              type="submit"
+            >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span>
+                {{ $t("buttons.create") }}</span
+              >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span>
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -129,7 +218,6 @@ import { toRefs, ref, watch, reactive, inject } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-
 
 export default {
   props: {
@@ -149,7 +237,7 @@ export default {
   setup(props) {
     const { t } = useI18n();
     const name = ref("");
-    const ServicePolicies = ref([])
+    const ServicePolicies = ref([]);
     const ServList = ref([]);
     const identityList = ref([]);
     const idServ = ref("");
@@ -167,10 +255,7 @@ export default {
         return ValidName(value) ? true : t("ztna.validName");
       },
     ];
-    const items = ref([
-      "Dial",
-      "Bind",
-    ]);
+    const items = ref(["Dial", "Bind"]);
     const semantic = ref(["AllOf", "AnyOf"]);
     const rules = [
       (value) => {
@@ -182,7 +267,9 @@ export default {
 
     const { isOpen, editRow, modalMode } = toRefs(props);
     function existingName(value) {
-      const existingIdentity = ServicePolicies.value.find(identity => identity.name === value);
+      const existingIdentity = ServicePolicies.value.find(
+        (identity) => identity.name === value
+      );
 
       if (existingIdentity) {
         return true;
@@ -236,30 +323,34 @@ export default {
     );
     const fetchServicePolicies = async () => {
       try {
-        const ServicePoliciesString = await document.getElementById("app").getAttribute("service_policies");
+        const ServicePoliciesString = await document
+          .getElementById("app")
+          .getAttribute("service_policies");
         const ServicePoliciesObject = JSON.parse(ServicePoliciesString);
 
-        const ServicePoliciesArray = Array.isArray(ServicePoliciesObject) ? ServicePoliciesObject : [];
+        const ServicePoliciesArray = Array.isArray(ServicePoliciesObject)
+          ? ServicePoliciesObject
+          : [];
 
-        ServicePolicies.value = ServicePoliciesArray.map(identity => ({ name: identity.name }));
-
+        ServicePolicies.value = ServicePoliciesArray.map((identity) => ({
+          name: identity.name,
+        }));
       } catch (error) {
         ServicePolicies.value = [];
       }
     };
 
     onMounted(() => {
-      fetchServicePolicies()
+      fetchServicePolicies();
       let servicesString = document
         .getElementById("app")
         .getAttribute("services");
       let servicesObject;
       try {
         servicesObject = JSON.parse(servicesString);
-      } catch (error) {
-      }
+      } catch (error) {}
 
-      ServList.value = servicesObject
+      ServList.value = servicesObject;
       let IdentitiesString = document
         .getElementById("app")
         .getAttribute("Identities");
@@ -268,13 +359,12 @@ export default {
 
       IdentitiesObject = JSON.parse(IdentitiesString);
       identityList.value = IdentitiesObject ? IdentitiesObject : [];
-    })
+    });
     const populate = (data) => {
       if (modalMode.value === "edit") {
         lastname.value = data.name;
-        idServ.value = data.id
+        idServ.value = data.id;
         name.value = data.name;
-
 
         Description.value = data.description;
         selectedTitle.value = data.type;
@@ -296,18 +386,15 @@ export default {
           }
         }
         serviceRA.value = service;
-        identityatt.value = identity
-
+        identityatt.value = identity;
       }
     };
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(name.value) === true);
-      if (isFieldValid || modalMode.value === "edit"
-      ) {
+      const isFieldValid = rulesName.every((rule) => rule(name.value) === true);
+      if (isFieldValid || modalMode.value === "edit") {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
 
         let identityAttribute = `#${identityatt.value.attribute_identitie}`;
         let serviceAttribute = `#${serviceRA.value.attribute_service}`;
@@ -317,7 +404,7 @@ export default {
           semantic: selectedsemantic.value,
           identityRoles: [identityAttribute],
           serviceRoles: [serviceAttribute],
-          Description: Description.value
+          Description: Description.value,
         };
 
         let token = document.getElementById("app").getAttribute("token");

@@ -1,10 +1,19 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -15,58 +24,110 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addServices") }}</span>
+              {{ $t("ztna.addServices") }}</span
+            >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateService") }}</span>
+              {{ $t("ztna.updateService") }}</span
+            >
           </v-card-title>
 
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="ServiceName" v-model="name" :placeholder="$t('ztna.serviceName')" :rules="rulesName"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="ServiceName"
+                    v-model="name"
+                    :placeholder="`${$t('ztna.serviceName')}*`"
+                    :rules="rulesName"
+                    persistent-placeholder
+                  />
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="ServiceAttribute" v-model="serviceAtt" :placeholder="$t('ztna.serviceAttribute')"
-                    :rules="rulesatt" persistent-placeholder />
+                  <v-text-field
+                    id="ServiceAttribute"
+                    v-model="serviceAtt"
+                    :placeholder="`${$t('ztna.serviceAttribute')}*`"
+                    :rules="rulesatt"
+                    persistent-placeholder
+                  />
                 </v-col>
 
                 <v-col cols="12" class="mb-n3">
                   <label for="Tunneler" class="mr-3">{{
                     $t("ztna.encryption")
                   }}</label>
-                  <input type="checkbox" id="encryptionRequired" value="encryptionRequired"
-                    v-model="encryptionRequired" />
+                  <input
+                    type="checkbox"
+                    id="encryptionRequired"
+                    value="encryptionRequired"
+                    v-model="encryptionRequired"
+                  />
                 </v-col>
 
                 <v-col cols="6">
-                  <v-select v-model="intercept" label="INTERCEPT" density="compact" item-title="name" item-value="id"
-                    return-object :rules="rules" :items="interceptList" background-color="#fffffff"
-                    :no-data-text="$t('certificat.certificatlist')">
+                  <v-select
+                    v-model="intercept"
+                    label="INTERCEPT*"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :rules="rules"
+                    :items="interceptList"
+                    background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')"
+                  >
                   </v-select>
-
                 </v-col>
                 <v-col cols="6" class="mb-n6">
-
-                  <v-select v-model="host" :label="$t('ztna.host')" density="compact" item-title="name" item-value="id"
-                    return-object :rules="rules" :items="hostList" background-color="#fffffff"
-                    :no-data-text="$t('certificat.certificatlist')">
+                  <v-select
+                    v-model="host"
+                    :label="`${$t('ztna.host')}*`"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :rules="rules"
+                    :items="hostList"
+                    background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')"
+                  >
                   </v-select>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="Description"
+                    v-model="Description"
+                    placeholder="Description"
+                    persistent-placeholder
+                  />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
             <v-spacer></v-spacer>
-            <v-btn color="indigo-darken-3" :rounded="true" large outlined label-color="#213E9F" variant="flat"
-              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span></v-btn>
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              outlined
+              label-color="#213E9F"
+              variant="flat"
+              class="mt-3 btn-add"
+              text
+              @click="cancel"
+              ><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span
+              ></v-btn
+            >
             <!-- <VBtn
               color="red"
               :rounded="true"
@@ -80,18 +141,33 @@
             >
               Reset
             </VBtn> -->
-            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" variant="flat"
-              class="mt-3 ml-2 btn-add" type="submit">
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              color="indigo-darken-3"
+              variant="flat"
+              class="mt-3 ml-2 btn-add"
+              type="submit"
+            >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span>
+                {{ $t("buttons.create") }}</span
+              >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span>
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -102,7 +178,6 @@ import axios from "axios";
 import { toRefs, ref, watch, reactive, inject, onMounted } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { useI18n } from "vue-i18n";
-
 
 export default {
   props: {
@@ -133,7 +208,7 @@ export default {
     const rules = [
       (value) => {
         if (value) return true;
-        return "You must enter a value.";
+        return t("ztna.enterValue");
       },
     ];
     const rulesName = [
@@ -151,7 +226,9 @@ export default {
       },
     ];
     function existingName(value) {
-      const existingservice = Services.value.find(service => service.name === value);
+      const existingservice = Services.value.find(
+        (service) => service.name === value
+      );
 
       if (existingservice) {
         return true;
@@ -161,13 +238,18 @@ export default {
     }
     const fetchServices = async () => {
       try {
-        const ServicesString = await document.getElementById("app").getAttribute("Services");
+        const ServicesString = await document
+          .getElementById("app")
+          .getAttribute("Services");
         const ServicesObject = JSON.parse(ServicesString);
 
-        const ServicesArray = Array.isArray(ServicesObject) ? ServicesObject : [];
+        const ServicesArray = Array.isArray(ServicesObject)
+          ? ServicesObject
+          : [];
 
-        Services.value = ServicesArray.map(service => ({ name: service.name }));
-
+        Services.value = ServicesArray.map((service) => ({
+          name: service.name,
+        }));
       } catch (error) {
         Services.value = [];
       }
@@ -189,10 +271,10 @@ export default {
     });
 
     onMounted(() => {
-      fetchHostConfigs()
-      fetchInterceptConfigs()
-      fetchServices()
-    })
+      fetchHostConfigs();
+      fetchInterceptConfigs();
+      fetchServices();
+    });
 
     watch(
       () => isOpen.value,
@@ -223,7 +305,7 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        servId.value = data.id
+        servId.value = data.id;
         name.value = data.name;
         lastname.value = data.name;
         serviceAtt.value = data.attribute_service;
@@ -245,7 +327,7 @@ export default {
           }
         }
         host.value = hostobj;
-        intercept.value = interceptobj
+        intercept.value = interceptobj;
       }
     };
     const fetchInterceptConfigs = () => {
@@ -256,8 +338,7 @@ export default {
 
       try {
         configsObject = JSON.parse(configsString);
-      } catch (error) {
-      }
+      } catch (error) {}
 
       interceptList.value = configsObject;
     };
@@ -270,13 +351,13 @@ export default {
 
       try {
         configsObject = JSON.parse(configsString);
-      } catch (error) {
-      }
+      } catch (error) {}
 
       hostList.value = configsObject;
     };
     function ValidName(value) {
-      const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
+      const hostnamePattern =
+        /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
       if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
         return true;
@@ -286,9 +367,11 @@ export default {
     }
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(name.value) === true);
-      const isattValid = rulesatt.every(rule => rule(serviceAtt.value) === true);
-      if (isFieldValid && isattValid || modalMode.value === "edit") {
+      const isFieldValid = rulesName.every((rule) => rule(name.value) === true);
+      const isattValid = rulesatt.every(
+        (rule) => rule(serviceAtt.value) === true
+      );
+      if ((isFieldValid && isattValid) || modalMode.value === "edit") {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -297,7 +380,7 @@ export default {
           roleAttributes: [serviceAtt.value],
           encryptionRequired: encryptionRequired.value,
           configs: [intercept.value.ref_intercept, host.value.ref_host],
-          Description: Description.value
+          Description: Description.value,
         };
 
         let token = document.getElementById("app").getAttribute("token");
@@ -320,7 +403,6 @@ export default {
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
-
               }
             })
             .catch((i) => {
@@ -385,7 +467,6 @@ export default {
     };
 
     const cancel = () => {
-
       name.value = "";
       serviceAtt.value = "";
       encryptionRequired.value = false;
@@ -412,7 +493,7 @@ export default {
       resetForm,
       cancel,
       rulesName,
-      rulesatt
+      rulesatt,
     };
   },
 };

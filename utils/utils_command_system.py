@@ -4,6 +4,8 @@ from utils.commands_utils import execute_command_without_arguments, execute_list
 
 def restart_nginx_in_system():
     execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])
+def restart_uvicorn_in_system():
+    execute_command_without_arguments(["sudo", "systemctl", "restart", "uvicorn"])
 
 
 def check_exist_files_in_system(list_file_path: list[str]):

@@ -61,7 +61,7 @@ from rest_framework.permissions import AllowAny
 from django.views.decorators.http import require_http_methods
 from decouple import config
 
-from utils.utils_command_system import restart_nginx_in_system
+from utils.utils_command_system import restart_nginx_in_system, restart_uvicorn_in_system
 
 
 # Constants
@@ -836,7 +836,6 @@ def update_settings(request):
         root_login = data.get("root_login", None)
         auth_method = data.get("auth_method", None)
         session_timeout = data.get("session_timeout", None)
-        protocol_http = data.get("protocol_http", None)
         certificat = data.get("certificat", None)
         tcp_port = data.get("tcp_port", None)
         login_message = data.get("login_message", None)
@@ -844,7 +843,7 @@ def update_settings(request):
         interface_web = data.get("interface_web",[])
         password_length = data.get("password_length", None)
         all_interfaces = get_all_interfaces()
-        if not certificat and not protocol_http:
+        if not certificat:
             msg = ERROR_MESSAGE_HTTPS
             status = 400 
         else:
@@ -856,17 +855,15 @@ def update_settings(request):
                 "root_login" : root_login,
                 "auth_method" : auth_method,
                 "session_timeout" : session_timeout,
-                "protocol_http" : protocol_http,
                 "certificat" : certificat,
                 "tcp_port" : tcp_port,
                 "login_message" : login_message,
                 "password_length" : password_length
                 }
-            all_commandes,rules_web,rules_ssh = manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, auth_method, enable_ssh, protocol_http, tcp_port, login_message, certif, session_timeout)
+            all_commandes= manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, auth_method, enable_ssh, tcp_port, login_message, certif, session_timeout,password_length)
             aux_commandes = execute_all_commandes(all_commandes)
             if aux_commandes:
                 msg,status = save_config_db(data, settings.pk, interface_web, interface_ssh)
-                save_rules_settings(rules_ssh, rules_web)
             else:
                 msg = ERROR_MESSAGES_UPDATING
                 status = 400
@@ -895,4 +892,5 @@ def get_settings(request):
 @permission_classes([IsAuthenticated])
 def restart_nginx(_):
     restart_nginx_in_system()
+    restart_uvicorn_in_system()
     return JsonResponse({"msg": ""}, status=200)

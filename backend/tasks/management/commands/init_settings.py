@@ -12,7 +12,6 @@ class Command(BaseCommand):
             root_login=True
             auth_method="password"
             session_timeout=300
-            protocol_http=False
             certificat_id=None
             tcp_port=443
             login_message=True
@@ -64,19 +63,16 @@ class Command(BaseCommand):
                     "root_login": root_login,
                     "auth_method": auth_method,
                     "session_timeout": session_timeout,
-                    "protocol_http": protocol_http,
                     "certificat": certificat_id,
                     "tcp_port": tcp_port,
                     "login_message": login_message,
                     "password_length": password_length
                     }
-                commandes,rules_web,rules_ssh = manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,protocol_http,tcp_port,login_message,certif,session_timeout)
-                
-                print({"all_commandes":commandes})
+                commandes = manage_commandes(all_interfaces,interface_ssh,interface_web,root_login,auth_method,enable_ssh,tcp_port,login_message,certif,session_timeout,password_length)
+                commandes+=['sudo systemctl restart nginx', "sudo systemctl restart uvicorn"]
                 aux_commandes=execute_all_commandes(commandes)
                 if aux_commandes:
                     msg,_=create_config_db(data,interface_web,interface_ssh)
-                    save_rules_settings(rules_ssh,rules_web)
                 else:
                     msg=aux_commandes
                 # status=400

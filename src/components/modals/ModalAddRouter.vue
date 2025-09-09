@@ -1,10 +1,19 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -15,48 +24,99 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addRelay") }}</span>
+              {{ $t("ztna.addRelay") }}</span
+            >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateRelay") }}</span>
+              {{ $t("ztna.updateRelay") }}</span
+            >
           </v-card-title>
 
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="RouterName" v-model="RouterName" :placeholder="$t('ztna.relayName')"
-                    :rules="rulesName" persistent-placeholder />
+                  <v-text-field
+                    id="RouterName"
+                    v-model="RouterName"
+                    :placeholder="`${$t('ztna.relayName')}*`"
+                    :rules="rulesName"
+                    persistent-placeholder
+                  />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="RouterAttribute" v-model="RouterAttribute" :placeholder="$t('ztna.relayAttribute')"
-                    :rules="rulesatt" persistent-placeholder />
+                  <v-text-field
+                    id="RouterAttribute"
+                    v-model="RouterAttribute"
+                    :placeholder="`${$t('ztna.relayAttribute')}*`"
+                    :rules="rulesatt"
+                    persistent-placeholder
+                  />
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="Description"
+                    v-model="Description"
+                    placeholder="Description"
+                    persistent-placeholder
+                  />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
 
           <v-card-actions>
+            <div class="text-start ml-6 mt-3">
+              <span class="text-sm">
+                <span class="text-red text-lg">*</span>
+                {{ $t("errors.oblig") }}</span
+              >
+            </div>
+            <span></span>
             <v-spacer></v-spacer>
-            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
-              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span></v-btn>
-            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
-              class="mt-3 ml-2 btn-add" type="submit">
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              variant="flat"
+              class="mt-3 btn-add"
+              text
+              @click="cancel"
+              ><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span
+              ></v-btn
+            >
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 ml-2 btn-add"
+              type="submit"
+            >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span>
+                {{ $t("buttons.create") }}</span
+              >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span>
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -102,7 +162,7 @@ export default {
         if (!value) return t("ztna.enterValue");
         if (existingName(value)) return t("ztna.nameExist");
         if (inValidRelay(value)) return t("ztna.namerelay");
-        return ValidName(value) ? true : t("ztna.validName");
+        return true;
       },
     ];
     const rulesatt = [
@@ -125,7 +185,8 @@ export default {
     }
 
     function ValidName(value) {
-      const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
+      const hostnamePattern =
+        /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
       if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
         return true;
@@ -134,7 +195,7 @@ export default {
       return false;
     }
     function inValidRelay(value) {
-      const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*\.relay$/;
+      const hostnamePattern = /^[a-zA-Z0-9_]+\.relay$/;
       // Check if the value matches the hostname pattern and is not entirely numeric
       if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
         return false;
@@ -195,7 +256,6 @@ export default {
         const RelaysArray = Array.isArray(RelaysObject) ? RelaysObject : [];
 
         Relays.value = RelaysArray.map((identity) => ({ name: identity.name }));
-
       } catch (error) {
         Relays.value = [];
       }
@@ -206,9 +266,16 @@ export default {
     });
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(RouterName.value) === true);
-      const isattValid = rulesatt.every(rule => rule(RouterAttribute.value) === true);
-      if (isFieldValid && isattValid || modalMode.value === "edit") {
+      const isFieldValid = rulesName.every(
+        (rule) => rule(RouterName.value) === true
+      );
+      const isattValid = rulesatt.every(
+        (rule) => rule(RouterAttribute.value) === true
+      );
+      console.log("isFieldValid", isFieldValid);
+      console.log("isattValid", isattValid);
+
+      if (isFieldValid && isattValid) {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -319,7 +386,7 @@ export default {
       rules,
       submitForm,
       rulesName,
-      rulesatt
+      rulesatt,
     };
   },
 };

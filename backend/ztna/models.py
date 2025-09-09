@@ -93,10 +93,8 @@ class RelaysPolicy(models.Model):
     name = models.CharField(max_length=500, unique=True, verbose_name=_("name"))
     semantic = models.CharField(max_length=10, default="AllOf")
     description = models.CharField(max_length=800, null=True, blank=True)
-    relay = models.ForeignKey(Relays, on_delete=models.CASCADE)
-    identity = models.ForeignKey(Identities, on_delete=models.CASCADE)
-    identity_attribute=models.CharField(max_length=500, null=True, blank=True)
-    relay_attribute=models.CharField(max_length=500, null=True, blank=True)
+    relay = models.ForeignKey(Relays, on_delete=models.CASCADE, default=None, null=True)
+    identity = models.ForeignKey(Identities, on_delete=models.CASCADE, default=None, null=True)
 
     date_creation = models.DateTimeField()
     class Meta:

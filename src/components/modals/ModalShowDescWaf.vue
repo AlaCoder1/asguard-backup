@@ -17,7 +17,9 @@
                     ></span>
                   </div>
                 </v-card-title>
-                <v-card-item class="text-subtitle-1 text-white w-100 mb-10 mt-1">
+                <v-card-item
+                  class="text-subtitle-1 text-white w-100 mb-10 mt-1"
+                >
                   {{ description ?? $t("noDesc") }}
                 </v-card-item>
                 <!-- <v-card-actions class="mt-1 actionBtn"> </v-card-actions> -->
@@ -88,7 +90,9 @@ export default {
 
     const populate = (data) => {
       if (modalMode.value === "show") {
-        description.value = data.description;
+        let lang = localStorage.getItem("lang");
+        description.value =
+          lang === "en" ? data.description_english : data.description_french;
       }
     };
 

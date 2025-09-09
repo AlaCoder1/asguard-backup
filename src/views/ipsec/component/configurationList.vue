@@ -356,7 +356,6 @@ export default {
           state.viewModal = true;
         }
       });
-      console.log("params,params", params);
       return input;
     }
 
@@ -745,8 +744,10 @@ export default {
     onMounted(async () => {
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
+
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
+
       overlayTemplate.value = `
       <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
@@ -756,27 +757,27 @@ export default {
       />
      </svg></span>`;
 
-      try {
-        const serversAttribute =
-          document.getElementById("app").attributes["servers"].value;
-        const validJsonString = serversAttribute;
-        const parsedArray = JSON.parse(validJsonString);
-        rowData.value = parsedArray;
+      // try {
+      const serversAttribute =
+        document.getElementById("app").attributes["servers"].value;
+      const validJsonString = serversAttribute;
+      const parsedArray = JSON.parse(validJsonString);
+      rowData.value = parsedArray;
 
-        const statusAttribute =
-          document.getElementById("app").attributes["status"].value;
+      const statusAttribute =
+        document.getElementById("app").attributes["status"].value;
 
-        status.value = statusAttribute === "False" ? false : true;
+      status.value = statusAttribute === "False" ? false : true;
 
-        setTimeout(() => {
-          if (
-            !last_Subscription.value.includes("VPN IPSEC") &&
-            status.value === true
-          ) {
-            startStopServer("stop");
-          }
-        }, 1000);
-      } catch (error) {}
+      // setTimeout(() => {
+      //   if (
+      //     !last_Subscription.value.includes("VPN IPSEC") &&
+      //     status.value === true
+      //   ) {
+      //     startStopServer("stop");
+      //   }
+      // }, 1000);
+      // } catch (error) {}
     });
 
     const startStopServer = (data) => {
@@ -794,12 +795,17 @@ export default {
           status: data,
         };
 
+        loading.value = true;
+        isLoadingDialogue.value = true;
+
         axios
           .post("/ipsec/statusIPsec", payload)
           .then((response) => {
             snackbar.value = true;
             color.value = "success";
             textAlert.value = response.data.msg;
+            loading.value = false;
+            isLoadingDialogue.value = false;
 
             setTimeout(() => {
               location.reload();
@@ -815,6 +821,8 @@ export default {
               color.value = "red";
               textAlert.value = i.response.data.error;
             }
+            loading.value = false;
+            isLoadingDialogue.value = false;
           });
       } else {
         state.isviewModal = true;

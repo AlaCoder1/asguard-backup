@@ -102,13 +102,13 @@
             </v-col>
           </v-row>
 
-          <template v-if="state.protocol === 'HTTP'">
+          <!-- <template v-if="state.protocol === 'HTTP'">
             <v-text-field
               :label="$t('settings.TCPPort')"
               v-model="state.tcpPortHttp"
               placeholder="80"
             ></v-text-field>
-          </template>
+          </template> -->
 
           <template v-if="state.protocol === 'HTTPS'">
             <!-- <v-text-field
@@ -135,6 +135,10 @@
               v-model="state.tcpPort"
               placeholder="443"
             ></v-text-field>
+
+            <p class="error-feedback mb-5" v-if="v$.tcpPort.$error">
+              {{ v$.tcpPort.$errors[0].$message }}
+            </p>
           </template>
 
           <v-row class="mb-1">
@@ -244,13 +248,12 @@ export default {
       state.rootLogin = data.root_login;
       state.authMethod = data.auth_method;
       state.sessionTimeout = data.session_timeout;
-      state.protocol = data.protocol_http === true ? "HTTP" : "HTTPS";
+      state.protocol = "HTTPS";
       state.password = data.password_length;
       state.loginMsg = data.login_message;
 
-      state.networkInterfaceSSH = data.interfaces_ssh.map((i)=> i.interface);
-      state.networkInterfaceWEB = data.interfaces_web.map((i)=> i.interface);
-
+      state.networkInterfaceSSH = data.interfaces_ssh.map((i) => i.interface);
+      state.networkInterfaceWEB = data.interfaces_web.map((i) => i.interface);
 
       setTimeout(() => {
         const filtredCertif = state.certificatList.filter(
@@ -259,12 +262,11 @@ export default {
         state.sslCertificate = filtredCertif[0];
       }, 1000);
 
-      state.tcpPort = data.protocol_http === false ? data?.tcp_port : "";
-      state.tcpPortHttp = data.protocol_http === true ? data?.tcp_port : "";
+      state.tcpPort = data?.tcp_port;
     };
 
     const state = reactive({
-      protocolList: ["HTTP", "HTTPS"],
+      protocolList: ["HTTPS"],
       mapedInterface: [],
       interfaceWEBList: [],
       certificatList: [],
@@ -282,25 +284,25 @@ export default {
       rootLogin: false,
       authMethod: false,
       sessionTimeout: "",
-      protocol: "HTTP",
+      protocol: "HTTPS",
       sslCertificate: "",
       tcpPort: "",
-      tcpPortHttp: "",
+      // tcpPortHttp: "",
       loginMsg: false,
       password: null,
     });
 
-    watch(
-      () => state.protocol,
-      (val) => {
-        if (val === "HTTP") {
-          state.sslCertificate = "";
-          state.tcpPort = "";
-        } else {
-          state.tcpPortHttp = "";
-        }
-      }
-    );
+    // watch(
+    //   () => state.protocol,
+    //   (val) => {
+    //     if (val === "HTTP") {
+    //       state.sslCertificate = "";
+    //       state.tcpPort = "";
+    //     } else {
+    //       state.tcpPortHttp = "";
+    //     }
+    //   }
+    // );
 
     const getCertif = () => {
       const csrfToken = getCookie("csrftoken");
@@ -338,8 +340,12 @@ export default {
       axios.post("/settings/restartNginx");
     };
 
-      const error = computed(() => {
+    const error = computed(() => {
       return t("errors.valueRequired");
+    });
+
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
     });
 
     const rules = computed(() => {
@@ -348,6 +354,12 @@ export default {
           requiredIfFuction: helpers.withMessage(
             error,
             requiredIf(() => state.protocol === "HTTPS")
+          ),
+        },
+        tcpPort: {
+          isValidPort: helpers.withMessage(
+            onlynumbers,
+            helpers.regex(/^[0-9]+$/)
           ),
         },
       };
@@ -366,7 +378,6 @@ export default {
           root_login: state.rootLogin,
           auth_method: state.authMethod,
           session_timeout: state.sessionTimeout,
-          protocol_http: state.protocol === "HTTP" ? true : false,
           password_length: state.password ?? "",
           login_message: state.loginMsg,
           interface_ssh: state.networkInterfaceSSH
@@ -382,19 +393,9 @@ export default {
                 address: i.address,
               }))
             : [],
+          certificat: state.sslCertificate ? state.sslCertificate.id : "",
+          tcp_port: state.tcpPort,
         };
-
-        if (state.protocol === "HTTP") {
-          payload = { ...payload, tcp_port: state.tcpPortHttp };
-        }
-
-        if (state.protocol === "HTTPS") {
-          payload = {
-            ...payload,
-            certificat: state.sslCertificate ? state.sslCertificate.id : "",
-            tcp_port: state.tcpPort,
-          };
-        }
 
         state.loading = true;
         state.isLoadingDialogue = true;
@@ -403,20 +404,20 @@ export default {
           .put(`/settings/updateSettings`, payload)
           .then((response) => {
             if (response.status == 200) {
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
-                setTimeout(() => {
-                  state.loading = false;
-                  state.isLoadingDialogue = false;
-                  state.snackbar = true;
-                  state.color = "success";
-                  state.textAlert = response.data.msg;
-                  closeModal();
-                }, 5000);
-                setTimeout(() => {
-                  location.reload();
-                }, 5000);
+              restartNginx();
+              state.loading = true;
+              state.isLoadingDialogue = true;
+              setTimeout(() => {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                closeModal();
+              }, 5000);
+              setTimeout(() => {
+                location.reload();
+              }, 5000);
             }
           })
           .catch((i) => {
@@ -438,8 +439,6 @@ export default {
     };
 
     const cancel = () => {};
-
-  
 
     return {
       v$,
@@ -467,7 +466,7 @@ export default {
   line-height: normal;
 }
 .text-xs {
-  font-size: 12px; 
+  font-size: 12px;
 }
 .container {
   height: 50px;

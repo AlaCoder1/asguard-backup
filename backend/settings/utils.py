@@ -113,7 +113,6 @@ def get_all_interfaces():
             ip4config = None
         results.append({
             "id":info.pk,
-            "name_interface": info.name_interface,
             "address": ip4config.ip_address if ip4config else None
         })
     return results
@@ -125,8 +124,10 @@ def init_settings_firewall():
       (
     "sudo nft list table inet settings >/dev/null 2>&1 || sudo nft add table inet settings && "
     "sudo nft list chain inet settings input >/dev/null 2>&1 || "
-    "sudo nft add chain inet settings input '{ type filter hook input priority 0; policy accept; }'"
-)
+    "sudo nft add chain inet settings input '{ type filter hook input priority 0; policy accept; }'",
+),
+    "sudo nft flush chain inet settings input"
+      
 
     ]
     return commandes
@@ -136,16 +137,18 @@ def add_rule_web(list_interface_drop, interface_address):
     rules_web = []
     commandes = []
     try:
-        interface_id = IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
-        commandes.append(f"sudo nft list chain inet settings input | grep -q 'ip saddr {interface_address[0]} accept' || sudo nft add rule inet settings input ip saddr {interface_address[0]} accept")
-        rules_web.append({
-            "rule" : f"ip saddr {interface_address[0]} accept",
-            "saddr" : interface_address[0],
-            "protocol" : "ALL",
-            "policy" : "accept",
-            "type_rule" : "inbound",
-            "interface" : interface_id
-        })
+        for i in interface_address:
+            interface_id = IP4Config.objects.get(ip_address=i).interface.pk
+            rule=f'ip saddr {i} log prefix "___nftables_logs_rule_settings____ip_saddr_{i}_accept___" accept'
+            commandes.append(f"sudo nft list chain inet settings input | grep -q '{rule}' || sudo nft add rule inet settings input {rule}")
+            rules_web.append({
+                "rule" : rule,
+                "saddr" : i,
+                "protocol" : "all",
+                "policy" : "accept",
+                "type_rule" : "inbound",
+                "interface" : interface_id
+            })
     except IP4Config.DoesNotExist:
         pass
 
@@ -153,11 +156,12 @@ def add_rule_web(list_interface_drop, interface_address):
         try:
             interface_id = IP4Config.objects.get(ip_address=add).interface.pk
             if add not in interface_address:
-                commandes.append(f"sudo nft list chain inet settings input | grep -q 'ip saddr {add} drop' || sudo nft add rule inet settings input ip saddr {add} drop")
+                rule=f'ip saddr {add} log prefix "___nftables_logs_rule_settings____ip_saddr_{add}_drop___" drop'
+                commandes.append(f"sudo nft list chain inet settings input | grep -q '{rule}' || sudo nft add rule inet settings input {rule}")
                 rules_web.append({
-                "rule" : f"ip saddr {add} drop",
+                "rule" : rule,
                 "saddr" : add,
-                "protocol" : "ALL",
+                "protocol" : "all",
                 "policy" : "drop",
                 "type_rule" : "inbound",
                 "interface" : interface_id
@@ -169,23 +173,25 @@ def add_rule_web(list_interface_drop, interface_address):
         f"sudo nft list table inet settings  > /etc/rules/settings/settings.conf"
     ]
    
-    return commandes, rules_web
+    return commandes
 
 
 def add_rule_ssh(list_interface_drop, interface_address):
     rules_ssh = []
     commandes = []
     try:
-        interface_id = IP4Config.objects.get(ip_address=interface_address[0]).interface.pk
-        commandes.append(f"sudo nft list chain inet settings input | grep -q 'ip saddr {interface_address[0]} tcp dport 22 accept' || sudo nft add rule inet settings input ip saddr {interface_address[0]} tcp dport 22 accept")
-        rules_ssh.append({
-            "rule" : f"ip saddr {interface_address[0]} tcp dport 22 accept",
-            "saddr" : interface_address[0],
-            "policy" : "accept",
-            "type_rule" : "inbound",
-            "protocol" : "TCP",
-            "dport" : 22,
-            "interface" : interface_id
+        for i in interface_address:
+            interface_id = IP4Config.objects.get(ip_address=i).interface.pk
+            rule=f'ip saddr {i} tcp dport 22 log prefix "___nftables_logs_rule_settings____ip_saddr_{i}_tcp_dport_22_accept___" accept'
+            commandes.append(f"sudo nft list chain inet settings input | grep -q '{rule}' || sudo nft add rule inet settings input {rule}")
+            rules_ssh.append({
+                "rule" : rule,
+                "saddr" : i,
+                "policy" : "accept",
+                "type_rule" : "inbound",
+                "protocol" : "tcp",
+                "dport" : 22,
+                "interface" : interface_id
         })
     except IP4Config.DoesNotExist:
         pass
@@ -193,14 +199,15 @@ def add_rule_ssh(list_interface_drop, interface_address):
         try:
             interface_id = IP4Config.objects.get(ip_address=add).interface.pk
             if add not in interface_address:
-                commandes.append( f"sudo nft list chain inet settings input | grep -q 'ip saddr {add} tcp dport 22 drop' || sudo nft add rule inet settings input ip saddr {add} tcp dport 22 drop")
+                rule=f'ip saddr {add} tcp dport 22 log prefix "___nftables_logs_rule_settings____ip_saddr_{add}_tcp_dport_22_drop___" drop'
+                commandes.append( f"sudo nft list chain inet settings input | grep -q '{rule}' || sudo nft add rule inet settings input {rule}")
                 rules_ssh.append(
                     {
-                    "rule" : f"ip saddr {add} tcp dport 22 drop",
+                    "rule" : rule,
                     "saddr" : add,
                     "policy" : "drop",
                     "type_rule" : "inbound",
-                    "protocol" : "TCP",
+                    "protocol" : "tcp",
                     "dport" : 22,
                     "interface": interface_id
                     }
@@ -211,7 +218,7 @@ def add_rule_ssh(list_interface_drop, interface_address):
     commandes += [
         f"sudo nft list table inet settings  > /etc/rules/settings/settings.conf"
     ]
-    return commandes, rules_ssh
+    return commandes
 
     
 def permit_user_ssh(root_login,passwd_login,enable_ssh):
@@ -229,57 +236,15 @@ def permit_user_ssh(root_login,passwd_login,enable_ssh):
     return commandes
 
 
-def modify_web_page(http_config, port, certif):
+def modify_location(http):
+    locations = f"""
+
+"""
+    return locations
+def modify_web_page( port, certif):
     commandes=[]
     file_path="/etc/nginx/sites-available/asguard.conf"
-    locations = f"""
-    location /static/ {{
-        root /asguard/asguard;
-        expires 30d;
-        add_header Cache-Control "public, max-age=2592000";
-        allow all;
-    }}
-
-    location /ws/ {{
-        proxy_pass http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }}
-
-    location / {{
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-Proto "https";
-        allow all;
-    }}
-
-    location /swagger/ {{
-        proxy_pass http://127.0.0.1:8000/swagger/; # Swagger UI endpoint
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-Proto "https";
-    }}
-
-    location /redoc/ {{
-        proxy_pass http://127.0.0.1:8000/redoc/; # Redoc endpoint
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-Proto "https";
-    }}
-}}
-"""
-    contenu_http = f"""
-    server {{
-        listen {port};
-        #server_name www.example.com;  # Replace with your actual domain name or IP address
-        modsecurity on;
-        modsecurity_rules_file /etc/nginx/modsec/main.conf;
-        {locations}
-    """
-
-    contenu_https = f"""
+    all_content = f"""
     server {{
         listen {port} ssl;
         #server_name www.example.com;  # Replace with your actual domain name or IP address
@@ -287,12 +252,43 @@ def modify_web_page(http_config, port, certif):
         ssl_certificate_key /etc/ssl/private/{certif}.key;
         modsecurity on;
         # modsecurity_rules_file /etc/nginx/modsec/main.conf;
-        {locations}
-    """
+            location /static/ {{
+        root /asguard/asguard;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+        allow all;
+    }}
 
-    # choose based on flag
-    all_content = contenu_http if http_config else contenu_https
-        
+        location /ws/ {{
+            proxy_pass http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }}
+
+        location / {{
+            proxy_pass http://127.0.0.1:8000;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-Proto "https";
+            allow all;
+        }}
+
+        location /swagger/ {{
+            proxy_pass http://127.0.0.1:8000/swagger/; # Swagger UI endpoint
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-Proto "https";
+        }}
+
+        location /redoc/ {{
+            proxy_pass http://127.0.0.1:8000/redoc/; # Redoc endpoint
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-Proto "https";
+        }}
+    }}
+    """
     commandes += [
     """cat <<EOF | sudo tee {} > /dev/null
 {}
@@ -302,8 +298,9 @@ EOF""".format(file_path, all_content),
     return commandes
 
 
+
 def modify_log_message(login_msg: bool,timeout:int):
-    MIDDELWARE_FILE="/asguard/asguard/asguard/middelware.py"
+    MIDDELWARE_FILE="/asguard/asguard/asguard/middleware.py"
     SETTINGS_FILE= "/asguard/asguard/asguard/settings.py"
     all_content = """
 # yourapp/middleware.py
@@ -350,31 +347,29 @@ class UvicornUserLoggingMiddleware:
     commandes = [
         f"sudo cat <<EOF > {MIDDELWARE_FILE}\n{all_content}\nEOF",
          f"""sed -i '/SESSION_COOKIE_AGE/c\\SESSION_COOKIE_AGE = {timeout}' "{SETTINGS_FILE}" || echo "SESSION_COOKIE_AGE = {timeout}" >> "{SETTINGS_FILE}" """
-        "sudo systemctl restart uvicorn"
     ]
 
     return commandes          
       
   
-def manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, passwd_login, enable_ssh, http_config, port, login_msg, certif, timeout):
+def manage_commandes(all_interfaces, interface_ssh, interface_web, root_login, passwd_login, enable_ssh, port, login_msg, certif, timeout):
     all_interfaces_drop_ssh = [x["address"] for x in all_interfaces if x not in interface_ssh]
     all_interfaces_drop_web = [x["address"] for x in all_interfaces if x not in interface_web]
     interface_ssh = [x['address'] for x in interface_ssh]
     interface_web = [x['address'] for x in interface_web]
     init_firewall = init_settings_firewall()
-    command_web, rules_web = add_rule_web(all_interfaces_drop_web, interface_web) if interface_web else ([], [])
-    commmand_ssh, rules_ssh = add_rule_ssh(all_interfaces_drop_ssh, interface_ssh) if interface_ssh !=[] else ([],[])
+    command_web = add_rule_web(all_interfaces_drop_web, interface_web) if interface_web else ([], [])
+    commmand_ssh = add_rule_ssh(all_interfaces_drop_ssh, interface_ssh) if interface_ssh !=[] else ([],[])
     command_user = permit_user_ssh(root_login, passwd_login, enable_ssh)
-    command_page_web = modify_web_page(http_config, port, certif)
+    command_page_web = modify_web_page(port, certif)
     command_login = modify_log_message(login_msg, timeout)
     all_commandes = init_firewall+command_web+commmand_ssh+command_user+command_page_web+command_login
-    return all_commandes, rules_web, rules_ssh
+    return all_commandes
 
 
 def execute_all_commandes(all_commandes):
     for cmd in all_commandes:
         _,error=execute_command(cmd)
-        # print({"cmd":cmd})
         if error :
             return error
     return True
@@ -397,6 +392,8 @@ def save_data_interface(list_interface, setting_id, aux_web):
                 serialiser_inter.save()
             else:
                 return next(iter(serialiser_inter.errors.values()))[0]
+    ids_to_keep = [item["id"] for item in list_interface if "id" in item]
+    SettingInterface.objects.filter(interface_web=aux_web).exclude(interface__in=ids_to_keep).delete()
     return True
    
      
@@ -435,6 +432,7 @@ def save_config_db(data, id, interface_web, interface_ssh):
         aux_web = save_data_interface(interface_web, id, True)
         if aux_web:
             aux_ssh = save_data_interface(interface_ssh, id, False)
+            
             if aux_ssh:
                 msg = SUCCES_MESSAGE
                 status = 200

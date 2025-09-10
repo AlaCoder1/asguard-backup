@@ -106,7 +106,7 @@
               <v-col class="device-style">Description </v-col>
             </v-row>
             <v-row class="ml-2 mr-3">
-              <v-text-field v-model="description"></v-text-field>
+              <v-text-field v-model="description" placeholder="Description"></v-text-field>
             </v-row>
           </div>
           <v-card-title class="title-text mt-5" style="margin-left: -5px">{{

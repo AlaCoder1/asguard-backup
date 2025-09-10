@@ -88,8 +88,8 @@ def add_dns_servers(nameserver):
             file.writelines(existing_content)
         
 
-def add_gateway_to_dns_servers(nameserver,gateways_address,ifname,metric):
-    cmd = f'ip route add {nameserver} via {gateways_address} dev {ifname} metric {metric}'
+def add_gateway_to_dns_servers(nameserver, gateways_address, ifname):
+    cmd = f'ip route add {nameserver} via {gateways_address} dev {ifname}'
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
     error = completed_process.stderr

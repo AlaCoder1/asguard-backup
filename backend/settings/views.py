@@ -113,7 +113,7 @@ ERROR_MESSAGE_HTTPS=_("If you choose HTTPS, you must select a certificate.")
 @api_view(['PUT'])
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
-def generale_settings(request, _):
+def generale_settings(request, id):
     """
     Updates the general system settings including hostname, domain, timezone, and DNS configurations.
 
@@ -160,10 +160,10 @@ def generale_settings(request, _):
         system_object.time_zone = timezone
         system_object.save()
         # if "dns_servers" in data:
-        for dns_server in data['dns_servers']:
-            dns_server = dns_server['dns_server']       
-            gateway = dns_server['gateway']            
-            interface_id = dns_server['interface_id']   
+        for network in data['dns_servers']:
+            dns_server = network['dns_server']
+            gateway = network['gateway']
+            interface_id = network['interface_id']
             
             add_dns_servers(dns_server)
             if gateway != "" and interface_id != "":
@@ -179,8 +179,7 @@ def generale_settings(request, _):
                     return JsonResponse({"error": f"Interface with ID {interface_id} does not exist"}, status=404)
                 except ValueError:
                     return JsonResponse({"error": f"Invalid interface ID: {interface_id}"}, status=404)
-                metric = dns_server['metric']
-                add_gateway_to_dns_servers(dns_server,gateway.gwaddress,interface.ifname,metric)
+                add_gateway_to_dns_servers(dns_server, gateway.gwaddress, interface.ifname)
         if not Network.objects.exists():
             Network.objects.create(server_dns=data['dns_servers'])
 

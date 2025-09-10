@@ -235,7 +235,11 @@ def start_routers(_, id):
             ztna_status = get_status_ztna_service()
             if ztna_status:
                 change_status_router(relay.name, "start")
-                return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
+                # Check router status after running
+                router_status = get_status_router_from_system(relay.name)
+                if router_status:
+                    return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
+                return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_RELAY}"}, status=400)
             return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
     except requests.exceptions.ConnectionError:
@@ -258,7 +262,11 @@ def stop_routers(_, id):
             ztna_status = get_status_ztna_service()
             if ztna_status:
                 change_status_router(relay.name, "stop")
-                return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
+                # Check router status after running
+                router_status = get_status_router_from_system(relay.name)
+                if not router_status:
+                    return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
+                return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_RELAY}"}, status=400)
             return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
     except requests.exceptions.ConnectionError:

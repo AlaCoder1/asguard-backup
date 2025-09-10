@@ -100,7 +100,6 @@ def add_edge_routers_policies(request):
         response = requests.post(PATH_ZTNA_EDGE_ROUTERS_POLICIES, headers=headers, json=data_without_description, verify=False)
         response_dict = json.loads(response.text)
         relay_policy_id = response_dict.get('data', {}).get('id')
-        print("response.status_code= ", response.status_code)
         if response.status_code == 201:
             now = datetime.now()
             formatted_now = now.strftime("%Y-%m-%d %H:%M")

@@ -225,15 +225,19 @@ def update_routers(request, id):
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def start_routers(request, id):
+def start_routers(_, id):
     try:
         relay = Relays.objects.get(id=id)
+        # Check router status
         router_status = get_status_router_from_system(relay.name)
-        status = get_status_ztna_service()
-        if ("Router is not running" in router_status) and (status):
-            change_status_router(relay.name, "start")
-            return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_RELAY}"}, status=400)
+        if not router_status:
+            # Check ztna service status
+            ztna_status = get_status_ztna_service()
+            if ztna_status:
+                change_status_router(relay.name, "start")
+                return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
+            return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
     except CommandExecutionError:
@@ -246,15 +250,17 @@ def start_routers(request, id):
 @require_http_methods(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def stop_routers(request, id):
+def stop_routers(_, id):
     try:
         relay = Relays.objects.get(id=id)
         router_status = get_status_router_from_system(relay.name)
-        status = get_status_ztna_service()
-        if ("Router is not running" not in router_status) and (status):
-            change_status_router(relay.name, "stop")
-            return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_RELAY}"}, status=400)
+        if router_status:
+            ztna_status = get_status_ztna_service()
+            if ztna_status:
+                change_status_router(relay.name, "stop")
+                return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
+            return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
     except CommandExecutionError:

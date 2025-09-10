@@ -105,22 +105,10 @@ class RelaysSerializerUpdate(serializers.ModelSerializer):
     
 
 class RelaysPolicySerializer(serializers.ModelSerializer):
-    relay_id = serializers.PrimaryKeyRelatedField(source='relay', queryset=Relays.objects.all())
-    identity_id = serializers.PrimaryKeyRelatedField(source='identity', queryset=Identities.objects.all())
     
     class Meta:
         model = RelaysPolicy
-        fields = [
-            'ref_relay_policy',
-            'name',
-            'semantic',
-            'description',
-            'relay_id',
-            'identity_id',
-            'identity_attribute',
-            'relay_attribute',
-            'date_creation'
-        ]
+        fields = "__all__"
 
 
 class RelaysPolicySerializerUpdate(serializers.ModelSerializer):

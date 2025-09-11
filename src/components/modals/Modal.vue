@@ -189,6 +189,7 @@ import useValidate from "@vuelidate/core";
 import { toRefs, watch, reactive, computed, inject, onMounted, ref } from "vue";
 import { required, helpers, requiredIf, email } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { get_params } from "@/mixins/params.js";
 
 export default {
   props: {
@@ -210,6 +211,12 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const { isOpen, editRow, modalMode } = toRefs(props);
+    const length = ref(0);
+
+    onMounted(async () => {
+      const params = await get_params();
+      length.value = params?.password_length || 16;
+    });
 
     const state = reactive({
       loading: false,
@@ -401,6 +408,18 @@ export default {
       return t("errors.ChampNoInclude");
     });
 
+    const invalidPassword = computed(() => {
+      return `${t("errors.invalidPassword1")} ${length.value} ${t(
+        "errors.invalidPassword"
+      )}`;
+    });
+
+    const passwordRegex = computed(() => {
+      if (!length.value) return /.*/;
+      const pattern = `^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~])[A-Za-z\\d!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~]{${length.value},}$`;
+      return new RegExp(pattern);
+    });
+
     const rules = computed(() => {
       return {
         name: {
@@ -435,10 +454,17 @@ export default {
         userDn: {
           required: helpers.withMessage(error, required),
         },
-        password: { required: helpers.withMessage(error, required) },
+
+        password: {
+          required: helpers.withMessage(error, required),
+          isValidPassword: helpers.withMessage(
+            invalidPassword,
+            // helpers.regex(passwordRegex.value)
+            (value) => passwordRegex.value.test(value)
+          ),
+        },
       };
     });
-
     const v$ = useValidate(rules, state);
 
     return {

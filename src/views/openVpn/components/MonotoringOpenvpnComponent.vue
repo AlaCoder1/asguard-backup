@@ -229,6 +229,7 @@ import VButton from "@/components/VButton.vue";
 import { get_lang } from "@/mixins/storage_language.js";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { get_params } from "@/mixins/params.js";
 
 export default {
   name: "MonotoringOpenvpnComponent",
@@ -246,6 +247,7 @@ export default {
     const paginationLocalization = reactive({
       of: "/",
     });
+    const length = ref(0);
     const state = reactive({
       lang: null,
       show1: false,
@@ -371,16 +373,26 @@ export default {
     const error = computed(() => {
       return t("errors.valueRequired");
     });
+
+    const invalidPassword = computed(() => {
+      return `${t("errors.invalidPassword1")} ${length.value} ${t(
+        "errors.invalidPassword"
+      )}`;
+    });
+    const passwordRegex = computed(() => {
+      if (!length.value) return /.*/;
+      const pattern = `^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~])[A-Za-z\\d!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~]{${length.value},}$`;
+      return new RegExp(pattern);
+    });
+
     const rules = computed(() => {
       return {
         password: {
           required: helpers.withMessage(error, required),
           isValidPassword: helpers.withMessage(
-            specificform,
+            invalidPassword,
 
-            helpers.regex(
-              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-            )
+            (value) => passwordRegex.value.test(value)
           ),
         },
         server: { required: helpers.withMessage(error, required) },
@@ -504,24 +516,25 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/openvpn/getAllServerOpenvpn").then(
-        (response) => {
-          let servers = response.data.map((i) => {
-            return {
-              id: i.id,
-              name: i.name,
-            };
-          });
+      axios.get("/openvpn/getAllServerOpenvpn").then((response) => {
+        let servers = response.data.map((i) => {
+          return {
+            id: i.id,
+            name: i.name,
+          };
+        });
 
-          state.serverList = servers;
-        },
-      );
+        state.serverList = servers;
+      });
     };
 
     onMounted(async () => {
       (async () => {
         state.lang = await get_lang();
       })();
+
+      const params = await get_params();
+      length.value = params?.password_length || 16;
 
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
@@ -562,6 +575,9 @@ export default {
               initializeWebSocket();
             }, 1000);
           }
+        }
+        else {
+          console.log('error :',v$.value)
         }
       } else {
         state.isviewModal = true;
@@ -668,8 +684,7 @@ export default {
         }
       };
 
-      state.socket.onclose = () => {
-      };
+      state.socket.onclose = () => {};
     };
 
     return {

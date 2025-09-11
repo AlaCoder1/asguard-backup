@@ -311,6 +311,7 @@ import clientSettings from "./serveurComponents/clientSettings.vue";
 import cryptoSettings from "./serveurComponents/cryptoSettings.vue";
 import { reactive, onMounted, computed, watch } from "vue";
 import { user_privilege } from "@/mixins/user_privilege.js";
+import { get_params } from "@/mixins/params.js";
 
 export default {
   name: "ClientsOpenvpnComponent",
@@ -323,6 +324,128 @@ export default {
   },
   props: ["dataServer"],
   setup(props) {
+    onMounted(async () => {
+      const params = await get_params();
+      length.value = params?.password_length || 16;
+
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      getInterface();
+      getAllCertAuth();
+      getCertif();
+
+      emitter.on("edit-server", (data) => {
+        if (data) state.isEditState = "edit";
+
+        state.serverModeState = "edit";
+        state.id = data.id;
+
+        //General information
+        state.clientName = data.name;
+        state.description = data.description;
+        state.serverMode = data.server_mode;
+
+        let filtredProtocol = protocolList.value.filter(
+          (i) => i.slug === data.proto
+        );
+
+        let filtredCertifAuth = state.mapedCertifAuth.filter(
+          (i) => i.name === data.ca_name
+        );
+        let filtredCertiServer = state.filtredMapCertif.filter(
+          (i) => i.name === data.cert_name
+        );
+        state.protocol = filtredProtocol[0];
+
+        let filtredDevice = deviceModeList.value.filter(
+          (i) => i.slug === data.dev
+        );
+
+        state.deviceMode = filtredDevice[0];
+
+        let filtredInterfaces = state.mapedInterface.filter(
+          (i) => i.id === +data.interface
+        );
+        let filtredInter = state.mapedInterface.filter(
+          (i) => i.name === data.interface
+        );
+
+        state.interface = filtredInterfaces[0] ?? filtredInter[0];
+        state.localPort = data.port;
+        //Cryptographic Settings
+        state.isEnableAuth = data.tls_key ? false : true;
+        state.tlsGenerate = data.tls_key;
+        state.peerCertif = filtredCertifAuth[0];
+        state.serverCertif = filtredCertiServer[0];
+        state.dhParameters = data.dh;
+        state.encryptAlgo = data.cipher;
+
+        let filtredAuth = authDigestList.value.filter(
+          (i) => i.slug === data.auth
+        );
+
+        state.authDigest = filtredAuth[0];
+        // state.hardwareCrypto = data.hardware_crypto;
+        //tunnelSettings
+        state.ip4Tunnel = data.ipv4_tunnel_network;
+        // state.ip6Tunnel= "";
+        state.isGateway = data.gateway;
+        state.isBridge = data.bridge_interface ? true : false;
+
+        let filtredInterfacesBridge = state.mapedInterface.filter(
+          (i) => i.id === +data.bridge_interface
+        );
+        let filtredInterBridge = state.mapedInterface.filter(
+          (i) => i.name === data.bridge_interface
+        );
+
+        state.interfaceBridge =
+          filtredInterfacesBridge[0] ?? filtredInterBridge[0];
+
+        state.startDHCPBridge = data.bridge_start_dhcp;
+        state.endDHCPBridge = data.bridge_end_dhcp;
+        state.iPv4Local = data.ipv4_local_network;
+        // state.iPv6Local= "";
+        state.iPv4Remote = data.ipv4_remote_network;
+        // state.iPv6Remote= "";
+        state.concurrentConnections = data.concurrent_connections;
+
+        let filtredCompression = compressionList.value.filter(
+          (i) => i.slug === data.compression
+        );
+
+        state.compression = filtredCompression[0];
+        state.typefService = data.type_of_service;
+        state.Connections = data.duplicate_connections;
+        state.IPv6 = data.ipv6;
+        state.interClients = data.inter_clients;
+        //clientSettings
+        state.dynamicIP = data.dynamic_ip;
+        state.adressPool = data.address_pool_start ? true : false;
+        state.topology = data.topology;
+        state.dnsDefaultDomain = data.dns_default_domain_server ? true : false;
+        state.dnsServers = data.dns_server1 ? true : false;
+        state.forceDNS = data.force_dns_cache_update;
+        state.ntpServers = data.ntp_server1 ? true : false;
+        state.clientPort = false; //*
+        state.startAddressPool = data.address_pool_start;
+        state.endAddressPool = data.address_pool_end;
+        state.activeDnsDefault = data.dns_default_domain_server;
+        state.activeDnsServer1 = data.dns_server1;
+        state.activeDnsServer2 = data.dns_server2;
+        state.activeNtpServer1 = data.ntp_server1;
+        state.activeNtpServer2 = data.ntp_server2;
+        state.verbLevel = data.verb;
+
+        state.clientPort = data.client_management_port ? true : false;
+        state.portClient = data.client_management_port;
+        state.passwordClient = data.client_management_password;
+      });
+    });
+
+    const length = ref(0);
     const { t } = useI18n();
     const current_user = ref();
     const last_Subscription = ref([]);
@@ -454,6 +577,18 @@ export default {
       state.isviewModal = false;
       state.viewModal = false;
     };
+
+    const invalidPassword = computed(() => {
+      return `${t("errors.invalidPassword1")} ${length.value} ${t(
+        "errors.invalidPassword"
+      )}`;
+    });
+
+    const passwordRegex = computed(() => {
+      if (!length.value) return /.*/;
+      const pattern = `^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~])[A-Za-z\\d!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~]{${length.value},}$`;
+      return new RegExp(pattern);
+    });
 
     const rules = computed(() => {
       return {
@@ -690,14 +825,31 @@ export default {
           ),
         },
 
-        passwordClient: {
-          // requiredIfFuction: requiredIf(
-          //   () =>
-          //     (state.clientPort && state.serverModeState === "create") ||
-          //     (state.serverModeState === "edit" && state.NewPasswordClient)
-          // ),
+        // requiredIfFuction: requiredIf(
+        //   () =>
+        //     (state.clientPort && state.serverModeState === "create") ||
+        //     (state.serverModeState === "edit" && state.NewPasswordClient)
+        // ),
+        // passwordClient: {
 
-          requiredIfFuction: helpers.withMessage(
+        //   requiredIfFuction: helpers.withMessage(
+        //     error,
+        //     requiredIf(
+        //       () =>
+        //         (state.clientPort && state.serverModeState === "create") ||
+        //         (state.serverModeState === "edit" && state.NewPasswordClient)
+        //     )
+        //   ),
+
+        //   isValidPassword: helpers.withMessage(
+        //     invalidPassword,
+
+        //     (value) => passwordRegex.value.test(value)
+        //   ),
+        // },
+
+        passwordClient: {
+          required: helpers.withMessage(
             error,
             requiredIf(
               () =>
@@ -705,15 +857,12 @@ export default {
                 (state.serverModeState === "edit" && state.NewPasswordClient)
             )
           ),
-
-          isValidPassword: helpers.withMessage(
-            specificform,
-
-            helpers.regex(
-              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-            )
-          ),
+          isValidPassword: helpers.withMessage(invalidPassword, (value) => {
+            if (!value) return true;
+            return passwordRegex.value.test(value);
+          }),
         },
+
         NewPasswordClient: {
           requiredIfFuction: helpers.withMessage(
             error,
@@ -727,11 +876,12 @@ export default {
           // ),
 
           isValidPassword: helpers.withMessage(
-            specificform,
+            invalidPassword,
 
-            helpers.regex(
-              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-            )
+            (value) => {
+              if (!value) return true;
+              return passwordRegex.value.test(value);
+            }
           ),
         },
       };
@@ -794,27 +944,25 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/network/AllInterfaces").then(
-        (response) => {
-          let filtredInterface = response.data.filter(
-            (i) =>
-              !i.ifname.startsWith("tun_") &&
-              !i.ifname.startsWith("tap_") &&
-              !i.ifname.startsWith("vlan")
-          );
+      axios.get("/network/AllInterfaces").then((response) => {
+        let filtredInterface = response.data.filter(
+          (i) =>
+            !i.ifname.startsWith("tun_") &&
+            !i.ifname.startsWith("tap_") &&
+            !i.ifname.startsWith("vlan")
+        );
 
-          let interfaces = filtredInterface.map((i) => {
-            return {
-              id: i.id,
-              name: i.name_interface,
-            };
-          });
+        let interfaces = filtredInterface.map((i) => {
+          return {
+            id: i.id,
+            name: i.name_interface,
+          };
+        });
 
-          let listInter = [{ id: 0, name: "Any" }];
-          var combinedArray = [...listInter, ...interfaces];
-          state.mapedInterface = combinedArray;
-        },
-      );
+        let listInter = [{ id: 0, name: "Any" }];
+        var combinedArray = [...listInter, ...interfaces];
+        state.mapedInterface = combinedArray;
+      });
     };
 
     // const getCertif = () => {
@@ -856,41 +1004,37 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/certificates/getAllCertificates").then(
-        (response) => {
-          let mapedListCertif = response.data.filter(
-            (i) => i.certificate_type === "server"
-          );
-          let mapedCertServer = mapedListCertif.map((i) => {
-            return {
-              id: i.id,
-              name: i.name,
-              is_private_key: i.is_private_key,
-              certificate_authority: i.certificate_authority,
-            };
-          });
-          state.filtredMapCertif = mapedCertServer.filter(
-            (i) => i.is_private_key
-          );
-        },
-      );
+      axios.get("/certificates/getAllCertificates").then((response) => {
+        let mapedListCertif = response.data.filter(
+          (i) => i.certificate_type === "server"
+        );
+        let mapedCertServer = mapedListCertif.map((i) => {
+          return {
+            id: i.id,
+            name: i.name,
+            is_private_key: i.is_private_key,
+            certificate_authority: i.certificate_authority,
+          };
+        });
+        state.filtredMapCertif = mapedCertServer.filter(
+          (i) => i.is_private_key
+        );
+      });
     };
     const getAllCertAuth = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/certificates/getAllCertAuth").then(
-        (response) => {
-          let mapedList = response.data.map((i) => {
-            return {
-              id: i.id,
-              name: i.name,
-              is_private_key: i.is_private_key,
-            };
-          });
-          state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
-        },
-      );
+      axios.get("/certificates/getAllCertAuth").then((response) => {
+        let mapedList = response.data.map((i) => {
+          return {
+            id: i.id,
+            name: i.name,
+            is_private_key: i.is_private_key,
+          };
+        });
+        state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
+      });
     };
 
     const deviceModeList = ref([
@@ -1016,124 +1160,6 @@ export default {
       },
       { deep: true }
     );
-
-    onMounted(() => {
-      const lastSubscription =
-        document.getElementById("app").attributes["last_subscription"].value;
-      let parsedArraySubscription = JSON.parse(lastSubscription);
-      last_Subscription.value = parsedArraySubscription;
-      getInterface();
-      getAllCertAuth();
-      getCertif();
-
-      emitter.on("edit-server", (data) => {
-        if (data) state.isEditState = "edit";
-
-        state.serverModeState = "edit";
-        state.id = data.id;
-
-        //General information
-        state.clientName = data.name;
-        state.description = data.description;
-        state.serverMode = data.server_mode;
-
-        let filtredProtocol = protocolList.value.filter(
-          (i) => i.slug === data.proto
-        );
-
-        let filtredCertifAuth = state.mapedCertifAuth.filter(
-          (i) => i.name === data.ca_name
-        );
-        let filtredCertiServer = state.filtredMapCertif.filter(
-          (i) => i.name === data.cert_name
-        );
-        state.protocol = filtredProtocol[0];
-
-        let filtredDevice = deviceModeList.value.filter(
-          (i) => i.slug === data.dev
-        );
-
-        state.deviceMode = filtredDevice[0];
-
-        let filtredInterfaces = state.mapedInterface.filter(
-          (i) => i.id === +data.interface
-        );
-        let filtredInter = state.mapedInterface.filter(
-          (i) => i.name === data.interface
-        );
-
-        state.interface = filtredInterfaces[0] ?? filtredInter[0];
-        state.localPort = data.port;
-        //Cryptographic Settings
-        state.isEnableAuth = data.tls_key ? false : true;
-        state.tlsGenerate = data.tls_key;
-        state.peerCertif = filtredCertifAuth[0];
-        state.serverCertif = filtredCertiServer[0];
-        state.dhParameters = data.dh;
-        state.encryptAlgo = data.cipher;
-
-        let filtredAuth = authDigestList.value.filter(
-          (i) => i.slug === data.auth
-        );
-
-        state.authDigest = filtredAuth[0];
-        // state.hardwareCrypto = data.hardware_crypto;
-        //tunnelSettings
-        state.ip4Tunnel = data.ipv4_tunnel_network;
-        // state.ip6Tunnel= "";
-        state.isGateway = data.gateway;
-        state.isBridge = data.bridge_interface ? true : false;
-
-        let filtredInterfacesBridge = state.mapedInterface.filter(
-          (i) => i.id === +data.bridge_interface
-        );
-        let filtredInterBridge = state.mapedInterface.filter(
-          (i) => i.name === data.bridge_interface
-        );
-
-        state.interfaceBridge =
-          filtredInterfacesBridge[0] ?? filtredInterBridge[0];
-
-        state.startDHCPBridge = data.bridge_start_dhcp;
-        state.endDHCPBridge = data.bridge_end_dhcp;
-        state.iPv4Local = data.ipv4_local_network;
-        // state.iPv6Local= "";
-        state.iPv4Remote = data.ipv4_remote_network;
-        // state.iPv6Remote= "";
-        state.concurrentConnections = data.concurrent_connections;
-
-        let filtredCompression = compressionList.value.filter(
-          (i) => i.slug === data.compression
-        );
-
-        state.compression = filtredCompression[0];
-        state.typefService = data.type_of_service;
-        state.Connections = data.duplicate_connections;
-        state.IPv6 = data.ipv6;
-        state.interClients = data.inter_clients;
-        //clientSettings
-        state.dynamicIP = data.dynamic_ip;
-        state.adressPool = data.address_pool_start ? true : false;
-        state.topology = data.topology;
-        state.dnsDefaultDomain = data.dns_default_domain_server ? true : false;
-        state.dnsServers = data.dns_server1 ? true : false;
-        state.forceDNS = data.force_dns_cache_update;
-        state.ntpServers = data.ntp_server1 ? true : false;
-        state.clientPort = false; //*
-        state.startAddressPool = data.address_pool_start;
-        state.endAddressPool = data.address_pool_end;
-        state.activeDnsDefault = data.dns_default_domain_server;
-        state.activeDnsServer1 = data.dns_server1;
-        state.activeDnsServer2 = data.dns_server2;
-        state.activeNtpServer1 = data.ntp_server1;
-        state.activeNtpServer2 = data.ntp_server2;
-        state.verbLevel = data.verb;
-
-        state.clientPort = data.client_management_port ? true : false;
-        state.portClient = data.client_management_port;
-        state.passwordClient = data.client_management_password;
-      });
-    });
 
     const submitForm = async () => {
       const user = user_privilege("Openvpn");

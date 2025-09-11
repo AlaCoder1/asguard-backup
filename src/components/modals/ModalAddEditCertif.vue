@@ -1,10 +1,19 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -15,74 +24,134 @@
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title>
-            <span class="text-h5">{{
-              mode === "create"
-                ? $t("buttons.createcertif")
-                : $t("buttons.updatecertif")
-            }}
-              {{ $t("agGrid.certificat") }}</span>
+            <span class="text-h5"
+              >{{
+                mode === "create"
+                  ? $t("buttons.createcertif")
+                  : $t("buttons.updatecertif")
+              }}
+              {{ $t("agGrid.certificat") }}</span
+            >
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field :label="`${$t('certificat.certificatName')} *`"
-                    v-model="state.formData.certifName"></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.formData.certifName.$error">
+                  <v-text-field
+                    :label="`${$t('certificat.certificatName')} *`"
+                    v-model="state.formData.certifName"
+                  ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.certifName.$error"
+                  >
                     {{ v$.formData.certifName.$errors[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="state.formData.method" :label="`${$t('certificat.method')} *`" item-title="name"
-                    item-value="id" return-object :items="selectlist"></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.formData.method.$error">
+                  <v-select
+                    v-model="state.formData.method"
+                    :label="`${$t('certificat.method')} *`"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="selectlist"
+                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.method.$error"
+                  >
                     {{ v$.formData.method.$errors[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" v-if="isImportCetif" class="mb-n6">
                   <label for="">
-                    {{ $t("certificat.certificat_existant") }}</label>
+                    {{ $t("certificat.certificat_existant") }}</label
+                  >
                   <v-divider></v-divider>
 
-                  <v-textarea class="mt-3" v-model="state.formData.certificatData"
-                    :label="`${$t('certificat.certificatdata')} *`" variant="outlined"></v-textarea>
-                  <p class="error-feedback mb-5" v-if="v$.formData.certificatData.$error">
+                  <v-textarea
+                    class="mt-3"
+                    v-model="state.formData.certificatData"
+                    :label="`${$t('certificat.certificatdata')} *`"
+                    variant="outlined"
+                  ></v-textarea>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.certificatData.$error"
+                  >
                     {{ v$.formData.certificatData.$errors[0].$message }}
                   </p>
 
-                  <v-textarea class="mt-3" v-model="state.formData.privateKey" :label="$t('certificat.privatekey')"
-                    variant="outlined"></v-textarea>
+                  <v-textarea
+                    class="mt-3"
+                    v-model="state.formData.privateKey"
+                    :label="$t('certificat.privatekey')"
+                    variant="outlined"
+                  ></v-textarea>
 
-                  <v-text-field :label="$t('certificat.serialnumber')"
-                    v-model="state.formData.serialNumber"></v-text-field>
+                  <v-text-field
+                    :label="$t('certificat.serialnumber')"
+                    v-model="state.formData.serialNumber"
+                  ></v-text-field>
                 </v-col>
 
                 <v-col v-if="isCreateCetif" cols="12" class="mb-n6">
                   <label for=""> {{ $t("certificat.certif_intern") }}</label>
                   <v-divider></v-divider>
 
-                  <v-select class="mt-3" v-model="state.formData.autorityCertif"
-                    :label="`${$t('certificat.certificat_auth')} *`" :items="allCertifAuth" item-title="nom"
-                    item-value="id" :no-data-text="$t('certificat.certificatlist')" return-object></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.formData.autorityCertif.$error">
+                  <v-select
+                    class="mt-3"
+                    v-model="state.formData.autorityCertif"
+                    :label="`${$t('certificat.certificat_auth')} *`"
+                    :items="allCertifAuth"
+                    item-title="nom"
+                    item-value="id"
+                    :no-data-text="$t('certificat.certificatlist')"
+                    return-object
+                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.autorityCertif.$error"
+                  >
                     {{ v$.formData.autorityCertif.$errors[0].$message }}
                   </p>
 
-                  <v-select v-model="state.formData.type" label="Type *" item-title="name" item-value="id" return-object
-                    :items="selectlisttype"></v-select>
+                  <v-select
+                    v-model="state.formData.type"
+                    label="Type *"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="selectlisttype"
+                  ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.formData.type.$error">
                     {{ v$.formData.type.$errors[0].$message }}
                   </p>
-                  <v-select v-model="state.formData.keyType" :label="`${$t('certificat.keytype')} *`" item-title="name"
-                    item-value="id" return-object :items="[{ name: 'RSA', id: '1', slug: 'rsa' }]"></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.formData.keyType.$error">
+                  <v-select
+                    v-model="state.formData.keyType"
+                    :label="`${$t('certificat.keytype')} *`"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="[{ name: 'RSA', id: '1', slug: 'rsa' }]"
+                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.keyType.$error"
+                  >
                     {{ v$.formData.keyType.$errors[0].$message }}
                   </p>
 
-                  <v-select v-model="state.formData.keyLength" :label="`${$t('certificat.keylength')} *`"
-                    item-title="name" item-value="id" return-object :items="[
+                  <v-select
+                    v-model="state.formData.keyLength"
+                    :label="`${$t('certificat.keylength')} *`"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="[
                       {
                         name: '2048',
                         slug: '2048',
@@ -103,12 +172,21 @@
                         slug: '8192',
                         id: '4',
                       },
-                    ]"></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.formData.keyLength.$error">
+                    ]"
+                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.keyLength.$error"
+                  >
                     {{ v$.formData.keyLength.$errors[0].$message }}
                   </p>
-                  <v-select v-model="state.formData.hashAlgo" :label="`${$t('certificat.Hashalgo')} *`"
-                    item-title="name" item-value="id" return-object :items="[
+                  <v-select
+                    v-model="state.formData.hashAlgo"
+                    :label="`${$t('certificat.Hashalgo')} *`"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="[
                       {
                         name: 'SHA256',
                         slug: 'sha256',
@@ -124,57 +202,100 @@
                         slug: 'sha512',
                         id: '3',
                       },
-                    ]"></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.formData.hashAlgo.$error">
+                    ]"
+                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.hashAlgo.$error"
+                  >
                     {{ v$.formData.hashAlgo.$errors[0].$message }}
                   </p>
 
-                  <v-text-field :label="`${$t('certificat.lifetime')} *`"
-                    v-model.number="state.formData.lifeTime"></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.formData.lifeTime.$error">
+                  <v-text-field
+                    :label="`${$t('certificat.lifetime')} *`"
+                    v-model.number="state.formData.lifeTime"
+                  ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.lifeTime.$error"
+                  >
                     {{ v$.formData.lifeTime.$errors[0].$message }}
                   </p>
 
                   <v-row>
                     <v-col cols="6" class="mb-n6">
-                      <v-autocomplete v-model="state.formData.country" :label="`${$t('certificat.country')} *`"
-                        item-title="countryName" item-value="countryCode" return-object
-                        :items="countriesList"></v-autocomplete>
-                      <p class="error-feedback mb-5" v-if="v$.formData.country.$error">
+                      <v-autocomplete
+                        v-model="state.formData.country"
+                        :label="`${$t('certificat.country')} *`"
+                        item-title="countryName"
+                        item-value="countryCode"
+                        return-object
+                        :items="countriesList"
+                      ></v-autocomplete>
+                      <p
+                        class="error-feedback mb-5"
+                        v-if="v$.formData.country.$error"
+                      >
                         {{ v$.formData.country.$errors[0].$message }}
                       </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
-                      <v-text-field :label="`${$t('certificat.state')} *`"
-                        v-model="state.formData.state"></v-text-field>
-                      <p class="error-feedback mb-5" v-if="v$.formData.state.$error">
+                      <v-text-field
+                        :label="`${$t('certificat.state')} *`"
+                        v-model="state.formData.state"
+                      ></v-text-field>
+                      <p
+                        class="error-feedback mb-5"
+                        v-if="v$.formData.state.$error"
+                      >
                         {{ v$.formData.state.$errors[0].$message }}
                       </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
-                      <v-text-field :label="`${$t('certificat.place')} *`"
-                        v-model="state.formData.place"></v-text-field>
-                      <p class="error-feedback mb-5" v-if="v$.formData.place.$error">
+                      <v-text-field
+                        :label="`${$t('certificat.place')} *`"
+                        v-model="state.formData.place"
+                      ></v-text-field>
+                      <p
+                        class="error-feedback mb-5"
+                        v-if="v$.formData.place.$error"
+                      >
                         {{ v$.formData.place.$errors[0].$message }}
                       </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
-                      <v-text-field :label="`${$t('certificat.organisation')} *`"
-                        v-model="state.formData.organisation"></v-text-field>
-                      <p class="error-feedback mb-5" v-if="v$.formData.organisation.$error">
+                      <v-text-field
+                        :label="`${$t('certificat.organisation')} *`"
+                        v-model="state.formData.organisation"
+                      ></v-text-field>
+                      <p
+                        class="error-feedback mb-5"
+                        v-if="v$.formData.organisation.$error"
+                      >
                         {{ v$.formData.organisation.$errors[0].$message }}
                       </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
-                      <v-text-field label="E-Mail *" v-model="state.formData.mail"></v-text-field>
-                      <p class="error-feedback mb-5" v-if="v$.formData.mail.$error">
+                      <v-text-field
+                        label="E-Mail *"
+                        v-model="state.formData.mail"
+                      ></v-text-field>
+                      <p
+                        class="error-feedback mb-5"
+                        v-if="v$.formData.mail.$error"
+                      >
                         {{ v$.formData.mail.$errors[0].$message }}
                       </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
-                      <v-text-field :label="`${$t('certificat.communName')} *`"
-                        v-model="state.formData.communName"></v-text-field>
-                      <p class="error-feedback mb-5" v-if="v$.formData.communName.$error">
+                      <v-text-field
+                        :label="`${$t('certificat.communName')} *`"
+                        v-model="state.formData.communName"
+                      ></v-text-field>
+                      <p
+                        class="error-feedback mb-5"
+                        v-if="v$.formData.communName.$error"
+                      >
                         {{ v$.formData.communName.$errors[0].$message }}
                       </p>
                     </v-col>
@@ -188,16 +309,27 @@
             <div class="text-start ml-6 mt-3">
               <span class="text-sm">
                 <span class="text-red text-lg">*</span>
-                {{ $t("errors.oblig") }}</span>
+                {{ $t("errors.oblig") }}</span
+              >
             </div>
             <v-spacer></v-spacer>
-            <v-btn color="asguard_primary_light" :rounded="true" @click="closeModal" class="mt-3 btn-add">
+            <v-btn
+              color="asguard_primary_light"
+              :rounded="true"
+              @click="closeModal"
+              class="mt-3 btn-add"
+            >
               <span class="text-white pr-3 pl-3">{{
                 $t("buttons.close")
-                }}</span>
+              }}</span>
             </v-btn>
 
-            <v-btn type="submit" color="asguard_primary_light" :rounded="true" class="mt-3 btn-add">
+            <v-btn
+              type="submit"
+              color="asguard_primary_light"
+              :rounded="true"
+              class="mt-3 btn-add"
+            >
               <span class="text-white pr-3 pl-3">{{
                 mode === "create"
                   ? $t("buttons.create")
@@ -208,7 +340,12 @@
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
       {{ textAlert }}
 
       <template v-slot:actions> </template>
@@ -326,7 +463,11 @@ export default {
       return {
         formData: {
           certifName: {
-            required: helpers.withMessage(error, required),
+            // required: helpers.withMessage(error, required),
+            requiredIfFuction: helpers.withMessage(
+              error,
+              requiredIf(() => state.ModalMode === "create")
+            ),
             isValidCertifName: helpers.withMessage(
               champ,
 
@@ -334,7 +475,11 @@ export default {
             ),
           },
           method: {
-            required: helpers.withMessage(error, required),
+            // required: helpers.withMessage(error, required),
+            requiredIfFuction: helpers.withMessage(
+              error,
+              requiredIf(() => state.ModalMode === "create")
+            ),
           },
 
           certificatData: {
@@ -381,7 +526,9 @@ export default {
             isValidlifeTime: helpers.withMessage(
               champNumberAndMax,
 
-              helpers.regex(/^(?:[0-9]{1,2}|[1-7][0-9]{2}|8[0-1][0-9]|82[0-5])$/)
+              helpers.regex(
+                /^(?:[0-9]{1,2}|[1-7][0-9]{2}|8[0-1][0-9]|82[0-5])$/
+              )
             ),
           },
 
@@ -454,6 +601,7 @@ export default {
       countriesList: [],
       color: "",
       openModal: false,
+      snackbar: false,
       textAlert: "",
       userId: null,
     };
@@ -487,6 +635,7 @@ export default {
     mode(val) {
       if (val == "create") {
         this.resetForm();
+        this.v$.$reset();
         this.state.ModalMode = "create";
       }
     },
@@ -518,7 +667,7 @@ export default {
       this.countriesList = countryList;
     },
     closeModal() {
-      this.resetForm()
+      this.resetForm();
       this.v$.$reset();
       this.$emit("closeModal");
     },
@@ -540,8 +689,8 @@ export default {
       this.state.formData.organisation = "";
       this.state.formData.mail = "";
       this.state.formData.communName = "";
+      this.state.ModalMode = null;
     },
-
 
     getCookie(name) {
       let cookieValue = null;

@@ -1,10 +1,11 @@
 import axios from "axios";
+import { get_params } from "@/mixins/params.js";
 
 let counter = 0;
-const maxCounter = 600;
+let maxCounter = null;
 let resetTimeOnMouseMove = true;
 
-function startTimer() {
+function initTimer() {
   setInterval(() => {
     if (counter < maxCounter) {
       counter++;
@@ -23,6 +24,17 @@ function startTimer() {
     });
   }
 }
+
+async function startTimer() {
+  const params = await get_params();
+  if (params?.session_timeout) {
+    maxCounter = Number(params.session_timeout);
+  } else {
+    maxCounter = 600;
+  }
+  initTimer();
+}
+
 const logout = async () => {
   try {
     await axios.get("/auth/logout");

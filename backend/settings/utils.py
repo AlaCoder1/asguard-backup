@@ -247,7 +247,7 @@ def modify_web_page( port, certif):
         ssl_certificate /etc/ssl/certs/{certif}.crt;
         ssl_certificate_key /etc/ssl/private/{certif}.key;
         modsecurity on;
-        # modsecurity_rules_file /etc/nginx/modsec/main.conf;
+        modsecurity_rules_file /etc/nginx/modsec/main.conf;
             location /static/ {{
         root /asguard/asguard;
         expires 30d;

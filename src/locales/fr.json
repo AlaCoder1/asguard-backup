@@ -90,6 +90,7 @@
   },
 
   "errors": {
+    "Password":"Le mot de passe doit être un nombre et au moins 16",
     "formatRange": "Format doit correspondre à une adresse IP : X.X.X.X et ne doit pas être hors plage.",
     "duplicated": "Les adresses des champs source, traduction et destination doivent être toutes différentes.",
     "endAddress": "Format doit correspondre à l'adresse IP : X.X.X.X (dernier octet ne doit pas être 0 ou 255)",
@@ -98,7 +99,8 @@
     "format_address": "Format doit correspondre à : exemple.com",
     "errorServer": "Erreur de serveur interne. Veuillez réessayer plus tard",
     "valueRequired": "Champs est obligatoire",
-    "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
+    "invalidPassword1": "Il doit contenir au moins",
+    "invalidPassword": "caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers": "Champ ne peut inclure que des numéros",
     "ChampIncludeOnlyNumbersOrFloat": "Champ ne peut contenir que des numéros entiers ou décimaux.",
@@ -1181,7 +1183,7 @@
     "TCPPort": "Port TCP",
     "LoginMessages": "Messages de connexion",
     "DisableWebGUISuccessfulLoginsLogging": "Désactiver la journalisation des connexions réussies à l’interface Web",
-    "PasswordLengthSetting": "Paramètre de longueur du mot de passe"
+    "PasswordLengthSetting": "Longueur minimale du mot de passe"
   },
   "profil": {
     "Personalinformations": "Informations personnelles",

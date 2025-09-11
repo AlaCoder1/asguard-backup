@@ -883,7 +883,7 @@ def update_settings(request):
 def get_settings(request):
     if request.method == 'GET':
         list_settings = get_list_settings()
-        return list_settings
+        return JsonResponse(list_settings, safe=False)
 
 
 @api_view(['POST'])

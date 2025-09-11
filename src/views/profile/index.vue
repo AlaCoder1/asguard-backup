@@ -273,7 +273,7 @@
 
 <script>
 import { useI18n } from "vue-i18n";
-import { reactive, computed } from "vue";
+import { reactive, computed, ref, onMounted } from "vue";
 import useValidate from "@vuelidate/core";
 import { required, sameAs, helpers, email } from "@vuelidate/validators";
 import VButton from "@/components/VButton.vue";
@@ -281,6 +281,7 @@ import BaseLayout from "@/layouts/layout.vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
 import helpModal from "@/components/modals/help.vue";
+import { get_params } from "@/mixins/params.js";
 
 export default {
   name: "Profile",
@@ -299,7 +300,14 @@ export default {
   },
 
   setup() {
+    const length = ref(0);
     const { t } = useI18n();
+
+    onMounted(async () => {
+      const params = await get_params();
+      length.value = params?.password_length || 16;
+    });
+
     const state = reactive({
       formData: {
         confirmPassword: "",
@@ -311,12 +319,23 @@ export default {
     const error = computed(() => {
       return t("errors.valueRequired");
     });
-    const invalidPassword = computed(() => {
-      return t("errors.invalidPassword");
-    });
+
     const passwordConfirmation = computed(() => {
       return t("errors.passwordConfirmation");
     });
+
+    const invalidPassword = computed(() => {
+      return `${t("errors.invalidPassword1")} ${length.value} ${t(
+        "errors.invalidPassword"
+      )}`;
+    });
+
+    const passwordRegex = computed(() => {
+      if (!length.value) return /.*/;
+      const pattern = `^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~])[A-Za-z\\d!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~]{${length.value},}$`;
+      return new RegExp(pattern);
+    });
+
     const rules = computed(() => {
       return {
         formData: {
@@ -335,9 +354,10 @@ export default {
             isValidPassword: helpers.withMessage(
               invalidPassword,
 
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-              )
+              (value) => {
+                if (!value) return true;
+                return passwordRegex.value.test(value);
+              }
             ),
           },
           confirmPassword: {
@@ -351,9 +371,10 @@ export default {
             isValidPassword: helpers.withMessage(
               invalidPassword,
 
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-              )
+              (value) => {
+                if (!value) return true;
+                return passwordRegex.value.test(value);
+              }
             ),
           },
         },

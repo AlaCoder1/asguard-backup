@@ -153,16 +153,19 @@
             </v-col>
           </v-row>
 
-          <!-- <v-text-field
-            :label="$t('settings.Password')"
+          <v-text-field
+            :label="$t('settings.PasswordLengthSetting')"
             v-model="state.password"
-          ></v-text-field> -->
-          <v-select
+          ></v-text-field>
+          <p class="error-feedback mb-5" v-if="v$.password.$error">
+            {{ v$.password.$errors[0].$message }}
+          </p>
+          <!-- <v-select
             :label="$t('settings.PasswordLengthSetting')"
             v-model="state.password"
             clearable
             :items="state.numPassword"
-          ></v-select>
+          ></v-select> -->
         </v-col>
       </v-col>
     </v-row>
@@ -347,6 +350,9 @@ export default {
     const onlynumbers = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
+    const PasswordLengthSetting = computed(() => {
+      return t("errors.Password");
+    });
 
     const rules = computed(() => {
       return {
@@ -360,6 +366,14 @@ export default {
           isValidPort: helpers.withMessage(
             onlynumbers,
             helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        password: {
+          isValidPassword: helpers.withMessage(
+            PasswordLengthSetting,
+            helpers.regex(
+              /^(1[6-9]|[2-9][0-9]{1,4}|[1-9][0-9]{2,4}|[1-5][0-9]{5}|6[0-4][0-9]{4}|65[0-4][0-9]{3}|655[0-2][0-9]{2}|6553[0-5])$/
+            )
           ),
         },
       };
@@ -414,10 +428,10 @@ export default {
                 state.color = "success";
                 state.textAlert = response.data.msg;
                 closeModal();
-              }, 5000);
+              }, 10000);
               setTimeout(() => {
                 location.reload();
-              }, 5000);
+              }, 10000);
             }
           })
           .catch((i) => {

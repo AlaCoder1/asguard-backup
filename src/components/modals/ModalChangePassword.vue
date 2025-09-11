@@ -86,7 +86,9 @@ const storeAuth = useAuthStore();
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { required, sameAs, helpers } from "@vuelidate/validators";
-import { reactive, computed } from "vue";
+import { reactive, computed, onMounted, ref } from "vue";
+import { get_params } from "@/mixins/params.js";
+
 export default {
   name: "Modal_User",
   props: {
@@ -112,6 +114,12 @@ export default {
     },
   },
   setup() {
+    const length = ref(0);
+    onMounted(async () => {
+      const params = await get_params();
+      length.value = params?.password_length || 16;
+    });
+
     const { t } = useI18n();
     //data
     const state = reactive({
@@ -126,11 +134,21 @@ export default {
     const error = computed(() => {
       return t("errors.valueRequired");
     });
-    const invalidPassword = computed(() => {
-      return t("errors.invalidPassword");
-    });
+
     const passwordConfirmation = computed(() => {
       return t("errors.passwordConfirmation");
+    });
+
+    const invalidPassword = computed(() => {
+      return `${t("errors.invalidPassword1")} ${length.value} ${t(
+        "errors.invalidPassword"
+      )}`;
+    });
+
+    const passwordRegex = computed(() => {
+      if (!length.value) return /.*/;
+      const pattern = `^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~])[A-Za-z\\d!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~]{${length.value},}$`;
+      return new RegExp(pattern);
     });
 
     const rules = computed(() => {
@@ -138,12 +156,8 @@ export default {
         formData: {
           password: {
             required: helpers.withMessage(error, required),
-            isValidPassword: helpers.withMessage(
-              invalidPassword,
-
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-              )
+            isValidPassword: helpers.withMessage(invalidPassword, (value) =>
+              passwordRegex.value.test(value)
             ),
           },
           confirm_password: {
@@ -154,12 +168,8 @@ export default {
             ), // can be a reference to a field or computed property
             required: helpers.withMessage(error, required),
 
-            isValidPassword: helpers.withMessage(
-              invalidPassword,
-
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-              )
+            isValidPassword: helpers.withMessage(invalidPassword, (value) =>
+              passwordRegex.value.test(value)
             ),
           },
         },

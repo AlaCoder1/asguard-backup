@@ -1,35 +1,35 @@
 <template>
-    <v-overlay v-model="viewModal">
-            <v-dialog v-model="isviewModal" :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="@/assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text>
-                  {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
-                </v-card-text>
+  <v-overlay v-model="viewModal">
+    <v-dialog v-model="isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
+        </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    :label="$t('buttons.close')"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-overlay v-model="loading">
     <v-dialog
       v-model="isLoadingDialogue"
@@ -117,6 +117,12 @@
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.password.$error"
+                  >
+                    {{ v$.formData.password.$errors[0].$message }}
+                  </p>
                 </v-col>
 
                 <v-col cols="6">
@@ -125,6 +131,12 @@
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.confirm_password.$error"
+                  >
+                    {{ v$.formData.confirm_password.$errors[0].$message }}
+                  </p>
                 </v-col>
               </v-row>
             </v-container>
@@ -134,13 +146,10 @@
             <v-btn color="blue darken-1" text @click="cancelDelete">{{
               $t("PageGeneral.form.Cancel")
             }}</v-btn>
-            <v-btn
-              color="blue darken-1"
-              text
-              @click="confirmDownload"
-              :disabled="!isPassword || !isSame"
-              >{{ $t("buttons.download") }}</v-btn
-            >
+            <v-btn color="blue darken-1" text @click="confirmDownload">{{
+              $t("buttons.download")
+            }}</v-btn>
+            <!-- :disabled="!isPassword || !isSame" -->
           </v-card-actions>
         </v-card>
       </form>
@@ -179,12 +188,14 @@
 import { user_privilege } from "@/mixins/user_privilege.js";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { helpers, sameAs } from "@vuelidate/validators";
-import { reactive, computed, defineAsyncComponent } from "vue";
+import { required, helpers, sameAs } from "@vuelidate/validators";
+import { reactive, computed, defineAsyncComponent, ref, onMounted } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import ModalAddEditCertif from "@/components/modals/ModalAddEditCertif.vue";
 import ModalRevocation from "@/components/modals/ModalRevocation.vue";
 import VButton from "@/components/VButton.vue";
+import { get_params } from "@/mixins/params.js";
+import { useI18n } from "vue-i18n";
 
 // import FileP12 from `../../../../downloads/${this.rowName}.p12`
 export default {
@@ -205,6 +216,8 @@ export default {
     VButton,
   },
   setup() {
+    const length = ref(0);
+    const { t } = useI18n();
     const state = reactive({
       formData: {
         password: "",
@@ -213,25 +226,77 @@ export default {
       userRole: null,
       userName: null,
     });
+
+    onMounted(async () => {
+      const params = await get_params();
+      length.value = params?.password_length || 16;
+    });
+
     const paginationLocalization = reactive({
       of: "/",
     });
-    const isSame = computed(() => {
-      return state.formData.confirm_password == state.formData.password;
+
+    const passwordConfirmation = computed(() => {
+      return t("errors.passwordConfirmation");
+    });
+    // const isSame = computed(() => {
+    //   return state.formData.confirm_password == state.formData.password;
+    // });
+
+    // const isPassword = computed(() => {
+    //   let password =
+    //     state.formData.password && state.formData.confirm_password
+    //       ? true
+    //       : false;
+    //   return password;
+    // });
+    //
+    const invalidPassword = computed(() => {
+      return `${t("errors.invalidPassword1")} ${length.value} ${t(
+        "errors.invalidPassword"
+      )}`;
     });
 
-    const isPassword = computed(() => {
-      let password =
-        state.formData.password && state.formData.confirm_password
-          ? true
-          : false;
-      return password;
+    const passwordRegex = computed(() => {
+      if (!length.value) return /.*/;
+      const pattern = `^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~])[A-Za-z\\d!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~]{${length.value},}$`;
+      return new RegExp(pattern);
     });
+
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+
+    const rules = computed(() => {
+      return {
+        formData: {
+          password: {
+            required: helpers.withMessage(error, required),
+            isValidPassword: helpers.withMessage(invalidPassword, (value) =>
+              passwordRegex.value.test(value)
+            ),
+          },
+          confirm_password: {
+            sameAsPassword: helpers.withMessage(
+              passwordConfirmation,
+
+              sameAs(state.formData.password)
+            ), // can be a reference to a field or computed property
+            required: helpers.withMessage(error, required),
+
+            isValidPassword: helpers.withMessage(invalidPassword, (value) =>
+              passwordRegex.value.test(value)
+            ),
+          },
+        },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
 
     return {
       state,
-      isSame,
-      isPassword,
+      v$,
       paginationLocalization,
     };
   },
@@ -269,19 +334,19 @@ export default {
           field: "nom",
           width: 90,
           minWidth: 50,
-          flex: 1
+          flex: 1,
         },
         {
           headerName: this.distingushedname,
           cellRenderer: this.formatedDn,
           width: 90,
           minWidth: 50,
-          flex: 1
+          flex: 1,
         },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
-          width:150,
+          width: 150,
           editable: false,
           sortable: false,
           filter: false,
@@ -401,58 +466,49 @@ export default {
 
       return eGui;
     },
-    close(){
+    close() {
       this.isviewModal = false;
       this.viewModal = false;
     },
-    getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    },
     async confirmDownload() {
-      const csrfToken = this.getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      this.v$.$validate();
+      if (!this.v$.$error) {
+        const csrfToken = this.getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let payload = {
-        download_type: "p12",
-        password: this.state.formData?.password,
-      };
-      axios
-        .post(`/certificates/exportCert/${this.rowId}`, payload)
-        .then((response) => {
-          this.deleteDialog = false;
-          this.state.formData.password = "";
-          this.state.formData.confirm_password = "";
-          localStorage.setItem("cert-name", this.rowName);
-          this.isLoadingDialogue = true;
-          this.loading = true;
-          setTimeout(() => {
-            this.isLoadingDialogue = false;
-            this.loading = false;
-            location.reload();
-          }, 2000);
-        })
-        .catch((i) => {
-          if (i.response.status === 500) {
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = this.$t("errors.errorServer");
-          } else {
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = i.response.data.error;
-          }
-        });
+        let payload = {
+          download_type: "p12",
+          password: this.state.formData?.password,
+        };
+        axios
+          .post(`/certificates/exportCert/${this.rowId}`, payload)
+          .then((response) => {
+            this.deleteDialog = false;
+            this.state.formData.password = "";
+            this.state.formData.confirm_password = "";
+            localStorage.setItem("cert-name", this.rowName);
+            this.isLoadingDialogue = true;
+            this.loading = true;
+            setTimeout(() => {
+              this.isLoadingDialogue = false;
+              this.loading = false;
+              location.reload();
+            }, 2000);
+          })
+          .catch((i) => {
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            }
+          });
+      } else {
+        console.log("error : ", this.v$.$errors);
+      }
     },
     cancelDeleteCertif() {
       this.deleteDialogCertif = false;
@@ -464,27 +520,26 @@ export default {
     openModalAdd() {
       const user = user_privilege();
 
-      if (user !=='viewer') {
+      if (user !== "viewer") {
         this.modalData = {};
-      this.modalMode = "create"; 
-      this.isModalOpen = true;
-          } else {
-            this.isviewModal = true;
-            this.viewModal = true;
-            };
-
+        this.modalMode = "create";
+        this.isModalOpen = true;
+      } else {
+        this.isviewModal = true;
+        this.viewModal = true;
+      }
     },
     openModalRevoce() {
       const user = user_privilege();
 
-      if (user !=='viewer') {
+      if (user !== "viewer") {
         this.modalData = {};
-      this.modalMode = "revoce"; // Assuming you want to open the modal in create mode
-      this.isModalOpenRevoce = true;
-          } else {
-            this.isviewModal = true;
-            this.viewModal = true;
-            };
+        this.modalMode = "revoce"; // Assuming you want to open the modal in create mode
+        this.isModalOpenRevoce = true;
+      } else {
+        this.isviewModal = true;
+        this.viewModal = true;
+      }
     },
     closeModal() {
       this.isModalOpen = false;
@@ -523,7 +578,7 @@ export default {
            </button>
            <button
            class="action-button download"
-           data-action="exportKey" title=${this.$t('titleAgGrid.privateKey')}>
+           data-action="exportKey" title=${this.$t("titleAgGrid.privateKey")}>
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
@@ -584,7 +639,7 @@ export default {
            </button>
            <button
            class="action-button download"
-           data-action="exportKey" title=${this.$t('titleAgGrid.privateKey')}>
+           data-action="exportKey" title=${this.$t("titleAgGrid.privateKey")}>
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
@@ -636,7 +691,7 @@ export default {
            </button>
            <button
            class="action-button download"
-           data-action="exportKey" title=${this.$t('titleAgGrid.privateKey')}>
+           data-action="exportKey" title=${this.$t("titleAgGrid.privateKey")}>
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
@@ -714,7 +769,7 @@ export default {
             this.snackbar = true;
             this.color = "red";
             this.textAlert = i.response.data.error;
-          };
+          }
         });
     },
     getCookie(name) {
@@ -733,6 +788,8 @@ export default {
     },
     cancelDelete() {
       this.deleteDialog = false;
+      this.state.formData.password = "";
+      this.state.formData.confirm_password = "";
     },
     confirmDeleteCertif() {
       const csrfTok = this.getCookie("csrftoken");
@@ -769,27 +826,26 @@ export default {
       const user = user_privilege();
       switch (action) {
         case "exportP12":
-        if (user !=='viewer') {
-          this.deleteDialog = true;
-          this.rowId = rowData.id;
-          this.rowName = rowData.nom;
+          if (user !== "viewer") {
+            this.v$.$reset();
+            this.deleteDialog = true;
+            this.rowId = rowData.id;
+            this.rowName = rowData.nom;
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
-
+          }
 
           break;
 
         case "delete":
-        if (user !=='viewer') {
-          this.deleteDialogCertif = true;
-          this.deletedRow = rowData;
+          if (user !== "viewer") {
+            this.deleteDialogCertif = true;
+            this.deletedRow = rowData;
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
-
+          }
 
           // const index = this.rowData.findIndex(
           //   (item) => item.id === rowData.id
@@ -799,28 +855,28 @@ export default {
           // }
           break;
         case "lock":
-        if (user !=='viewer') {
-          const csrfToken = this.getCookie("csrftoken");
-          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+          if (user !== "viewer") {
+            const csrfToken = this.getCookie("csrftoken");
+            axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-          axios
-            .put(`/certificates/unrevokeCertificate/${rowData.id}`)
-            .then((response) => {
-              this.closeModal();
+            axios
+              .put(`/certificates/unrevokeCertificate/${rowData.id}`)
+              .then((response) => {
+                this.closeModal();
 
-              this.snackbar = true;
-              this.color = "success";
-              this.textAlert = response.data.msg;
+                this.snackbar = true;
+                this.color = "success";
+                this.textAlert = response.data.msg;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              });
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
-          
+          }
+
           // .catch((i) => {
           //   this.snackbar = true;
           //   this.color = "red";
@@ -829,39 +885,38 @@ export default {
 
           break;
         case "export":
-        if (user !=='viewer') {
-          let id = rowData.id;
-          let type = "certificate";
-          let fileExtention = `${rowData.nom}.crt`;
-          this.download(id, type, fileExtention);
+          if (user !== "viewer") {
+            let id = rowData.id;
+            let type = "certificate";
+            let fileExtention = `${rowData.nom}.crt`;
+            this.download(id, type, fileExtention);
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
-
+          }
 
           break;
         case "exportKey":
-        if (user !=='viewer') {
-          let rowId = rowData.id;
-          let typeName = "private_key";
-          let fileExt = `${rowData.nom}.key`;
-          this.download(rowId, typeName, fileExt);
+          if (user !== "viewer") {
+            let rowId = rowData.id;
+            let typeName = "private_key";
+            let fileExt = `${rowData.nom}.key`;
+            this.download(rowId, typeName, fileExt);
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
-          
+          }
+
           break;
         case "revoce":
-        if (user !=='viewer') {
-          this.rowEdit = rowData;
-          this.openModalRevoce();
-          this.modalMode = "revoce";
+          if (user !== "viewer") {
+            this.rowEdit = rowData;
+            this.openModalRevoce();
+            this.modalMode = "revoce";
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
+          }
 
           break;
         case "cancel":
@@ -873,3 +928,10 @@ export default {
   },
 };
 </script>
+<style>
+.error-feedback {
+  color: red;
+  font-size: 0.85em;
+  display: flex;
+}
+</style>

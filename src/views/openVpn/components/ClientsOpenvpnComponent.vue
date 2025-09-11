@@ -438,6 +438,7 @@ import { reactive, onMounted, ref, computed, watch } from "vue";
 import axios from "axios";
 import protocols from "@/constants/protocols.js";
 import { user_privilege } from "@/mixins/user_privilege.js";
+import { get_params } from "@/mixins/params.js";
 
 export default {
   name: "ClientsOpenvpnComponent",
@@ -451,6 +452,7 @@ export default {
   props: ["dataClient"],
   setup(props) {
     const { t } = useI18n();
+    const length = ref(0);
     const current_user = ref();
     const last_Subscription = ref([]);
     const paginationLocalization = reactive({
@@ -576,7 +578,10 @@ export default {
       port: "",
     });
 
-    onMounted(() => {
+    onMounted(async () => {
+      const params = await get_params();
+      length.value = params?.password_length || 16;
+
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
@@ -697,7 +702,6 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataCertificats.value);
         } else {
-          
         }
       });
     });
@@ -739,6 +743,19 @@ export default {
     const specificform = computed(() => {
       return t("errors.formsepcificpassword");
     });
+
+    const invalidPassword = computed(() => {
+      return `${t("errors.invalidPassword1")} ${length.value} ${t(
+        "errors.invalidPassword"
+      )}`;
+    });
+
+    const passwordRegex = computed(() => {
+      if (!length.value) return /.*/;
+      const pattern = `^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~])[A-Za-z\\d!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~]{${length.value},}$`;
+      return new RegExp(pattern);
+    });
+
     const rules = computed(() => {
       return {
         clientName: {
@@ -813,13 +830,12 @@ export default {
             )
           ),
         },
+
         passwordUser: {
-          isValidPassword: helpers.withMessage(
-            specificform,
-            helpers.regex(
-              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-            )
-          ),
+          isValidPassword: helpers.withMessage(invalidPassword, (value) => {
+            if (!value) return true;
+            return passwordRegex.value.test(value);
+          }),
           // requiredIfFuction: requiredIf(
           //   () => state.modeState === "edit" && state.NewUserPassword
           // ),
@@ -833,11 +849,12 @@ export default {
         },
         NewUserPassword: {
           isValidNewUserPassword: helpers.withMessage(
-            specificform,
+            invalidPassword,
 
-            helpers.regex(
-              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-            )
+            (value) => {
+              if (!value) return true;
+              return passwordRegex.value.test(value);
+            }
           ),
           // requiredIfFuction: requiredIf(
           //   () => state.modeState === "edit" && state.passwordUser
@@ -850,11 +867,12 @@ export default {
 
         password: {
           isValidPassword: helpers.withMessage(
-            specificform,
+            invalidPassword,
 
-            helpers.regex(
-              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-            )
+            (value) => {
+              if (!value) return true;
+              return passwordRegex.value.test(value);
+            }
           ),
 
           // requiredIfFuction: requiredIf(
@@ -876,11 +894,12 @@ export default {
         },
         NewProxyPassword: {
           isValidNewProxyPassword: helpers.withMessage(
-            specificform,
+            invalidPassword,
 
-            helpers.regex(
-              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-            )
+            (value) => {
+              if (!value) return true;
+              return passwordRegex.value.test(value);
+            }
           ),
 
           // requiredIfFuction: requiredIf(
@@ -1022,7 +1041,6 @@ export default {
               if (gridApi.value) {
                 gridApi.value.setRowData(rowDataCertificats.value);
               } else {
-                
               }
             }
           } else {
@@ -1081,7 +1099,6 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataCertificats.value);
         } else {
-          
         }
       } else {
         state.isviewModal = true;
@@ -1094,7 +1111,6 @@ export default {
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataCertificats.value);
       } else {
-        
       }
     };
 
@@ -1169,46 +1185,41 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/certificates/getAllCertAuth").then(
-        (response) => {
-          let mapedList = response.data.map((i) => {
-            return {
-              id: i.id,
-              name: i.name,
-              is_private_key: i.is_private_key,
-            };
-          });
+      axios.get("/certificates/getAllCertAuth").then((response) => {
+        let mapedList = response.data.map((i) => {
+          return {
+            id: i.id,
+            name: i.name,
+            is_private_key: i.is_private_key,
+          };
+        });
 
-          state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
-        },
-     
-      );
+        state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
+      });
     };
 
     const getAllClientCertif = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/certificates/getAllCertificates").then(
-        (response) => {
-          let mapedListCertif = response.data.filter(
-            (i) => i.certificate_type === "client"
-          );
+      axios.get("/certificates/getAllCertificates").then((response) => {
+        let mapedListCertif = response.data.filter(
+          (i) => i.certificate_type === "client"
+        );
 
-          let clientCerticateList = mapedListCertif.map((i) => {
-            return {
-              id: i.id,
-              name: i.name,
-              is_private_key: i.is_private_key,
-              certificate_authority: i.certificate_authority,
-            };
-          });
+        let clientCerticateList = mapedListCertif.map((i) => {
+          return {
+            id: i.id,
+            name: i.name,
+            is_private_key: i.is_private_key,
+            certificate_authority: i.certificate_authority,
+          };
+        });
 
-          state.filtredMapCertif = clientCerticateList.filter(
-            (i) => i.is_private_key
-          );
-        },
-      );
+        state.filtredMapCertif = clientCerticateList.filter(
+          (i) => i.is_private_key
+        );
+      });
     };
     const save = async () => {
       const user = user_privilege("Openvpn");
@@ -1540,7 +1551,6 @@ export default {
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataCertificats.value);
         } else {
-          
         }
         v$.value.$reset();
       } else {

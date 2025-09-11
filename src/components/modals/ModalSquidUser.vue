@@ -140,8 +140,9 @@ import {
   email,
   required,
 } from "@vuelidate/validators";
-import { reactive, computed, toRefs, watch, inject } from "vue";
+import { reactive, computed, onMounted, toRefs, watch, inject, ref } from "vue";
 import VButton from "@/components/VButton.vue";
+import { get_params } from "@/mixins/params.js";
 import { id } from "@/mixins/storage_language.js";
 
 export default {
@@ -170,6 +171,14 @@ export default {
     const { t } = useI18n();
     const { isOpen, editRow, modalMode } = toRefs(props);
     const emitter = inject("emitter");
+
+    const length = ref(0);
+
+    onMounted(async () => {
+      const params = await get_params();
+      length.value = params?.password_length || 16;
+    });
+
     const state = reactive({
       formData: {
         email: "",
@@ -195,6 +204,18 @@ export default {
       return t("errors.passwordConfirmation");
     });
 
+    const invalidPassword = computed(() => {
+      return `${t("errors.invalidPassword1")} ${length.value} ${t(
+        "errors.invalidPassword"
+      )}`;
+    });
+
+    const passwordRegex = computed(() => {
+      if (!length.value) return /.*/;
+      const pattern = `^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~])[A-Za-z\\d!"#$%&'()*+,-./:;<=>?@[\\]^_\\{|}~]{${length.value},}$`;
+      return new RegExp(pattern);
+    });
+
     const rules = computed(() => {
       return {
         formData: {
@@ -202,6 +223,9 @@ export default {
             required: helpers.withMessage(
               error,
               requiredIf(() => modalMode.value === "create")
+            ),
+            isValidPassword: helpers.withMessage(invalidPassword, (value) =>
+              passwordRegex.value.test(value)
             ),
           },
           confirm_password: {
@@ -213,6 +237,9 @@ export default {
             required: helpers.withMessage(
               error,
               requiredIf(() => modalMode.value === "create")
+            ),
+            isValidPassword: helpers.withMessage(invalidPassword, (value) =>
+              passwordRegex.value.test(value)
             ),
           },
           userName: {
@@ -288,7 +315,6 @@ export default {
       const result = await v$.value.$validate();
 
       if (result) {
-
         let payload = {
           email: state.formData.email,
           username: state.formData.userName,

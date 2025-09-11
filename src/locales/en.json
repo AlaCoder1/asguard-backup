@@ -14,8 +14,8 @@
     "LoginTime": "Login Time",
     "resetPassword": "Reset Password"
   },
-  "Valid":"Valid",
-  "Revoqued":"Revoqued",
+  "Valid": "Valid",
+  "Revoqued": "Revoqued",
   "Static": "Static",
   "keyPair": "Key Pair",
   "createPrivateKey": "Create Private Key",
@@ -90,6 +90,7 @@
   },
 
   "errors": {
+    "Password": "Password must be a number and at least 16",
     "formatRange": "Format must be X.X.X.X and the address must not be out of range",
     "duplicated": "The source, translation, and destination fields must each contain a different address.",
     "endAddress": "Format must match IP address: X.X.X.X (last byte must not be 0 or 255)",
@@ -98,7 +99,8 @@
     "format_address": "Format must be like : example.com",
     "errorServer": "Internal Server Error. Please try again later",
     "valueRequired": "Value is required",
-    "invalidPassword": "There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
+    "invalidPassword1": "There must be at least",
+    "invalidPassword": "characters, including at least one uppercase, one number, and one special character.",
     "passwordConfirmation": "Your password does not match",
     "ChampIncludeOnlyNumbers": "Champs can include only Numbers",
     "ChampIncludeOnlyNumbersOrFloat": "Field can only include digits or decimal numbers",
@@ -634,7 +636,7 @@
   },
 
   "ztna": {
-    "RelayPolicy":"Relay Policy",
+    "RelayPolicy": "Relay Policy",
     "identities": "IDENTITIES",
     "configurations": "CONFIGURATIONS",
     "services": "Services",
@@ -1048,10 +1050,10 @@
     "Proxyauthenticationextraoptions": "Proxy authentication extra options",
     "AdvancedConfiguration": "Advanced Configuration",
     "Remoteserver": "Remote Server",
-    "createNewClient":"Create New Client",
-    "clientCertificate":"Client Certificate",
-    "address":"Address",
-    "clientName":"Client Name"
+    "createNewClient": "Create New Client",
+    "clientCertificate": "Client Certificate",
+    "address": "Address",
+    "clientName": "Client Name"
   },
   "Clientsopenvpn": {
     "UserAuthenticationSettings": "User Authentication Settings",
@@ -1181,7 +1183,7 @@
     "TCPPort": "TCP Port",
     "LoginMessages": "Login Messages",
     "DisableWebGUISuccessfulLoginsLogging": "Disable logging of web GUI successful logins",
-    "PasswordLengthSetting": "Password length setting"
+    "PasswordLengthSetting": "Minimum password length"
   },
   "profil": {
     "Personalinformations": "Personal informations",

@@ -1,12 +1,14 @@
 from backend.ztna.constant_variables import PATH_CREATE_ROUTER_BASH, PATH_DELETE_ROUTER_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STATUS_ZTNA_ROUTER_BASH, PATH_STOP_ZTNA_ROUTER_BASH, PATH_UPDATE_ROUTER_BASH, PATH_ZTNA_ROUTER
-from backend.ztna.utils import get_data
+from backend.ztna.utils import get_data_from_openziti
 from utils.commands_utils import execute_command_with_arguments, get_current_directory
 
 
-def get_router_from_ziti(id):
+def get_router_from_ziti(id=None):
     """Get router data from openziti API"""
-    endpoint = f"edge-routers/{id}"
-    return get_data(endpoint)
+    endpoint = "edge-routers/"
+    if id:
+        f"edge-routers/{id}"
+    return get_data_from_openziti(endpoint)
 
 
 def change_status_router(router_name, router_status):

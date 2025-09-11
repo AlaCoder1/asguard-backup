@@ -1,17 +1,18 @@
 from backend.ztna.models import Identities, Relays, Services, RelaysPolicy,ServicesPolicy, ServicesRelaysPolicy, InterceptConfigs, HostConfigs
-from backend.ztna.utils import get_data, get_local_domain_from_system
+from backend.ztna.utils import get_data_from_openziti, get_local_domain_from_system
 from django.core import serializers
 import json
 
 
 def get_identities():
+    """Get list of identities from database"""
     list_identities = []
-    identities = Identities.objects.all()
+    identities = Identities.objects.all().order_by("name")
 
     # Synchronize identites in system with database
     try:
         endpoint = "identities/"
-        identities_from_ziti=get_data(endpoint)
+        identities_from_ziti=get_data_from_openziti(endpoint)
         for identity in identities:
             matching_ziti_identity = next((z for z in identities_from_ziti if z['id'] == identity.ref_identitie), None)        
             if matching_ziti_identity and 'envInfo' in matching_ziti_identity and 'hostname' in matching_ziti_identity['envInfo']:
@@ -34,13 +35,14 @@ def get_identities():
 
 
 def get_routers():
+    """Get list of routers from database"""
     list_relays = []
-    relays = Relays.objects.all()
+    relays = Relays.objects.all().order_by("name")
 
     # Synchronize routers in system with database
     try:
         endpoint = "edge-routers/"
-        routers_from_ziti=get_data(endpoint)
+        routers_from_ziti=get_data_from_openziti(endpoint)
         for relay in relays:
             matching_ziti_relay = next((z for z in routers_from_ziti if z['id'] == relay.ref_relay), None)
             relay.online = matching_ziti_relay['isOnline']
@@ -61,8 +63,9 @@ def get_routers():
 
 
 def get_intercept_configs():
+    """Get list of intercept configurations from database"""
     list_intercept = []
-    intercept = InterceptConfigs.objects.all()
+    intercept = InterceptConfigs.objects.all().order_by("name")
     intercept_dict = serializers.serialize("json", intercept)
     res = json.loads(intercept_dict)
     for i in range(0, len(res)):
@@ -75,8 +78,9 @@ def get_intercept_configs():
 
 
 def get_host_configs():
+    """Get list of host configurations from database"""
     list_host = []
-    host = HostConfigs.objects.all()
+    host = HostConfigs.objects.all().order_by("name")
     host_dict = serializers.serialize("json", host)
     res = json.loads(host_dict)
     for i in range(0, len(res)):
@@ -89,8 +93,9 @@ def get_host_configs():
 
 
 def get_services():
+    """Get list of serviecs from database"""
     list_services = []
-    services = Services.objects.all()
+    services = Services.objects.all().order_by("name")
     services_dict = serializers.serialize("json", services)
     res = json.loads(services_dict)
     for i in range(0, len(res)):
@@ -103,8 +108,9 @@ def get_services():
 
 
 def get_edge_router_policies():
+    """Get list of edge router policies from database"""
     list_relay_policies = []
-    relay_policy = RelaysPolicy.objects.all()
+    relay_policy = RelaysPolicy.objects.all().order_by("name")
     relay_policy_dict = serializers.serialize("json", relay_policy)
     res = json.loads(relay_policy_dict)
     for relay_policy in res:
@@ -128,8 +134,9 @@ def get_edge_router_policies():
 
 
 def get_service_policies():
+    """Get list of service policies from database"""
     list_services_policies = []
-    service_policy = ServicesPolicy.objects.all()
+    service_policy = ServicesPolicy.objects.all().order_by("name")
     service_policy_dict = serializers.serialize("json", service_policy)
     res = json.loads(service_policy_dict)
     for i in range(0, len(res)):
@@ -142,8 +149,9 @@ def get_service_policies():
 
 
 def get_service_edge_router_policies():
+    """Get list of service edge router policies from database"""
     list_services_relays_policies = []
-    service_relay_policy = ServicesRelaysPolicy.objects.all()
+    service_relay_policy = ServicesRelaysPolicy.objects.all().order_by("name")
     service_relay_policy_dict = serializers.serialize("json", service_relay_policy)
     res = json.loads(service_relay_policy_dict)
     for i in range(0, len(res)):

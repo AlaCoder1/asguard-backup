@@ -4,6 +4,8 @@ import json
 from backend.ztna.constant_variables import PATH_BASE_URL_ZTNA, CONSTANT_CONTENT_TYPE, PATH_CHECK_TEMPLATE_BASH, PATH_LINUX_TEMPLATE_BASH, PATH_START_ZTNA_BASH, PATH_STATUS_ZTNA_BASH, PATH_STOP_ZTNA_BASH, PATH_WINDOWS_TEMPLATE_BASH
 from utils.commands_utils import execute_command_without_arguments, get_current_directory
 from decouple import config
+
+
 def get_ztna_token_from_system():
     """Get the token to use openziti APIs"""
     try:
@@ -30,7 +32,7 @@ def get_ztna_token_from_system():
         return None
 
 
-def get_data(endpoint):
+def get_data_from_openziti(endpoint):
     """Get data from openziti APIs: Identity, Enrollement, Configuration, Service, Router, and Policy"""
     try:
         url = PATH_BASE_URL_ZTNA + endpoint

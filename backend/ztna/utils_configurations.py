@@ -1,11 +1,13 @@
 from backend.ztna.models import HostConfigs, InterceptConfigs
-from backend.ztna.utils import get_data
+from backend.ztna.utils import get_data_from_openziti
 
 
-def get_configuration_from_ziti(id):
+def get_configuration_from_ziti(id=None):
     """Get configuration data from openziti API"""
-    endpoint = f"configurations/{id}"
-    return get_data(endpoint)
+    endpoint = "configs/"
+    if id:
+        endpoint = f"configs/{id}"
+    return get_data_from_openziti(endpoint)
 
 
 def get_payload_config_openziti(payload: dict):

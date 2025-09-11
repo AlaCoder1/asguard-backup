@@ -10,11 +10,12 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated
 import json
 
+from backend.ztna.list_ztna import get_host_configs, get_intercept_configs
 from backend.ztna.models import HostConfigs, InterceptConfigs
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_CONFIGS
 from backend.ztna.serializers import HostConfigsSerializer, HostSerializerUpdate, InterceptConfigsSerializer, InterceptSerializerUpdate
 from backend.ztna.utils import get_ztna_token_from_system
-from backend.ztna.utils_configurations import get_payload_config_database, get_payload_config_openziti, is_exist_config
+from backend.ztna.utils_configurations import get_configuration_from_ziti, get_payload_config_database, get_payload_config_openziti, is_exist_config
 from django.views.decorators.http import require_http_methods
 
 # Constants
@@ -40,14 +41,11 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_configs_from_openziti(request):
+def get_configs_from_openziti(_):
     """Getting all configurations existing in system using openziti API"""
     try:
-        session_id = get_ztna_token_from_system()
-        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        response = requests.get(PATH_ZTNA_CONFIGS, headers=headers, verify=False)
-        response_dict = json.loads(response.text)
-        return JsonResponse(response_dict["data"], safe=False)
+        list_configs_openziti = get_configuration_from_ziti()
+        return JsonResponse(list_configs_openziti, safe=False)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
 
@@ -58,14 +56,10 @@ def get_configs_from_openziti(request):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_host_configs(request):
+def get_all_host_configs(_):
     """Getting all configs from database"""
-    try:
-        if request.method == 'GET':
-            host_configs = list(map(model_to_dict, HostConfigs.objects.all()))
-            return JsonResponse(host_configs, safe=False)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+    host_configs = get_host_configs()
+    return JsonResponse(host_configs, safe=False)
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'},
@@ -74,13 +68,10 @@ def get_host_configs(request):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_intercept_configs(request):
+def get_all_intercept_configs(_):
     """Getting list of all intercept configs from database"""
-    try:
-        intercept_configs = list(map(model_to_dict, InterceptConfigs.objects.all()))
-        return JsonResponse(intercept_configs, safe=False)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+    intercept_configs = get_intercept_configs()
+    return JsonResponse(intercept_configs, safe=False)
 
 
 @swagger_auto_schema(

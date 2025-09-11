@@ -9,13 +9,14 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated
 import json
 
+from backend.ztna.list_ztna import get_services
 from backend.ztna.models import HostConfigs, InterceptConfigs, Services
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_SERVICES
 from backend.ztna.serializers import ServicesSerializer, ServicesSerializerUpdate
 from backend.ztna.utils import get_ztna_token_from_system
 from django.views.decorators.http import require_http_methods
 
-from backend.ztna.utils_services import is_exist_config
+from backend.ztna.utils_services import get_service_from_ziti, is_exist_config
 
 # Constants
 CONSTANT_SERVICE = _('Service')
@@ -40,15 +41,11 @@ ERROR_MESSAGES_NAME_EXISTANT = _("Service with this name exist")
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_services_from_openziti(request):
+def get_services_from_openziti(_):
     """Getting all services existing in system using openziti API"""
     try:
-        session_id = get_ztna_token_from_system()
-        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        response = requests.get(PATH_ZTNA_SERVICES, headers=headers, verify=False)
-        response_dict = json.loads(response.text)
-        print(response_dict["data"])
-        return JsonResponse(response_dict["data"], safe=False)
+        list_services_openziti = get_service_from_ziti()
+        return JsonResponse(list_services_openziti, safe=False)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
 
@@ -59,14 +56,10 @@ def get_services_from_openziti(request):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_all_services(request):
+def get_all_services(_):
     """Getting all services from database"""
-    try:
-        if request.method == 'GET':
-            services = Services.objects.all()
-            return JsonResponse(list(services.values()), safe=False)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+    list_services = get_services()
+    return JsonResponse(list_services, safe=False)
 
 
 @swagger_auto_schema(

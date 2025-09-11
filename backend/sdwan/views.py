@@ -61,7 +61,6 @@ request_body_sdwan=Schema(
 @permission_classes([IsAuthenticated])
 def get_all_area(_):
     """Getting all servers from database"""
-    list_area = []
     list_area = get_list_all_area()
     return JsonResponse(list_area, safe=False)
 
@@ -112,7 +111,7 @@ def create_area(request):
 @require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_area(request, id):
+def delete_area(_, id):
     """Deleting an area from database"""
     try:
         area = Area.objects.get(id=id)
@@ -163,9 +162,8 @@ def update_area(request, id):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_all_sdwan_rule(request):
+def get_all_sdwan_rule(_):
     """Getting all servers from database"""
-    list_sdwan_rule = []
     list_sdwan_rule = get_list_all_sdwan_rule()
     return JsonResponse(list_sdwan_rule, safe=False)
 
@@ -244,7 +242,7 @@ def create_sdwan_rule(request):
 @require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_sdwan_rule(request, id):
+def delete_sdwan_rule(_, id):
     """Deleting an sdwan_rule from database"""
     try:
         sdwan_rule = SdwanRules.objects.get(id=id)
@@ -335,7 +333,7 @@ def update_sdwan_rule(request, id):
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def start_sdwan_rule(request, id):
+def start_sdwan_rule(_, id):
     """Start an SDWAN rule on background using celery. Change rule_status to True to start the script"""
     try:
         # Get the SDWAN rule
@@ -372,7 +370,7 @@ def start_sdwan_rule(request, id):
 @require_http_methods(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def stop_sdwan_rule(request, id):
+def stop_sdwan_rule(_, id):
     """Stop an SDWAN rule. By changing rule_status to False, the while loop of the script will be breaked"""
     try:
         sdwan_rule = SdwanRules.objects.get(id=id)

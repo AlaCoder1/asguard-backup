@@ -13,4 +13,5 @@ urlpatterns = [
     path('gatways_information', views.gatways_information, name="gatways_information"),
     path('getLanguage',views.get_language, name='getLanguage'),
     path('restartNginx', views.restart_nginx, name="restartNginx"),
+    path('restartUvicorn', views.restart_uvicorn, name="restartUvicorn"),
 ]

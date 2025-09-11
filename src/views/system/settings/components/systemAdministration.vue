@@ -343,6 +343,12 @@ export default {
       axios.post("/settings/restartNginx");
     };
 
+    const restartUvicorn = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/settings/restartUvicorn");
+    };
+
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -419,6 +425,7 @@ export default {
           .then((response) => {
             if (response.status == 200) {
               restartNginx();
+              restartUvicorn();
               state.loading = true;
               state.isLoadingDialogue = true;
               setTimeout(() => {

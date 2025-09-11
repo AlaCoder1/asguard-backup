@@ -886,5 +886,13 @@ def get_settings(request):
 @permission_classes([IsAuthenticated])
 def restart_nginx(_):
     restart_nginx_in_system()
+    return JsonResponse({"msg": ""}, status=200)
+
+
+@api_view(['POST'])
+@require_http_methods(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def restart_uvicorn(_):
     restart_uvicorn_in_system()
     return JsonResponse({"msg": ""}, status=200)

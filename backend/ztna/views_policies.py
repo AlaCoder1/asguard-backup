@@ -9,12 +9,14 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated
 import json
 
-from backend.ztna.list_ztna import get_edge_router_policies
+from backend.ztna.list_ztna import get_edge_router_policies, get_service_edge_router_policies, get_service_policies
 from backend.ztna.models import Identities, Relays, RelaysPolicy, Services, ServicesPolicy, ServicesRelaysPolicy
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES
 from backend.ztna.serializers import RelaysPolicySerializer, RelaysPolicySerializerUpdate, ServicesPolicySerializer, ServicesPolicySerializerUpdate, ServicesRelaysPolicySerializer, ServicesRelaysPolicySerializerUpdate
 from backend.ztna.utils import get_ztna_token_from_system
 from django.views.decorators.http import require_http_methods
+
+from backend.ztna.utils_policies import get_router_policy_from_ziti, get_service_policy_from_ziti, get_services_router_policy_from_ziti
 
 # Constants
 CONSTANT_EDGE_ROUTER_POLICIE = _('Relay Policy')
@@ -39,14 +41,11 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_edge_routers_policies_from_openziti(request):
+def get_edge_routers_policies_from_openziti(_):
     """Getting all edge routers existing in system using openziti API"""
     try:
-        session_id = get_ztna_token_from_system()
-        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        response = requests.get(PATH_ZTNA_EDGE_ROUTERS_POLICIES, headers=headers, verify=False)
-        response_dict = json.loads(response.text)
-        return JsonResponse(response_dict["data"], safe=False)
+        list_router_policies_openziti = get_router_policy_from_ziti()
+        return JsonResponse(list_router_policies_openziti, safe=False)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
 
@@ -57,13 +56,10 @@ def get_edge_routers_policies_from_openziti(request):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_edge_routers_policies(_):
+def get_all_edge_routers_policies(_):
     """Getting all edge routers from database"""
-    try:
-        list_relay_policy = get_edge_router_policies()
-        return JsonResponse(list_relay_policy, safe=False)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+    list_relay_policy = get_edge_router_policies()
+    return JsonResponse(list_relay_policy, safe=False)
 
 
 @swagger_auto_schema(
@@ -141,7 +137,7 @@ def add_edge_routers_policies(request):
 @require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_edge_routers_policies(request, id):
+def delete_edge_routers_policies(_, id):
     try:
         relays_policy = RelaysPolicy.objects.get(id=id)
         session_id = get_ztna_token_from_system()
@@ -230,14 +226,11 @@ def update_edge_routers_policies(request, id):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_services_policies_from_openziti(request):
+def get_services_policies_from_openziti(_):
     """Getting all services policies existing in system using openziti API"""
     try:
-        session_id = get_ztna_token_from_system()
-        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        response = requests.get(PATH_ZTNA_SERVICES_POLICIES, headers=headers, verify=False)
-        response_dict = json.loads(response.text)
-        return JsonResponse(response_dict["data"], safe=False)
+        list_services_policies_openziti = get_service_policy_from_ziti()
+        return JsonResponse(list_services_policies_openziti, safe=False)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
 
@@ -248,14 +241,10 @@ def get_services_policies_from_openziti(request):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_services_policies(request):
+def get_all_services_policies(_):
     """Getting all services from database"""
-    try:
-        if request.method == 'GET':
-            service_policy = ServicesPolicy.objects.all()
-            return JsonResponse(list(service_policy.values()), safe=False)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+    list_service_policy = get_service_policies()
+    return JsonResponse(list_service_policy, safe=False)
 
 
 @swagger_auto_schema(
@@ -333,7 +322,7 @@ def add_services_policies(request):
 @require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_services_policies(request, id):
+def delete_services_policies(_, id):
     try:
         service_policy = ServicesPolicy.objects.get(id=id)
         session_id = get_ztna_token_from_system()
@@ -426,14 +415,11 @@ def update_services_policies(request, id):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_services_edge_routers_policies_from_openziti(request):
+def get_services_edge_routers_policies_from_openziti(_):
     """Getting all services existing in system using openziti API"""
     try:
-        session_id = get_ztna_token_from_system()
-        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        response = requests.get(PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, headers=headers, verify=False)
-        response_dict = json.loads(response.text)
-        return JsonResponse(response_dict["data"], safe=False)
+        list_service_router_policies_openziti = get_services_router_policy_from_ziti()
+        return JsonResponse(list_service_router_policies_openziti, safe=False)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
 
@@ -444,14 +430,10 @@ def get_services_edge_routers_policies_from_openziti(request):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_services_edge_routers_policies(request):
+def get_all_services_edge_routers_policies(_):
     """Getting all services edge routers from database"""
-    try:
-        if request.method == 'GET':
-            service_relay_policy = ServicesRelaysPolicy.objects.all()
-            return JsonResponse(list(service_relay_policy.values()), safe=False)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+    list_relay_policy = get_service_edge_router_policies()
+    return JsonResponse(list_relay_policy, safe=False)
 
 
 @swagger_auto_schema(
@@ -528,7 +510,7 @@ def add_services_edge_routers_policies(request):
 @require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_services_edge_routers_policies(request, id):
+def delete_services_edge_routers_policies(_, id):
     try:
         service_relay_policy = ServicesRelaysPolicy.objects.get(id=id)
         session_id = get_ztna_token_from_system()

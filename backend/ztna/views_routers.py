@@ -41,14 +41,11 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_routers_from_openziti(request):
+def get_routers_from_openziti(_):
     """Getting all routers existing in system using openziti API"""
     try:
-        session_id = get_ztna_token_from_system()
-        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        response = requests.get(PATH_ZTNA_ROUTERS, headers=headers, verify=False)
-        response_dict = json.loads(response.text)
-        return JsonResponse(response_dict["data"], safe=False)
+        list_routers_openziti = get_router_from_ziti()
+        return JsonResponse(list_routers_openziti, safe=False)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
 

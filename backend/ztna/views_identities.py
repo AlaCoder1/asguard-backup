@@ -2,7 +2,6 @@ import requests
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, Schema
 from datetime import datetime
-from django.core import serializers
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import SessionAuthentication
@@ -10,6 +9,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated
 import json
 
+from backend.ztna.list_ztna import get_identities
 from backend.ztna.models import Identities
 from backend.ztna.constant_variables import CONSTANT_CONTENT_TYPE, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES
 from backend.ztna.serializers import EnrollementsSerializer, IdentitiesSerializer, IdentitiesSerializerUpdate
@@ -38,14 +38,11 @@ ERROR_MESSAGES_REQUIRED_START = _("Try to start the service")
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_identities_from_openziti(request):
+def get_identities_from_openziti(_):
     """Getting all identities existing in system using openziti API"""
     try:
-        session_id = get_ztna_token_from_system()
-        headers = {"zt-session": session_id, "Content-Type": CONSTANT_CONTENT_TYPE}
-        response = requests.get(PATH_ZTNA_IDENTITIES, headers=headers, verify=False)
-        response_dict = json.loads(response.text)
-        return JsonResponse(response_dict["data"], safe=False)
+        list_identities_openziti = get_identitie_from_ziti()
+        return JsonResponse(list_identities_openziti, safe=False)
     except requests.exceptions.ConnectionError:
         return JsonResponse({"error": ERROR_MESSAGES_REQUIRED_START,}, status=400)
 
@@ -56,21 +53,10 @@ def get_identities_from_openziti(request):
 @require_http_methods(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def get_all_identities(request):
+def get_all_identities(_):
     """API to get the ZTNA identites"""
-    list_identities = []
-    if request.method == 'GET':
-        identities = Identities.objects.all()
-        identitie_dict = serializers.serialize("json", identities)
-        res = json.loads(identitie_dict)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            identitie_id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = identitie_id
-            list_identities.append(res[i]['fields'])
-
-        return JsonResponse(list_identities, safe=False)
+    list_identities = get_identities()
+    return JsonResponse(list_identities, safe=False)
 
 
 @swagger_auto_schema(
@@ -138,7 +124,7 @@ def add_identities(request):
 @require_http_methods(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_identities(request, id):
+def delete_identities(_, id):
     """API to delete a ZTNA identity"""
     try:
         identitie = Identities.objects.get(id=id)

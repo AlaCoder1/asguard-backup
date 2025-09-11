@@ -29,8 +29,8 @@ urlpatterns = [
     
     ########## Config Paths ##########
     path('get_configs_from_openziti', views_configurations.get_configs_from_openziti, name='get_configs_from_openziti'),
-    path('get_host_configs', views_configurations.get_host_configs, name='get_host_configs'),
-    path('get_intercept_configs', views_configurations.get_intercept_configs, name='get_intercept_configs'),
+    path('get_host_configs', views_configurations.get_all_host_configs, name='get_host_configs'),
+    path('get_intercept_configs', views_configurations.get_all_intercept_configs, name='get_intercept_configs'),
     path('add_config', views_configurations.add_configs, name='add_config'),
     path('delete_intercept_config/<int:id>', views_configurations.delete_intercept_configs, name='delete_intercept_config'),
     path('delete_host_config/<int:id>', views_configurations.delete_host_configs, name='delete_host_config'),
@@ -47,19 +47,19 @@ urlpatterns = [
     ########## Policies Paths ##########
     # Edge routers policies
     path('get_edge_routers_policies_from_openziti', views_policies.get_edge_routers_policies_from_openziti, name='get_edge_routers_policies_from_openziti'),
-    path('get_edge_routers_policies', views_policies.get_edge_routers_policies, name='get_edge_routers_policies'),
+    path('get_edge_routers_policies', views_policies.get_all_edge_routers_policies, name='get_edge_routers_policies'),
     path('add_edge_routers_policies', views_policies.add_edge_routers_policies, name='add_edge_routers_policies'),
     path('delete_edge_routers_policies/<int:id>', views_policies.delete_edge_routers_policies, name='delete_edge_routers_policies'),
     path('update_edge_routers_policies/<int:id>', views_policies.update_edge_routers_policies, name='update_edge_routers_policies'),
     # Services policies
     path('get_services_policies_from_openzit', views_policies.get_services_policies_from_openziti, name='get_services_policies_from_openzit'),
-    path('get_services_policies', views_policies.get_services_policies, name='get_services_policies'),
+    path('get_services_policies', views_policies.get_all_services_policies, name='get_services_policies'),
     path('add_services_policies', views_policies.add_services_policies, name='add_services_policies'),
     path('delete_services_policies/<int:id>', views_policies.delete_services_policies, name='delete_services_policies'),
     path('update_services_policies/<int:id>', views_policies.update_services_policies, name='update_services_policies'),
     # Services Edge routers policies
     path('get_services_edge_routers_policies_from_openzit', views_policies.get_services_edge_routers_policies_from_openziti, name='get_services_edge_routers_policies_from_openzit'),
-    path('get_services_edge_routers_policies', views_policies.get_services_edge_routers_policies, name='get_services_edge_routers_policies'),
+    path('get_services_edge_routers_policies', views_policies.get_all_services_edge_routers_policies, name='get_services_edge_routers_policies'),
     path('add_services_edge_routers_policies', views_policies.add_services_edge_routers_policies, name='add_services_edge_routers_policies'),
     path('delete_services_edge_routers_policies/<int:id>', views_policies.delete_services_edge_routers_policies, name='delete_services_edge_routers_policies'),
     path('update_services_edge_routers_policies/<int:id>', views_policies.update_services_edge_routers_policies, name='update_services_edge_routers_policies'),

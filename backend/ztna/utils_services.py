@@ -1,5 +1,5 @@
 from backend.ztna.models import Services
-from backend.ztna.utils import get_data
+from backend.ztna.utils import get_data_from_openziti
 
 
 def is_exist_config(service_name):
@@ -9,7 +9,9 @@ def is_exist_config(service_name):
     return True
 
 
-def get_service_from_ziti(id):
+def get_service_from_ziti(id=None):
     """Get service data from openziti API"""
-    endpoint = f"services/{id}"
-    return get_data(endpoint)
+    endpoint = "services/"
+    if id:
+        endpoint = f"services/{id}"
+    return get_data_from_openziti(endpoint)

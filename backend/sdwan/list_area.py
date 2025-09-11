@@ -8,7 +8,7 @@ def get_list_all_area():
     """Getting all areas from database"""
 
     list_area = []
-    areas = Area.objects.all()
+    areas = Area.objects.all().order_by("name")
     area_dict = serializers.serialize("json", areas)
     res = json.loads(area_dict)
     for area in res:

@@ -14,7 +14,7 @@ def get_list_all_sdwan_rule():
         SdwanRules.objects.update(rule_status=False)
     synchronize_rule_table()
     list_sdwan_rule = []
-    sdwan_rules = SdwanRules.objects.all()
+    sdwan_rules = SdwanRules.objects.all().order_by("name")
     sdwan_rule_dict = serializers.serialize("json", sdwan_rules)
     res = json.loads(sdwan_rule_dict)
     for sdwan_rule in res:

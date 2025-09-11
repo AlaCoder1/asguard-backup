@@ -63,11 +63,7 @@ def update_router_in_system(old_router_name, new_router_name):
 
 def get_status_router_from_system(router_name):
     current_dir = get_current_directory()
-    process, stdout, stderr = execute_command_with_arguments(["sudo", "bash", PATH_STATUS_ZTNA_ROUTER_BASH.format(current_dir)], f"{router_name}\n")
-    if process is not None:
-        print("status_router completed with exit code:", process.returncode)
-        print("status_router output:", stdout)
-        print("status_router error (if any):", stderr)
-    else:
-        print("Failed to execute the command.")
-    return stdout
+    process, stdout, _ = execute_command_with_arguments(["sudo", "bash", PATH_STATUS_ZTNA_ROUTER_BASH.format(current_dir)], f"{router_name}\n")
+    if process and "Router is not running" not in stdout:
+        return True
+    return False

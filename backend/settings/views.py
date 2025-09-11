@@ -148,57 +148,51 @@ def generale_settings(request, id):
         If the specified network interface does not exist.
     """
     msg = ''
-    if (request.method == 'PUT'):
-        system_object = System.objects.all().first()
-        # network = Network.objects.get(id=id)
-        
-        data = request.data
-        if change_hostname(data['hostname']) and '.' in data['domain'] and data['domain'][-1] != '.':
-            system_object.hostname = data['hostname']
-            change_domain(data['domain'])
-            system_object.domaine = data['domain']
-            timezone = Timezone.objects.get(name = data['timezone'])
-            set_time_zone(timezone.name)
-            system_object.time_zone = timezone
-            system_object.save()
-            # if "dns_servers" in data:
-            for i in data['dns_servers']:
-                dns_server = i['dns_server']       
-                gateway = i['gateway']            
-                interface_id = i['interface_id']   
-                metric = i['metric']  
-                add_dns_servers(dns_server)
-                if gateway != "" and interface_id != "":
-                    try:
-                        gateway = Gateway.objects.get(gwaddress = gateway)
-                    except Gateway.DoesNotExist:
-                        return JsonResponse({"error": f"Gateway with {gateway} does not exist"}, status=404)
-                    except ValueError:
-                        return JsonResponse({"error": f"Invalid gateway: {gateway}"}, status=404)
-                    try:
-                        interface = Interface.objects.get(id=interface_id)
-                    except Interface.DoesNotExist:
-                        return JsonResponse({"error": f"Interface with ID {interface_id} does not exist"}, status=404)
-                    except ValueError:
-                        return JsonResponse({"error": f"Invalid interface ID: {interface_id}"}, status=404)
-                    resultat,error = add_gateway_to_dns_servers(dns_server,gateway.gwaddress,interface.ifname,metric)
-            # network.server_dns = data['dns_servers']
-            # network.save()
-            # data['dns_servers'][0]['name_interface'] = interface.name_interface
-            # For adding if the table is empty
-            if not Network.objects.exists():
-                Network.objects.create(server_dns=data['dns_servers'])
+    system_object = System.objects.all().first()
+    
+    data = request.data
+    if change_hostname(data['hostname']) and '.' in data['domain'] and data['domain'][-1] != '.':
+        system_object.hostname = data['hostname']
+        change_domain(data['domain'])
+        system_object.domaine = data['domain']
+        timezone = Timezone.objects.get(name = data['timezone'])
+        set_time_zone(timezone.name)
+        system_object.time_zone = timezone
+        system_object.save()
+        # if "dns_servers" in data:
+        for network in data['dns_servers']:
+            dns_server = network['dns_server']
+            gateway = network['gateway']
+            interface_id = network['interface_id']
+            
+            add_dns_servers(dns_server)
+            if gateway != "" and interface_id != "":
+                try:
+                    gateway = Gateway.objects.get(gwaddress = gateway)
+                except Gateway.DoesNotExist:
+                    return JsonResponse({"error": f"Gateway with {gateway} does not exist"}, status=404)
+                except ValueError:
+                    return JsonResponse({"error": f"Invalid gateway: {gateway}"}, status=404)
+                try:
+                    interface = Interface.objects.get(id=interface_id)
+                except Interface.DoesNotExist:
+                    return JsonResponse({"error": f"Interface with ID {interface_id} does not exist"}, status=404)
+                except ValueError:
+                    return JsonResponse({"error": f"Invalid interface ID: {interface_id}"}, status=404)
+                add_gateway_to_dns_servers(dns_server, gateway.gwaddress, interface.ifname)
+        if not Network.objects.exists():
+            Network.objects.create(server_dns=data['dns_servers'])
 
-            # For updating if the table is not empty
-            else:
-                Network.objects.update_or_create(
-                    defaults={'server_dns': data['dns_servers']},
-                )
-            msg = f"{CONSTANT_SYSTEM} {SUCCESS_MESSAGES_CREATING}"
-            status = 200
+        # For updating if the table is not empty
         else:
-            msg = ERROR_MESSAGES_CREATING
-            status = 400
+            Network.objects.update_or_create(
+                defaults={'server_dns': data['dns_servers']},
+            )
+        msg = f"{CONSTANT_SYSTEM} {SUCCESS_MESSAGES_CREATING}"
+        status = 200
+    else:
+        msg = ERROR_MESSAGES_CREATING
+        status = 400
     return JsonResponse({"msg": msg}, status=status)
 
 

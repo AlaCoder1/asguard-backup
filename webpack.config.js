@@ -40,7 +40,7 @@ Encore.setOutputPath("static/")
   .addEntry("settings", "./src/middleware/settings.js")
   .addEntry("logrotate", "./src/middleware/logrotate.js")
   .addEntry("double_masque", "./src/middleware/double_masque.js")
-  .enableVueLoader(() => {}, {
+  .enableVueLoader(() => { }, {
     version: 3,
   })
 
@@ -70,7 +70,7 @@ Encore.setOutputPath("static/")
         },
       },
     ],
-    
+
   })
 
 

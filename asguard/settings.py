@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 import mimetypes
+from celery.schedules import crontab
 import warnings
 from decouple import config
 warnings.filterwarnings("ignore")
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
     "backend.ipsec",
     'backend.LdapServer',
     "backend.managementCertificates",
+    'backend.managementBackup',
     'backend.managementGroup',
     'backend.managementKeypairs',
     "backend.managementServers",
@@ -222,7 +224,7 @@ SWAGGER_SETTINGS = {
 }
 
 # jwt_auth/settings.py
-SESSION_COOKIE_AGE = 30000
+SESSION_COOKIE_AGE = 300000
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE= True
 SESSION_COOKIE_HTTPONLY = True
@@ -258,6 +260,15 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+
+# Periodic scheduled tasks (Celery Beat)
+CELERY_BEAT_SCHEDULE = {
+    'daily-backup': {
+        'task': 'backend.managementBackup.tasks.export_backup_task',
+        'schedule': crontab(hour=2, minute=0),
+        'args': (),
+    },
+}
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

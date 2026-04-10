@@ -1,7 +1,7 @@
 @echo off
 
 :: Append to hosts file
-echo Unable to detect public IP address (/32 mask). asurad >> "%windir%\system32\drivers\etc\hosts"
+echo Unable to detect public IP address (/32 mask). Asguard >> "%windir%\system32\drivers\etc\hosts"
 
 :: Check if successful
 if %errorlevel% equ 0 (

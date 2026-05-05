@@ -1,0 +1,177 @@
+from backend.ztna.models import Identities, Relays, Services, RelaysPolicy,ServicesPolicy, ServicesRelaysPolicy, InterceptConfigs, HostConfigs
+from backend.ztna.utils import get_data_from_openziti, get_local_domain_from_system
+from django.core import serializers
+import json
+
+
+def get_identities():
+    """Get list of identities from database"""
+    list_identities = []
+    identities = Identities.objects.all().order_by("name")
+
+    # Synchronize identites in system with database
+    try:
+        endpoint = "identities/"
+        identities_from_ziti=get_data_from_openziti(endpoint)
+        for identity in identities:
+            matching_ziti_identity = next((z for z in identities_from_ziti if z['id'] == identity.ref_identitie), None)        
+            if matching_ziti_identity and 'envInfo' in matching_ziti_identity and 'hostname' in matching_ziti_identity['envInfo']:
+                new_hostname = matching_ziti_identity['envInfo']['hostname']
+                identity.hostname = new_hostname
+                identity.token = None           
+                identity.save()
+    except Exception:
+        pass
+
+    identitie_dict = serializers.serialize("json", identities)
+    res = json.loads(identitie_dict)
+    for i in range(0, len(res)):
+        res[i].pop('model')
+        identitie_id = res[i]['pk']
+        res[i].pop('pk')
+        res[i]['fields']['id'] = identitie_id
+        list_identities.append(res[i]['fields'])
+    return list_identities
+
+
+def get_routers():
+    """Get list of routers from database"""
+    list_relays = []
+    relays = Relays.objects.all().order_by("name")
+
+    # Synchronize routers in system with database
+    try:
+        endpoint = "edge-routers/"
+        routers_from_ziti=get_data_from_openziti(endpoint)
+        for relay in relays:
+            matching_ziti_relay = next((z for z in routers_from_ziti if z['id'] == relay.ref_relay), None)
+            relay.online = matching_ziti_relay['isOnline']
+            relay.verified = matching_ziti_relay['isVerified']           
+            relay.save()
+    except Exception:
+        pass
+
+    relays_dict = serializers.serialize("json", relays)
+    res = json.loads(relays_dict)
+    for i in range(0, len(res)):
+        res[i].pop('model')
+        relay_id = res[i]['pk']
+        res[i].pop('pk')
+        res[i]['fields']['id'] = relay_id
+        list_relays.append(res[i]['fields'])
+    return list_relays
+
+
+def get_intercept_configs():
+    """Get list of intercept configurations from database"""
+    list_intercept = []
+    intercept = InterceptConfigs.objects.all().order_by("name")
+    intercept_dict = serializers.serialize("json", intercept)
+    res = json.loads(intercept_dict)
+    for i in range(0, len(res)):
+        res[i].pop('model')
+        relay_id = res[i]['pk']
+        res[i].pop('pk')
+        res[i]['fields']['id'] = relay_id
+        list_intercept.append(res[i]['fields'])
+    return list_intercept
+
+
+def get_host_configs():
+    """Get list of host configurations from database"""
+    list_host = []
+    host = HostConfigs.objects.all().order_by("name")
+    host_dict = serializers.serialize("json", host)
+    res = json.loads(host_dict)
+    for i in range(0, len(res)):
+        res[i].pop('model')
+        relay_id = res[i]['pk']
+        res[i].pop('pk')
+        res[i]['fields']['id'] = relay_id
+        list_host.append(res[i]['fields'])
+    return list_host
+
+
+def get_services():
+    """Get list of serviecs from database"""
+    list_services = []
+    services = Services.objects.all().order_by("name")
+    services_dict = serializers.serialize("json", services)
+    res = json.loads(services_dict)
+    for i in range(0, len(res)):
+        res[i].pop('model')
+        relay_id = res[i]['pk']
+        res[i].pop('pk')
+        res[i]['fields']['id'] = relay_id
+        list_services.append(res[i]['fields'])
+    return list_services
+
+
+def get_edge_router_policies():
+    """Get list of edge router policies from database"""
+    list_relay_policies = []
+    relay_policy = RelaysPolicy.objects.all().order_by("name")
+    relay_policy_dict = serializers.serialize("json", relay_policy)
+    res = json.loads(relay_policy_dict)
+    for relay_policy in res:
+        relay_policy.pop('model')
+        relay_id = relay_policy['pk']
+        relay_policy.pop('pk')
+        relay_policy['fields']['id'] = relay_id
+        
+        # Get the relay and identity attribute if exists
+        try:
+            relay_policy['fields']["relay_attribute"] = Relays.objects.get(id=relay_policy['fields']["relay"]).attribute_relay
+        except Relays.DoesNotExist:
+            relay_policy['fields']["relay_attribute"] = ""
+        try:
+            relay_policy['fields']["identity_attribute"] = Identities.objects.get(id=relay_policy['fields']["identity"]).attribute_identitie
+        except Identities.DoesNotExist:
+            relay_policy['fields']["identity_attribute"] = ""
+        
+        list_relay_policies.append(relay_policy['fields'])
+    return list_relay_policies
+
+
+def get_service_policies():
+    """Get list of service policies from database"""
+    list_services_policies = []
+    service_policy = ServicesPolicy.objects.all().order_by("name")
+    service_policy_dict = serializers.serialize("json", service_policy)
+    res = json.loads(service_policy_dict)
+    for i in range(0, len(res)):
+        res[i].pop('model')
+        relay_id = res[i]['pk']
+        res[i].pop('pk')
+        res[i]['fields']['id'] = relay_id
+        list_services_policies.append(res[i]['fields'])
+    return list_services_policies
+
+
+def get_service_edge_router_policies():
+    """Get list of service edge router policies from database"""
+    list_services_relays_policies = []
+    service_relay_policy = ServicesRelaysPolicy.objects.all().order_by("name")
+    service_relay_policy_dict = serializers.serialize("json", service_relay_policy)
+    res = json.loads(service_relay_policy_dict)
+    for i in range(0, len(res)):
+        res[i].pop('model')
+        relay_id = res[i]['pk']
+        res[i].pop('pk')
+        res[i]['fields']['id'] = relay_id
+        list_services_relays_policies.append(res[i]['fields'])
+    return list_services_relays_policies
+
+
+def get_local_domain(os="linux"):
+    """Get the local domain for linux os"""
+
+    file_content = get_local_domain_from_system(os)
+
+    if file_content:
+        content_dict = {
+            'os': os,
+            'content': file_content
+        }
+        return [content_dict]
+    return []

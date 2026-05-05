@@ -1,0 +1,208 @@
+<template>
+  <div class="ml-3 mr-3 mt-5">
+    <h4>{{$t('PageIpsec.Phase2proposal(SA/Key Exchange)')}}</h4>
+    <v-divider class="mt-2"></v-divider>
+    <v-row class="mt-2">
+      <v-col cols="4" class="mt-5">
+        <label>{{$t('PageIpsec.Protocol')}}*</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          :label="$t('PageIpsec.Protocol')"
+          v-model="protocol"
+          item-title="name"
+          item-value="slug"
+          return-object
+          :items="props.protocolListph2"
+        ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.protocol.$errors.length"
+        >
+          {{ props.errors.protocol.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <template v-if="props.isProtocol?.slug === 'ESP'">
+        <template v-if="props.keyExchange.slug === 'V1'">
+          <v-col cols="4" class="mt-5">
+            <label>{{$t('PageIpsec.Hashalgorithms')}}*</label>
+          </v-col>
+          <v-col cols="8" class="mb-n6">
+            <v-select
+              :label="$t('PageIpsec.Encryptionalgorithms1')"
+              v-model= "encryptAlgoExch2"
+              item-title="name"
+              item-value="slug"
+              return-object
+              multiple
+              :items="props.filteredAlgoListExchangeV1"
+            ></v-select>
+            <p
+              class="error-feedback mb-5"
+              v-if="props.errors.encryptAlgoExchange.$errors.length"
+            >
+              {{ props.errors.encryptAlgoExchange.$errors?.[0].$message }}
+            </p>
+          </v-col>
+        </template>
+        <template v-else>
+          <v-col cols="4" class="mt-5">
+            <label>{{$t('PageIpsec.algorithms_cryptage')}}*</label>
+          </v-col>
+          <v-col cols="8" class="mb-n6">
+            <v-select
+              :label="$t('PageIpsec.Encryptionalgorithms2')"
+              v-model="encryptAlgoExchange"
+              item-title="name"
+              item-value="slug"
+              return-object
+              multiple
+              :items="props.filteredAlgoListExchangeV1"
+            ></v-select>
+            <p
+              class="error-feedback mb-5"
+              v-if="props.errors.encryptAlgoExch2.$errors.length"
+            >
+              {{ props.errors.encryptAlgoExch2.$errors?.[0].$message }}
+            </p>
+          </v-col>
+        </template>
+      </template>
+      <v-col cols="4" class="mt-5">
+        <label>{{$t('PageIpsec.Hashalgorithms')}}*</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          :label="$t('PageIpsec.Hashalgorithms')"
+          v-model="hashAlgoExchange"
+          item-title="name"
+          item-value="slug"
+          return-object
+          multiple
+          :items="props.hashAlgoList"
+        ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.hashAlgoExchange.$errors.length"
+        >
+          {{ props.errors.hashAlgoExchange.$errors?.[0].$message }}
+        </p>
+      </v-col>
+
+      <v-col cols="4" class="mt-5">
+        <label>{{$t('PageIpsec.PFSkeygroup')}}*</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          :label="$t('PageIpsec.PFSkeygroup')"
+          v-model="pfsKey"
+          item-title="name"
+          item-value="slug"
+          return-object
+          :items="props.pfsList"
+        ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.pfsKey.$errors.length"
+        >
+          {{ props.errors.pfsKey.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4" class="mt-5">
+        <label>{{$t('PageIpsec.Lifetime')}}</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-text-field
+          :label="$t('PageIpsec.Lifetimeinseconds')"
+          v-model="lifetimeExchange"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.lifetimeExchange.$errors.length"
+        >
+          {{ props.errors.lifetimeExchange.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <!-- <template v-if="false">
+        <v-col cols="12">
+          <h4>Advanced Options</h4>
+          <v-divider class="mt-2"></v-divider>
+        </v-col>
+        <v-col cols="4" class="mt-5">
+          <label>Automatically ping host</label>
+        </v-col>
+        <v-col cols="8" class="mb-n6">
+          <v-text-field
+            label="Automatically ping host"
+            v-model="pingHost"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5"
+            v-if="props.errors.pingHost.$errors.length"
+          >
+            {{ props.errors.pingHost.$errors?.[0].$message }}
+          </p>
+        </v-col>
+        <v-col cols="4" class="mt-5">
+          <label>Manual SPD entries</label>
+        </v-col>
+        <v-col cols="8" class="mb-n6">
+          <v-text-field
+            label="Manual SPD entries"
+            v-model="spdEntries"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5"
+            v-if="props.errors.spdEntries.$errors.length"
+          >
+            {{ props.errors.spdEntries.$errors?.[0].$message }}
+          </p>
+        </v-col>
+      </template> -->
+    </v-row>
+  </div>
+</template>
+<script setup>
+import { ref } from "vue";
+import { useVModels } from "@vueuse/core";
+
+const props = defineProps([
+  "keyExchange",
+  "protocolListph2",
+  "encryptAlgoExch2",
+  "pfsList",
+  "encryptAlgoListExchange",
+  "filteredAlgoListExchangeV1",
+  "hashAlgoList",
+  "isProtocol",
+  "isMode",
+  "errors",
+  "spdEntries",
+  "protocol",
+  "encryptAlgoExchange",
+  "hashAlgoExchange",
+  "pfsKey",
+  "pingHost",
+  "lifetimeExchange",
+]);
+const emit = defineEmits([
+  "update:protocol",
+  "update:pingHost",
+  "update:spdEntries",
+  "update:encryptAlgoExchange",
+  "update:hashAlgoExchange",
+  "update:pfsKey",
+  "update:lifetimeExchange",
+  "update:encryptAlgoExch2",
+]);
+const {
+  protocol,
+  encryptAlgoExchange,
+  encryptAlgoExch2,
+  hashAlgoExchange,
+  pfsKey,
+  lifetimeExchange,
+  pingHost,
+  spdEntries,
+} = useVModels(props, emit);
+</script>

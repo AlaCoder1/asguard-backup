@@ -1,0 +1,74 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: backend/authentification/function.py:21 backend/authentification/views.py:92
+msgid "verification code"
+msgstr "code de vérification"
+
+#: backend/authentification/function.py:23 backend/authentification/views.py:94
+msgid "Success Authentication"
+msgstr "Authentification réussie"
+
+#: backend/authentification/function.py:24 backend/authentification/views.py:96
+msgid "is sent successfully"
+msgstr "a été envoyé avec succès"
+
+#: backend/authentification/function.py:26
+#: backend/authentification/views.py:101
+msgid "Invalid credentials"
+msgstr "les informations d'identification invalides"
+
+#: backend/authentification/views.py:91
+msgid "Email"
+msgstr "E-mail"
+
+#: backend/authentification/views.py:95
+msgid "Success Logout"
+msgstr "Déconnexion réussie"
+
+#: backend/authentification/views.py:97
+msgid "is re-sent successfully"
+msgstr "a été re-envoyé avec succès"
+
+#: backend/authentification/views.py:99
+msgid "does not exist"
+msgstr "n'existe pas"
+
+#: backend/authentification/views.py:100
+msgid "Invalid credentials for directory server login"
+msgstr ""
+"Informations d'identification non valides pour la connexion au serveur "
+"d'annuaire"
+
+#: backend/authentification/views.py:102
+msgid "No directory servers registered"
+msgstr "Aucun serveur d'annuaire enregistré"
+
+#: backend/authentification/views.py:103
+msgid "Directory server is unreachable"
+msgstr "Le serveur d'annuaire est inaccessible"
+
+#: backend/authentification/views.py:104
+msgid "Email not assigned in Asguard. Contact your administrator"
+msgstr "E-mail non attribué dans Asguard. Contactez votre administrateur"
+
+#: backend/authentification/views.py:105
+msgid "has expired"
+msgstr "a expiré"

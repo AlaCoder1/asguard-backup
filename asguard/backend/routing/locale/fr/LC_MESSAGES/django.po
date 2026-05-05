@@ -1,0 +1,91 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-21 09:57+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: backend/routing/views.py:39
+msgid "Route"
+msgstr "Routage"
+
+#: backend/routing/views.py:40
+msgid "Gateway"
+msgstr "Passerelle"
+
+#: backend/routing/views.py:41
+msgid "Interface"
+msgstr "Interface"
+
+#: backend/routing/views.py:43
+msgid "is created"
+msgstr "est créé"
+
+#: backend/routing/views.py:44
+msgid "is deleted"
+msgstr "est supprimé"
+
+#: backend/routing/views.py:45
+msgid "is updated"
+msgstr "est modifié"
+
+#: backend/routing/views.py:47
+msgid "System error in creating"
+msgstr "Erreur système lors de la création de"
+
+#: backend/routing/views.py:48
+msgid "System error in deleting"
+msgstr "Erreur système lors de la suppression de"
+
+#: backend/routing/views.py:49
+msgid "System error in updating"
+msgstr "Erreur système lors de la modification de"
+
+#: backend/routing/views.py:50
+msgid "Route with this network and gateway exist"
+msgstr "Routage avec ce réseau et cette gateway existe"
+
+#: backend/routing/views.py:51
+msgid "does not exist"
+msgstr "n'existe pas"
+
+#: backend/routing/views.py:52
+msgid "Gateway for this interface exist"
+msgstr "Gateway pour cette interface existe déjà"
+
+#: backend/routing/views.py:53
+msgid ""
+"Check your gateway address, must belongs to the same Subnet as the Host and "
+"can't take the same address"
+msgstr ""
+"Vérifiez votre adresse de passerelle, elle doit appartenir au même sous-"
+"réseau que l'hôte et ne peut pas prendre la même adresse"
+
+#: backend/routing/views.py:54
+msgid ""
+"If you want to use an existing gateway, then the 'gateway' field should "
+"contain the ID of the gateway"
+msgstr ""
+"Si vous souhaitez utiliser une passerelle existante, alors le champ "
+"'gateway' doit contenir l'ID de la passerelle"
+
+#: backend/routing/views.py:55
+msgid ""
+"If you want to create a new gateway, then the 'gateway' field must contain "
+"all the fields of the new gateway"
+msgstr ""
+"Si vous souhaitez créer une nouvelle passerelle, alors le champ 'gateway' "
+"doit contenir tous les champs de la nouvelle passerelle"

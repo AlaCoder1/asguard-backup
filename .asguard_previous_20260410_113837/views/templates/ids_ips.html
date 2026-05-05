@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    {% encore_entry_link_tags 'ids-ips' %}
+{% endblock %}
+
+{% block javascripts %}
+    {% encore_entry_script_tags 'ids-ips' %}
+{% endblock %}
+
+{% block body %}
+
+    <div id='app' general_config_suricata='{{ general_config_suricata }}'  last_subscription='{{ last_subscription }}' all_interfaces='{{ all_interfaces }}' >
+    </div>
+
+{% endblock %}

@@ -1,0 +1,365 @@
+import threading
+from django.http import JsonResponse
+from backend.backup.notifications import notify_nat_change
+from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext_lazy as _
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_OBJECT, TYPE_INTEGER
+
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated
+
+from backend.nat.contant_variables import REQUEST_BODY_DNAT
+from backend.nat.utils_dnat import check_payload
+
+from .utils_dnat import input_create_dnat
+
+from .list_nat import get_list_all_dnat, get_one_dnat
+from .models import DNat
+from .serializers import DNatSerializer
+from .utils import change_position_rule, get_next_nat_handle
+from .utils_dnat_system import change_rule_dnat_position_in_system, create_dnat_rule_in_system, delete_dnat_rule_in_system, update_dnat_rule_in_system
+
+from backend.network.models import Interface
+from utils.errors_utils import CommandExecutionError
+from utils.utils_address import fix_ipv4_address
+
+
+# Constants
+CONSTANT_DNAT_RULE = _("DNAT rule")
+CONSTANT_DNAT_RULE_POSITION = _("DNAT rule position")
+CONSTANT_INTERFACE = _("interface")
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+SUCCESS_MESSAGES_STARTING = _("is started")
+SUCCESS_MESSAGES_STOPING = _("is stoped")
+SUCCESS_MESSAGES_CHANGE = _("is changed")
+# Error messages
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
+ERROR_MESSAGES_UPDATING = _("System error in updating")
+ERROR_MESSAGES_STARTING = _("System error in starting")
+ERROR_MESSAGES_STOPING = _("System error in stoping")
+ERROR_MESSAGES_CHANGING = _("System error in changing")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_INVALID_DATA = _("Invalid data")
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL DNAT RULES",)
+@api_view(['GET'])
+@require_http_methods(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_dnat(_):
+    """Getting all dnat from database"""
+    list_dnat = []
+    list_dnat = get_list_all_dnat()
+    return JsonResponse(list_dnat, safe=False)
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET A DNAT RULE",)
+@api_view(['GET'])
+@require_http_methods(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_dnat(_, id):
+    """Getting dnat by id from database"""
+    dnat = get_one_dnat(id)
+    return JsonResponse(dnat, safe=False)
+
+
+@swagger_auto_schema(
+    'POST', responses={201: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE A DNAT RULE", 
+    request_body=REQUEST_BODY_DNAT)
+@api_view(['POST'])
+@require_http_methods(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def create_dnat(request):
+    """Creating a new DNAT rule and adding it to the database"""
+    try:
+        data = request.data
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
+        # Apply correction for ipv4 addresses
+        data["source_address"], data["external_address"], data["internal_address"] = fix_ipv4_address(
+            [data["source_address"], data["external_address"], data["internal_address"]])
+        
+        serializer_dnat = DNatSerializer(data=data)
+        if serializer_dnat.is_valid():
+            interface_ifname = None
+            if data["interface"]:
+                interface_ifname = Interface.objects.get(id=data["interface"]).ifname
+            
+            source, destination = input_create_dnat(
+                data["source_address"], data["source_protocol"], data["source_port"], data["source_port_from"], data["source_port_to"], 
+                data["external_address"], data["internal_address"], data["destination_protocol"],
+                data["destination_port_forwarding"], data["destination_port_from"], data["destination_port_to"], data["destination_port"])
+            
+            rule_number, rule_content = create_dnat_rule_in_system(
+                interface_ifname, source, destination, data["protocol"])
+            data["rule_number"] = int(rule_number)
+            data["rule_content"] = rule_content
+
+            data["db_position"] = 1
+            for dnat_rule in DNat.objects.all().order_by("-db_position"):
+                dnat_rule.db_position += 1
+                dnat_rule.save()
+
+            serializer_dnat = DNatSerializer(data=data)
+            if serializer_dnat.is_valid():
+
+                # Add the rule to the database
+                serializer_dnat.save()
+                threading.Thread(target=notify_nat_change, args=("créée", "DNAT"), daemon=True).start()
+                return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+
+        return JsonResponse({"error": list(serializer_dnat.errors.values())[0][0]}, status=400)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_DNAT_RULE}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE AN DNAT RULE",)
+@api_view(['DELETE'])
+@require_http_methods(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_dnat(_, id):
+    """Deleting a dnat from database"""
+    try:
+        dnat = DNat.objects.get(id=id)
+
+        if dnat.rule_status:
+            # Delete rule from system
+            delete_dnat_rule_in_system(dnat.rule_number)
+
+            dnat.delete()
+            
+            for dnat_rule in DNat.objects.filter(db_position__gt=dnat.db_position).order_by("db_position"):
+                dnat_rule.db_position -= 1
+                dnat_rule.save()
+            threading.Thread(target=notify_nat_change, args=("supprimée", "DNAT"), daemon=True).start()
+            return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+
+        # delete rule from database
+        dnat.delete()
+        return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_DNAT_RULE}"}, status=400)
+    except DNat.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO DELETE A LIST OF DNAT RULE AND RETURN A LIST OF RESPONSES FOR EACH DNAT",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['list_rules'],
+        properties={
+            'list_rules': Schema(type=TYPE_ARRAY, description="Set the DNAT rule list of IDs",
+                                items=Schema(type=TYPE_INTEGER, example=1)),
+            }))
+@api_view(['POST'])
+@require_http_methods(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_list_dnat(request):
+    """Deleting a list of dnat rules"""
+    data = request.data
+    list_id_dnat = data.get("list_rules")
+    list_responses = []
+    for id_dnat in list_id_dnat:
+        try:
+            dnat = DNat.objects.get(id=id_dnat)
+
+            if dnat.rule_status:
+                # Delete rule from system
+                delete_dnat_rule_in_system(dnat.rule_number)
+
+                dnat.delete()
+
+                for dnat_rule in DNat.objects.filter(db_position__gt=dnat.db_position).order_by("db_position"):
+                    dnat_rule.db_position -= 1
+                    dnat_rule.save()
+            
+            else:
+                # delete rule from database
+                dnat.delete()
+            list_responses.append({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_DELETING}", "status": 200})
+
+        except CommandExecutionError:
+            list_responses.append({"msg": f"{ERROR_MESSAGES_DELETING} {CONSTANT_DNAT_RULE}", "status": 400})
+        except DNat.DoesNotExist:
+            list_responses.append({"msg": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}", "status": 404})
+    return JsonResponse(list_responses, safe=False)
+
+
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CREATE A DNAT RULE", 
+    request_body=REQUEST_BODY_DNAT)
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_dnat(request, id):
+    """Updating a DNAT rule"""
+    try:
+        dnat = DNat.objects.get(id=id)
+        
+        data = request.data
+        # Check data validity
+        if not check_payload(data):
+            return JsonResponse({"error": ERROR_MESSAGES_INVALID_DATA}, status=400)
+        # Apply correction for ipv4 addresses
+        data["source_address"], data["external_address"], data["internal_address"] = fix_ipv4_address(
+            [data["source_address"], data["external_address"], data["internal_address"]])
+
+        source, destination = input_create_dnat(
+                data["source_address"], data["source_protocol"], data["source_port"], data["source_port_from"], data["source_port_to"], 
+                data["external_address"], data["internal_address"], data["destination_protocol"],
+                data["destination_port_forwarding"], data["destination_port_from"], data["destination_port_to"], data["destination_port"])
+        
+        serializer_dnat = DNatSerializer(dnat, data=data)
+        if serializer_dnat.is_valid():
+            interface_ifname = None
+            if data["interface"]:
+                interface_ifname = Interface.objects.get(id=data["interface"]).ifname
+
+            if dnat.rule_status:
+                # Get the rule handle of the next rule (by position)
+                next_postrouting_handle = get_next_nat_handle(dnat, "prerouting")
+                # Update the rule in system
+                rule_number, rule_content = update_dnat_rule_in_system(
+                    interface_ifname, source, destination, data["protocol"], dnat.rule_number, 
+                    next_postrouting_handle)
+                data["rule_number"] = int(rule_number)
+                data["rule_content"] = rule_content
+
+                serializer_dnat = DNatSerializer(dnat, data=data)
+                if serializer_dnat.is_valid():
+
+                    # Update the rule in the database
+                    serializer_dnat.save()
+                    threading.Thread(target=notify_nat_change, args=("modifiée", "DNAT"), daemon=True).start()
+                    return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+            serializer_dnat.save()
+            threading.Thread(target=notify_nat_change, args=("modifiée", "DNAT"), daemon=True).start()
+            return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+        
+        return JsonResponse({"error": list(serializer_dnat.errors.values())[0][0]}, status=400)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_DNAT_RULE}"}, status=400)
+    except DNat.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+
+
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO START A DNAT RULE",)
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def start_dnat(_, id):
+    """Start a DNAT rule. Change rule_status to True to add the rule to the nft table"""
+    try:
+        dnat = DNat.objects.get(id=id)
+
+        source, destination = input_create_dnat(
+            dnat.source_address, dnat.source_protocol, dnat.source_port, dnat.source_port_from, dnat.source_port_to,
+            dnat.external_address, dnat.internal_address, dnat.destination_protocol,
+            dnat.destination_port_forwarding, dnat.destination_port_from, dnat.destination_port_to, dnat.destination_port)
+
+        # Add the rule in system
+        # Find the next activated rule handle to insert the started rule above
+        list_next_dnat = DNat.objects.filter(rule_status=True, db_position__gt=dnat.db_position)
+        position_insert = -1
+        if len(list_next_dnat) > 0:
+            next_dnat = list_next_dnat.order_by('db_position')[0]
+            position_insert = next_dnat.rule_number
+        
+        interface_ifname = None
+        if dnat.interface:
+            interface_ifname = dnat.interface.ifname
+        rule_number, _ = create_dnat_rule_in_system(
+            interface_ifname, source, destination, dnat.protocol, position_insert)
+        dnat.rule_number = int(rule_number)
+
+        dnat.rule_status = True
+        dnat.save()
+        
+        return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_STARTING}"}, status=201)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_DNAT_RULE}"}, status=400)
+    except DNat.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO STOP A DNAT RULE",)
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def stop_dnat(_, id):
+    """Stop an DNAT rule. By changing rule_status to False, the while loop of the script will be breaked"""
+    try:
+        dnat = DNat.objects.get(id=id)
+
+        # Delete rule from system
+        delete_dnat_rule_in_system(dnat.rule_number)
+        
+        dnat.rule_status = False
+        dnat.rule_number = None
+        dnat.prerouting_position = None
+        dnat.save()
+        
+        return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_STOPING}"}, status=201)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_DNAT_RULE}"}, status=400)
+    except DNat.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+    operation_summary="API TO CHANGE POSITION OF A DNAT RULE",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=["new_position"], properties={
+            "new_position": Schema(type=TYPE_INTEGER, example="4", description="New position of DNAT rule after changing its position")}))
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def change_dnat_position(request, id):
+    """Change a rule position"""
+    try:
+        data = request.data
+        new_position = data["new_position"]
+        dnat = DNat.objects.get(id=id)
+        change_rule_dnat_position_in_system(dnat, new_position)
+        change_position_rule(dnat.pk, new_position, DNat)
+        
+        return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CHANGING} {CONSTANT_DNAT_RULE_POSITION}"}, status=400)
+    except DNat.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

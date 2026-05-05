@@ -1,0 +1,67 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-14 15:02+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: backend/gateway/functions.py:10
+msgid "Gateway DHCP"
+msgstr "Gateway DHCP"
+
+#: backend/gateway/functions.py:11
+msgid "does not found"
+msgstr "n'est pas trouvée"
+
+#: backend/gateway/models.py:9
+msgid "gateway name"
+msgstr "nom de gateway"
+
+#: backend/gateway/models.py:10
+msgid "gateway address"
+msgstr "Addresse gateway"
+
+#: backend/gateway/views.py:22
+msgid "Gateway"
+msgstr "Gateway"
+
+#: backend/gateway/views.py:24
+msgid "is created"
+msgstr "est créé"
+
+#: backend/gateway/views.py:25
+msgid "is deleted"
+msgstr "est supprimé"
+
+#: backend/gateway/views.py:26
+msgid "is updated"
+msgstr "est modifié"
+
+#: backend/gateway/views.py:28
+msgid "Error in deleting"
+msgstr "Erreur lors de la suppression"
+
+#: backend/gateway/views.py:29
+msgid "Error in updating"
+msgstr "Erreur lors de la modification"
+
+#: backend/gateway/views.py:30
+msgid "does not exist"
+msgstr "n'existe pas"
+
+#: backend/gateway/views.py:31
+msgid "already exist"
+msgstr "existe déjà"

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    {% encore_entry_link_tags 'UserManagement' %}
+{% endblock %}
+
+{% block javascripts %}
+    {% encore_entry_script_tags 'UserManagement' %}
+{% endblock %}
+
+{% block body %}
+
+<div id="app" 
+     users="{{ users }}"
+     groups="{{ groups }}"
+     roles="{{ roles }}"
+     servers="{{ servers }}"
+     last_subscription='{{ last_subscription }}'>
+         <my-component :users="{{users}}" :groups="{{groups}}" :servers="{{servers}}"></my-component>
+</div>
+
+
+{% endblock %}

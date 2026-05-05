@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+{{ block.super }}
+
+{% encore_entry_link_tags 'ztna' %}
+{% endblock %}
+
+{% block javascripts %}
+{% encore_entry_script_tags 'ztna' %}
+{% endblock %}
+
+{% block body %}
+
+<div id='app' identities='{{identities}}' routers='{{routers}}' interceptconfigs='{{interceptconfigs}}'
+    hostconfigs='{{hostconfigs}}' token='{{token}}' services='{{services}}' terminators='{{terminators}}'
+    service_policies='{{service_policies}}' router_policies='{{router_policies}}'
+    service_edge_router_policies='{{service_edge_router_policies}}' linux_file='{{linux_file}}'
+    windows_file='{{windows_file}}' last_subscription='{{ last_subscription }}' ztna_status='{{ztna_status}}'>
+</div>
+
+{% endblock %}

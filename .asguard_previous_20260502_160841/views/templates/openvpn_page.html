@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    {% encore_entry_link_tags 'openvpn' %}
+{% endblock %}
+
+{% block javascripts %}
+    {% encore_entry_script_tags 'openvpn' %}
+{% endblock %}
+
+{% block body %}
+
+    <div id='app'
+    servers='{{ servers }}'
+    clients='{{ clients }}'
+    last_subscription='{{ last_subscription }}'
+    >
+    </div>
+
+{% endblock %}

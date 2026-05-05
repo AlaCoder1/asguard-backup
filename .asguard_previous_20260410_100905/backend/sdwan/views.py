@@ -1,0 +1,384 @@
+from django.http import JsonResponse
+from django.utils.translation import gettext_lazy as _
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
+
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated
+from backend.gateway.models import Gateway, GatewayInterface
+from backend.network.models import Interface
+
+from backend.sdwan.list_area import get_list_all_area, get_one_area
+from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule, get_one_sdwan_rule
+from backend.sdwan.models import Area, AreaInterface, SdwanRules
+from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
+from backend.sdwan.utils import search_routing_table_id
+from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
+from utils.errors_utils import CommandExecutionError
+from utils.utils_address import fix_ipv4_address
+from django.views.decorators.http import require_http_methods
+from decouple import config
+# Constants
+CONSTANT_SDWAN_RULE = _("SDwan rule")
+CONSTANT_AREA = _("Area")
+CONSTANT_GATEWAY = _("Gateway")
+CONSTANT_INTERFACE = _("Interface")
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+SUCCESS_MESSAGES_STARTING = _("is started")
+SUCCESS_MESSAGES_STOPING = _("is stoped")
+# Error messages
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
+ERROR_MESSAGES_UPDATING = _("System error in updating")
+ERROR_MESSAGES_STARTING = _("System error in starting")
+ERROR_MESSAGES_STOPING = _("System error in stoping")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_CHECK_INTERFACES = _("Check your interfaces and its gateways")
+ERROR_MESSAGES_CHECK_INTERFACES_NUMBERS = _("An area contains at least two interfaces")
+ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER = _("An area contains only two interfaces")
+
+
+########################################
+################# AREA #################
+########################################
+request_body_sdwan=Schema(
+        type=TYPE_OBJECT, required=['name', 'members'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="area1"),
+            'members': Schema(type=TYPE_ARRAY, example=[2, 3, 1], description="list of interfaces'id, contains at least two interfaces", items=Schema(type=TYPE_INTEGER)),
+                    }
+                    )
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL AREAS",)
+@api_view(['GET'])
+@require_http_methods(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_area(_):
+    """Getting all servers from database"""
+    list_area = get_list_all_area()
+    return JsonResponse(list_area, safe=False)
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET AN AREA",)
+@api_view(['GET'])
+@require_http_methods(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_area(_, id):
+    """Getting area by id from database"""
+    area = get_one_area(id)
+    if area:
+        return JsonResponse(area, safe=False)
+    return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+
+
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN AREA",
+    request_body=request_body_sdwan)
+@api_view(['POST'])
+@require_http_methods(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def create_area(request):
+    """Creating a new area and adding it to the database"""
+    data = request.data
+
+    # Check if members contains at least two interfaces
+    if len(data["members"]) < 2:
+        return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_NUMBERS}, status=400)
+
+    serializer_area = AreaSerializer(data=data)
+    if serializer_area.is_valid():
+
+        # Add the server to the database
+        serializer_area.save()
+
+        return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+    
+    return JsonResponse({"error": list(serializer_area.errors.values())[0][0]}, status=400)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE AN AREA",)
+@api_view(['Delete'])
+@require_http_methods(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_area(_, id):
+    """Deleting an area from database"""
+    try:
+        area = Area.objects.get(id=id)
+
+        # delete from database
+        area.delete()
+        return JsonResponse({"msg": f"{area.name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+    
+    except Area.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN AREA",
+    request_body=request_body_sdwan)
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_area(request, id):
+    try:
+        """Updating area in database"""
+        area = Area.objects.get(id=id)
+        data = request.data
+
+        # Check if members contains at least two interfaces
+        if len(data["members"]) < 2:
+            return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_NUMBERS}, status=400)
+
+        serializer_area = AreaSerializer(area, data=data)
+        if serializer_area.is_valid():
+
+            # Add the server to the database
+            serializer_area.save()
+            return JsonResponse({"msg": f"{area.name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+        return JsonResponse({"error": list(serializer_area.errors.values())[0][0]}, status=400)
+    
+    except Area.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+########################################
+############# SDWAN RULES ##############
+########################################
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL SDWAN RULES",)
+@api_view(['GET'])
+@require_http_methods(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_sdwan_rule(_):
+    """Getting all servers from database"""
+    list_sdwan_rule = get_list_all_sdwan_rule()
+    return JsonResponse(list_sdwan_rule, safe=False)
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET AN SDWAN RULE",)
+@api_view(['GET'])
+@require_http_methods(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_sdwan_rule(_, id):
+    """Getting sdwan_rules by id from database"""
+    sdwan_rule = get_one_sdwan_rule(id)
+    if sdwan_rule:
+        return JsonResponse(sdwan_rule, safe=False)
+    return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+
+
+@swagger_auto_schema(
+    'POST', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE AN SDWAN RULE",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'source_address', 'area', 'algorythme_type',
+                                    'health_check', 'health_check_target'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="test failover"),
+            'source_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask"),
+            'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
+            'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
+            'health_check':Schema(type=TYPE_INTEGER, example=1),
+            'health_check_target':Schema(type=TYPE_STRING, example=config('SERVER_DNS')),
+            'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")
+            }
+            ))
+@api_view(['POST'])
+@require_http_methods(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def create_sdwan_rule(request):
+    """Creating a new SDWAN rule and adding it to the database"""
+    try:
+        data = request.data
+        # Apply correction for ipv4 addresses
+        data["source_address"] = fix_ipv4_address([data["source_address"]])
+        data["source_address"] = data["source_address"][0]
+
+        data["table_id"] = search_routing_table_id()
+        if data["algorythme_type"] == "failover":
+            # Check if the area contains only two interfaces in failover method
+            if len(AreaInterface.objects.filter(area_id=data["area"])) != 2:
+                return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER}, status=400)
+            data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
+        else:
+            data["primary_interface"] = None
+        serializer_sdwan_rule = SdwanRulesSerializer(data=data)
+        if serializer_sdwan_rule.is_valid():
+
+            # Add the rule in system
+            create_sdwan_rule_in_system(data["source_address"], str(data["table_id"]))
+
+            # Add the rule to the database
+            serializer_sdwan_rule.save()
+            return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+        
+        return JsonResponse({"error": list(serializer_sdwan_rule.errors.values())[0][0]}, status=400)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SDWAN_RULE}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE AN SDWAN RULE",)
+@api_view(['Delete'])
+@require_http_methods(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_sdwan_rule(_, id):
+    """Deleting an sdwan_rule from database"""
+    try:
+        sdwan_rule = SdwanRules.objects.get(id=id)
+
+        # Delete rule from system
+        delete_sdwan_rule_in_system(str(sdwan_rule.table_id))
+
+        # delete rule from database
+        sdwan_rule.delete()
+        return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SDWAN_RULE}"}, status=400)
+    except SdwanRules.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema(
+    'PUT', responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CREATE AN SDWAN RULE",
+    request_body=Schema(
+        type=TYPE_OBJECT, required=['name', 'source_address', 'area', 'algorythme_type',
+                                    'health_check', 'health_check_target'],
+        properties={
+            'name': Schema(type=TYPE_STRING, example="test failover"),
+            'source_address': Schema(type=TYPE_STRING, example=config('IP_MASK'), description="format of address/mask"),
+            'area':Schema(type=TYPE_INTEGER, example=1, description="When choosing failover algorithm you can choose only areas with 2 members"),
+            'algorythme_type':Schema(type=TYPE_STRING, example="failover", enum=["failover", "round_robin"]),
+            'health_check':Schema(type=TYPE_INTEGER, example=1),
+            'health_check_target':Schema(type=TYPE_STRING, example=config('SERVER_DNS')),
+            'primary_interface':Schema(type=TYPE_STRING, example="WAN", description="Name of the primary interface. This is used when choosing failover algorithm")
+            }
+            ))
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_sdwan_rule(request, id):
+    """Updating a new SDWAN rule"""
+    try:
+        sdwan_rule = SdwanRules.objects.get(id=id)
+        data = request.data
+        # Apply correction for ipv4 addresses
+        data["source_address"] = fix_ipv4_address([data["source_address"]])
+        data["source_address"] = data["source_address"][0]
+        
+        if data["algorythme_type"] == "failover":
+            # Check if the area contains only two interfaces in failover method
+            if len(AreaInterface.objects.filter(area_id=data["area"])) != 2:
+                return JsonResponse({"error": ERROR_MESSAGES_CHECK_INTERFACES_FAILOVER}, status=400)
+            data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
+        else:
+            data["primary_interface"] = None
+
+        serializer_sdwan_rule = SdwanRulesSerializer(sdwan_rule, data=data)
+        if serializer_sdwan_rule.is_valid():
+
+            # Update the rule in system
+            update_sdwan_rule_in_system(data["source_address"], str(sdwan_rule.table_id))
+
+            # If the rule is started before the update it must be stoped and started again
+            if sdwan_rule.rule_status:
+                # Stop the rule
+                sdwan_rule.rule_status = False
+                sdwan_rule.save()
+                
+                # Start the rule
+                sdwan_rule.rule_status = True
+                serializer_sdwan_rule.save()
+                start_sdwan_rule_in_system(id)
+                return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+
+            # Update the rule in the database
+            serializer_sdwan_rule.save()
+            return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+        
+        return JsonResponse({"error": list(serializer_sdwan_rule.errors.values())[0][0]}, status=400)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SDWAN_RULE}"}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except SdwanRules.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+
+
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def start_sdwan_rule(_, id):
+    """Start an SDWAN rule on background using celery. Change rule_status to True to start the script"""
+    try:
+        # Get the SDWAN rule
+        sdwan_rule = SdwanRules.objects.get(id=id)
+
+        # Check existing of the interfaces and its gateways
+        list_area_interface = AreaInterface.objects.filter(area=sdwan_rule.area)
+        list_interface = [area_intefrace.interface for area_intefrace in list_area_interface]
+        for interface in list_interface:
+            GatewayInterface.objects.get(interface=interface)
+        
+        # Change status of the rule to True to start the process
+        sdwan_rule.rule_status = True
+        sdwan_rule.save()
+        
+        # Start the rule in system
+        start_sdwan_rule_in_system(id)
+
+        return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STARTING}"}, status=201)
+        
+    except CommandExecutionError:
+        sdwan_rule.rule_status = False
+        sdwan_rule.save()
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}. {ERROR_MESSAGES_CHECK_INTERFACES}"}, status=400)
+    except SdwanRules.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except (Area.DoesNotExist, AreaInterface.DoesNotExist):
+        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+    except (GatewayInterface.DoesNotExist, Gateway.DoesNotExist):
+        return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+
+
+@api_view(['PUT'])
+@require_http_methods(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def stop_sdwan_rule(_, id):
+    """Stop an SDWAN rule. By changing rule_status to False, the while loop of the script will be breaked"""
+    try:
+        sdwan_rule = SdwanRules.objects.get(id=id)
+        sdwan_rule.rule_status = False
+        sdwan_rule.save()
+        return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STOPING}"}, status=201)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_SDWAN_RULE}"}, status=400)
+    except SdwanRules.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

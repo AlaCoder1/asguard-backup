@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    {% encore_entry_link_tags 'waf' %}
+{% endblock %}
+
+{% block javascripts %}
+    {% encore_entry_script_tags 'waf' %}
+{% endblock %}
+
+{% block body %}
+
+    <div id='app' waf_conf = '{{waf_conf}}' list_rules = '{{list_rules}}'  list_waf_app = '{{list_waf_app}}'  waf_alert = '{{waf_alert}}' last_subscription='{{ last_subscription }}'
+    >
+</div>
+
+{% endblock %}

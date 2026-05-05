@@ -1,0 +1,337 @@
+<template>
+  <div class="mt-3">
+    <h4 class="mt-6">{{$t('openvpn.ClientSettings')}}</h4>
+    <v-divider class="mt-2"></v-divider>
+    <v-row class="mt-2">
+      <v-col cols="4" align-self="center">
+        <label>{{$t('openvpn.DynamicIP')}}</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <input type="checkbox" v-model="dynamicIP" />
+        <label class="ml-2">{{$t('openvpn.ActiveDynamicIP')}}</label>
+      </v-col>
+      <v-col v-if="props.deviceMode === 'tun'" cols="4">
+        <label>{{$t('openvpn.AdressPool')}} </label>
+      </v-col>
+      <v-col v-if="props.deviceMode === 'tun'" cols="8" class="mb-n6">
+        <input type="checkbox" v-model="adressPool" />
+        <label class="ml-2">{{$t('openvpn.ActiveAdresspool')}}</label>
+        <v-text-field
+          class="mt-3 mb-n6"
+          :label="$t('sdwan.startServer')"
+          v-model="startAddressPool"
+          v-if="adressPool"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5 mt-3"
+          v-if="props.errors.startAddressPool.$errors.length"
+        >
+          {{ props.errors.startAddressPool.$errors?.[0].$message }}
+        </p>
+        <v-text-field
+          class="mt-3"
+          :label="$t('openvpn.end')"
+          v-model="endAddressPool"
+          v-if="adressPool"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.endAddressPool.$errors.length"
+        >
+          {{ props.errors.endAddressPool.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <!-- <v-col cols="4" align-self="center">
+        <label>Topology</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <input type="checkbox" v-model="topology" />
+        <label class="ml-2">Active toplogy</label>
+      </v-col> -->
+      <v-col cols="4">
+        <label>{{$t('openvpn.DNSDefaultDomain')}}</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <input type="checkbox" v-model="dnsDefaultDomain" />
+        <label class="ml-2">{{$t('openvpn.ActiveDNSDefaultDomain')}} </label>
+        <v-text-field
+          class="mt-3"
+          v-model="activeDnsDefault"
+          :label="$t('openvpn.DNSDefaultDomain')"
+          v-if="dnsDefaultDomain"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.activeDnsDefault.$errors.length"
+        >
+          {{ props.errors.activeDnsDefault.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4">
+        <label>{{$t('openvpn.DNSServers')}}</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <input type="checkbox" v-model="dnsServers" />
+        <label class="ml-2">{{$t('openvpn.ActiveDNSServers')}}</label>
+        <v-text-field
+          class="mt-3 mb-n6"
+          v-model="activeDnsServer1"
+          :label="$t('openvpn.DNSServers1')"
+          v-if="dnsServers"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5 mt-3"
+          v-if="props.errors.activeDnsServer1.$errors.length"
+        >
+          {{ props.errors.activeDnsServer1.$errors?.[0].$message }}
+        </p>
+        <v-text-field
+          class="mt-3"
+          :label="$t('openvpn.DNSServers2')"
+          v-model="activeDnsServer2"
+          v-if="dnsServers"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5 mt-3"
+          v-if="props.errors.activeDnsServer2.$errors.length"
+        >
+          {{ props.errors.activeDnsServer2.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4" align-self="center">
+        <label>{{$t('openvpn.ForceDNScacheupdate')}}</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <input type="checkbox" v-model="forceDNS" />
+        <label class="ml-2">{{$t('openvpn.ActiveForceDNScacheupdate')}}</label>
+      </v-col>
+      <v-col cols="4">
+        <label>{{$t('openvpn.NTPServers')}}</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <input type="checkbox" v-model="ntpServers" />
+        <label class="ml-2">{{$t('openvpn.ActiveNTPServers')}}</label>
+        <v-text-field
+          class="mt-3 mb-n6"
+          :label="$t('openvpn.NTPServers1')"
+          v-model="activeNtpServer1"
+          v-if="ntpServers"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5 mt-3"
+          v-if="props.errors.activeNtpServer1.$errors.length"
+        >
+          {{ props.errors.activeNtpServer1.$errors?.[0].$message }}
+        </p>
+        <v-text-field
+          class="mt-3"
+          :label="$t('openvpn.NTPServers2')"
+          v-model="activeNtpServer2"
+          v-if="ntpServers"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5 mt-3"
+          v-if="props.errors.activeNtpServer2.$errors.length"
+        >
+          {{ props.errors.activeNtpServer2.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4" align-self="center">
+        <label>{{$t('openvpn.ClientManagementPort')}}</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <input type="checkbox" v-model="clientPort" />
+        <label class="ml-2">{{$t('openvpn.ActiveClientManagementPort')}}</label>
+      </v-col>
+
+      <template v-if="clientPort">
+        <v-col cols="4" class="mt-3">
+          <label>Port</label>
+        </v-col>
+        <v-col cols="8" class="mb-n6">
+          <v-text-field label="Port" v-model="portClient"></v-text-field>
+
+          <p
+            class="error-feedback mb-5 mt-3"
+            v-if="props.errors.portClient.$errors.length"
+          >
+            {{ props.errors.portClient.$errors?.[0].$message }}
+          </p>
+        </v-col>
+        <v-col cols="4" class="mt-3">
+          <label>{{$t('form.password')}}</label>
+        </v-col>
+        <v-col :cols="props.serverModeState === 'edit' ? 4 : 8" class="mb-n6">
+          <v-text-field
+            :label="$t('form.password')"
+            :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+            @click:append-inner="show1 = !show1"
+            :type="show1 ? 'text' : 'password'"
+            v-model="passwordClient"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5 mt-3"
+            v-if="props.errors.passwordClient.$errors.length"
+          >
+            {{ props.errors.passwordClient.$errors?.[0].$message }}
+          </p>
+        </v-col>
+        <v-col cols="4" class="mb-n6" v-if="props.serverModeState === 'edit'">
+          <v-text-field
+            :label="$t('openvpn.newPassword')"
+            :append-inner-icon="showClientNewPass ? 'mdi-eye' : 'mdi-eye-off'"
+            @click:append-inner="showClientNewPass = !showClientNewPass"
+            :type="showClientNewPass ? 'text' : 'password'"
+            v-model="NewPasswordClient"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5 mt-3"
+            v-if="props.errors.NewPasswordClient.$errors.length"
+          >
+            {{ props.errors.NewPasswordClient.$errors?.[0].$message }}
+          </p>
+        </v-col>
+      </template>
+
+      <v-col align-self="center" cols="4" class="mb-5">
+        <label>{{$t('openvpn.VerbosityLevel')}}</label>
+      </v-col>
+      <v-col cols="8">
+        <v-select
+          :label="$t('openvpn.VerbosityLevel')"
+          v-model="verbLevel"
+          :items="verbosityLevelList"
+          item-title="name"
+          item-value="slug"
+          return-object
+        ></v-select>
+      </v-col>
+    </v-row>
+  </div>
+</template>
+
+<script setup>
+import { ref } from "vue";
+import { useVModels } from "@vueuse/core";
+const show1 = ref(false);
+const showClientNewPass = ref(false);
+
+const props = defineProps([
+  "errors",
+  "serverModeState",
+  "deviceMode",
+  "passwordClient",
+  "NewPasswordClient",
+  "portClient",
+  "isBridge",
+  "dynamicIP",
+  "adressPool",
+  // "topology",
+  "dnsDefaultDomain",
+  "dnsServers",
+  "forceDNS",
+  "ntpServers",
+  "clientPort",
+  "startAddressPool",
+  "endAddressPool",
+  "activeDnsDefault",
+  "activeDnsServer1",
+  "activeDnsServer2",
+  "activeNtpServer1",
+  "activeNtpServer2",
+  "verbLevel",
+]);
+const emit = defineEmits([
+  "update:adressPool",
+  "update:verbLevel",
+  // "update:topology",
+  "update:dnsDefaultDomain",
+  "update:dnsServers",
+  "update:forceDNS",
+  "update:ntpServers",
+  "update:clientPort",
+  "update:endAddressPool",
+  "update:startAddressPool",
+  "update:activeDnsDefault",
+  "update:activeDnsServer1",
+  "update:activeDnsServer2",
+  "update:activeNtpServer1",
+  "update:activeNtpServer2",
+  "update:dynamicIP",
+  "update:passwordClient",
+  "update:NewPasswordClient",
+  "update:portClient",
+]);
+const {
+  verbLevel,
+  adressPool,
+  // topology,
+  dnsDefaultDomain,
+  forceDNS,
+  endAddressPool,
+  dnsServers,
+  ntpServers,
+  activeDnsServer1,
+  activeDnsServer2,
+  activeNtpServer1,
+  activeNtpServer2,
+  clientPort,
+  dynamicIP,
+  activeDnsDefault,
+  startAddressPool,
+  passwordClient,
+  portClient,
+  NewPasswordClient,
+} = useVModels(props, emit);
+
+const verbosityLevelList = ref([
+  {
+    name: "0 (none)",
+    slug: "0",
+  },
+  {
+    name: "1 (default)",
+    slug: "1",
+  },
+  {
+    name: "2",
+    slug: "2",
+  },
+  {
+    name: "3",
+    slug: "3",
+  },
+  {
+    name: "4",
+    slug: "4",
+  },
+  {
+    name: "5",
+    slug: "5",
+  },
+  {
+    name: "6",
+    slug: "6",
+  },
+  {
+    name: "7",
+    slug: "7",
+  },
+  {
+    name: "8",
+    slug: "8",
+  },
+  {
+    name: "9",
+    slug: "9",
+  },
+  {
+    name: "10",
+    slug: "10",
+  },
+  {
+    name: "11",
+    slug: "11",
+  },
+]);
+</script>

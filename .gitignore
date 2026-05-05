@@ -116,3 +116,4 @@
 npm-debug.log
 
 yarn-error.log
+.asguard_previous_*

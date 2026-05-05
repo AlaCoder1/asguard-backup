@@ -1,1 +1,0 @@
-PATH_DOUBLE_MASK = "/home/dm"

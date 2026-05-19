@@ -198,15 +198,15 @@ def wait_for_system_stabilization(max_attempts=30, delay_seconds=4):
 
 def main():
     if len(sys.argv) not in (3, 4):
-        print("Usage: full_restore_runner.py <backup_id> <job_id> [safe|complete]")
+        print("Usage: full_restore_runner.py <backup_id> <job_id> [safe|complete|ui_full]")
         return 2
 
     backup_id = sys.argv[1]
     job_id    = sys.argv[2]
     mode      = sys.argv[3] if len(sys.argv) == 4 else "safe"
 
-    if mode not in ("safe", "complete"):
-        print("Mode must be 'safe' or 'complete'")
+    if mode not in ("safe", "complete", "ui_full"):
+        print("Mode must be 'safe', 'complete', or 'ui_full'")
         return 2
 
     state_file = JOBS_ROOT / f"{job_id}.json"
@@ -214,7 +214,7 @@ def main():
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
     started_at = utc_now()
-    mode_label = "Full DR" if mode == "complete" else "Safe"
+    mode_label = "Full UI Safe" if mode == "ui_full" else ("Full DR" if mode == "complete" else "Safe")
 
     # Signal watchdog: don't interfere with service restarts during restore
     set_restore_mode(job_id)
@@ -252,8 +252,13 @@ def main():
             title=f"🔄 Restauration {mode_label} démarrée",
             body=(
                 f"Backup : {backup_id}\n"
-                f"⚠️  L'interface sera indisponible ~2-5 min.\n"
-                f"Des notifications seront envoyées à chaque étape."
+                +
+                (
+                    "Mode UI-safe : le moteur applicatif et les services de boot ne seront pas remplacés à chaud.\n"
+                    if mode == "ui_full"
+                    else "⚠️  L'interface sera indisponible ~2-5 min.\n"
+                )
+                + "Des notifications seront envoyées à chaque étape."
             ),
             priority="high",
             tags="arrows_counterclockwise,rotating_light,shield",
@@ -265,6 +270,8 @@ def main():
         progress_cb = make_progress_callback(state_file)
         if mode == "complete":
             result = RestoreService.restore_full_complete(backup_id, progress_callback=progress_cb)
+        elif mode == "ui_full":
+            result = RestoreService.restore_full_ui_safe(backup_id, progress_callback=progress_cb)
         else:
             result = RestoreService.restore_full_safe(backup_id, progress_callback=progress_cb)
         duration_s = time.time() - t0
@@ -272,7 +279,13 @@ def main():
         print(f"[{utc_now()}] RESTORE CORE FINISHED: raw_status={result.get('status', 'error')}, mode={mode}")
 
         # ── Force uvicorn recovery before stabilization check ───────────────
-        uvicorn_recovered = force_uvicorn_recovery()
+        # UI-safe full restore deliberately avoids touching the application
+        # control plane, so do not daemon-reload/restart uvicorn unless it is down.
+        if mode == "ui_full":
+            uvicorn_active = run_cmd(["systemctl", "is-active", "uvicorn"], timeout=10)
+            uvicorn_recovered = (uvicorn_active.stdout or "").strip() == "active"
+        else:
+            uvicorn_recovered = force_uvicorn_recovery()
         if not uvicorn_recovered:
             send_ntfy_direct(
                 title="⚠️  Uvicorn ne répond pas après restauration",

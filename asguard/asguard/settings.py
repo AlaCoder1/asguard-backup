@@ -139,6 +139,14 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default=5432, cast=int),
+        # When PostgreSQL is down, libpq otherwise blocks for ~75s on each
+        # connection attempt — long enough to lock up every Daphne worker.
+        # A 5s ceiling fails fast so the appliance stays responsive (AI Risk
+        # Center, login screen) and the failure can actually be alerted on.
+        'OPTIONS': {
+            'connect_timeout': 5,
+        },
+        'CONN_MAX_AGE': 60,
     }
 }
 

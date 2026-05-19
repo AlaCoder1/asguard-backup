@@ -14,20 +14,20 @@ function loadCache() {
 export const useNotifStore = defineStore("notif", () => {
   // Initialiser depuis le cache localStorage → affichage immédiat au reload
   const cached = loadCache();
+  const metricsCount = ref(cached.metricsCount ?? 0);
+  const inAppCount = ref(cached.inAppCount ?? 0);
   const count = ref(cached.count ?? 0);
   const autoBackupOn = ref(cached.autoBackupOn ?? false);
   const notificationsConfigured = ref(cached.notificationsConfigured ?? false);
 
-  function update(data) {
-    count.value = (data.alerts || []).length;
-    autoBackupOn.value = !!data.auto_backup_on;
-    notificationsConfigured.value = !!data.notifications_configured;
-    // Persist pour le prochain chargement de page
+  function persist() {
     try {
       localStorage.setItem(
         CACHE_KEY,
         JSON.stringify({
           count: count.value,
+          metricsCount: metricsCount.value,
+          inAppCount: inAppCount.value,
           autoBackupOn: autoBackupOn.value,
           notificationsConfigured: notificationsConfigured.value,
         })
@@ -37,5 +37,19 @@ export const useNotifStore = defineStore("notif", () => {
     }
   }
 
-  return { count, autoBackupOn, notificationsConfigured, update };
+  function update(data) {
+    metricsCount.value = (data.alerts || []).length;
+    autoBackupOn.value = !!data.auto_backup_on;
+    notificationsConfigured.value = !!data.notifications_configured;
+    count.value = metricsCount.value + inAppCount.value;
+    persist();
+  }
+
+  function setInAppCount(n) {
+    inAppCount.value = Number(n) || 0;
+    count.value = metricsCount.value + inAppCount.value;
+    persist();
+  }
+
+  return { count, metricsCount, inAppCount, autoBackupOn, notificationsConfigured, update, setInAppCount };
 });

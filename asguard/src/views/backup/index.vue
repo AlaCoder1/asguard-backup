@@ -4,24 +4,36 @@
 
       <!-- Status pill dans la toolbar, à côté du titre -->
       <template #toolbar-status>
-        <div
-          v-if="notifStore.notificationsConfigured"
-          class="bap-pill bap-pill--live"
-          title="Notifications actives — système surveillé"
-        >
-          <span class="bap-dot"></span>
-          <span class="bap-label">LIVE</span>
-          <span class="bap-sep"></span>
-          <span class="bap-clock">{{ liveClock }}</span>
-        </div>
-        <div
-          v-else
-          class="bap-pill bap-pill--warn"
-          title="Cliquer pour configurer les alertes"
-          @click="activeTab = 'Alertes & Mailing'"
-        >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L12 11.5H1L6.5 1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.5 5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="6.5" cy="9.5" r=".7" fill="currentColor"/></svg>
-          Alertes non configurées
+        <div class="bap-toolbar-pills">
+          <div
+            class="bap-pill bap-pill--drp"
+            title="Ouvrir le cockpit DRP Metrics"
+            @click="activeTab = 'Dashboard & Monitoring'"
+          >
+            <span class="bap-dot bap-dot--blue"></span>
+            <span class="bap-label">DRP Metrics</span>
+            <span class="bap-sep"></span>
+            <span class="bap-clock">v2</span>
+          </div>
+          <div
+            v-if="notifStore.notificationsConfigured"
+            class="bap-pill bap-pill--live"
+            title="Notifications actives — système surveillé"
+          >
+            <span class="bap-dot"></span>
+            <span class="bap-label">LIVE</span>
+            <span class="bap-sep"></span>
+            <span class="bap-clock">{{ liveClock }}</span>
+          </div>
+          <div
+            v-else
+            class="bap-pill bap-pill--warn"
+            title="Cliquer pour configurer les alertes"
+            @click="activeTab = 'Alertes & Mailing'"
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L12 11.5H1L6.5 1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.5 5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="6.5" cy="9.5" r=".7" fill="currentColor"/></svg>
+            Alertes non configurées
+          </div>
         </div>
       </template>
 
@@ -58,6 +70,7 @@ import BackupLogs from "./components/BackupLogs.vue";
 import BackupDashboardMonitoring from "./components/BackupDashboardMonitoring.vue";
 import RestoreHistory from "./components/RestoreHistory.vue";
 import BackupCloud from "./components/BackupCloud.vue";
+import BackupRiskCenter from "./components/BackupRiskCenter.vue";
 import { useNotifStore } from "@/store/modules/notifications.js";
 
 export default {
@@ -72,6 +85,7 @@ export default {
     BackupDashboardMonitoring,
     RestoreHistory,
     BackupCloud,
+    BackupRiskCenter,
   },
   inject: ["emitter"],
 
@@ -87,13 +101,14 @@ export default {
       _clockInterval: null,
       tabs: [
         { id: 1, label: "Dashboard & Monitoring", component: BackupDashboardMonitoring },
-        { id: 2, label: "Backups", component: Backups },
-        { id: 3, label: "Historique Restores", component: RestoreHistory },
-        { id: 4, label: "VM Snapshot", component: VmSnapshot },
-        { id: 5, label: "Schedule", component: BackupSchedule },
-        { id: 6, label: "Cloud Storage", component: BackupCloud },
-        { id: 7, label: "Alertes & Mailing", component: BackupAlertsMailing },
-        { id: 8, label: "Logs", component: BackupLogs },
+        { id: 2, label: "AI Risk Center", component: BackupRiskCenter },
+        { id: 3, label: "Backups", component: Backups },
+        { id: 4, label: "Historique Restores", component: RestoreHistory },
+        { id: 5, label: "VM Snapshot", component: VmSnapshot },
+        { id: 6, label: "Schedule", component: BackupSchedule },
+        { id: 7, label: "Cloud Storage", component: BackupCloud },
+        { id: 8, label: "Alertes & Mailing", component: BackupAlertsMailing },
+        { id: 9, label: "Logs", component: BackupLogs },
       ],
     };
   },
@@ -103,16 +118,21 @@ export default {
     },
   },
   mounted() {
-    const savedTab = localStorage.getItem("backup-tab") || "Backups";
+    const upgradeKey = "backup-drp-metrics-ui";
+    if (localStorage.getItem(upgradeKey) !== "v2") {
+      localStorage.setItem("backup-tab", "Dashboard & Monitoring");
+      localStorage.setItem(upgradeKey, "v2");
+    }
+    const savedTab = localStorage.getItem("backup-tab") || "Dashboard & Monitoring";
     this.activeTab = this.tabs.some((tab) => tab.label === savedTab)
       ? savedTab
-      : "Backups";
+      : "Dashboard & Monitoring";
 
     this.emitter.on("reload-tabs", () => {
-      const tab = localStorage.getItem("backup-tab") || "Backups";
+      const tab = localStorage.getItem("backup-tab") || "Dashboard & Monitoring";
       this.activeTab = this.tabs.some((item) => item.label === tab)
         ? tab
-        : "Backups";
+        : "Dashboard & Monitoring";
     });
 
     const tick = () => {
@@ -130,6 +150,12 @@ export default {
 
 <style scoped>
 /* ── Status pills dans la toolbar ──────────────────────── */
+.bap-toolbar-pills {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .bap-pill {
   display: inline-flex;
   align-items: center;
@@ -143,6 +169,19 @@ export default {
   cursor: default;
   user-select: none;
   transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.bap-pill--drp {
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  border: 1px solid #93c5fd;
+  color: #1d4ed8;
+  box-shadow: 0 1px 4px rgba(59,130,246,0.14);
+  cursor: pointer;
+}
+
+.bap-pill--drp:hover {
+  box-shadow: 0 2px 9px rgba(59,130,246,0.22);
+  transform: translateY(-1px);
 }
 
 /* LIVE pill */
@@ -180,9 +219,19 @@ export default {
   animation: bap-pulse 2s ease-in-out infinite;
 }
 
+.bap-dot--blue {
+  background: #3b82f6;
+  animation: bap-pulse-blue 2s ease-in-out infinite;
+}
+
 @keyframes bap-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
   50%       { box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+}
+
+@keyframes bap-pulse-blue {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.48); }
+  50%       { box-shadow: 0 0 0 4px rgba(59,130,246,0); }
 }
 
 .bap-label {

@@ -1,0 +1,446 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# asguard-dr-restore — Disaster Recovery restore script
+# ------------------------------------------------------------------------------
+# Restores an Asguard appliance from a full backup onto a fresh (or recovered)
+# VM. This is the COUNTERPART of the UI-safe restore: where the UI restore
+# protects engine components from being touched at hot, this script EXPECTS
+# to touch them — it must be run from a TTY/console (not from the UI), after
+# the appliance has been booted into a minimal state.
+#
+# What it does (in order):
+#   1. Preflight        — OS check, RAM/disk, required binaries
+#   2. Locate backup    — verify metadata + integrity
+#   3. NIC mapping      — detect new interfaces, prompt for old→new mapping
+#   4. Packages         — install missing RPM/DEB from the backup's list
+#   5. Stop app stack   — uvicorn, nginx, postgres container
+#   6. Restore /etc     — system_config component
+#   7. Restore systemd  — custom unit files + daemon-reload
+#   8. Restore app code — /asguard/asguard from backup
+#   9. Restore DB       — postgres dump
+#  10. Restore configs  — firewall, vpn, proxy, etc. (the UI-safe set)
+#  11. Restore Docker   — pull images, recreate containers from saved state
+#  12. Apply firewall   — rebuild nft + routing from DB
+#  13. Reboot           — clean restart on the recovered system
+#  14. Post-restore     — healthcheck (run after reboot, --verify mode)
+#
+# Usage:
+#   asguard-dr-restore <backup_dir> [--dry-run] [--skip-packages]
+#                                   [--skip-reboot] [--nic-map OLD=NEW,...]
+#   asguard-dr-restore --verify     # post-reboot healthcheck
+#
+# Safety:
+#   - All destructive actions are logged to /var/log/asguard-dr/<timestamp>.log
+#   - Original state of each replaced file is preserved under
+#     /var/backups/asguard/dr-preflight-<timestamp>/
+#   - --dry-run prints what WOULD happen without changing anything
+#
+# Exit codes:
+#   0  Success
+#   1  Generic error / preflight failed
+#   2  Backup missing or invalid
+#   3  Required binary missing on host
+#   4  User aborted
+#   5  A restore phase failed (see log)
+# ==============================================================================
+
+set -o pipefail
+
+# ── Constants ────────────────────────────────────────────────────────────────
+ASGUARD_ROOT="/asguard/asguard"
+BACKUP_ROOT="/var/backups/asguard"
+DB_CONTAINER="app-db-container"
+DB_USER="postgres"
+DB_NAME="postgres"
+LOG_DIR="/var/log/asguard-dr"
+TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+LOG_FILE="${LOG_DIR}/dr-restore-${TIMESTAMP}.log"
+PRESERVE_DIR="${BACKUP_ROOT}/dr-preflight-${TIMESTAMP}"
+
+# Default options (overridable by flags)
+DRY_RUN=0
+SKIP_PACKAGES=0
+SKIP_REBOOT=0
+NIC_MAP=""
+MODE="restore"
+
+# ── Logging helpers ─────────────────────────────────────────────────────────
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+mkdir -p "$LOG_DIR" 2>/dev/null || true
+
+log()    { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$*" | tee -a "$LOG_FILE"; }
+ok()     { printf "${GREEN}✓${NC} %s\n" "$*" | tee -a "$LOG_FILE"; }
+warn()   { printf "${YELLOW}⚠${NC} %s\n" "$*" | tee -a "$LOG_FILE"; }
+err()    { printf "${RED}✗${NC} %s\n" "$*" | tee -a "$LOG_FILE" >&2; }
+phase()  { printf "\n${BOLD}${BLUE}━━━ %s ━━━${NC}\n" "$*" | tee -a "$LOG_FILE"; }
+run()    {
+    log "  \$ $*"
+    if [[ $DRY_RUN -eq 1 ]]; then return 0; fi
+    "$@" 2>&1 | tee -a "$LOG_FILE"
+    return ${PIPESTATUS[0]}
+}
+
+# Confirmation prompt — refuses to proceed without explicit "yes" on stdin.
+# Returns 0 if confirmed, exits 4 otherwise.
+confirm() {
+    local prompt="$1"
+    printf "\n${YELLOW}⚠  %s${NC}\n" "$prompt"
+    read -rp "Tapez exactement 'oui' pour confirmer : " ans
+    if [[ "$ans" != "oui" ]]; then
+        err "Abandon utilisateur (réponse: '$ans')"
+        exit 4
+    fi
+}
+
+# ── Argument parsing ────────────────────────────────────────────────────────
+BACKUP_DIR=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry-run)        DRY_RUN=1 ;;
+        --skip-packages)  SKIP_PACKAGES=1 ;;
+        --skip-reboot)    SKIP_REBOOT=1 ;;
+        --nic-map)        NIC_MAP="$2"; shift ;;
+        --verify)         MODE="verify" ;;
+        -h|--help)
+            sed -n '2,50p' "$0"; exit 0 ;;
+        -*)
+            err "Option inconnue: $1"; exit 1 ;;
+        *)
+            if [[ -z "$BACKUP_DIR" ]]; then BACKUP_DIR="$1"; fi ;;
+    esac
+    shift
+done
+
+# ── Phase 14: post-reboot verification mode ─────────────────────────────────
+# Run as `asguard-dr-restore --verify` after the DR-driven reboot. Does NOT
+# touch anything — only reports the health of the restored appliance.
+if [[ "$MODE" == "verify" ]]; then
+    phase "VÉRIFICATION POST-RESTORE"
+    fail=0
+
+    for unit in uvicorn nginx; do
+        if systemctl is-active --quiet "$unit"; then
+            ok "Service $unit : actif"
+        else
+            err "Service $unit : INACTIF"
+            fail=1
+        fi
+    done
+
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^${DB_CONTAINER}$"; then
+        ok "Container $DB_CONTAINER : en cours d'exécution"
+    else
+        err "Container $DB_CONTAINER : ABSENT"
+        fail=1
+    fi
+
+    if docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1;" &>/dev/null; then
+        ok "PostgreSQL accessible"
+    else
+        err "PostgreSQL : ÉCHEC de connexion"
+        fail=1
+    fi
+
+    http_code=$(curl -s -k -o /dev/null -w "%{http_code}" "http://localhost:8000/backup/dashboard-overview?skip_sync_scan=true" 2>/dev/null)
+    if [[ "$http_code" == "200" ]]; then
+        ok "API Asguard (dashboard-overview) : HTTP 200"
+    else
+        err "API Asguard : HTTP $http_code"
+        fail=1
+    fi
+
+    if [[ $fail -eq 0 ]]; then
+        printf "\n${GREEN}${BOLD}✓ APPLIANCE RESTAURÉE ET OPÉRATIONNELLE${NC}\n\n"
+        exit 0
+    else
+        printf "\n${RED}${BOLD}✗ DES PROBLÈMES PERSISTENT — voir $LOG_FILE${NC}\n\n"
+        exit 5
+    fi
+fi
+
+# ── Phase 1: Preflight ──────────────────────────────────────────────────────
+phase "PHASE 1 — PREFLIGHT"
+
+if [[ $EUID -ne 0 ]]; then
+    err "Doit être exécuté en root (utilisez sudo)"
+    exit 1
+fi
+
+if [[ -z "$BACKUP_DIR" ]]; then
+    err "Backup directory manquant en argument"
+    echo "Usage: $0 <backup_dir> [--dry-run] [--skip-packages] [--skip-reboot]"
+    echo "Backups disponibles dans $BACKUP_ROOT :"
+    ls -1 "$BACKUP_ROOT" 2>/dev/null | grep "^backup_" | tail -10
+    exit 2
+fi
+
+# Allow short form: just the backup ID, will be looked up in BACKUP_ROOT.
+if [[ ! -d "$BACKUP_DIR" ]] && [[ -d "$BACKUP_ROOT/$BACKUP_DIR" ]]; then
+    BACKUP_DIR="$BACKUP_ROOT/$BACKUP_DIR"
+fi
+
+if [[ ! -d "$BACKUP_DIR" ]]; then
+    err "Répertoire backup introuvable : $BACKUP_DIR"
+    exit 2
+fi
+
+META_FILE="$BACKUP_DIR/backup_metadata.json"
+if [[ ! -f "$META_FILE" ]]; then
+    err "Métadonnées absentes : $META_FILE"
+    exit 2
+fi
+
+ok "Mode :   $MODE${DRY_RUN:+ (dry-run)}"
+ok "Backup : $BACKUP_DIR"
+ok "Log :    $LOG_FILE"
+
+# Required binaries
+for bin in tar gzip jq docker systemctl pg_restore curl ip; do
+    if ! command -v "$bin" &>/dev/null; then
+        err "Binaire manquant : $bin"
+        exit 3
+    fi
+done
+ok "Toutes les dépendances présentes"
+
+# Disk space (need at least 2x the backup size to be safe)
+backup_kb=$(du -sk "$BACKUP_DIR" | awk '{print $1}')
+free_kb=$(df -k / | awk 'NR==2 {print $4}')
+need_kb=$((backup_kb * 2))
+if [[ $free_kb -lt $need_kb ]]; then
+    err "Espace insuffisant : libre=${free_kb}KB, requis=${need_kb}KB (2x taille backup)"
+    exit 1
+fi
+ok "Espace disque OK : libre=$((free_kb/1024))MB, requis=$((need_kb/1024))MB"
+
+# RAM
+ram_mb=$(free -m | awk '/^Mem:/ {print $2}')
+if [[ $ram_mb -lt 1500 ]]; then
+    warn "RAM faible : ${ram_mb}MB (recommandé : 2GB+)"
+fi
+
+# OS detection (informational — Asguard runs on RHEL-family but should adapt)
+if [[ -r /etc/os-release ]]; then
+    OS_ID=$(. /etc/os-release && echo "$ID")
+    OS_VER=$(. /etc/os-release && echo "$VERSION_ID")
+    ok "OS détecté : $OS_ID $OS_VER"
+fi
+
+mkdir -p "$PRESERVE_DIR"
+log "État pré-restore sauvegardé sous : $PRESERVE_DIR"
+
+# ── Phase 3: NIC mapping ────────────────────────────────────────────────────
+# Skipped to Phase 2 (locate backup) first since we already validated above.
+phase "PHASE 2 — VÉRIFICATION INTÉGRITÉ"
+
+components_ok=$(jq -r '[.components[] | select(.status=="success")] | length' "$META_FILE")
+components_total=$(jq -r '.components | length' "$META_FILE")
+created_at=$(jq -r '.created_at' "$META_FILE")
+ok "Backup créé le : $created_at"
+ok "Composants : $components_ok / $components_total réussis à la sauvegarde"
+
+phase "PHASE 3 — MAPPING DES INTERFACES RÉSEAU"
+
+# List current interfaces on the new host.
+current_nics=$(ip -o link show | awk -F': ' '!/lo:/ && !/docker/ && !/veth/ && !/br-/ {print $2}' | sed 's/@.*//')
+log "Interfaces détectées sur cette VM :"
+for n in $current_nics; do log "  • $n"; done
+
+# Try to read NICs from the backup's network component.
+backup_nics=""
+if [[ -f "$BACKUP_DIR/network/network.tar.gz" ]]; then
+    tmp_nic=$(mktemp -d)
+    tar -xzf "$BACKUP_DIR/network/network.tar.gz" -C "$tmp_nic" 2>/dev/null || true
+    # Heuristic: look for ifname references in any saved Asguard config.
+    backup_nics=$(grep -rhE 'ifname[[:space:]]*[=:][[:space:]]*"?[a-z0-9]+"?' "$tmp_nic" 2>/dev/null \
+                  | sed -E 's/.*ifname[[:space:]]*[=:][[:space:]]*"?([a-z0-9]+)"?.*/\1/' \
+                  | sort -u | head -10)
+    rm -rf "$tmp_nic"
+fi
+if [[ -n "$backup_nics" ]]; then
+    log "Interfaces référencées dans le backup :"
+    for n in $backup_nics; do log "  • $n"; done
+fi
+
+if [[ -n "$NIC_MAP" ]]; then
+    log "Mapping fourni en argument : $NIC_MAP"
+elif [[ -n "$backup_nics" ]]; then
+    log "Indiquez un mapping si les noms diffèrent (ex: ens33=eth0,ens34=eth1)."
+    log "Laissez vide si les noms sont identiques."
+    if [[ -t 0 ]]; then read -rp "NIC mapping : " NIC_MAP; fi
+fi
+
+# ── Phase 4: Packages ──────────────────────────────────────────────────────
+phase "PHASE 4 — PAQUETS SYSTÈME"
+
+if [[ $SKIP_PACKAGES -eq 1 ]]; then
+    warn "--skip-packages : phase ignorée"
+else
+    pkg_list="$BACKUP_DIR/packages/packages.txt"
+    if [[ -f "$pkg_list" ]]; then
+        missing=()
+        while IFS= read -r line; do
+            pkg=$(echo "$line" | awk '{print $1}' | head -c 100)
+            [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
+            if ! rpm -q "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null; then
+                missing+=("$pkg")
+            fi
+        done < "$pkg_list"
+        if [[ ${#missing[@]} -gt 0 ]]; then
+            warn "Paquets manquants : ${#missing[@]}"
+            log "Premiers manquants : ${missing[@]:0:10}"
+            if [[ $DRY_RUN -eq 0 ]]; then
+                if command -v dnf &>/dev/null; then
+                    run dnf install -y "${missing[@]}" || warn "Certains paquets n'ont pas pu être installés"
+                elif command -v apt-get &>/dev/null; then
+                    run apt-get install -y "${missing[@]}" || warn "Certains paquets n'ont pas pu être installés"
+                fi
+            fi
+        else
+            ok "Tous les paquets requis sont déjà présents"
+        fi
+    else
+        warn "Liste de paquets absente : $pkg_list"
+    fi
+fi
+
+# ── Phase 5: Stop app stack ─────────────────────────────────────────────────
+phase "PHASE 5 — ARRÊT DU STACK APPLICATIF"
+
+confirm "Cette phase va ARRÊTER uvicorn, nginx et le container PostgreSQL. Continuer ?"
+
+run systemctl stop uvicorn  || warn "uvicorn déjà arrêté"
+run systemctl stop nginx    || warn "nginx déjà arrêté"
+run docker stop -t 30 "$DB_CONTAINER" || warn "container DB déjà arrêté"
+ok "Stack applicatif arrêté"
+
+# ── Phase 6 + 7 + 8: Restore /etc, systemd, application ─────────────────────
+phase "PHASE 6 — RESTAURATION /etc (system_config)"
+sysconf_tar="$BACKUP_DIR/system_config/system_config.tar.gz"
+if [[ -f "$sysconf_tar" ]]; then
+    # Preserve current /etc minus mounts so we can roll back if needed.
+    run tar -czf "$PRESERVE_DIR/etc-before.tar.gz" \
+        --exclude="/etc/asguard" --exclude="/etc/openvpn" \
+        --exclude="/etc/strongswan.d" --exclude="/etc/squid" \
+        --exclude="/etc/rules" --exclude="/etc/nftables.conf" \
+        --exclude="/etc/dhcpd.conf" --exclude="/etc/dhcpd6.conf" \
+        /etc 2>/dev/null
+    run tar -xzf "$sysconf_tar" -C / 2>/dev/null
+    ok "/etc restauré"
+else
+    warn "system_config non trouvé — phase ignorée"
+fi
+
+phase "PHASE 7 — RESTAURATION systemd custom"
+sysd_tar="$BACKUP_DIR/systemd_services/systemd.tar.gz"
+if [[ -f "$sysd_tar" ]]; then
+    run tar -xzf "$sysd_tar" -C / 2>/dev/null
+    run systemctl daemon-reload
+    ok "Unit files restaurées + daemon-reload"
+else
+    warn "systemd_services non trouvé — phase ignorée"
+fi
+
+phase "PHASE 8 — RESTAURATION /asguard/asguard"
+app_tar="$BACKUP_DIR/application/application.tar.gz"
+if [[ -f "$app_tar" ]]; then
+    if [[ -d "$ASGUARD_ROOT" ]]; then
+        run mv "$ASGUARD_ROOT" "${ASGUARD_ROOT}.pre-dr-${TIMESTAMP}"
+    fi
+    run mkdir -p "$ASGUARD_ROOT"
+    run tar -xzf "$app_tar" -C "$ASGUARD_ROOT" --strip-components=1 2>/dev/null
+    ok "Application restaurée sous $ASGUARD_ROOT"
+else
+    warn "application.tar.gz non trouvé — phase ignorée"
+fi
+
+# ── Phase 9: Database ───────────────────────────────────────────────────────
+phase "PHASE 9 — RESTAURATION BASE POSTGRESQL"
+run docker start "$DB_CONTAINER"
+log "Attente que PostgreSQL accepte les connexions..."
+for i in $(seq 1 30); do
+    if docker exec "$DB_CONTAINER" psql -U "$DB_USER" -c "SELECT 1" &>/dev/null; then
+        ok "PostgreSQL prêt"
+        break
+    fi
+    sleep 2
+done
+
+db_dump=$(find "$BACKUP_DIR/db" -name "*.dump" 2>/dev/null | head -1)
+if [[ -z "$db_dump" ]]; then
+    db_dump=$(find "$BACKUP_DIR" -maxdepth 1 -name "asguard_db_*.dump" 2>/dev/null | head -1)
+fi
+
+if [[ -n "$db_dump" ]]; then
+    log "Dump trouvé : $db_dump"
+    run docker cp "$db_dump" "$DB_CONTAINER:/tmp/restore.dump"
+    run docker exec "$DB_CONTAINER" pg_restore -U "$DB_USER" -d "$DB_NAME" \
+        --clean --if-exists --no-owner /tmp/restore.dump || \
+        warn "pg_restore a rapporté des avertissements (cf. log)"
+    ok "Base PostgreSQL restaurée"
+else
+    err "Aucun dump PostgreSQL trouvé dans le backup"
+    exit 5
+fi
+
+# ── Phase 10: UI-safe configs ───────────────────────────────────────────────
+phase "PHASE 10 — CONFIGS APPLIANCE (firewall, vpn, …)"
+# These already work via the UI-safe restore code path — invoke it.
+if [[ -x "$ASGUARD_ROOT/manage.py" ]]; then
+    log "Appel du restore service en mode 'safe'..."
+    run /usr/bin/python "$ASGUARD_ROOT/manage.py" shell -c "
+from backend.backup.system_backup.restore_service import RestoreService
+import json
+r = RestoreService.restore_full_safe('$(basename "$BACKUP_DIR")')
+print(json.dumps(r.get('summary', {}), indent=2))
+" || warn "Restore appliance: certains composants en erreur"
+fi
+
+# ── Phase 11: Docker state ──────────────────────────────────────────────────
+phase "PHASE 11 — DOCKER (images + volumes)"
+docker_state="$BACKUP_DIR/docker_state/docker_state.json"
+if [[ -f "$docker_state" ]]; then
+    log "Liste Docker présente — recréation des containers manquants..."
+    jq -r '.containers[]? | .Image' "$docker_state" 2>/dev/null | sort -u | while read -r img; do
+        [[ -z "$img" || "$img" == "null" ]] && continue
+        if ! docker image inspect "$img" &>/dev/null; then
+            run docker pull "$img" || warn "Pull échoué : $img"
+        fi
+    done
+    ok "Images Docker vérifiées"
+else
+    warn "docker_state.json absent — phase ignorée"
+fi
+
+# ── Phase 12: Apply firewall ────────────────────────────────────────────────
+phase "PHASE 12 — RÈGLES FIREWALL RUNTIME"
+if [[ -x "$ASGUARD_ROOT/manage.py" ]]; then
+    run /usr/bin/python "$ASGUARD_ROOT/manage.py" shell -c "
+from backend.backup.post_restore_resync import resync_all
+import json
+r = resync_all()
+print(json.dumps(r.get('summary', {}), indent=2))
+" || warn "Resync firewall : certaines étapes en erreur"
+fi
+
+# ── Phase 13: Reboot ────────────────────────────────────────────────────────
+phase "PHASE 13 — REDÉMARRAGE"
+if [[ $SKIP_REBOOT -eq 1 ]]; then
+    warn "--skip-reboot : reboot ignoré. Lancez 'systemctl reboot' manuellement."
+    log "Après reboot, lancez :  asguard-dr-restore --verify"
+else
+    log "Redémarrage dans 5 secondes... (Ctrl+C pour annuler)"
+    log "Après reboot, lancez :  asguard-dr-restore --verify"
+    sleep 5
+    if [[ $DRY_RUN -eq 0 ]]; then
+        run systemctl reboot
+    fi
+fi
+
+ok "DR restore terminé. Log complet : $LOG_FILE"

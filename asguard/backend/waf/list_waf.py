@@ -87,11 +87,18 @@ def get_list_all_waf_application():
                                                "rule_name": rule.rule_waf.name,
                                                "rule_policy": rule.rule_policy,
                                                "rule_log": rule.rule_log,} for rule in waf_application_rules]
-        # Return the application config as an object
+        # Return the application config as an object. An application created
+        # without its OneToOne ConfigWaf (e.g. via the API rather than the UI
+        # wizard) would otherwise crash the whole WAF page — degrade to an
+        # empty config instead.
         waf_application_config = ApplicationWaf.objects.get(id=waf_application_id).config
-        waf_application_config_dict = serializers.serialize("json", ConfigWaf.objects.filter(id=waf_application_config.pk))
-        waf_application['fields']['config'] = json.loads(waf_application_config_dict)
-        waf_application['fields']['config'] = waf_application['fields']['config'][0]['fields']
+        if waf_application_config is not None:
+            waf_application_config_dict = serializers.serialize(
+                "json", ConfigWaf.objects.filter(id=waf_application_config.pk))
+            parsed_config = json.loads(waf_application_config_dict)
+            waf_application['fields']['config'] = parsed_config[0]['fields'] if parsed_config else {}
+        else:
+            waf_application['fields']['config'] = {}
         list_waf_application.append(waf_application['fields'])
     return list_waf_application
 

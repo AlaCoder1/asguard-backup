@@ -21,6 +21,16 @@ class RestoreService:
     DB_NAME = "postgres"
     APP_ROOT = Path("/asguard/asguard")
     RESTORE_MODE = "safe"
+    UI_FULL_EXCLUDED_COMPONENTS = {
+        "application",
+        "system_config",
+        "systemd_services",
+        "logs",
+        "users_groups",
+        "packages",
+        "docker_state",
+        "vm_snapshot",
+    }
 
     @classmethod
     def restore_full_safe(cls, backup_id: str, progress_callback=None) -> dict:
@@ -29,6 +39,16 @@ class RestoreService:
     @classmethod
     def restore_full_complete(cls, backup_id: str, progress_callback=None) -> dict:
         return cls._restore_full(backup_id, include_application=True, progress_callback=progress_callback)
+
+    @classmethod
+    def restore_full_ui_safe(cls, backup_id: str, progress_callback=None) -> dict:
+        return cls._restore_full(
+            backup_id,
+            include_application=False,
+            excluded_components=cls.UI_FULL_EXCLUDED_COMPONENTS,
+            mode_name="full_ui_safe",
+            progress_callback=progress_callback,
+        )
 
     @classmethod
     def restore_full(cls, backup_id: str) -> dict:
@@ -49,6 +69,7 @@ class RestoreService:
         backup_id: str,
         include_application: bool,
         selected_components: list[str] | None = None,
+        excluded_components: set[str] | None = None,
         mode_name: str | None = None,
         progress_callback=None,
     ) -> dict:
@@ -76,6 +97,15 @@ class RestoreService:
             runners["application"] = cls._restore_application
         else:
             runners["application"] = cls._restore_application_skipped
+
+        excluded_components = excluded_components or set()
+        for component_name in excluded_components:
+            if component_name in runners:
+                runners[component_name] = cls._restore_skipped_runner(
+                    component_name,
+                    "Skipped by UI-safe full restore to keep the appliance control plane online. "
+                    "Use offline/console DR restore for this boot/runtime component.",
+                )
 
         if selected_components is not None:
             selected = cls._normalize_components(selected_components, runners, metadata)
@@ -244,6 +274,13 @@ class RestoreService:
         }
 
     @classmethod
+    def _restore_skipped_runner(cls, name: str, reason: str):
+        def _runner(_backup_dir: Path, _component_meta: dict) -> ComponentResult:
+            return ComponentResult.skipped(name, reason)
+
+        return _runner
+
+    @classmethod
     def _verify_component_file(cls, backup_dir: Path, component_name: str, component_meta: dict) -> tuple[bool, str]:
         rel_file = component_meta.get("file", "")
         expected_sha = component_meta.get("sha256", "")
@@ -264,14 +301,22 @@ class RestoreService:
 
     @classmethod
     def _extract_archive_to_root(cls, archive: Path, timeout: int = 180) -> tuple[bool, str]:
-        res = run_cmd(["sudo", "/usr/bin/tar", "-xzf", str(archive), "-C", "/"], timeout=timeout)
+        res = run_cmd(
+            ["sudo", "/usr/bin/tar", "--overwrite", "-xzf", str(archive), "-C", "/"],
+            timeout=timeout,
+        )
         if not res["success"]:
             return False, res.get("error", res.get("stderr", "archive extraction failed"))
         return True, ""
 
     @classmethod
     def _service_exists(cls, service_name: str) -> bool:
-        res = run_cmd(["systemctl", "list-unit-files", f"{service_name}.service"], timeout=15)
+        unit = service_name if service_name.endswith(".service") else f"{service_name}.service"
+        for root in (Path("/etc/systemd/system"), Path("/usr/lib/systemd/system"), Path("/lib/systemd/system")):
+            if (root / unit).exists():
+                return True
+
+        res = run_cmd(["systemctl", "list-unit-files", unit], timeout=15)
         return res["success"]
 
     @classmethod
@@ -722,6 +767,8 @@ class RestoreService:
 
         # 1) Si une archive des unités custom existe, on la restaure
             units_archive = backup_dir / "systemd_services" / "systemd_units.tar.gz"
+            if not units_archive.exists():
+                units_archive = backup_dir / "systemd_services" / "custom_units.tar.gz"
             if units_archive.exists():
                 ok, msg = cls._extract_archive_to_root(units_archive, timeout=120)
                 if not ok:
@@ -755,37 +802,35 @@ class RestoreService:
             if not services:
                 return ComponentResult.skipped(name, "No services found in snapshot file")
 
-            enabled_count = 0
-            skipped_count = 0
-            failed_services = []
-
+            existing_services = []
             for svc in services:
-                check = run_cmd(["systemctl", "list-unit-files", svc], timeout=15)
+                if cls._service_exists(svc):
+                    existing_services.append(svc)
 
-            # service absent -> skip
-                if not check["success"]:
-                    skipped_count += 1
-                    continue
+            skipped_count = len(services) - len(existing_services)
+            if not existing_services:
+                return ComponentResult.skipped(name, "No services from snapshot exist on this system")
 
-                enable_res = run_cmd(["sudo", "systemctl", "enable", svc], timeout=20)
-                if enable_res["success"]:
-                    enabled_count += 1
-                else:
-                    failed_services.append(f"{svc}: {enable_res.get('error', 'enable failed')}")
-
-            if failed_services and enabled_count == 0:
+            enable_res = run_cmd(
+                ["sudo", "systemctl", "enable", "--no-reload", *existing_services],
+                timeout=max(60, len(existing_services) * 10),
+            )
+            if not enable_res["success"]:
                 return ComponentResult.failed(
                     name,
-                    "No service could be enabled. " + " | ".join(failed_services[:5])
+                    enable_res.get("error", enable_res.get("stderr", "systemctl enable failed")),
                 )
 
+            reload_res = run_cmd(["sudo", "systemctl", "daemon-reload"], timeout=60)
+            if not reload_res["success"]:
+                return ComponentResult.failed(name, reload_res.get("error", "systemctl daemon-reload failed after enable"))
+
+            enabled_count = len(existing_services)
             message = f"{enabled_count} service(s) enabled from snapshot; {skipped_count} skipped."
-            if failed_services:
-                message += f" {len(failed_services)} enable operation(s) failed."
 
             return ComponentResult(
                 name=name,
-                status="success" if enabled_count > 0 else "partial_success",
+                status="success",
                 file=component_meta["file"],
                 duration_s=t.elapsed,
                 message=message,

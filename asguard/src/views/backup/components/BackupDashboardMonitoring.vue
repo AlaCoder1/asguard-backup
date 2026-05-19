@@ -109,257 +109,269 @@
     </nav>
 
     <template v-if="activeMonitoringTab === 'overview'">
-    <section class="metric-grid">
-      <!-- Card 1: Last backup -->
-      <article :class="['kpi-card', `kpi-card--${statusMetricClass(latestBackup.status)}`]">
-        <div class="kpi-card__header">
-          <span class="kpi-card__label">Dernier backup</span>
-          <span :class="['kpi-status-dot', statusMetricClass(latestBackup.status)]"></span>
+    <!-- ======= DRP METRICS STRIP — visible observability layer ======= -->
+    <section class="drp-live-strip" :class="`drp-live-strip--${drpGlobalTone}`">
+      <div class="drp-live-head">
+        <div class="drp-live-title">
+          <span class="drp-live-dot"></span>
+          <div>
+            <strong>DRP Metrics</strong>
+            <small>RPO, restores, stockage et services critiques</small>
+          </div>
         </div>
-        <div class="kpi-card__value-row">
-          <strong :class="['kpi-card__value', statusMetricClass(latestBackup.status)]">
-            {{ statusMetricLabel(latestBackup.status) }}
-          </strong>
-          <span :class="['kpi-health-badge', statusMetricClass(latestBackup.status)]">
+        <div class="drp-live-actions">
+          <span class="drp-live-updated">{{ drpMetrics ? `MAJ ${formatTime(drpMetrics.generated_at)}` : 'chargement...' }}</span>
+          <button class="drp-live-btn" type="button" :disabled="loading" @click="fetchDrpMetrics">
+            Rafraîchir
+          </button>
+        </div>
+      </div>
+      <div class="drp-metric-grid">
+        <article
+          v-for="card in drpMetricCards"
+          :key="card.key"
+          :class="['drp-metric-card', `tone-${card.tone}`]"
+        >
+          <span class="drp-metric-label">{{ card.label }}</span>
+          <strong>{{ card.value }}</strong>
+          <small>{{ card.hint }}</small>
+          <div class="drp-metric-bar">
+            <span :style="{ width: `${card.bar}%` }"></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======= PRIORITY COCKPIT ======= -->
+    <section class="cockpit">
+      <!-- P1 · ÉTAT MACHINE -->
+      <article :class="['cockpit-col', 'cockpit-col--machine', `cockpit-col--tone-${cockpitMachineTone}`]">
+        <header class="cockpit-head">
+          <span class="cockpit-eyebrow">
+            <span class="cockpit-rank">P1</span>
+            État machine
+          </span>
+          <span class="cockpit-live"><span class="cockpit-live-dot"></span>live</span>
+        </header>
+        <strong :class="['cockpit-headline', `tone-${cockpitMachineTone}`]">{{ machineHealthLabel }}</strong>
+        <span class="cockpit-sub">{{ vmStatusTitle }}</span>
+        <a
+          v-if="aiAnalysis.scores && aiAnalysis.scores.smoothed !== undefined"
+          href="/backup"
+          @click="openAiRiskCenter"
+          :class="['ai-verdict-pill', `ai-verdict-${aiAnalysis.scores.level || 'stable'}`]"
+          :title="`IA: ${aiAnalysis.explanation || ''} — cliquer pour ouvrir l'AI Risk Center`"
+        >
+          <span class="ai-verdict-dot"></span>
+          <span class="ai-verdict-text">IA · {{ aiVerdictLabel }}</span>
+          <strong class="ai-verdict-score">{{ aiAnalysis.scores.smoothed }}/100</strong>
+        </a>
+        <div class="cockpit-meters">
+          <div class="cm-row">
+            <span class="cm-lbl">CPU</span>
+            <div class="cm-bar"><div :class="['cm-fill', meterTone(liveMetrics.cpu)]" :style="{ width: `${Math.min(100, liveMetrics.cpu)}%` }"></div></div>
+            <strong class="cm-val">{{ liveMetrics.cpu }}%</strong>
+          </div>
+          <div class="cm-row">
+            <span class="cm-lbl">RAM</span>
+            <div class="cm-bar"><div :class="['cm-fill', meterTone(liveMetrics.memory)]" :style="{ width: `${Math.min(100, liveMetrics.memory)}%` }"></div></div>
+            <strong class="cm-val">{{ liveMetrics.memory }}%</strong>
+          </div>
+          <div class="cm-row">
+            <span class="cm-lbl">Disk /</span>
+            <div class="cm-bar"><div :class="['cm-fill', meterTone(diskUsagePercent(rootDisk.used_bytes, rootDisk.total_bytes))]" :style="{ width: `${diskUsagePercent(rootDisk.used_bytes, rootDisk.total_bytes)}%` }"></div></div>
+            <strong class="cm-val">{{ diskUsagePercent(rootDisk.used_bytes, rootDisk.total_bytes) }}%</strong>
+          </div>
+        </div>
+        <footer class="cockpit-foot">
+          <span class="cf-pill"><span class="cf-pill-ico">↑</span>{{ uptimeReadableTitle }}</span>
+          <span class="cf-pill">{{ loadAverageReadableTitle }}</span>
+        </footer>
+      </article>
+
+      <!-- P2 · SAUVEGARDE -->
+      <article :class="['cockpit-col', 'cockpit-col--backup', `cockpit-col--tone-${statusMetricClass(latestBackup.status)}`]">
+        <header class="cockpit-head">
+          <span class="cockpit-eyebrow">
+            <span class="cockpit-rank">P2</span>
+            Sauvegarde
+          </span>
+          <span :class="['cockpit-score', statusMetricClass(latestBackup.status)]">
             {{ latestBackup.health_score ?? 0 }}<small>/100</small>
           </span>
-        </div>
-        <div class="kpi-card__meta">
-          <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.5V8.5l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-          {{ formatDate(latestBackup.timestamp) }}
-        </div>
-        <div class="kpi-health-bar">
-          <div class="kpi-health-bar__track">
-            <div
-              :class="['kpi-health-bar__fill', statusMetricClass(latestBackup.status)]"
-              :style="{ width: `${latestBackup.health_score ?? 0}%` }"
-            ></div>
+        </header>
+        <strong :class="['cockpit-headline', `tone-${statusMetricClass(latestBackup.status)}`]">
+          {{ statusMetricLabel(latestBackup.status) }}
+        </strong>
+        <span class="cockpit-sub">{{ formatDate(latestBackup.timestamp) || 'Aucun backup' }}</span>
+        <div class="cockpit-mini-grid">
+          <div class="cmg-cell">
+            <span>Archives</span>
+            <strong>{{ storageSummary.count || 0 }}</strong>
+          </div>
+          <div class="cmg-cell">
+            <span>Stockage</span>
+            <strong>{{ formatSize(storageSummary.used_bytes) }}</strong>
+          </div>
+          <div class="cmg-cell">
+            <span>RPO</span>
+            <strong :class="rpoToneClass">{{ rpoLabel }}</strong>
+          </div>
+          <div class="cmg-cell">
+            <span>Services</span>
+            <strong :class="serviceSummary.failing > 0 ? 'tone-warning' : 'tone-ok'">
+              {{ serviceSummary.running }}/{{ serviceSummary.total }}
+            </strong>
           </div>
         </div>
+        <footer class="cockpit-foot">
+          <div class="cf-bar">
+            <div :class="['cf-bar-fill', statusMetricClass(latestBackup.status)]" :style="{ width: `${latestBackup.health_score ?? 0}%` }"></div>
+          </div>
+        </footer>
       </article>
 
-      <!-- Card 2: Critical services -->
-      <article :class="['kpi-card', serviceSummary.failing > 0 ? 'kpi-card--warning' : 'kpi-card--ok']">
-        <div class="kpi-card__header">
-          <span class="kpi-card__label">Services critiques</span>
-          <span :class="['kpi-status-dot', serviceSummary.failing > 0 ? 'warning' : 'ok']"></span>
-        </div>
-        <div class="kpi-card__value-row">
-          <strong class="kpi-card__value kpi-card__value--neutral">
-            {{ serviceSummary.running }}<small>/{{ serviceSummary.total }}</small>
-          </strong>
-          <span v-if="serviceSummary.failing > 0" class="kpi-alert-count">
-            {{ serviceSummary.failing }}<small> alerte{{ serviceSummary.failing > 1 ? 's' : '' }}</small>
+      <!-- P3 · DERNIER RESTORE -->
+      <article :class="['cockpit-col', 'cockpit-col--restore', lastRestore ? `cockpit-col--tone-${lastRestore.status === 'success' ? 'ok' : 'warning'}` : 'cockpit-col--tone-neutral']">
+        <header class="cockpit-head">
+          <span class="cockpit-eyebrow">
+            <span class="cockpit-rank">P3</span>
+            Dernier restore
           </span>
-        </div>
-        <div class="kpi-service-bar">
-          <div class="kpi-health-bar__track">
-            <div
-              :class="['kpi-health-bar__fill', serviceSummary.failing > 0 ? 'warning' : 'ok']"
-              :style="{ width: `${serviceSummary.total ? Math.round((serviceSummary.running / serviceSummary.total) * 100) : 0}%` }"
-            ></div>
+          <span v-if="lastRestore" :class="['cockpit-pill', `mode-${lastRestore.mode}`]">{{ lastRestoreModeLabel }}</span>
+          <span v-else class="cockpit-pill muted">aucun</span>
+        </header>
+        <template v-if="lastRestore">
+          <strong class="cockpit-headline tone-neutral">{{ formatDate(lastRestore.started_at) }}</strong>
+          <span class="cockpit-sub">{{ lastRestoreAgo }} · durée {{ lastRestoreDurationLabel }}</span>
+          <div class="cockpit-mini-grid">
+            <div class="cmg-cell">
+              <span>Composants</span>
+              <strong>{{ lastRestore.summary?.success ?? 0 }}</strong>
+            </div>
+            <div class="cmg-cell">
+              <span>Statut</span>
+              <strong :class="lastRestore.status === 'success' ? 'tone-ok' : 'tone-warning'">
+                {{ lastRestore.status === 'success' ? 'Vérifié' : lastRestore.status === 'partial_success' ? 'Partiel' : lastRestore.status }}
+              </strong>
+            </div>
+            <div class="cmg-cell">
+              <span>Mode</span>
+              <strong>{{ lastRestoreModeLabel }}</strong>
+            </div>
           </div>
-          <span class="kpi-service-bar__pct">{{ serviceSummary.total ? Math.round((serviceSummary.running / serviceSummary.total) * 100) : 0 }}%</span>
-        </div>
-        <div class="kpi-card__meta">
-          <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2.5" width="13" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M8 5.5v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-          {{ serviceSummary.failing > 0 ? `${serviceSummary.failing} sur le périmètre critique` : 'Périmètre critique stable' }}
-        </div>
-        <div class="kpi-tag-row">
-          <span class="kpi-tag">services critiques</span>
-          <span class="kpi-tag">checks VM</span>
-        </div>
+        </template>
+        <template v-else>
+          <strong class="cockpit-headline muted">—</strong>
+          <span class="cockpit-sub">Aucun restore enregistré sur cette plateforme.</span>
+          <div class="cockpit-empty-hint">
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M13 8A5 5 0 1 1 8 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M13 3v5h-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Utiliser l'onglet Backups pour lancer un test.
+          </div>
+        </template>
       </article>
 
-      <!-- Card 3: Backup storage -->
-      <article class="kpi-card kpi-card--neutral">
-        <div class="kpi-card__header">
-          <span class="kpi-card__label">Stockage backup</span>
-          <span class="kpi-storage-count">{{ storageSummary.count }} archives</span>
-        </div>
-        <strong class="kpi-card__value kpi-card__value--neutral">
-          {{ formatSize(storageSummary.used_bytes) }}
-        </strong>
-        <div class="kpi-disk-section">
-          <div class="kpi-disk-label-row">
-            <span class="kpi-card__meta">
-              <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="5.5" rx="5.5" ry="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 5.5v5c0 1.38 2.46 2.5 5.5 2.5s5.5-1.12 5.5-2.5v-5" stroke="currentColor" stroke-width="1.2"/></svg>
-              Disque backup
-            </span>
-            <span :class="['kpi-disk-pct', Number(diskUsagePercent(storageSummary.disk_used_bytes, storageSummary.disk_total_bytes)) > 80 ? 'warning' : 'ok']">
-              {{ diskUsagePercent(storageSummary.disk_used_bytes, storageSummary.disk_total_bytes) }}%
-            </span>
-          </div>
-          <div class="kpi-health-bar__track">
-            <div
-              :class="['kpi-health-bar__fill', Number(diskUsagePercent(storageSummary.disk_used_bytes, storageSummary.disk_total_bytes)) > 80 ? 'warning' : 'ok']"
-              :style="{ width: `${diskUsagePercent(storageSummary.disk_used_bytes, storageSummary.disk_total_bytes)}%` }"
-            ></div>
-          </div>
-          <div class="kpi-disk-sizes">
-            <span>{{ formatSize(storageSummary.disk_used_bytes) }} utilisé</span>
-            <span>{{ formatSize(storageSummary.disk_total_bytes) }} total</span>
-          </div>
-        </div>
-      </article>
-
-      <!-- Card 4: Next backup -->
-      <article class="kpi-card kpi-card--neutral">
-        <div class="kpi-card__header">
-          <span class="kpi-card__label">Prochain backup</span>
-          <span class="kpi-tag kpi-tag--muted">planifié</span>
-        </div>
-        <strong class="kpi-card__value kpi-card__value--neutral kpi-card__value--mono">
-          {{ nextBackupLabel }}
-        </strong>
-        <div class="kpi-card__meta">
-          <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 1.5V4M11 1.5V4M2 7h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-          {{ nextBackupHint }}
-        </div>
-      </article>
-
-      <!-- Card 5: Last restore -->
-      <article :class="['kpi-card', lastRestore ? 'kpi-card--neutral' : 'kpi-card--neutral', 'kpi-card--restore']">
-        <div class="kpi-card__header">
-          <span class="kpi-card__label">Dernier restore</span>
-          <span v-if="lastRestore" :class="['kpi-restore-mode', lastRestore.mode]">{{ lastRestoreModeLabel }}</span>
-          <span v-else class="kpi-tag kpi-tag--muted">aucun</span>
-        </div>
-        <strong v-if="lastRestore" class="kpi-card__value kpi-card__value--neutral">
-          {{ formatDate(lastRestore.started_at) }}
-        </strong>
-        <strong v-else class="kpi-card__value kpi-card__value--neutral kpi-card__value--muted">—</strong>
-        <div v-if="lastRestore" class="kpi-card__meta">
-          <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><path d="M13 8A5 5 0 1 1 8 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M13 3v5h-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          {{ lastRestore.summary.success }} composants · {{ lastRestoreDurationLabel }}
-        </div>
-        <div v-if="lastRestore" class="kpi-restore-status-row">
-          <span :class="['kpi-restore-status', lastRestore.status]">
-            {{ lastRestore.status === 'success' ? 'Vérifié' : lastRestore.status === 'partial_success' ? 'Partiel' : lastRestore.status }}
+      <!-- P4 · AUTOMATISATION -->
+      <article :class="['cockpit-col', 'cockpit-col--auto', scheduledTasks.length ? 'cockpit-col--tone-info' : 'cockpit-col--tone-warning']">
+        <header class="cockpit-head">
+          <span class="cockpit-eyebrow">
+            <span class="cockpit-rank">P4</span>
+            Automatisation
           </span>
-          <span class="kpi-restore-ago">{{ lastRestoreAgo }}</span>
-        </div>
-        <div v-else class="kpi-card__meta">
-          <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><path d="M13 8A5 5 0 1 1 8 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M13 3v5h-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Aucun restore enregistré
-        </div>
+          <span v-if="scheduledTasks.length" class="cockpit-pill ok">
+            {{ enabledTaskCount }} active{{ enabledTaskCount > 1 ? 's' : '' }}
+          </span>
+          <span v-else class="cockpit-pill warning">off</span>
+        </header>
+
+        <template v-if="nextTaskInfo">
+          <div class="cockpit-countdown">
+            <div class="cc-block">
+              <strong>{{ countdown.h.toString().padStart(2,'0') }}</strong>
+              <span>h</span>
+            </div>
+            <span class="cc-sep">:</span>
+            <div class="cc-block">
+              <strong>{{ countdown.m.toString().padStart(2,'0') }}</strong>
+              <span>min</span>
+            </div>
+            <span class="cc-sep cc-sep-sm">:</span>
+            <div class="cc-block cc-block-sec">
+              <strong>{{ countdown.s.toString().padStart(2,'0') }}</strong>
+              <span>s</span>
+            </div>
+          </div>
+          <span class="cockpit-sub">
+            <span :class="['auto-typedot', nextTaskInfo.type]"></span>
+            {{ nextTaskInfo.label }} · {{ cronHumanShort(nextTaskInfo.cron) }}
+          </span>
+          <footer class="cockpit-foot cockpit-foot--split">
+            <span class="cf-pill">{{ nextTaskInfo.nextRunFormatted }}</span>
+            <button class="cockpit-cfg-btn" type="button" @click="goToScheduleTab">⚙ Configurer</button>
+          </footer>
+        </template>
+        <template v-else-if="scheduledTasks.length">
+          <strong class="cockpit-headline tone-warning">En pause</strong>
+          <span class="cockpit-sub">Aucune exécution planifiée à venir.</span>
+          <footer class="cockpit-foot cockpit-foot--split">
+            <span class="cf-pill">{{ enabledTaskCount }} sur {{ scheduledTasks.length }} active{{ enabledTaskCount > 1 ? 's' : '' }}</span>
+            <button class="cockpit-cfg-btn primary" type="button" @click="goToScheduleTab">⚙ Configurer</button>
+          </footer>
+        </template>
+        <template v-else>
+          <strong class="cockpit-headline tone-warning">Non configurée</strong>
+          <span class="cockpit-sub">Les backups ne se déclenchent pas automatiquement.</span>
+          <footer class="cockpit-foot cockpit-foot--split">
+            <button class="cockpit-cfg-btn primary cockpit-cfg-btn--full" type="button" @click="goToScheduleTab">⚙ Configurer l'automatisation</button>
+          </footer>
+        </template>
       </article>
     </section>
 
-    <!-- ======= AUTOMATION OVERVIEW ======= -->
-
-    <!-- Empty state: compact warning banner -->
-    <div v-if="!scheduledTasks.length" class="auto-empty-banner">
-      <div class="auto-empty-left">
-        <span class="auto-empty-icon-sm">⏰</span>
-        <div>
-          <span class="auto-empty-title">Automatisation non configurée</span>
-          <span class="auto-empty-sub">Les backups ne se déclenchent pas automatiquement.</span>
-        </div>
+    <!-- ======= AUTOMATION NOTICE (kept inline, condensed) ======= -->
+    <div
+      v-if="automationNotice"
+      :class="['auto-notice-strip', `auto-notice-strip--${automationNotice.tone}`]"
+    >
+      <span class="auto-notice-strip-dot"></span>
+      <div class="auto-notice-strip-copy">
+        <strong>{{ automationNotice.title }}</strong>
+        <span>{{ automationNotice.message }}</span>
       </div>
-      <button class="auto-empty-cta" @click="goToScheduleTab">⚙ Configurer l'automatisation</button>
+      <span class="auto-notice-strip-time">{{ automationNotice.timeLabel }}</span>
+      <button type="button" class="auto-notice-strip-ok" @click="dismissAutomationNotice(automationNotice.key)">OK</button>
     </div>
 
-    <!-- Active state: full panel -->
-    <div v-else class="auto-panel">
-
-      <!-- Header -->
-      <div class="auto-panel-hdr">
-        <div class="auto-panel-hdr-left">
-          <span class="auto-live-dot"></span>
-          <span class="auto-panel-hdr-title">Automatisation</span>
-          <span class="auto-count-pill">{{ enabledTaskCount }} active{{ enabledTaskCount > 1 ? 's' : '' }}</span>
-        </div>
-        <button class="auto-cfg-btn" @click="goToScheduleTab">⚙ Configurer</button>
+    <!-- ======= SCHEDULED TASKS — compact strip ======= -->
+    <div v-if="scheduledTasks.length" class="task-strip">
+      <div class="task-strip-head">
+        <span class="task-strip-title">Tâches planifiées</span>
+        <span class="task-strip-count">{{ scheduledTasks.length }} défini{{ scheduledTasks.length > 1 ? 's' : '' }} · {{ enabledTaskCount }} actif{{ enabledTaskCount > 1 ? 's' : '' }}</span>
       </div>
-
-      <div
-        v-if="automationNotice"
-        :class="['auto-notice', `auto-notice--${automationNotice.tone}`]"
-      >
-        <div class="auto-notice-marker">
-          <span class="auto-notice-dot"></span>
+      <div class="task-strip-list">
+        <div
+          v-for="task in allTasksWithNextRun"
+          :key="task.id"
+          :class="['task-chip', { 'task-chip--off': !task.enabled }]"
+        >
+          <span :class="['auto-typedot', task.type]"></span>
+          <span class="task-chip-name">{{ task.label }}</span>
+          <span class="task-chip-freq">{{ cronHumanShort(task.cron) }}</span>
+          <span v-if="task.nextRun" class="task-chip-eta">
+            <span class="task-chip-eta-lbl">dans</span>
+            <strong>{{ timeUntil(task.nextRun) }}</strong>
+          </span>
+          <span v-else class="task-chip-eta muted">en pause</span>
+          <span
+            v-if="taskRunBadge(task)"
+            :class="['task-chip-badge', `task-chip-badge--${taskRunBadge(task).tone}`]"
+          >{{ taskRunBadge(task).label }}</span>
+          <span :class="['task-chip-status', task.enabled ? 'on' : 'off']"></span>
         </div>
-        <div class="auto-notice-copy">
-          <strong>{{ automationNotice.title }}</strong>
-          <span>{{ automationNotice.message }}</span>
-        </div>
-        <div class="auto-notice-meta">
-          <span>{{ automationNotice.timeLabel }}</span>
-          <button type="button" @click="dismissAutomationNotice(automationNotice.key)">OK</button>
-        </div>
-      </div>
-
-      <div class="auto-panel-body">
-
-        <!-- LEFT: countdown -->
-        <div class="auto-cd" v-if="nextTaskInfo">
-          <div class="auto-cd-eyebrow">PROCHAIN BACKUP</div>
-          <div class="auto-cd-taskrow">
-            <span :class="['auto-typedot', nextTaskInfo.type]"></span>
-            <span class="auto-cd-taskname">{{ nextTaskInfo.label }}</span>
-          </div>
-
-          <!-- Digital clock blocks -->
-          <div class="auto-cd-clock">
-            <div class="auto-cd-block">
-              <span class="auto-cd-digit">{{ countdown.h.toString().padStart(2,'0') }}</span>
-              <span class="auto-cd-block-lbl">heures</span>
-            </div>
-            <span class="auto-cd-colon">:</span>
-            <div class="auto-cd-block">
-              <span class="auto-cd-digit">{{ countdown.m.toString().padStart(2,'0') }}</span>
-              <span class="auto-cd-block-lbl">min</span>
-            </div>
-            <span class="auto-cd-colon auto-cd-colon-sm">:</span>
-            <div class="auto-cd-block auto-cd-block-sec">
-              <span class="auto-cd-digit auto-cd-digit-sec">{{ countdown.s.toString().padStart(2,'0') }}</span>
-              <span class="auto-cd-block-lbl">sec</span>
-            </div>
-          </div>
-
-          <div class="auto-cd-footer">
-            <span class="auto-cd-footer-label">Prévu le</span>
-            <strong class="auto-cd-footer-date">{{ nextTaskInfo.nextRunFormatted }}</strong>
-            <span class="auto-cd-footer-freq">· {{ cronHumanShort(nextTaskInfo.cron) }}</span>
-          </div>
-        </div>
-
-        <div class="auto-panel-sep"></div>
-
-        <!-- RIGHT: all tasks -->
-        <div class="auto-tasklist">
-          <div class="auto-tasklist-eyebrow">TÂCHES PLANIFIÉES</div>
-          <div
-            v-for="task in allTasksWithNextRun"
-            :key="task.id"
-            :class="['auto-trow', { 'auto-trow-off': !task.enabled }]"
-          >
-            <span :class="['auto-typedot', task.type]"></span>
-            <div class="auto-trow-body">
-              <span class="auto-trow-name">{{ task.label }}</span>
-              <span class="auto-trow-freq">{{ cronHumanShort(task.cron) }}</span>
-              <span
-                v-if="taskRunBadge(task)"
-                :class="['auto-run-badge', `auto-run-badge--${taskRunBadge(task).tone}`]"
-              >
-                {{ taskRunBadge(task).label }}
-              </span>
-            </div>
-            <div class="auto-trow-timing">
-              <span v-if="task.nextRun" class="auto-trow-dans">
-                dans <strong>{{ timeUntil(task.nextRun) }}</strong>
-              </span>
-              <span v-else class="auto-trow-dans muted">en pause</span>
-              <span class="auto-trow-at">{{ task.nextRunFormatted }}</span>
-            </div>
-            <span :class="['auto-status-dot', task.enabled ? 'on' : 'off']"></span>
-          </div>
-        </div>
-
       </div>
     </div>
-    <!-- ======= END AUTOMATION OVERVIEW ======= -->
+    <!-- ======= END PRIORITY COCKPIT ======= -->
+
 
     <!-- ======= ALERTS PRIORITY STRIP (visible dès le haut) ======= -->
     <div v-if="visibleAlerts.length > 0" class="alert-priority-strip">
@@ -398,6 +410,198 @@
       </div>
     </div>
 
+    <section class="insight-grid">
+      <article class="insight-hero-card">
+        <!-- Score banner -->
+        <div :class="['insight-score-banner', protectionScoreClass]">
+          <div class="insight-score-banner-left">
+            <div class="insight-score-number-wrap">
+              <span :class="['insight-score-big', protectionScoreClass]">{{ insights.protection_score ?? 0 }}</span>
+              <span class="insight-score-of">/100</span>
+            </div>
+            <div class="insight-score-copy">
+              <strong>{{ protectionScoreText }}</strong>
+              <span>Score de protection global</span>
+            </div>
+          </div>
+          <div class="insight-score-gauge">
+            <div class="insight-score-gauge-track">
+              <div
+                :class="['insight-score-gauge-fill', protectionScoreClass]"
+                :style="{ width: `${insights.protection_score ?? 0}%` }"
+              ></div>
+              <div class="insight-score-gauge-marker" style="left:60%"><span>60</span></div>
+              <div class="insight-score-gauge-marker" style="left:85%"><span>85</span></div>
+            </div>
+            <div class="insight-score-gauge-labels">
+              <span class="gauge-label-bad">Faible</span>
+              <span class="gauge-label-mid">Moyen</span>
+              <span class="gauge-label-good">Bon</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown list -->
+        <div class="insight-breakdown-list">
+          <div
+            v-for="item in scoreBreakdown"
+            :key="item.key"
+            class="insight-breakdown-row"
+          >
+            <div :class="['insight-breakdown-row-icon', scoreItemClass(item.value)]">
+              <svg v-if="item.key === 'backup_health' || item.key === 'backup'" viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 1L2 3.5v4.5C2 11.6 4.7 14.8 8 16c3.3-1.2 6-4.4 6-8V3.5L8 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+              <svg v-else-if="item.key === 'sync' || item.key === 'synchronisation'" viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M13 8A5 5 0 1 1 8 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M13 3v5h-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg v-else-if="item.key === 'services'" viewBox="0 0 16 16" fill="none" width="14" height="14"><rect x="1.5" y="2.5" width="13" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M8 5.5v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+              <svg v-else viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.5V8.5l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="insight-breakdown-row-body">
+              <div class="insight-breakdown-row-top">
+                <span class="insight-breakdown-row-label">{{ scoreItemFriendlyLabel(item) }}</span>
+                <span :class="['insight-breakdown-row-score', scoreItemClass(item.value)]">
+                  {{ item.value }}/100
+                </span>
+              </div>
+              <div class="insight-breakdown-bar">
+                <div
+                  :class="['insight-breakdown-fill', scoreItemClass(item.value)]"
+                  :style="{ width: `${item.value}%` }"
+                ></div>
+              </div>
+              <small class="insight-breakdown-row-hint">{{ scoreItemHint(item) }}</small>
+            </div>
+            <div class="insight-breakdown-row-weight">
+              <span>{{ item.weight_percent }}%</span>
+              <small>du score</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="insight-footer-row">
+          <div class="insight-footer-note">
+            <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span>Périmètre :</span>
+            <strong>{{ insights.score_scope_label || syncSummary.scope_label || "-" }}</strong>
+          </div>
+          <div class="insight-footer-note">
+            <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2.5" width="13" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M8 5.5v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span>Services :</span>
+            <strong>{{ serviceHealthReadable }}</strong>
+          </div>
+        </div>
+      </article>
+
+      <article :class="['metric-card', 'smart-card', 'freshness-card', freshnessToneClass]">
+        <div class="smart-card-topline">
+          <div class="smart-card-topline-left">
+            <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.5V8.5l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span>Fraîcheur des backups</span>
+          </div>
+          <span :class="['smart-pill', freshnessToneClass]">{{ freshnessPill }}</span>
+        </div>
+        <strong :class="freshnessClass">{{ freshnessHeadline }}</strong>
+        <small>{{ freshnessSubline }}</small>
+        <div class="freshness-rail">
+          <div
+            v-for="stage in freshnessStages"
+            :key="stage.key"
+            :class="['freshness-stage', {
+              active: stage.key === activeFreshnessStage,
+              passed: stage.order < activeFreshnessStageOrder,
+            }]"
+          >
+            <strong>{{ stage.label }}</strong>
+            <span>{{ stage.range }}</span>
+          </div>
+        </div>
+        <div class="smart-meter">
+          <div class="smart-meter-track">
+            <div class="smart-meter-fill" :style="{ width: `${freshnessMeterValue}%` }"></div>
+          </div>
+          <span>{{ insights.freshness_score ?? 0 }}/100</span>
+        </div>
+        <p class="smart-copy">{{ freshnessNarrative }}</p>
+      </article>
+
+      <article :class="['metric-card', 'smart-card', 'restore-card', restoreReadinessClass]">
+        <div class="smart-card-topline">
+          <div class="smart-card-topline-left">
+            <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><path d="M13 8A5 5 0 1 1 8 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M13 3v5h-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Peut-on restaurer ?</span>
+          </div>
+          <span :class="['smart-pill', restoreReadinessClass]">{{ restoreReadinessPill }}</span>
+        </div>
+        <strong :class="restoreReadinessClass">{{ restoreReadinessLabel }}</strong>
+        <small>{{ restoreReadinessSubline }}</small>
+        <p class="smart-copy">{{ insights.restore_reason || `${insights.active_alerts ?? 0} alertes actives` }}</p>
+        <div v-if="restoreImpactItems.length" class="smart-detail-list">
+          <div
+            v-for="item in restoreImpactItems"
+            :key="`${item.name}-${item.message}`"
+            :class="['smart-detail-item', item.tone]"
+          >
+            <strong>{{ item.name }}</strong>
+            <span>{{ item.message }}</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="metric-card smart-card recommendation-card">
+        <div class="recommendation-card-topline">
+          <div class="recommendation-card-icon">
+            <svg viewBox="0 0 20 20" fill="none" width="20" height="20"><path d="M10 2l2 6h6l-5 3.5 2 6L10 14l-5 3.5 2-6L2 8h6L10 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="recommendation-card-label">Ce qu'on vous conseille</span>
+        </div>
+        <div class="recommendation-list">
+          <div
+            v-for="(rec, idx) in allRecommendations"
+            :key="idx"
+            :class="['recommendation-item', idx === 0 ? 'recommendation-item--primary' : 'recommendation-item--secondary']"
+          >
+            <span class="recommendation-rank">{{ idx + 1 }}</span>
+            <p class="recommendation-text">{{ rec }}</p>
+          </div>
+        </div>
+        <div class="recommendation-footer">
+          <span>Basé sur le backup, la cohérence et les services</span>
+          <span v-if="lastRefreshedLabel" class="recommendation-refresh-label">· {{ lastRefreshedLabel }}</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="guide-grid">
+      <article class="guide-card">
+        <div class="guide-step-icon">
+          <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M10 2L3 5v5c0 4.1 3 7.9 7 9 4-1.1 7-4.9 7-9V5l-7-3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          <span class="guide-step">1</span>
+        </div>
+        <div>
+          <strong>Sauvegarde</strong>
+          <p>Votre archive est-elle saine et complète ?</p>
+        </div>
+      </article>
+      <article class="guide-card">
+        <div class="guide-step-icon">
+          <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M3 10h14M10 3l7 7-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="guide-step">2</span>
+        </div>
+        <div>
+          <strong>Cohérence</strong>
+          <p>Le système correspond-il à la base de données ?</p>
+        </div>
+      </article>
+      <article class="guide-card">
+        <div class="guide-step-icon">
+          <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M3 15l4-6 4 3 4-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="guide-step">3</span>
+        </div>
+        <div>
+          <strong>Tendance</strong>
+          <p>CPU, RAM, backups et dérives dans le temps.</p>
+        </div>
+      </article>
+    </section>
+    </template>
     <section class="integrity-card">
       <div class="section-head">
         <div class="section-head-title-group">
@@ -546,7 +750,40 @@
         </div>
       </div>
 
-      <div class="sync-orbit">
+      <!-- Compact scope summary + collapsible expert pilot -->
+      <div class="sync-pilot-summary">
+        <div class="sps-left">
+          <div class="sps-eyebrow">SCOPE COURANT</div>
+          <strong class="sps-title">{{ syncSummary.scope_label || "Périmètre par défaut" }}</strong>
+          <span class="sps-sub">{{ syncSelectedCount }}/{{ availableSyncComponents.length }} modules · couverture {{ syncCoveragePercent }}%</span>
+        </div>
+        <div class="sps-presets">
+          <button
+            v-for="preset in syncPresets"
+            :key="preset.key"
+            :class="['sps-preset', { active: activeSyncPreset === preset.key }]"
+            type="button"
+            :title="preset.description"
+            @click="applySyncPreset(preset)"
+          >{{ preset.label }}</button>
+        </div>
+        <div class="sps-actions">
+          <button
+            type="button"
+            class="sps-toggle"
+            :aria-expanded="syncPilotExpanded ? 'true' : 'false'"
+            @click="syncPilotExpanded = !syncPilotExpanded"
+          >
+            <svg viewBox="0 0 12 12" width="11" height="11" fill="none" :style="{ transform: syncPilotExpanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform .2s' }"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            {{ syncPilotExpanded ? "Réduire" : "Personnaliser" }}
+          </button>
+          <button class="hero-btn hero-btn-primary sps-analyze" type="button" :disabled="loading" @click="refreshDashboardAnalysis">
+            Analyser
+          </button>
+        </div>
+      </div>
+
+      <div v-show="syncPilotExpanded" class="sync-orbit">
           <div class="sync-pilot-card">
             <div class="sync-pilot-head">
               <div>
@@ -879,198 +1116,6 @@
       </div>
     </section>
 
-    <section class="insight-grid">
-      <article class="insight-hero-card">
-        <!-- Score banner -->
-        <div :class="['insight-score-banner', protectionScoreClass]">
-          <div class="insight-score-banner-left">
-            <div class="insight-score-number-wrap">
-              <span :class="['insight-score-big', protectionScoreClass]">{{ insights.protection_score ?? 0 }}</span>
-              <span class="insight-score-of">/100</span>
-            </div>
-            <div class="insight-score-copy">
-              <strong>{{ protectionScoreText }}</strong>
-              <span>Score de protection global</span>
-            </div>
-          </div>
-          <div class="insight-score-gauge">
-            <div class="insight-score-gauge-track">
-              <div
-                :class="['insight-score-gauge-fill', protectionScoreClass]"
-                :style="{ width: `${insights.protection_score ?? 0}%` }"
-              ></div>
-              <div class="insight-score-gauge-marker" style="left:60%"><span>60</span></div>
-              <div class="insight-score-gauge-marker" style="left:85%"><span>85</span></div>
-            </div>
-            <div class="insight-score-gauge-labels">
-              <span class="gauge-label-bad">Faible</span>
-              <span class="gauge-label-mid">Moyen</span>
-              <span class="gauge-label-good">Bon</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Breakdown list -->
-        <div class="insight-breakdown-list">
-          <div
-            v-for="item in scoreBreakdown"
-            :key="item.key"
-            class="insight-breakdown-row"
-          >
-            <div :class="['insight-breakdown-row-icon', scoreItemClass(item.value)]">
-              <svg v-if="item.key === 'backup_health' || item.key === 'backup'" viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 1L2 3.5v4.5C2 11.6 4.7 14.8 8 16c3.3-1.2 6-4.4 6-8V3.5L8 1z" stroke="currentColor" stroke-width="1.2"/></svg>
-              <svg v-else-if="item.key === 'sync' || item.key === 'synchronisation'" viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M13 8A5 5 0 1 1 8 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M13 3v5h-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <svg v-else-if="item.key === 'services'" viewBox="0 0 16 16" fill="none" width="14" height="14"><rect x="1.5" y="2.5" width="13" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M8 5.5v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-              <svg v-else viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.5V8.5l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            </div>
-            <div class="insight-breakdown-row-body">
-              <div class="insight-breakdown-row-top">
-                <span class="insight-breakdown-row-label">{{ scoreItemFriendlyLabel(item) }}</span>
-                <span :class="['insight-breakdown-row-score', scoreItemClass(item.value)]">
-                  {{ item.value }}/100
-                </span>
-              </div>
-              <div class="insight-breakdown-bar">
-                <div
-                  :class="['insight-breakdown-fill', scoreItemClass(item.value)]"
-                  :style="{ width: `${item.value}%` }"
-                ></div>
-              </div>
-              <small class="insight-breakdown-row-hint">{{ scoreItemHint(item) }}</small>
-            </div>
-            <div class="insight-breakdown-row-weight">
-              <span>{{ item.weight_percent }}%</span>
-              <small>du score</small>
-            </div>
-          </div>
-        </div>
-
-        <div class="insight-footer-row">
-          <div class="insight-footer-note">
-            <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            <span>Périmètre :</span>
-            <strong>{{ insights.score_scope_label || syncSummary.scope_label || "-" }}</strong>
-          </div>
-          <div class="insight-footer-note">
-            <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2.5" width="13" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M8 5.5v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            <span>Services :</span>
-            <strong>{{ serviceHealthReadable }}</strong>
-          </div>
-        </div>
-      </article>
-
-      <article :class="['metric-card', 'smart-card', 'freshness-card', freshnessToneClass]">
-        <div class="smart-card-topline">
-          <div class="smart-card-topline-left">
-            <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.5V8.5l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            <span>Fraîcheur des backups</span>
-          </div>
-          <span :class="['smart-pill', freshnessToneClass]">{{ freshnessPill }}</span>
-        </div>
-        <strong :class="freshnessClass">{{ freshnessHeadline }}</strong>
-        <small>{{ freshnessSubline }}</small>
-        <div class="freshness-rail">
-          <div
-            v-for="stage in freshnessStages"
-            :key="stage.key"
-            :class="['freshness-stage', {
-              active: stage.key === activeFreshnessStage,
-              passed: stage.order < activeFreshnessStageOrder,
-            }]"
-          >
-            <strong>{{ stage.label }}</strong>
-            <span>{{ stage.range }}</span>
-          </div>
-        </div>
-        <div class="smart-meter">
-          <div class="smart-meter-track">
-            <div class="smart-meter-fill" :style="{ width: `${freshnessMeterValue}%` }"></div>
-          </div>
-          <span>{{ insights.freshness_score ?? 0 }}/100</span>
-        </div>
-        <p class="smart-copy">{{ freshnessNarrative }}</p>
-      </article>
-
-      <article :class="['metric-card', 'smart-card', 'restore-card', restoreReadinessClass]">
-        <div class="smart-card-topline">
-          <div class="smart-card-topline-left">
-            <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><path d="M13 8A5 5 0 1 1 8 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M13 3v5h-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Peut-on restaurer ?</span>
-          </div>
-          <span :class="['smart-pill', restoreReadinessClass]">{{ restoreReadinessPill }}</span>
-        </div>
-        <strong :class="restoreReadinessClass">{{ restoreReadinessLabel }}</strong>
-        <small>{{ restoreReadinessSubline }}</small>
-        <p class="smart-copy">{{ insights.restore_reason || `${insights.active_alerts ?? 0} alertes actives` }}</p>
-        <div v-if="restoreImpactItems.length" class="smart-detail-list">
-          <div
-            v-for="item in restoreImpactItems"
-            :key="`${item.name}-${item.message}`"
-            :class="['smart-detail-item', item.tone]"
-          >
-            <strong>{{ item.name }}</strong>
-            <span>{{ item.message }}</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="metric-card smart-card recommendation-card">
-        <div class="recommendation-card-topline">
-          <div class="recommendation-card-icon">
-            <svg viewBox="0 0 20 20" fill="none" width="20" height="20"><path d="M10 2l2 6h6l-5 3.5 2 6L10 14l-5 3.5 2-6L2 8h6L10 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-          </div>
-          <span class="recommendation-card-label">Ce qu'on vous conseille</span>
-        </div>
-        <div class="recommendation-list">
-          <div
-            v-for="(rec, idx) in allRecommendations"
-            :key="idx"
-            :class="['recommendation-item', idx === 0 ? 'recommendation-item--primary' : 'recommendation-item--secondary']"
-          >
-            <span class="recommendation-rank">{{ idx + 1 }}</span>
-            <p class="recommendation-text">{{ rec }}</p>
-          </div>
-        </div>
-        <div class="recommendation-footer">
-          <span>Basé sur le backup, la cohérence et les services</span>
-          <span v-if="lastRefreshedLabel" class="recommendation-refresh-label">· {{ lastRefreshedLabel }}</span>
-        </div>
-      </article>
-    </section>
-
-    <section class="guide-grid">
-      <article class="guide-card">
-        <div class="guide-step-icon">
-          <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M10 2L3 5v5c0 4.1 3 7.9 7 9 4-1.1 7-4.9 7-9V5l-7-3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-          <span class="guide-step">1</span>
-        </div>
-        <div>
-          <strong>Sauvegarde</strong>
-          <p>Votre archive est-elle saine et complète ?</p>
-        </div>
-      </article>
-      <article class="guide-card">
-        <div class="guide-step-icon">
-          <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M3 10h14M10 3l7 7-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span class="guide-step">2</span>
-        </div>
-        <div>
-          <strong>Cohérence</strong>
-          <p>Le système correspond-il à la base de données ?</p>
-        </div>
-      </article>
-      <article class="guide-card">
-        <div class="guide-step-icon">
-          <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M3 15l4-6 4 3 4-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span class="guide-step">3</span>
-        </div>
-        <div>
-          <strong>Tendance</strong>
-          <p>CPU, RAM, backups et dérives dans le temps.</p>
-        </div>
-      </article>
-    </section>
-    </template>
 
     <template v-if="activeMonitoringTab === 'analytics'">
       <section class="analytics-hero">
@@ -1283,10 +1328,10 @@
         </div>
       </article>
 
-      <article class="panel-card">
+      <article class="panel-card machine-card-v2">
         <div class="section-head compact">
           <div class="chart-head-left">
-            <div class="chart-icon chart-icon--blue">
+            <div :class="['chart-icon', cockpitMachineTone === 'ok' ? 'chart-icon--green' : cockpitMachineTone === 'warning' ? 'chart-icon--orange' : 'chart-icon--red']">
               <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 13v2M11 13v2M3 15h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
             </div>
             <h3>Santé de la machine</h3>
@@ -1297,100 +1342,182 @@
           </span>
         </div>
 
-        <div class="machine-hero">
-          <div class="machine-hero-main">
-            <span>Sante instantanee</span>
-            <strong>{{ machineHealthLabel }}</strong>
-            <small>{{ machineHealthText }}</small>
+        <!-- Hero gauge + identity card -->
+        <div :class="['mh-hero', `mh-hero--${cockpitMachineTone}`]">
+          <div class="mh-gauge">
+            <svg viewBox="0 0 80 80" width="92" height="92" class="mh-gauge-svg">
+              <circle cx="40" cy="40" r="34" stroke="#eef2f7" stroke-width="8" fill="none"/>
+              <circle
+                cx="40" cy="40" r="34"
+                :stroke="cockpitMachineTone === 'ok' ? '#16a34a' : cockpitMachineTone === 'warning' ? '#d29031' : '#c23b32'"
+                stroke-width="8" fill="none"
+                stroke-linecap="round"
+                :stroke-dasharray="`${machineHealthScore * 2.136} 213.6`"
+                transform="rotate(-90 40 40)"
+                style="transition: stroke-dasharray .8s cubic-bezier(.4,0,.2,1)"
+              />
+              <text x="40" y="44" text-anchor="middle" font-size="20" font-weight="700" :fill="cockpitMachineTone === 'ok' ? '#16a34a' : cockpitMachineTone === 'warning' ? '#d29031' : '#c23b32'">{{ machineHealthScore }}</text>
+              <text x="40" y="58" text-anchor="middle" font-size="8" fill="#94a3b8" font-weight="600">/100</text>
+            </svg>
           </div>
-          <div class="machine-hero-side">
-            <div>
-              <span>Etat VM</span>
-              <strong>{{ vmStatusTitle }}</strong>
-              <small>{{ vmStatusText }}</small>
-            </div>
-            <div>
-              <span>Uptime</span>
-              <strong>{{ uptimeReadableTitle }}</strong>
-              <small>{{ uptimeReadableText }}</small>
-            </div>
-            <div>
-              <span>Charge systeme</span>
-              <strong>{{ loadAverageReadableTitle }}</strong>
-              <small>{{ loadAverageReadableText }}</small>
-            </div>
-          </div>
-        </div>
-
-        <div class="resource-list">
-          <div class="resource-row">
-            <div class="resource-labels">
-              <span>CPU</span>
-              <strong>{{ liveMetrics.cpu }}%</strong>
-            </div>
-            <div class="resource-bar">
-              <div class="resource-fill resource-cpu" :style="{ width: `${liveMetrics.cpu}%` }"></div>
-            </div>
-          </div>
-
-          <div class="resource-row">
-            <div class="resource-labels">
-              <span>RAM</span>
-              <strong>{{ liveMetrics.memory }}%</strong>
-            </div>
-            <div class="resource-bar">
-              <div class="resource-fill resource-memory" :style="{ width: `${liveMetrics.memory}%` }"></div>
-            </div>
-          </div>
-
-          <div class="resource-row">
-            <div class="resource-labels">
-              <span>Disk /</span>
-              <strong>{{ diskUsagePercent(rootDisk.used_bytes, rootDisk.total_bytes) }}%</strong>
-            </div>
-            <div class="resource-bar">
-              <div
-                class="resource-fill resource-root"
-                :style="{ width: `${diskUsagePercent(rootDisk.used_bytes, rootDisk.total_bytes)}%` }"
-              ></div>
-            </div>
-          </div>
-
-          <div class="resource-row">
-            <div class="resource-labels">
-              <span>Disk backup</span>
-              <strong>{{ diskUsagePercent(backupDisk.used_bytes, backupDisk.total_bytes) }}%</strong>
-            </div>
-            <div class="resource-bar">
-              <div
-                class="resource-fill resource-backup"
-                :style="{ width: `${diskUsagePercent(backupDisk.used_bytes, backupDisk.total_bytes)}%` }"
-              ></div>
+          <div class="mh-hero-copy">
+            <span class="mh-eyebrow">SANTÉ INSTANTANÉE</span>
+            <strong :class="['mh-headline', `tone-${cockpitMachineTone}`]">{{ machineHealthLabel }}</strong>
+            <p class="mh-sub">{{ machineHealthText }}</p>
+            <div class="mh-tags">
+              <span class="mh-tag"><span class="mh-tag-dot"></span>{{ vmStatusTitle }}</span>
+              <span class="mh-tag"><span class="mh-tag-ico">↑</span>{{ uptimeReadableTitle }}</span>
+              <span class="mh-tag">{{ loadAverageReadableTitle }}</span>
             </div>
           </div>
         </div>
 
-        <div class="machine-explainer-grid">
-          <div>
-            <span>Uptime</span>
-            <strong>{{ uptimeReadableTitle }}</strong>
-            <small>Duree sans reboot.</small>
+        <!-- Resources detail with absolute values -->
+        <div class="mh-block">
+          <div class="mh-block-head">
+            <strong>Ressources en temps réel</strong>
+            <span>{{ liveMetrics.currentDate || "" }}</span>
           </div>
-          <div>
-            <span>Load average</span>
-            <strong>{{ loadAverageReadableTitle }}</strong>
-            <small>{{ loadAverageHumanHint }}</small>
+          <div class="mh-meters-grid">
+            <div class="mh-meter">
+              <div class="mh-meter-head">
+                <span class="mh-meter-lbl">CPU</span>
+                <strong :class="['mh-meter-val', meterTone(liveMetrics.cpu)]">{{ liveMetrics.cpu }}%</strong>
+              </div>
+              <div class="mh-meter-bar">
+                <div :class="['mh-meter-fill', meterTone(liveMetrics.cpu)]" :style="{ width: `${Math.min(100, liveMetrics.cpu)}%` }"></div>
+              </div>
+              <span class="mh-meter-hint">{{ cpuStateHint }}</span>
+            </div>
+
+            <div class="mh-meter">
+              <div class="mh-meter-head">
+                <span class="mh-meter-lbl">RAM</span>
+                <strong :class="['mh-meter-val', meterTone(liveMetrics.memory)]">{{ liveMetrics.memory }}%</strong>
+              </div>
+              <div class="mh-meter-bar">
+                <div :class="['mh-meter-fill', meterTone(liveMetrics.memory)]" :style="{ width: `${Math.min(100, liveMetrics.memory)}%` }"></div>
+              </div>
+              <span class="mh-meter-hint">{{ ramStateHint }}</span>
+            </div>
+
+            <div class="mh-meter">
+              <div class="mh-meter-head">
+                <span class="mh-meter-lbl">Disk /</span>
+                <strong :class="['mh-meter-val', meterTone(diskUsagePercent(rootDisk.used_bytes, rootDisk.total_bytes))]">
+                  {{ diskUsagePercent(rootDisk.used_bytes, rootDisk.total_bytes) }}%
+                </strong>
+              </div>
+              <div class="mh-meter-bar">
+                <div :class="['mh-meter-fill', meterTone(diskUsagePercent(rootDisk.used_bytes, rootDisk.total_bytes))]" :style="{ width: `${diskUsagePercent(rootDisk.used_bytes, rootDisk.total_bytes)}%` }"></div>
+              </div>
+              <span class="mh-meter-hint">{{ formatSize(rootDisk.used_bytes) }} / {{ formatSize(rootDisk.total_bytes) }}</span>
+            </div>
+
+            <div class="mh-meter">
+              <div class="mh-meter-head">
+                <span class="mh-meter-lbl">Disk backup</span>
+                <strong :class="['mh-meter-val', meterTone(diskUsagePercent(backupDisk.used_bytes, backupDisk.total_bytes))]">
+                  {{ diskUsagePercent(backupDisk.used_bytes, backupDisk.total_bytes) }}%
+                </strong>
+              </div>
+              <div class="mh-meter-bar">
+                <div :class="['mh-meter-fill', meterTone(diskUsagePercent(backupDisk.used_bytes, backupDisk.total_bytes))]" :style="{ width: `${diskUsagePercent(backupDisk.used_bytes, backupDisk.total_bytes)}%` }"></div>
+              </div>
+              <span class="mh-meter-hint">{{ formatSize(backupDisk.used_bytes) }} / {{ formatSize(backupDisk.total_bytes) }}</span>
+            </div>
           </div>
-          <div>
-            <span>Espace backup libre</span>
-            <strong>{{ formatSize(backupDisk.free_bytes) }}</strong>
-            <small>Capacite restante.</small>
+        </div>
+
+        <!-- Load average breakdown -->
+        <div class="mh-block">
+          <div class="mh-block-head">
+            <strong>Charge système</strong>
+            <span>moyenne sur 1 / 5 / 15 min</span>
           </div>
+          <div class="mh-load-grid">
+            <div class="mh-load-cell">
+              <span>1 min</span>
+              <strong :class="loadToneClass(loadAverage1)">{{ loadAverage1 !== null ? loadAverage1.toFixed(2) : '—' }}</strong>
+              <small>{{ loadAverageShortText(loadAverage1) }}</small>
+            </div>
+            <div class="mh-load-cell">
+              <span>5 min</span>
+              <strong :class="loadToneClass(loadAverage5)">{{ loadAverage5 !== null ? loadAverage5.toFixed(2) : '—' }}</strong>
+              <small>récent</small>
+            </div>
+            <div class="mh-load-cell">
+              <span>15 min</span>
+              <strong :class="loadToneClass(loadAverage15)">{{ loadAverage15 !== null ? loadAverage15.toFixed(2) : '—' }}</strong>
+              <small>tendance</small>
+            </div>
+          </div>
+          <p class="mh-load-hint">{{ loadAverageHumanHint }}</p>
+        </div>
+
+        <!-- Environment & runtime details -->
+        <div class="mh-block">
+          <div class="mh-block-head">
+            <strong>Environnement</strong>
+            <span>contexte d'exécution</span>
+          </div>
+          <div class="mh-env-grid">
+            <div class="mh-env-row">
+              <div class="mh-env-ico">⚙</div>
+              <div>
+                <span>Plateforme</span>
+                <strong>{{ vmStatusTitle }}</strong>
+                <small>{{ vmStatusText }}</small>
+              </div>
+            </div>
+            <div class="mh-env-row">
+              <div class="mh-env-ico">⏱</div>
+              <div>
+                <span>Uptime · dernier reboot</span>
+                <strong>{{ uptimeReadableTitle }}</strong>
+                <small>{{ uptimeReadableText }}</small>
+              </div>
+            </div>
+            <div class="mh-env-row">
+              <div class="mh-env-ico">💾</div>
+              <div>
+                <span>Espace backup libre</span>
+                <strong>{{ formatSize(backupDisk.free_bytes) }}</strong>
+                <small>{{ formatSize(rootDisk.free_bytes) }} libre sur /</small>
+              </div>
+            </div>
+            <div class="mh-env-row">
+              <div class="mh-env-ico">🛡</div>
+              <div>
+                <span>Services critiques</span>
+                <strong :class="serviceSummary.failing > 0 ? 'tone-warning' : 'tone-ok'">{{ serviceSummary.running }}/{{ serviceSummary.total }}</strong>
+                <small>{{ serviceSummary.failing > 0 ? `${serviceSummary.failing} en alerte` : 'tout opérationnel' }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pressure points -->
+        <div v-if="machinePressurePoints.length" class="mh-pressure">
+          <div class="mh-pressure-head">
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 2L2 14h12L8 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6v3M8 10.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <strong>Points de pression</strong>
+          </div>
+          <ul>
+            <li v-for="p in machinePressurePoints" :key="p.label" :class="`tone-${p.tone}`">
+              <strong>{{ p.label }}</strong>
+              <span>{{ p.detail }}</span>
+            </li>
+          </ul>
+        </div>
+        <div v-else class="mh-pressure mh-pressure--ok">
+          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Aucun point de pression — toutes les ressources sont dans les seuils.</span>
         </div>
       </article>
     </section>
 
-    <section v-if="activeMonitoringTab === 'overview'" class="alerts-card">
+    <section v-if="activeMonitoringTab === 'overview'" class="alerts-card alerts-card-v2">
       <div class="section-head compact">
         <div class="chart-head-left">
           <div :class="['chart-icon', visibleAlerts.length > 0 ? 'chart-icon--orange' : 'chart-icon--green']">
@@ -1401,6 +1528,31 @@
         <span :class="['state-pill', visibleAlerts.length > 0 ? 'warning' : 'ok']">
           {{ visibleAlerts.length > 0 ? `${visibleAlerts.length} non résolue${visibleAlerts.length > 1 ? 's' : ''}` : 'Tout est calme' }}
         </span>
+      </div>
+
+      <!-- Severity counters + filter pills -->
+      <div v-if="visibleAlerts.length > 0" class="alerts-controls">
+        <div class="alerts-counters">
+          <div :class="['alerts-counter', 'critical', { active: alertsFilter === 'critical' }]" @click="setAlertsFilter('critical')">
+            <span class="ac-dot"></span>
+            <strong>{{ alertsCountBySeverity.critical }}</strong>
+            <span class="ac-lbl">Critique{{ alertsCountBySeverity.critical > 1 ? 's' : '' }}</span>
+          </div>
+          <div :class="['alerts-counter', 'warning', { active: alertsFilter === 'warning' }]" @click="setAlertsFilter('warning')">
+            <span class="ac-dot"></span>
+            <strong>{{ alertsCountBySeverity.warning }}</strong>
+            <span class="ac-lbl">Attention</span>
+          </div>
+          <div :class="['alerts-counter', 'all', { active: alertsFilter === 'all' }]" @click="setAlertsFilter('all')">
+            <span class="ac-dot"></span>
+            <strong>{{ visibleAlerts.length }}</strong>
+            <span class="ac-lbl">Toutes</span>
+          </div>
+        </div>
+        <div class="alerts-filter-info">
+          <span v-if="alertsFilter !== 'all'">Filtré · </span>
+          <strong>{{ filteredAlerts.length }}</strong> visible{{ filteredAlerts.length > 1 ? 's' : '' }}
+        </div>
       </div>
 
       <div class="alerts-table-wrap">
@@ -1431,7 +1583,7 @@
               </td>
             </tr>
             <tr
-              v-for="alert in visibleAlerts"
+              v-for="alert in filteredAlerts"
               :key="alertKey(alert)"
               :class="['alert-row', `alert-row--${alert.severity}`]"
             >
@@ -1517,7 +1669,12 @@ export default {
         currentDate: "",
       },
       socket: null,
+      aiAnalysis: { scores: {}, trend: {} },
+      _aiPollTimer: null,
+      _aiWsDebounce: null,
       syncViewMode: "all",
+      syncPilotExpanded: false,
+      alertsFilter: "all",
       activeMonitoringTab: "overview",
       selectedSyncComponents: [],
       loadingTitle: "Please Wait...",
@@ -1529,6 +1686,7 @@ export default {
       socketMaxRetries: 3,
       lastRefreshedAt: null,
       scheduledTasks: [],
+      drpMetrics: null,
       dismissedAutomationNoticeKey: null,
       countdown: { h: 0, m: 0, s: 0 },
       nextRunTarget: null,
@@ -1554,7 +1712,7 @@ export default {
     },
     lastRestoreModeLabel() {
       if (!this.lastRestore) return "—";
-      const map = { safe: "Safe", complete: "Full", full: "Full", selected_components: "Custom" };
+      const map = { safe: "Safe", complete: "Full", ui_full: "Full UI-safe", full: "Full", selected_components: "Custom" };
       return map[this.lastRestore.mode] || this.lastRestore.mode || "—";
     },
     lastRestoreDurationLabel() {
@@ -1576,6 +1734,23 @@ export default {
         (alert) => !this.ignoredAlerts.includes(this.alertKey(alert))
       );
     },
+    alertsCountBySeverity() {
+      const counts = { critical: 0, warning: 0, other: 0 };
+      for (const a of this.visibleAlerts) {
+        if (a.severity === "critical") counts.critical++;
+        else if (a.severity === "warning") counts.warning++;
+        else counts.other++;
+      }
+      return counts;
+    },
+    filteredAlerts() {
+      const severityOrder = { critical: 0, warning: 1 };
+      const sorted = [...this.visibleAlerts].sort(
+        (a, b) => (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9)
+      );
+      if (this.alertsFilter === "all") return sorted;
+      return sorted.filter((a) => a.severity === this.alertsFilter);
+    },
     primaryAlert() {
       return this.visibleAlerts[0] || null;
     },
@@ -1592,6 +1767,74 @@ export default {
         disk_used_bytes: 0,
         disk_total_bytes: 0,
       };
+    },
+    rpoLabel() {
+      const hours = this.drpMetrics?.rpo?.hours;
+      if (hours === null || hours === undefined) return "—";
+      if (hours < 1) return `${Math.round(hours * 60)}min`;
+      if (hours < 48) return `${hours.toFixed(1)}h`;
+      return `${Math.round(hours / 24)}j`;
+    },
+    rpoToneClass() {
+      const status = this.drpMetrics?.rpo?.status;
+      if (status === "critical") return "tone-error";
+      if (status === "warning") return "tone-warning";
+      return "tone-ok";
+    },
+    drpGlobalTone() {
+      if (!this.drpMetrics) return "loading";
+      if (this.drpMetrics.rpo?.status === "critical" || Number(this.drpMetrics.services?.failing || 0) > 0) return "error";
+      if (this.drpMetrics.rpo?.status === "warning" || Number(this.drpMetrics.storage?.backup_used_pct || 0) >= 85) return "warning";
+      return "ok";
+    },
+    drpMetricCards() {
+      const m = this.drpMetrics || {};
+      const backupRate = Number(m.backups?.success_rate ?? 0);
+      const restoreRate = Number(m.restores?.success_rate ?? 0);
+      const storagePct = Number(m.storage?.backup_used_pct ?? 0);
+      const failing = Number(m.services?.failing ?? 0);
+      return [
+        {
+          key: "rpo",
+          label: "RPO actuel",
+          value: this.rpoLabel,
+          hint: m.rpo?.status === "critical" ? "hors SLA, backup requis" : m.rpo?.status === "warning" ? "à surveiller" : "dans le SLA",
+          tone: m.rpo?.status === "critical" ? "error" : m.rpo?.status === "warning" ? "warning" : "ok",
+          bar: m.rpo?.hours === null || m.rpo?.hours === undefined ? 0 : Math.max(8, Math.min(100, 100 - (Number(m.rpo.hours) / 48) * 100)),
+        },
+        {
+          key: "backup_rate",
+          label: "Succès backup",
+          value: `${backupRate.toFixed(0)}%`,
+          hint: `${m.backups?.successful ?? 0}/${m.backups?.total ?? 0} archives OK`,
+          tone: backupRate >= 95 ? "ok" : backupRate >= 75 ? "warning" : "error",
+          bar: Math.max(0, Math.min(100, backupRate)),
+        },
+        {
+          key: "restore_rate",
+          label: "Succès restore",
+          value: `${restoreRate.toFixed(0)}%`,
+          hint: `${m.restores?.successful ?? 0}/${m.restores?.total ?? 0} restores OK`,
+          tone: restoreRate >= 95 || Number(m.restores?.total || 0) === 0 ? "ok" : restoreRate >= 75 ? "warning" : "error",
+          bar: Number(m.restores?.total || 0) === 0 ? 0 : Math.max(0, Math.min(100, restoreRate)),
+        },
+        {
+          key: "storage",
+          label: "Stockage backup",
+          value: `${storagePct.toFixed(0)}%`,
+          hint: `${this.formatSize(m.storage?.backup_free_bytes)} libres`,
+          tone: storagePct >= 90 ? "error" : storagePct >= 75 ? "warning" : "ok",
+          bar: Math.max(0, Math.min(100, storagePct)),
+        },
+        {
+          key: "services",
+          label: "Services critiques",
+          value: failing > 0 ? `${failing} down` : "OK",
+          hint: `${m.services?.running ?? 0}/${m.services?.total ?? 0} actifs`,
+          tone: failing > 0 ? "error" : "ok",
+          bar: failing > 0 ? 100 : 100,
+        },
+      ];
     },
     backupDisk() {
       return this.overview.resources?.backup_disk || { used_bytes: 0, total_bytes: 0, free_bytes: 0 };
@@ -2115,6 +2358,61 @@ export default {
       if (cpu >= 90 || memory >= 90 || root >= 95) return "Sous pression";
       if (cpu >= 70 || memory >= 75 || root >= 85) return "A surveiller";
       return "Confortable";
+    },
+    aiVerdictLabel() {
+      return ({
+        stable:   "Stable",
+        watch:    "À surveiller",
+        high:     "Risque élevé",
+        critical: "Critique",
+      })[this.aiAnalysis?.scores?.level] || "Stable";
+    },
+    cockpitMachineTone() {
+      const cpu = Number(this.liveMetrics.cpu || 0);
+      const memory = Number(this.liveMetrics.memory || 0);
+      const root = Number(this.diskUsagePercent(this.rootDisk.used_bytes, this.rootDisk.total_bytes) || 0);
+      if (cpu >= 90 || memory >= 90 || root >= 95) return "error";
+      if (cpu >= 70 || memory >= 75 || root >= 85) return "warning";
+      return "ok";
+    },
+    machineHealthScore() {
+      const cpu = Number(this.liveMetrics.cpu || 0);
+      const memory = Number(this.liveMetrics.memory || 0);
+      const root = Number(this.diskUsagePercent(this.rootDisk.used_bytes, this.rootDisk.total_bytes) || 0);
+      const backup = Number(this.diskUsagePercent(this.backupDisk.used_bytes, this.backupDisk.total_bytes) || 0);
+      const worst = Math.max(cpu, memory, root, backup);
+      return Math.max(0, Math.min(100, Math.round(100 - worst * 0.85)));
+    },
+    loadAverage1()  { return this.loadAverageNumbers[0] ?? null; },
+    loadAverage5()  { return this.loadAverageNumbers[1] ?? null; },
+    loadAverage15() { return this.loadAverageNumbers[2] ?? null; },
+    cpuStateHint() {
+      const v = Number(this.liveMetrics.cpu || 0);
+      if (v >= 90) return "Pression CPU forte — vérifier les processus.";
+      if (v >= 70) return "Activité CPU soutenue.";
+      if (v >= 30) return "Charge CPU modérée.";
+      return "CPU au repos.";
+    },
+    ramStateHint() {
+      const v = Number(this.liveMetrics.memory || 0);
+      if (v >= 90) return "Mémoire saturée — risque de swap.";
+      if (v >= 75) return "Consommation RAM élevée.";
+      if (v >= 50) return "Utilisation RAM normale.";
+      return "RAM confortable.";
+    },
+    machinePressurePoints() {
+      const points = [];
+      const cpu = Number(this.liveMetrics.cpu || 0);
+      const memory = Number(this.liveMetrics.memory || 0);
+      const root = Number(this.diskUsagePercent(this.rootDisk.used_bytes, this.rootDisk.total_bytes) || 0);
+      const backup = Number(this.diskUsagePercent(this.backupDisk.used_bytes, this.backupDisk.total_bytes) || 0);
+      const load1 = this.loadAverage1;
+      if (cpu >= 70) points.push({ label: "CPU élevé", detail: `${cpu}% en cours — surveiller les pics.`, tone: cpu >= 90 ? "error" : "warning" });
+      if (memory >= 75) points.push({ label: "RAM sous pression", detail: `${memory}% utilisé — possibles swaps.`, tone: memory >= 90 ? "error" : "warning" });
+      if (root >= 85) points.push({ label: "Disque système saturé", detail: `${root}% rempli sur /.`, tone: root >= 95 ? "error" : "warning" });
+      if (backup >= 85) points.push({ label: "Stockage backup limité", detail: `${backup}% utilisé — appliquer la rétention.`, tone: backup >= 95 ? "error" : "warning" });
+      if (load1 !== null && load1 >= 2) points.push({ label: "Charge système élevée", detail: `Load 1 min à ${load1.toFixed(2)}.`, tone: load1 >= 4 ? "error" : "warning" });
+      return points;
     },
     machineHealthText() {
       return `CPU ${this.liveMetrics.cpu}% · RAM ${this.liveMetrics.memory}% · disque systeme ${this.diskUsagePercent(this.rootDisk.used_bytes, this.rootDisk.total_bytes)}%`;
@@ -2668,12 +2966,16 @@ export default {
     this.connectLiveSocket();
     this.startAutoRefresh();
     this.startCountdown();
+    this.fetchAiAnalysis();
+    this._aiPollTimer = window.setInterval(() => this.fetchAiAnalysis(), 8000);
     this.emitter.on("schedule-changed", () => this.fetchScheduledTasks());
   },
   beforeUnmount() {
     this._unmounted = true;
     this.stopAutoRefresh();
     this.stopCountdown();
+    if (this._aiPollTimer) { window.clearInterval(this._aiPollTimer); this._aiPollTimer = null; }
+    if (this._aiWsDebounce) { window.clearTimeout(this._aiWsDebounce); this._aiWsDebounce = null; }
     if (this.socket) {
       this.socket.close();
       this.socket = null;
@@ -2684,6 +2986,19 @@ export default {
     }
   },
   methods: {
+    async fetchAiAnalysis() {
+      try {
+        const res = await axios.get("/backup/risk-ai-analysis");
+        this.aiAnalysis = res.data || { scores: {}, trend: {} };
+      } catch (_) { /* keep last value */ }
+    },
+    openAiRiskCenter(e) {
+      try { localStorage.setItem("backup-tab", "AI Risk Center"); } catch {}
+      if (this.emitter?.emit) {
+        e?.preventDefault?.();
+        this.emitter.emit("reload-tabs");
+      }
+    },
     async fetchLastRestore() {
       try {
         const res = await axios.get("/backup/restore-history");
@@ -2845,6 +3160,7 @@ export default {
         nextOverview.sync = this.resolveSyncSummaryForDisplay(nextOverview.sync, skipSyncScan);
         this.overview = nextOverview;
         this.updateLiveMetrics(response.data?.live_metrics);
+        this.fetchDrpMetrics();
         this.lastRefreshedAt = Date.now();
         const syncedSelection = this.overview.sync?.selected_components || [];
         if (syncedSelection.length) {
@@ -2857,6 +3173,14 @@ export default {
         if (showLoading) {
           this.loading = false;
         }
+      }
+    },
+    async fetchDrpMetrics() {
+      try {
+        const response = await axios.get("/backup/metrics");
+        this.drpMetrics = response.data || null;
+      } catch (error) {
+        this.drpMetrics = null;
       }
     },
     hasUsableSyncSummary(summary) {
@@ -3112,6 +3436,13 @@ export default {
       this.socket.onmessage = (event) => {
         try {
           this.updateLiveMetrics(JSON.parse(event.data));
+          // Push-driven AI refresh: ~2s after each WS frame
+          if (!this._aiWsDebounce) {
+            this._aiWsDebounce = window.setTimeout(() => {
+              this._aiWsDebounce = null;
+              this.fetchAiAnalysis();
+            }, 2000);
+          }
         } catch (error) {
           console.error("backup dashboard live parse error", error);
         }
@@ -3221,6 +3552,28 @@ export default {
       if (status === "partial") return "warning";
       return "ok";
     },
+    meterTone(value) {
+      const v = Number(value || 0);
+      if (v >= 90) return "error";
+      if (v >= 70) return "warning";
+      return "ok";
+    },
+    loadToneClass(value) {
+      if (value === null || value === undefined) return "tone-neutral";
+      if (value >= 4) return "tone-error";
+      if (value >= 2) return "tone-warning";
+      return "tone-ok";
+    },
+    loadAverageShortText(value) {
+      if (value === null || value === undefined) return "—";
+      if (value < 1) return "léger";
+      if (value < 2) return "modéré";
+      if (value < 4) return "élevé";
+      return "saturé";
+    },
+    setAlertsFilter(filter) {
+      this.alertsFilter = filter;
+    },
     scoreItemClass(value) {
       const v = Number(value || 0);
       if (v >= 85) return "ok";
@@ -3320,3 +3673,192 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.drp-live-strip {
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.drp-live-strip--ok {
+  border-color: #bbf7d0;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 48%);
+}
+
+.drp-live-strip--warning {
+  border-color: #fde68a;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 48%);
+}
+
+.drp-live-strip--error {
+  border-color: #fecaca;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 48%);
+}
+
+.drp-live-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.drp-live-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.drp-live-title strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.drp-live-title small,
+.drp-live-updated {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.drp-live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.13);
+  flex: 0 0 auto;
+}
+
+.drp-live-strip--warning .drp-live-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.16);
+}
+
+.drp-live-strip--error .drp-live-dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.16);
+}
+
+.drp-live-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.drp-live-btn {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.drp-live-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.drp-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.drp-metric-card {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.drp-metric-label {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.drp-metric-card strong {
+  display: block;
+  margin-top: 5px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.drp-metric-card small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drp-metric-bar {
+  height: 5px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.drp-metric-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #22c55e;
+}
+
+.drp-metric-card.tone-warning .drp-metric-bar span {
+  background: #f59e0b;
+}
+
+.drp-metric-card.tone-error .drp-metric-bar span {
+  background: #ef4444;
+}
+
+.drp-metric-card.tone-warning strong {
+  color: #b45309;
+}
+
+.drp-metric-card.tone-error strong {
+  color: #b91c1c;
+}
+
+@media (max-width: 1100px) {
+  .drp-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .drp-live-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .drp-live-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .drp-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

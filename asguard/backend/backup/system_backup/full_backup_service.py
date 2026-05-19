@@ -40,7 +40,6 @@ class FullBackupService:
     BACKEND_ROOT = APP_ROOT / "backend"
 
     FULL_COMPONENTS = [
-        "vm_snapshot",
         "database",
         "firewall",
         "vpn",
@@ -117,7 +116,6 @@ class FullBackupService:
             "docker_state",
             "logs",
             "users_groups",
-            "vm_snapshot",
             # nouveaux composants UI/fonctionnels
             "ztna",
             "ldap",
@@ -135,7 +133,6 @@ class FullBackupService:
             (backup_dir / sub).mkdir(parents=True, exist_ok=True)
 
         runners = [
-            cls._backup_vm_snapshot,      # volontairement skipped
             cls._backup_database,
             cls._backup_firewall,
             cls._backup_vpn,
@@ -396,7 +393,6 @@ class FullBackupService:
     @classmethod
     def _component_runners(cls) -> dict:
         return {
-            "vm_snapshot": cls._backup_vm_snapshot,
             "database": cls._backup_database,
             "firewall": cls._backup_firewall,
             "vpn": cls._backup_vpn,
@@ -1020,22 +1016,6 @@ class FullBackupService:
                 return ComponentResult.failed(name, str(exc))
 
         return cls._build_component_result_from_file(name, relative, dest, t.elapsed)
-
-    @classmethod
-    def _backup_vm_snapshot(cls, backup_dir: Path) -> ComponentResult:
-        name = "vm_snapshot"
-        snapshot_info_file = backup_dir / "vm_snapshot" / "snapshot_info.json"
-        msg = "VM snapshot temporarily disabled to avoid blocking full backup."
-
-        try:
-            snapshot_info_file.write_text(
-                json.dumps({"status": "skipped", "message": msg}, indent=2),
-                encoding="utf-8",
-            )
-        except Exception as exc:
-            return ComponentResult.failed(name, f"Could not write snapshot_info.json: {exc}")
-
-        return ComponentResult.skipped(name, msg)
 
     # -------------------------------------------------------------------------
     # New UI-aligned modules

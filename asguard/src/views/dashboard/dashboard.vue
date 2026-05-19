@@ -775,8 +775,9 @@ export default {
     };
 
     const initializeWebSocket = () => {
+      const protocol = window.location.protocol === "https:" ? "wss" : "ws";
       state.socket = new WebSocket(
-        "wss://" + window.location.host + "/ws/data/"
+        protocol + "://" + window.location.host + "/ws/data/"
       );
 
       state.socket.onopen = () => {

@@ -10,6 +10,9 @@ from channels.db import database_sync_to_async
 import psutil
 logger = logging.getLogger(__name__) 
 class DashboardConsumer(AsyncWebsocketConsumer):
+    _last_saved_at = 0.0
+    _save_lock = asyncio.Lock()
+
     async def connect(self):
         logger.info('WebSocket connection established')
         await self.accept()
@@ -46,8 +49,9 @@ class DashboardConsumer(AsyncWebsocketConsumer):
        
     async def start_data_loop_global_chart(self):
         try:
+            psutil.cpu_percent(interval=None)
             while True:
-                cpu_percentage = psutil.cpu_percent(interval=1)
+                cpu_percentage = psutil.cpu_percent(interval=None)
                 memory_percentage = psutil.virtual_memory().percent
                 # Get the current timestamp
                 current_time = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -81,8 +85,12 @@ class DashboardConsumer(AsyncWebsocketConsumer):
                     "load_average": load_average,
                     "current_date":current_date
                 }
-            # Save the data to the database asynchronously
-                await self.save_system_usage(data)
+                # Keep history useful without writing once per second per open tab.
+                now = time.time()
+                async with self.__class__._save_lock:
+                    if now - self.__class__._last_saved_at >= 5:
+                        await self.save_system_usage(data)
+                        self.__class__._last_saved_at = now
                 # Send the JSON data to the WebSocket client
                    # Send to client
                 try:

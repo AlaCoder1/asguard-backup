@@ -1,10 +1,67 @@
 from datetime import datetime
+from pathlib import Path
+import json
 import re
 import threading
+import time
 
 from backend.waf.constant_variables import PATH_LOG_WAF
 from backend.waf.models import AlertWaf
 from utils.commands_utils import read_file_from_system
+
+# WAF notification throttling. The page-load sync was emailing on every visit:
+# once for the whole accumulated modsec backlog (hundreds of "violations" that
+# are really just inspected LAN traffic), then again on every refresh. State is
+# kept on /var/log (root fs, not the snapshotable LV) so it is independent of
+# both Postgres and snapshot restores.
+WAF_NOTIFY_STATE = Path("/var/log/asguard/waf_alert_notify.json")
+WAF_NOTIFY_THROTTLE_SECONDS = 1800   # at most one WAF email per 30 min
+
+
+def _waf_notify_state() -> dict:
+    try:
+        if WAF_NOTIFY_STATE.exists():
+            return json.loads(WAF_NOTIFY_STATE.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
+def _save_waf_notify_state(state: dict) -> None:
+    try:
+        WAF_NOTIFY_STATE.parent.mkdir(parents=True, exist_ok=True)
+        WAF_NOTIFY_STATE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _maybe_notify_waf(new_count: int, samples: list) -> None:
+    """Send a WAF notification only when it is actually meaningful:
+      • The first sync ever flushes the whole modsec backlog into the DB —
+        that is not a live attack, so it is recorded silently (no email).
+      • Afterwards, at most one email per WAF_NOTIFY_THROTTLE_SECONDS.
+    The AlertWaf rows are still created on every sync — only the email/ntfy
+    side-effect is gated, so the WAF dashboard stays accurate."""
+    now = time.time()
+    state = _waf_notify_state()
+
+    if not state:
+        # Baseline run — establish state without paging the operator.
+        _save_waf_notify_state({"last_sent": 0.0, "initialized_at": now})
+        return
+
+    if now - float(state.get("last_sent", 0)) < WAF_NOTIFY_THROTTLE_SECONDS:
+        return
+
+    state["last_sent"] = now
+    _save_waf_notify_state(state)
+
+    from backend.backup.notifications import notify_waf_alert
+    threading.Thread(
+        target=notify_waf_alert,
+        args=(new_count, samples),
+        daemon=True,
+    ).start()
 
 
 def synchronize_database_waf_alert():
@@ -39,12 +96,7 @@ def synchronize_database_waf_alert():
             new_alert_fields.append(log_fields)
 
     if new_alert_fields:
-        from backend.backup.notifications import notify_waf_alert
-        threading.Thread(
-            target=notify_waf_alert,
-            args=(len(new_alert_fields), new_alert_fields),
-            daemon=True,
-        ).start()
+        _maybe_notify_waf(len(new_alert_fields), new_alert_fields)
 
 
 def extract_alert_fields(log: str, log_id: str):

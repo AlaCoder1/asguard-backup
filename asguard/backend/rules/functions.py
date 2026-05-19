@@ -402,6 +402,100 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
       else:
          msg=f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
          status=400
-         
+
       return msg,status
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Rebuild nftables from the database
+# ─────────────────────────────────────────────────────────────────────────────
+# Called after an LVM snapshot restore so the runtime nftables state (kernel +
+# /etc/rules/<ifname>/nftables.conf) matches the rolled-back DB. Without this,
+# the on-disk file contains whatever was captured in the snapshot — which can
+# legitimately include rules that were ALREADY orphaned at snapshot time (rule
+# present in file but missing from DB, e.g. left over from a partial nft sync).
+# Making the DB the single source of truth eliminates that drift.
+def rebuild_nft_from_db(ifname: str) -> dict:
+    """Flush table inet filter_<ifname>, recreate its chains, and re-apply every
+    enabled Rule for this interface in `position` order. Final kernel state is
+    dumped back to /etc/rules/<ifname>/nftables.conf so the persistent file is
+    also realigned with the DB.
+
+    Returns {"status": "success"|"error", "ifname": ..., "applied": N,
+             "errors": [str]}.
+    """
+    from backend.rules.models import Rule
+    from backend.network.models import Interface
+
+    errors: list[str] = []
+
+    # Resolve the Interface row. Some installs don't have a row per nft table
+    # (e.g. ens33 exists in fstab but not in the Interface model) — in that
+    # case we still flush + recreate empty chains so stale rules disappear.
+    iface = Interface.objects.filter(ifname=ifname).first()
+
+    # 1. Flush the existing table. `nft delete table` is idempotent (silent if
+    # missing); we then re-init structures via init_file_nftables which creates
+    # the table + four chains and writes a fresh /etc/rules/<ifname>/nftables.conf.
+    run_command(f"sudo nft delete table inet filter_{ifname} 2>/dev/null || true")
+    run_command(f"sudo rm -f /etc/rules/{ifname}/nftables.conf")
+    init_err = init_file_nftables(ifname)
+    if init_err is not True:
+        return {"status": "error", "ifname": ifname, "applied": 0,
+                "errors": [f"init_file_nftables: {init_err}"]}
+
+    # 2. Re-apply enabled DB rules in their stored position order. Use the raw
+    # `rule` column — it already holds the final nft expression that was
+    # serialized at create/update time (with the log prefix baked in).
+    applied = 0
+    if iface is not None:
+        rules_qs = (Rule.objects
+                    .filter(interface=iface, rule_status=True)
+                    .order_by("type_rule", "position", "id"))
+        for r in rules_qs:
+            if not r.rule or not r.type_rule:
+                continue
+            cmd = f"sudo nft add rule inet filter_{ifname} {r.type_rule} {r.rule}"
+            _, err = run_command(cmd)
+            if err:
+                errors.append(f"rule id={r.id}: {err.strip()}")
+            else:
+                applied += 1
+
+    # 3. Persist the final kernel state to the include file so a reboot or a
+    # nft reload from /etc/nftables.conf produces the same view.
+    run_command(
+        f"sudo nft list table inet filter_{ifname} "
+        f"> /etc/rules/{ifname}/nftables.conf"
+    )
+
+    return {
+        "status":  "success" if not errors else "partial",
+        "ifname":  ifname,
+        "applied": applied,
+        "errors":  errors,
+    }
+
+
+def rebuild_nft_from_db_all() -> dict:
+    """Rebuild nftables for every Interface in the DB. Returns an aggregate
+    `{"status", "interfaces": [{...per-iface result...}], "total_applied", "total_errors"}`.
+    Safe to call from any post-restore hook — never raises."""
+    from backend.network.models import Interface
+    results = []
+    total_applied = 0
+    total_errors = 0
+    try:
+        for iface in Interface.objects.exclude(ifname__isnull=True).exclude(ifname=""):
+            r = rebuild_nft_from_db(iface.ifname)
+            results.append(r)
+            total_applied += r.get("applied", 0)
+            total_errors  += len(r.get("errors", []))
+    except Exception as exc:  # never block the caller (e.g. restore_snapshot)
+        return {"status": "error", "error": str(exc),
+                "interfaces": results, "total_applied": total_applied,
+                "total_errors": total_errors}
+    status = "success" if total_errors == 0 else "partial"
+    return {"status": status, "interfaces": results,
+            "total_applied": total_applied, "total_errors": total_errors}
 

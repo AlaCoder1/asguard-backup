@@ -375,6 +375,61 @@
           </div>
         </div>
 
+        <!-- Preview panel — shown only for the "complete" UI-safe restore.
+             Tells the operator EXACTLY what will be touched and which engine
+             components are intentionally protected, with the technical reason.
+             Backed by GET /backup/<id>/restore-preview. -->
+        <div v-if="restoreMode === 'complete' && restorePreview" class="restore-preview">
+          <div class="restore-preview-head">
+            <strong>Aperçu — ce qui sera fait</strong>
+            <span class="restore-preview-badge restore-preview-badge--ui">mode ui_full</span>
+          </div>
+
+          <div class="restore-preview-cols">
+            <div class="restore-preview-col restore-preview-col--ok">
+              <div class="restore-preview-col-head">
+                <span class="restore-preview-dot restore-preview-dot--ok"></span>
+                <span><strong>{{ restorePreview.counts.included }}</strong> composants restaurés</span>
+                <span class="restore-preview-size">{{ restorePreview.total_included_mb }} MB</span>
+              </div>
+              <div class="restore-preview-list">
+                <span v-for="c in restorePreview.included" :key="c.name" class="restore-preview-chip restore-preview-chip--ok">
+                  {{ c.name }}
+                </span>
+              </div>
+            </div>
+
+            <div class="restore-preview-col restore-preview-col--skip">
+              <div class="restore-preview-col-head">
+                <span class="restore-preview-dot restore-preview-dot--skip"></span>
+                <span><strong>{{ restorePreview.counts.excluded }}</strong> composants moteur protégés</span>
+                <span class="restore-preview-size">{{ restorePreview.total_excluded_mb }} MB</span>
+              </div>
+              <div class="restore-preview-skip-list">
+                <details v-for="c in restorePreview.excluded" :key="c.name" class="restore-preview-skip-item">
+                  <summary>
+                    <span class="restore-preview-skip-name">{{ c.name }}</span>
+                    <span class="restore-preview-skip-label">{{ c.label }}</span>
+                    <span class="restore-preview-skip-size">{{ c.size_mb }} MB</span>
+                  </summary>
+                  <p class="restore-preview-skip-reason">{{ c.reason }}</p>
+                </details>
+              </div>
+            </div>
+          </div>
+
+          <div class="restore-preview-footer">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="8" r="6.5"/>
+              <path d="M8 5v4M8 11v.5"/>
+            </svg>
+            <span>{{ restorePreview.dr_hint }}</span>
+          </div>
+        </div>
+        <div v-else-if="restoreMode === 'complete' && restorePreviewLoading" class="restore-preview restore-preview--loading">
+          Calcul de l'aperçu en cours…
+        </div>
+
         <div class="action-modal-footer">
           <button class="btn btn-light" type="button" :disabled="loading" @click="closeRestoreDialog">
             Annuler
@@ -705,6 +760,8 @@ export default {
       restoreDialog: false,
       restoreTarget: null,
       restoreMode: "complete",
+      restorePreview: null,        // { included, excluded, counts, dr_hint, ... }
+      restorePreviewLoading: false,
       restoreComponents: [],
       selectedRestoreComponents: [],
       restoreMonitor: {
@@ -829,19 +886,19 @@ export default {
           note: "Ce mode apparait seulement quand le backup contient aussi la couche application.",
         },
         complete: {
-          eyebrow: "Restore integral",
+          eyebrow: "Restore UI-safe",
           title: this.restoreTargetHasApplication
-            ? "Restauration full du backup"
+            ? "Restauration full sans couper le moteur"
             : "Restauration de tout le contenu disponible",
           description: this.restoreTargetHasApplication
-            ? "Remet tout le backup, application comprise, avec verification et suivi du job de restauration."
+            ? "Restaure les donnees et configurations appliance sans remplacer l'application, les services de boot ou le socle /etc global a chaud."
             : "Applique tout ce que ce backup contient. Si l'application n'est pas dedans, elle n'est pas touchee.",
           highlights: this.restoreTargetHasApplication
-            ? ["Application restauree", "Tous les composants disponibles", "Reprise complete"]
+            ? ["Interface preservee", "Boot services non touches", "Config metier restauree"]
             : ["Tous les composants du backup", "Sans couche application", "Restore global du contenu disponible"],
-          noteLabel: "Lecture du backup",
+          noteLabel: "Protection UI",
           note: this.restoreTargetHasApplication
-            ? "Ce backup embarque l'application, donc tu peux choisir safe, full ou custom."
+            ? "Le backup reste Full DR; depuis l'UI, les composants moteur sont gardes pour un restore offline/console."
             : "Ce backup ne contient pas l'application, donc seuls full et custom sont proposes.",
         },
         custom: {
@@ -1388,11 +1445,29 @@ export default {
       this.restoreMode = "complete";
       this.restoreComponents = [];
       this.selectedRestoreComponents = [];
+      this.restorePreview = null;
       this.restoreDialog = true;
       try {
-        await this.fetchComponentCatalog(backup.id);
+        await Promise.all([
+          this.fetchComponentCatalog(backup.id),
+          this.fetchRestorePreview(backup.id),
+        ]);
       } catch (error) {
         this.notify("Impossible de charger les composants restaurables.", "error");
+      }
+    },
+
+    // Pre-restore preview — fetched once when the dialog opens. Tells the
+    // operator EXACTLY what the UI-safe restore will and will not touch.
+    async fetchRestorePreview(backupId) {
+      this.restorePreviewLoading = true;
+      try {
+        const { data } = await axios.get(`/backup/${backupId}/restore-preview`);
+        this.restorePreview = data;
+      } catch (e) {
+        this.restorePreview = null;
+      } finally {
+        this.restorePreviewLoading = false;
       }
     },
     closeRestoreDialog() {
@@ -1410,7 +1485,7 @@ export default {
       try {
         let response;
         const modeLabel = this.restoreMode === "complete"
-          ? "Full restore"
+          ? "Full UI-safe restore"
           : this.restoreMode === "custom"
             ? "Custom restore"
             : "Safe restore";

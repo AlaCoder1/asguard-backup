@@ -1,9 +1,26 @@
 from django.urls import path
-from . import views
+from . import views, views_vm_snapshot, views_lvm_migration, views_alerts, views_logs
 
 urlpatterns = [
     path("ping", views.ping, name="backupPing"),
+
+    # Alerts & Mailing config (channels, subscription matrix, quiet hours, test)
+    path("alerts/config",                     views_alerts.alerts_config,        name="alertsConfig"),
+    path("alerts/test/<str:channel>",         views_alerts.alerts_test_channel,  name="alertsTestChannel"),
+
+    # Logs / audit timeline / system tail / chaos lab
+    path("logs/timeline",                     views_logs.logs_timeline,          name="logsTimeline"),
+    path("logs/stats",                        views_logs.logs_stats,             name="logsStats"),
+    path("logs/tail",                         views_logs.logs_tail,              name="logsTail"),
+    path("logs/chaos/scenarios",              views_logs.chaos_scenarios,        name="logsChaosScenarios"),
+    path("logs/chaos/run/<str:scenario>",     views_logs.chaos_run,              name="logsChaosRun"),
+    path("logs/chaos/status/<str:job_id>",    views_logs.chaos_status,           name="logsChaosStatus"),
     path("dashboard-overview", views.get_dashboard_overview, name="getBackupDashboardOverview"),
+    path("metrics", views.get_backup_metrics, name="getBackupMetrics"),
+    path("metrics/prometheus", views.get_backup_metrics_prometheus, name="getBackupMetricsPrometheus"),
+    path("events", views.get_backup_events, name="getBackupEvents"),
+    path("risk-ai-analysis", views.get_risk_ai_analysis, name="getRiskAiAnalysis"),
+    path("risk-action/<str:action_key>", views.run_risk_action, name="runRiskAction"),
     path("getAllBackups", views.get_all_backups, name="getAllBackups"),
 
     path("create-db-backup", views.create_db_backup, name="createDbBackup"),
@@ -20,6 +37,8 @@ urlpatterns = [
     # COMPLETE restore = avec application
     path("<str:backup_id>/restore-full", views.restore_full_backup, name="restoreFullBackup"),
     path("<str:backup_id>/restore-components", views.restore_components, name="restoreComponents"),
+    # Pre-restore preview: what WILL be restored vs what will be SKIPPED + why.
+    path("<str:backup_id>/restore-preview", views.restore_preview, name="restorePreview"),
 
     path("restore-full-status/<str:job_id>", views.get_restore_full_status, name="getRestoreFullStatus"),
     path("progress/<str:job_id>", views.get_backup_progress, name="getBackupProgress"),
@@ -46,4 +65,32 @@ urlpatterns = [
     path("cloud/backups",                 views.cloud_list,           name="cloudList"),
     path("cloud/sync/<str:backup_id>",    views.cloud_sync,           name="cloudSync"),
     path("cloud/history",                 views.cloud_backup_history, name="cloudBackupHistory"),
+
+    # VM Snapshots
+    path("vm-snapshot/running-jobs",                  views_vm_snapshot.vm_snapshot_running_jobs,    name="vmSnapshotRunningJobs"),
+    path("vm-snapshot/last-restore",                  views_vm_snapshot.vm_snapshot_last_restore,    name="vmSnapshotLastRestore"),
+    path("vm-snapshot/info",                         views_vm_snapshot.vm_snapshot_info,           name="vmSnapshotInfo"),
+    path("vm-snapshot/test-connection",              views_vm_snapshot.vm_snapshot_test_connection, name="vmSnapshotTestConnection"),
+    path("vm-snapshot/list",                         views_vm_snapshot.vm_snapshot_list,           name="vmSnapshotList"),
+    path("vm-snapshot/verify",                       views_vm_snapshot.vm_snapshot_verify,         name="vmSnapshotVerify"),
+    path("vm-snapshot/create",                       views_vm_snapshot.vm_snapshot_create,         name="vmSnapshotCreate"),
+    path("vm-snapshot/progress/<str:job_id>",        views_vm_snapshot.vm_snapshot_progress,       name="vmSnapshotProgress"),
+    path("vm-snapshot/config",                       views_vm_snapshot.vm_snapshot_config,         name="vmSnapshotConfig"),
+    path("vm-snapshot/<str:snap_id>/restore",        views_vm_snapshot.vm_snapshot_restore,        name="vmSnapshotRestore"),
+    path("vm-snapshot/restore-status/<str:job_id>",              views_vm_snapshot.vm_snapshot_restore_status, name="vmSnapshotRestoreStatus"),
+    path("vm-snapshot/<str:snap_id>/delete",         views_vm_snapshot.vm_snapshot_delete,         name="vmSnapshotDelete"),
+    path("vm-snapshot/<str:job_id>/cancel",          views_vm_snapshot.vm_snapshot_cancel,          name="vmSnapshotCancel"),
+
+    # LVM coverage migration — extends snapshot scope to system configs
+    path("lvm-migration/status",                  views_lvm_migration.lvm_migration_status,   name="lvmMigrationStatus"),
+    path("lvm-migration/plan",                    views_lvm_migration.lvm_migration_plan,     name="lvmMigrationPlan"),
+    path("lvm-migration/config",                  views_lvm_migration.lvm_migration_config,   name="lvmMigrationConfig"),
+    path("lvm-migration/apply",                   views_lvm_migration.lvm_migration_apply,    name="lvmMigrationApply"),
+    path("lvm-migration/progress/<str:job_id>",   views_lvm_migration.lvm_migration_progress, name="lvmMigrationProgress"),
+    path("lvm-migration/rollback",                views_lvm_migration.lvm_migration_rollback, name="lvmMigrationRollback"),
+    path("lvm-migration/audit",                   views_lvm_migration.lvm_migration_audit,    name="lvmMigrationAudit"),
+
+    # In-app alerts
+    path("in-app-alerts",            views.get_in_app_alerts,       name="getInAppAlerts"),
+    path("in-app-alerts/mark-read",  views.mark_in_app_alerts_read, name="markInAppAlertsRead"),
 ]

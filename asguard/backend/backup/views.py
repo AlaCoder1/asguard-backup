@@ -9,7 +9,16 @@ import threading
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from backend.backup.notifications import notify_backup_started, notify_backup_completed, notify_backup_scheduled, notify_missed_backup_catchup
+from backend.backup.notifications import (
+    notify_backup_started,
+    notify_backup_completed,
+    notify_backup_scheduled,
+    notify_missed_backup_catchup,
+    notify_vm_resource_risk,
+    notify_vm_resource_resolved,
+)
+from backend.backup.observability import append_backup_event, read_backup_events
+from backend.backup.risk_ai import analyze_vm_and_services
 from backend.backup.system_backup.cloud_storage import CloudStorageService
 
 from django.http import JsonResponse, FileResponse
@@ -43,6 +52,8 @@ logger = logging.getLogger(__name__)
 
 BACKUP_DIR = Path("/var/backups/asguard")
 BACKUP_PATTERNS = ["asguard_backup_*.dump", "asguard_db_*.dump"]
+RESOURCE_RISK_STATE_FILE = Path("/var/log/asguard/resource_risk_notify.json")
+IN_APP_ALERTS_FILE = Path("/var/backups/asguard/in_app_alerts.json")
 
 RESTORE_JOBS_DIR = BACKUP_DIR / "restore_jobs"
 BACKUP_JOBS_DIR = BACKUP_DIR / "backup_jobs"
@@ -50,6 +61,13 @@ SYNC_SUMMARY_CACHE_FILE = BACKUP_DIR / "dashboard_last_sync_summary.json"
 FULL_RESTORE_RUNNER = Path("/asguard/asguard/full_restore_runner.py")
 PYTHON_BIN = "/usr/bin/python"
 _LAST_DASHBOARD_SYNC_SUMMARY = None
+_BACKUP_RESULTS_CACHE = {"expires_at": 0.0, "results": None}
+_DASHBOARD_SERVICES_CACHE = {"expires_at": 0.0, "services": None}
+_DASHBOARD_OVERVIEW_CACHE = {}
+_CACHE_LOCK = threading.RLock()
+BACKUP_RESULTS_CACHE_SECONDS = 8
+DASHBOARD_SERVICES_CACHE_SECONDS = 8
+DASHBOARD_OVERVIEW_CACHE_SECONDS = 4
 
 # Components that are expected to be absent/skipped on a firewall appliance.
 # Their absence does NOT degrade backup status or restore readiness.
@@ -253,6 +271,12 @@ def _normalize_backup_metadata(backup_dir: Path, metadata: dict) -> dict:
 
 
 def _collect_backup_results() -> list[dict]:
+    now = time.time()
+    with _CACHE_LOCK:
+        cached = _BACKUP_RESULTS_CACHE.get("results")
+        if cached is not None and now < float(_BACKUP_RESULTS_CACHE.get("expires_at", 0)):
+            return list(cached)
+
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     results = []
 
@@ -323,7 +347,17 @@ def _collect_backup_results() -> list[dict]:
             })
 
     results.sort(key=lambda x: x["modified_at"], reverse=True)
+    with _CACHE_LOCK:
+        _BACKUP_RESULTS_CACHE["results"] = list(results)
+        _BACKUP_RESULTS_CACHE["expires_at"] = time.time() + BACKUP_RESULTS_CACHE_SECONDS
     return results
+
+
+def _invalidate_backup_results_cache() -> None:
+    with _CACHE_LOCK:
+        _BACKUP_RESULTS_CACHE["results"] = None
+        _BACKUP_RESULTS_CACHE["expires_at"] = 0.0
+        _DASHBOARD_OVERVIEW_CACHE.clear()
 
 
 def _safe_parse_iso_datetime(value: str | None):
@@ -444,6 +478,12 @@ def _build_restore_verification(job_payload: dict) -> dict:
 
 
 def _load_dashboard_services() -> list[dict]:
+    now = time.time()
+    with _CACHE_LOCK:
+        cached = _DASHBOARD_SERVICES_CACHE.get("services")
+        if cached is not None and now < float(_DASHBOARD_SERVICES_CACHE.get("expires_at", 0)):
+            return list(cached)
+
     try:
         info = json.loads(get_system_infomations())
         services = []
@@ -556,6 +596,9 @@ def _load_dashboard_services() -> list[dict]:
         ]
         services.extend(runtime_checks)
         services.sort(key=lambda item: (0 if item.get("kind") == "service" else 1, item.get("label") or item.get("name") or ""))
+        with _CACHE_LOCK:
+            _DASHBOARD_SERVICES_CACHE["services"] = list(services)
+            _DASHBOARD_SERVICES_CACHE["expires_at"] = time.time() + DASHBOARD_SERVICES_CACHE_SECONDS
         return services
     except Exception:
         logger.exception("Failed to load dashboard services")
@@ -1503,6 +1546,303 @@ def _get_live_metrics() -> dict:
     }
 
 
+# Sustained-pressure thresholds. The frontend (TheHeading.vue) polls
+# /backup/dashboard-overview every 30 s, so each streak tick ≈ 30 s. A signal
+# must stay above its line for RESOURCE_RISK_REQUIRED_STREAK consecutive
+# polls before we fire a notification. This kills the "spike → instant alert
+# → score back to 17/100" false-positive loop. Single-sample spikes are
+# visible in the UI but no longer page the operator.
+RESOURCE_RISK_POLL_SECONDS = 30
+RESOURCE_RISK_REQUIRED_STREAK = 4        # ~2 min sustained
+RESOURCE_RISK_CRITICAL_CPU = 95          # %
+RESOURCE_RISK_HIGH_CPU = 92              # %
+RESOURCE_RISK_CRITICAL_MEM = 95          # %
+RESOURCE_RISK_HIGH_MEM = 92              # %
+# Resolution hysteresis: how many consecutive polls with no alert before we
+# declare the incident resolved. Without this, a brief CPU dip from 100→91→100
+# triggers a "résolu" notification then a fresh critical alert seconds later —
+# flapping that spams the operator.
+RESOURCE_RISK_RESOLVE_STREAK = 3         # ~1m30s sustained calm
+# Global cooldown: minimum interval between two alerts of any kind. Even if
+# incident_active was cleared (flapping safety net), do not re-page within
+# this window.
+RESOURCE_RISK_GLOBAL_COOLDOWN = 600      # 10 min
+
+
+def _resource_risk_alert(live_metrics: dict) -> dict | None:
+    """Detect a *sustained* resource-pressure condition.
+
+    Single-sample spikes never escalate to an alert: each tick we either
+    increment or reset a per-signal streak counter stored in
+    RESOURCE_RISK_STATE_FILE. Only when the streak crosses
+    RESOURCE_RISK_REQUIRED_STREAK do we return an alert payload. As soon as
+    the metric drops back below the high threshold the streak is reset to 0,
+    so a brief overload that comes back down on its own stays silent.
+    """
+    cpu = float(live_metrics.get("cpu_percentage") or 0)
+    memory = float(live_metrics.get("memory_percentage") or 0)
+    try:
+        load1 = float(str(live_metrics.get("load_average", "")).split(",")[0].strip())
+    except Exception:
+        load1 = 0.0
+    cores = max(psutil.cpu_count() or 1, 1)
+
+    try:
+        state = json.loads(RESOURCE_RISK_STATE_FILE.read_text()) if RESOURCE_RISK_STATE_FILE.exists() else {}
+    except Exception:
+        state = {}
+    streaks = state.get("streaks") or {"cpu": 0, "memory": 0, "load": 0}
+
+    def _tick(key: str, pressed: bool) -> int:
+        new_val = int(streaks.get(key, 0)) + 1 if pressed else 0
+        streaks[key] = new_val
+        return new_val
+
+    cpu_streak = _tick("cpu", cpu >= RESOURCE_RISK_HIGH_CPU)
+    mem_streak = _tick("memory", memory >= RESOURCE_RISK_HIGH_MEM)
+    load_streak = _tick("load", load1 >= cores * 2)
+
+    state["streaks"] = streaks
+    try:
+        RESOURCE_RISK_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        RESOURCE_RISK_STATE_FILE.write_text(json.dumps(state, indent=2))
+    except Exception:
+        pass
+
+    def _fmt_duration(streak: int) -> str:
+        secs = streak * RESOURCE_RISK_POLL_SECONDS
+        if secs < 60:
+            return f"{secs}s"
+        return f"{secs // 60}min{secs % 60:02d}s" if secs % 60 else f"{secs // 60}min"
+
+    reasons = []
+    critical = False
+    if cpu_streak >= RESOURCE_RISK_REQUIRED_STREAK:
+        label = "critique" if cpu >= RESOURCE_RISK_CRITICAL_CPU else "eleve"
+        reasons.append(f"CPU {label} {cpu:.0f}% depuis {_fmt_duration(cpu_streak)}")
+        critical = critical or cpu >= RESOURCE_RISK_CRITICAL_CPU
+    if mem_streak >= RESOURCE_RISK_REQUIRED_STREAK:
+        label = "critique" if memory >= RESOURCE_RISK_CRITICAL_MEM else "elevee"
+        reasons.append(f"RAM {label} {memory:.0f}% depuis {_fmt_duration(mem_streak)}")
+        critical = critical or memory >= RESOURCE_RISK_CRITICAL_MEM
+    if load_streak >= RESOURCE_RISK_REQUIRED_STREAK:
+        reasons.append(
+            f"Load {load1:.2f} pour {cores} vCPU depuis {_fmt_duration(load_streak)}"
+        )
+        critical = critical or load1 >= cores * 2.5
+
+    if not reasons:
+        return None
+
+    return {
+        "severity": "critical" if critical else "warning",
+        "time": datetime.now().isoformat(),
+        "service": "vmware-vm",
+        "message": "Surcharge soutenue — risque d'instabilite VM",
+        "cause": " ; ".join(reasons),
+        "action": None,
+        "action_label": "",
+    }
+
+
+def _collect_top_processes(limit: int = 5) -> list[dict]:
+    """Snapshot of the top resource consumers. Sorted by CPU+RAM combined,
+    so a process that's hammering either dimension surfaces."""
+    procs = []
+    try:
+        for p in psutil.process_iter(["pid", "name", "cpu_percent", "memory_percent"]):
+            try:
+                info = p.info
+                procs.append({
+                    "pid": info.get("pid"),
+                    "name": info.get("name") or "?",
+                    "cpu": float(info.get("cpu_percent") or 0.0),
+                    "mem": float(info.get("memory_percent") or 0.0),
+                })
+            except Exception:
+                continue
+    except Exception:
+        return []
+    procs.sort(key=lambda p: (p["cpu"] + p["mem"]), reverse=True)
+    return procs[:limit]
+
+
+def _attempt_resource_auto_fix(alert: dict, live_metrics: dict) -> str:
+    """Try a safe auto-remediation matching the alert cause. Returns a
+    human-readable summary of what was done (or empty string when nothing
+    safe is available — we never kill processes automatically).
+
+    Currently implemented:
+      • RAM ≥ 92%  → drop page/inode/dentry caches (always safe, just frees
+                     reclaimable memory; never affects running processes).
+    For CPU/Load no auto-fix is safe — we only diagnose.
+    """
+    cause = (alert.get("cause") or "").lower()
+    memory = float(live_metrics.get("memory_percentage") or 0)
+
+    if "ram" in cause and memory >= RESOURCE_RISK_HIGH_MEM:
+        try:
+            before = subprocess.check_output(
+                ["bash", "-c", "free -m | awk '/^Mem:/ {print $7}'"],
+                text=True, timeout=5,
+            ).strip()
+            subprocess.run(
+                ["bash", "-c", "sync; echo 3 > /proc/sys/vm/drop_caches"],
+                capture_output=True, text=True, timeout=10, check=False,
+            )
+            after = subprocess.check_output(
+                ["bash", "-c", "free -m | awk '/^Mem:/ {print $7}'"],
+                text=True, timeout=5,
+            ).strip()
+            try:
+                freed = int(after) - int(before)
+                return (f"Caches RAM purgés — {freed} MB libérés "
+                        f"(disponible {before} → {after} MB)")
+            except ValueError:
+                return "Caches RAM purgés (sync + drop_caches)"
+        except Exception as exc:
+            return f"Tentative de purge caches échouée: {exc}"
+
+    return ""
+
+
+def _build_recommendation(alert: dict, top_processes: list[dict]) -> str:
+    """One-line, operator-actionable recommendation derived from the alert
+    cause and the live diagnostic. Designed to be readable from a phone
+    notification — no jargon, includes a concrete next step."""
+    cause = (alert.get("cause") or "").lower()
+    top = top_processes[0] if top_processes else None
+    top_label = (f"{top['name']} (PID {top['pid']}, CPU {top['cpu']:.0f}%, "
+                 f"RAM {top['mem']:.0f}%)") if top else "le processus dominant"
+
+    if "cpu" in cause and "ram" in cause:
+        return (f"Système saturé sur deux axes. Identifier {top_label} et "
+                f"`kill -15 {top['pid'] if top else '<PID>'}` si non critique, "
+                f"sinon augmenter les vCPU/RAM de la VM.")
+    if "cpu" in cause:
+        return (f"Vérifier {top_label}. Si non critique → "
+                f"`kill -15 {top['pid'] if top else '<PID>'}`. "
+                f"Sinon → augmenter les vCPU de la VM.")
+    if "ram" in cause:
+        return ("Caches déjà purgés automatiquement. Si la RAM reste haute, "
+                f"surveiller {top_label} (fuite mémoire probable).")
+    if "load" in cause:
+        return ("Charge I/O ou processus bloquants. Vérifier disque saturé "
+                "(`iostat -x 2`) ou attente network.")
+    return f"Investiguer {top_label} et libérer la ressource saturée."
+
+
+def _maybe_notify_resource_risk(alert: dict | None, live_metrics: dict):
+    """Main alerting loop. Four responsibilities:
+      1. On NEW sustained alert: gather diagnostic, attempt safe auto-fix,
+         fire enriched notification, persist incident state.
+      2. While the incident is ongoing: stay silent (throttle).
+      3. Anti-flapping: when pressure briefly drops, do NOT immediately
+         declare resolution — require RESOURCE_RISK_RESOLVE_STREAK consecutive
+         clear polls. This prevents the "alert → 1s later résolu → 30s later
+         alert again" cycle caused by a micro-dip in raw cpu_percent.
+      4. On confirmed resolution: fire a "back to normal" follow-up.
+
+    Also enforces a global cooldown so even if state corruption clears
+    incident_active, two alerts can't fire within RESOURCE_RISK_GLOBAL_COOLDOWN.
+    """
+    now = time.time()
+    try:
+        state = json.loads(RESOURCE_RISK_STATE_FILE.read_text()) if RESOURCE_RISK_STATE_FILE.exists() else {}
+    except Exception:
+        state = {}
+
+    incident_active = bool(state.get("incident_active"))
+    clear_streak = int(state.get("clear_streak", 0))
+
+    # --- No current alert ---
+    if not alert:
+        if not incident_active:
+            # Already calm, nothing to do. Reset clear_streak so it doesn't
+            # grow indefinitely.
+            if clear_streak != 0:
+                state["clear_streak"] = 0
+                _safe_write_state(state)
+            return
+
+        # Incident was active but this poll is clean. Increment the calm
+        # streak — only fire the "résolu" notification once it crosses the
+        # hysteresis threshold (no flapping).
+        clear_streak += 1
+        state["clear_streak"] = clear_streak
+        if clear_streak < RESOURCE_RISK_RESOLVE_STREAK:
+            _safe_write_state(state)
+            return
+
+        # Confirmed resolution
+        started_at = float(state.get("incident_started_at") or now)
+        duration = max(0, int(now - started_at))
+        reason = state.get("incident_cause") or "Surcharge ressources"
+        auto_fix = state.get("incident_auto_fix") or ""
+        state["incident_active"] = False
+        state["incident_resolved_at"] = now
+        state["clear_streak"] = 0
+        _safe_write_state(state)
+        threading.Thread(
+            target=notify_vm_resource_resolved,
+            args=(reason, duration, auto_fix),
+            daemon=True,
+        ).start()
+        return
+
+    # --- Alert present: reset clear_streak (any new alert breaks the calm) ---
+    if clear_streak:
+        state["clear_streak"] = 0
+
+    # --- Throttle: same incident, don't re-alert ---
+    throttle_seconds = 1800 if alert.get("severity") == "critical" else 3600
+    if incident_active and (now - float(state.get("last_sent", 0)) < throttle_seconds):
+        _safe_write_state(state)
+        return
+
+    # --- Global cooldown: even if incident_active was cleared, refuse to
+    #     re-page within the cooldown window. Prevents flap-induced spam.
+    if (now - float(state.get("last_sent", 0))) < RESOURCE_RISK_GLOBAL_COOLDOWN:
+        _safe_write_state(state)
+        return
+
+    # --- New incident: diagnose, auto-fix, alert ---
+    top_processes = _collect_top_processes(limit=5)
+    auto_fix = _attempt_resource_auto_fix(alert, live_metrics)
+    recommendation = _build_recommendation(alert, top_processes)
+
+    state["last_sent"] = now
+    state["alert"] = alert
+    state["incident_active"] = True
+    state["incident_cause"] = alert.get("cause") or ""
+    state["incident_auto_fix"] = auto_fix
+    if not state.get("incident_started_at") or not incident_active:
+        state["incident_started_at"] = now
+    _safe_write_state(state)
+
+    threading.Thread(
+        target=notify_vm_resource_risk,
+        args=(
+            float(live_metrics.get("cpu_percentage") or 0),
+            float(live_metrics.get("memory_percentage") or 0),
+            live_metrics.get("load_average") or "",
+            alert.get("cause") or "Risque d'instabilite VM",
+            top_processes,
+            auto_fix,
+            recommendation,
+        ),
+        daemon=True,
+    ).start()
+
+
+def _safe_write_state(state: dict) -> None:
+    try:
+        RESOURCE_RISK_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        RESOURCE_RISK_STATE_FILE.write_text(json.dumps(state, indent=2))
+    except Exception:
+        pass
+
+
 def _build_chart_payloads(backups: list[dict], sync_summary: dict) -> dict:
     monitoring_history = _load_monitoring_history()
     backup_history = [
@@ -1532,8 +1872,12 @@ def _build_chart_payloads(backups: list[dict], sync_summary: dict) -> dict:
     }
 
 
-def _build_dashboard_alerts(backups: list[dict], services: list[dict]) -> list[dict]:
+def _build_dashboard_alerts(backups: list[dict], services: list[dict], live_metrics: dict | None = None) -> list[dict]:
     alerts: list[dict] = []
+
+    resource_alert = _resource_risk_alert(live_metrics or {})
+    if resource_alert:
+        alerts.append(resource_alert)
 
     for service in services:
         if not service.get("running"):
@@ -1601,18 +1945,31 @@ def _build_dashboard_alerts(backups: list[dict], services: list[dict]) -> list[d
 @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def get_dashboard_overview(request):
+    selected_components = _parse_selected_sync_components(request)
+    skip_sync_scan = str(request.GET.get("skip_sync_scan", "")).lower() in {"1", "true", "yes"}
+    cache_key = (
+        "skip" if skip_sync_scan else "scan",
+        tuple(selected_components or []),
+    )
+    now = time.time()
+    if skip_sync_scan:
+        with _CACHE_LOCK:
+            cached = _DASHBOARD_OVERVIEW_CACHE.get(cache_key)
+            if cached and now < cached.get("expires_at", 0):
+                return JsonResponse(cached["payload"])
+
     schedule_config = _read_schedule_config()
     _queue_due_schedule_catchups(schedule_config)
     backups = _collect_backup_results()
     services = _load_dashboard_services()
-    selected_components = _parse_selected_sync_components(request)
-    skip_sync_scan = str(request.GET.get("skip_sync_scan", "")).lower() in {"1", "true", "yes"}
     if skip_sync_scan:
         sync_summary = _load_cached_sync_summary(selected_components) or _build_idle_sync_summary(selected_components)
     else:
         sync_summary = _build_global_sync_summary(services, selected_components)
         _save_cached_sync_summary(sync_summary)
-    alerts = _build_dashboard_alerts(backups, services)
+    live_metrics = _get_live_metrics()
+    alerts = _build_dashboard_alerts(backups, services, live_metrics)
+    _maybe_notify_resource_risk(_resource_risk_alert(live_metrics), live_metrics)
 
     latest_backup = backups[0] if backups else None
     average_health = round(
@@ -1640,8 +1997,6 @@ def get_dashboard_overview(request):
     integrity_summary = _build_integrity_summary(latest_backup, average_health)
     insights = _build_dashboard_insights(latest_backup, services, sync_summary, alerts)
     charts = _build_chart_payloads(backups, sync_summary)
-    live_metrics = _get_live_metrics()
-
     notif_configured = False
     try:
         wd = Path("/etc/asguard/watchdog_config.json")
@@ -1658,7 +2013,7 @@ def get_dashboard_overview(request):
 
     auto_backup_on = any(t.get("enabled", True) for t in schedule_config.get("tasks", []))
 
-    return JsonResponse({
+    payload = {
         "status": "ok",
         "cards": {
             "latest_backup": {
@@ -1711,7 +2066,221 @@ def get_dashboard_overview(request):
         "alerts": alerts,
         "notifications_configured": notif_configured,
         "auto_backup_on": auto_backup_on,
-    })
+    }
+    if skip_sync_scan:
+        with _CACHE_LOCK:
+            _DASHBOARD_OVERVIEW_CACHE[cache_key] = {
+                "payload": payload,
+                "expires_at": time.time() + DASHBOARD_OVERVIEW_CACHE_SECONDS,
+            }
+    return JsonResponse(payload)
+
+
+RISK_ACTIONS = {
+    "cpu_top": {
+        "kind": "safe",
+        "title": "Top 15 processus CPU",
+        "cmd": ["bash", "-c", "ps -eo pid,user,pcpu,pmem,comm --sort=-pcpu | head -16"],
+    },
+    "ram_top": {
+        "kind": "safe",
+        "title": "Top 15 processus RAM",
+        "cmd": ["bash", "-c", "ps -eo pid,user,pcpu,pmem,comm --sort=-pmem | head -16"],
+    },
+    "load_top": {
+        "kind": "safe",
+        "title": "Charge système — top processus",
+        "cmd": ["bash", "-c", "uptime; echo; ps -eo pid,user,pcpu,pmem,stat,comm --sort=-pcpu | head -16"],
+    },
+    "disk_usage": {
+        "kind": "safe",
+        "title": "Utilisation disque par dossier",
+        "cmd": ["bash", "-c", "df -h /; echo; du -sh /var/log /var/backups /tmp /var/cache 2>/dev/null"],
+    },
+    "services_status": {
+        "kind": "safe",
+        "title": "Services en échec",
+        "cmd": ["bash", "-c", "systemctl --failed --no-legend --no-pager; echo; systemctl list-units --state=failed --no-legend --no-pager"],
+    },
+    "services_restart": {
+        "kind": "intrusive",
+        "title": "Redémarrer les services critiques arrêtés",
+        # Best-effort restart of every unit currently in "failed" or inactive
+        # state for our critical service candidates. We restart sequentially
+        # and capture per-service status so the UI shows which came back.
+        "internal": "services_restart",
+    },
+    "ram_caches": {
+        "kind": "intrusive",
+        "title": "Vider les caches page/inode/dentry",
+        "cmd": ["bash", "-c", "BEFORE=$(free -m | awk '/^Mem:/ {print $7}'); sync; echo 3 > /proc/sys/vm/drop_caches; AFTER=$(free -m | awk '/^Mem:/ {print $7}'); echo \"Mémoire disponible avant: ${BEFORE} MB\"; echo \"Mémoire disponible après: ${AFTER} MB\"; echo \"Libéré: $((AFTER-BEFORE)) MB\""],
+    },
+    "disk_journal": {
+        "kind": "intrusive",
+        "title": "Purger les journaux systemd (> 7 jours)",
+        "cmd": ["bash", "-c", "journalctl --vacuum-time=7d 2>&1 | tail -10"],
+    },
+    "snapshot_lvm": {
+        "kind": "intrusive",
+        "title": "Créer un snapshot LVM",
+        "internal": "lvm_snapshot",
+    },
+}
+
+
+def _run_risk_action(action_key: str) -> dict:
+    spec = RISK_ACTIONS.get(action_key)
+    if not spec:
+        return {"ok": False, "error": "Action inconnue", "action": action_key}
+
+    if spec.get("internal") == "lvm_snapshot":
+        try:
+            from backend.backup.system_backup.lvm_snapshot_service import LVMSnapshotService
+            res = LVMSnapshotService.create_snapshot(description="AI Risk Center — point de restauration auto")
+            ok = res.get("status") != "error"
+            return {"ok": ok, "title": spec["title"], "kind": spec["kind"],
+                    "action": action_key,
+                    "output": json.dumps(res, indent=2, ensure_ascii=False)}
+        except Exception as exc:
+            return {"ok": False, "error": str(exc), "action": action_key,
+                    "title": spec["title"], "kind": spec["kind"]}
+
+    if spec.get("internal") == "services_restart":
+        lines = []
+        any_ok = False
+        try:
+            services = _load_dashboard_services()
+        except Exception as exc:
+            return {"ok": False, "error": f"Impossible de lister les services: {exc}",
+                    "action": action_key, "title": spec["title"], "kind": spec["kind"]}
+
+        # Restart every service flagged as not running. Limit to the critical
+        # candidates so we never touch random user units.
+        critical_keys = {sd["key"] for sd in CRITICAL_SERVICE_CANDIDATES}
+        critical_names = set()
+        for sd in CRITICAL_SERVICE_CANDIDATES:
+            for cand in sd["candidates"]:
+                critical_names.add(cand.replace(".service", ""))
+
+        failing = [s for s in services if not s.get("running")
+                   and (s.get("name") in critical_names or s.get("key") in critical_keys)]
+        if not failing:
+            return {"ok": True, "title": spec["title"], "kind": spec["kind"],
+                    "action": action_key,
+                    "output": "Aucun service critique en panne — rien à redémarrer."}
+
+        try:
+            from backend.backup.notifications import notify_service_action
+        except Exception:
+            notify_service_action = None
+
+        for svc in failing:
+            unit = svc.get("name")
+            label = svc.get("label") or unit
+            try:
+                proc = subprocess.run(
+                    ["systemctl", "restart", unit],
+                    capture_output=True, text=True, timeout=25,
+                )
+                success = proc.returncode == 0
+                any_ok = any_ok or success
+                lines.append(f"[{('OK' if success else 'KO')}] {label} ({unit})"
+                             + (f" — {proc.stderr.strip()}" if proc.stderr else ""))
+                if notify_service_action:
+                    try:
+                        notify_service_action(unit, "restart", success, display_name=label)
+                    except Exception:
+                        pass
+            except subprocess.TimeoutExpired:
+                lines.append(f"[KO] {label} ({unit}) — timeout 25s")
+            except Exception as exc:
+                lines.append(f"[KO] {label} ({unit}) — {exc}")
+
+        return {
+            "ok": any_ok,
+            "title": spec["title"],
+            "kind": spec["kind"],
+            "action": action_key,
+            "output": "\n".join(lines),
+        }
+
+    try:
+        proc = subprocess.run(spec["cmd"], capture_output=True, text=True, timeout=20)
+        output = (proc.stdout or "") + (("\n[stderr]\n" + proc.stderr) if proc.stderr else "")
+        return {
+            "ok": proc.returncode == 0,
+            "title": spec["title"],
+            "kind": spec["kind"],
+            "action": action_key,
+            "exit_code": proc.returncode,
+            "output": output.strip() or "(aucune sortie)",
+        }
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "Action expirée (timeout 20s)", "action": action_key,
+                "title": spec["title"], "kind": spec["kind"]}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc), "action": action_key,
+                "title": spec["title"], "kind": spec["kind"]}
+
+
+@swagger_auto_schema("POST", responses={200: "OK"}, operation_summary="RUN AI RISK ACTION")
+@api_view(["POST"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def run_risk_action(request, action_key: str):
+    # No DB-backed authentication here: the AI Risk Center exists precisely to
+    # diagnose situations where PostgreSQL itself may be down. SessionAuthentication
+    # would query django_session and block the whole worker when the DB is gone.
+    spec = RISK_ACTIONS.get(action_key)
+    if not spec:
+        return JsonResponse({"ok": False, "error": "Action inconnue"}, status=404)
+    if spec["kind"] == "intrusive":
+        confirm = None
+        try:
+            confirm = json.loads(request.body or b"{}").get("confirm")
+        except Exception:
+            confirm = None
+        if not confirm:
+            return JsonResponse({"ok": False, "error": "Confirmation requise",
+                                 "needs_confirm": True, "title": spec["title"],
+                                 "kind": spec["kind"]}, status=400)
+    result = _run_risk_action(action_key)
+    return JsonResponse(result)
+
+
+@swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="AI RISK ANALYSIS")
+@api_view(["GET"])
+@require_http_methods(["GET"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def get_risk_ai_analysis(request):
+    services = _load_dashboard_services()
+    live_metrics = _get_live_metrics()
+    history = _load_monitoring_history(limit=80)
+    try:
+        root_total, root_used, _ = shutil.disk_usage("/")
+        root_usage = round((root_used / root_total) * 100) if root_total else 0
+    except Exception:
+        root_usage = 0
+
+    latest_backup = (_collect_backup_results() or [None])[0]
+    backup_risk = 0
+    if latest_backup:
+        backup_risk = 100 - int(latest_backup.get("health_score", 100) or 100)
+        if latest_backup.get("overall_status") in {"error", "failed"}:
+            backup_risk = 95
+        elif latest_backup.get("overall_status") == "partial":
+            backup_risk = max(backup_risk, 70)
+
+    return JsonResponse(
+        analyze_vm_and_services(
+            history_points=history,
+            live_metrics=live_metrics,
+            services=services,
+            root_disk_usage=root_usage,
+            backup_risk=backup_risk,
+        )
+    )
 
 
 @swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="PING BACKUP MODULE")
@@ -1721,6 +2290,189 @@ def get_dashboard_overview(request):
 @permission_classes([AllowAny])
 def ping(request):
     return JsonResponse({"status": "ok", "module": "backup"})
+
+
+def _restore_history_entries_for_metrics() -> list[dict]:
+    entries = []
+    RESTORE_JOBS_DIR.mkdir(parents=True, exist_ok=True)
+    for state_file in RESTORE_JOBS_DIR.glob("*.json"):
+        try:
+            payload = json.loads(state_file.read_text(encoding="utf-8"))
+            entries.append(payload)
+        except Exception:
+            continue
+    return entries
+
+
+def _build_backup_metrics_payload() -> dict:
+    backups = _collect_backup_results()
+    schedule_config = _read_schedule_config()
+    services = _load_dashboard_services()
+    restore_entries = _restore_history_entries_for_metrics()
+
+    now = datetime.now()
+    latest_backup = backups[0] if backups else None
+    latest_dt = _safe_parse_iso_datetime(latest_backup.get("modified_at") if latest_backup else None)
+    rpo_hours = None
+    if latest_dt:
+        try:
+            rpo_hours = round((datetime.now(latest_dt.tzinfo) - latest_dt).total_seconds() / 3600, 2)
+        except Exception:
+            rpo_hours = None
+
+    total_backups = len(backups)
+    successful_backups = sum(1 for item in backups if item.get("overall_status") == "ok")
+    degraded_backups = sum(1 for item in backups if item.get("overall_status") == "partial")
+    failed_backups = sum(1 for item in backups if item.get("overall_status") in {"error", "failed"})
+    success_rate = round((successful_backups / total_backups) * 100, 2) if total_backups else 0
+
+    restore_total = len(restore_entries)
+    restore_success = sum(1 for item in restore_entries if item.get("status") == "success")
+    restore_failed = sum(1 for item in restore_entries if item.get("status") not in {"success", "partial_success", "running", "queued"})
+    restore_durations = [
+        _duration_seconds_between(item.get("started_at"), item.get("finished_at"))
+        for item in restore_entries
+    ]
+    restore_durations = [value for value in restore_durations if value > 0]
+
+    backup_disk_total, backup_disk_used, backup_disk_free = shutil.disk_usage(BACKUP_DIR)
+    root_disk_total, root_disk_used, root_disk_free = shutil.disk_usage("/")
+    enabled_tasks = [task for task in schedule_config.get("tasks", []) if task.get("enabled", True)]
+    next_task = _get_next_scheduled_task(schedule_config.get("tasks", []), _get_schedule_tz(schedule_config))
+    failing_services = [service for service in services if not service.get("running")]
+
+    return {
+        "status": "ok",
+        "generated_at": datetime.now().isoformat(),
+        "rpo": {
+            "hours": rpo_hours,
+            "status": "unknown" if rpo_hours is None else ("ok" if rpo_hours <= 24 else "warning" if rpo_hours <= 48 else "critical"),
+        },
+        "backups": {
+            "total": total_backups,
+            "successful": successful_backups,
+            "degraded": degraded_backups,
+            "failed": failed_backups,
+            "success_rate": success_rate,
+            "average_health": round(sum(int(item.get("health_score", 0) or 0) for item in backups) / total_backups, 2) if total_backups else 0,
+            "latest": {
+                "id": latest_backup.get("id") if latest_backup else None,
+                "status": latest_backup.get("overall_status") if latest_backup else "missing",
+                "health_score": latest_backup.get("health_score", 0) if latest_backup else 0,
+                "timestamp": latest_backup.get("modified_at") if latest_backup else None,
+                "size_bytes": latest_backup.get("size_bytes", 0) if latest_backup else 0,
+            },
+        },
+        "restores": {
+            "total": restore_total,
+            "successful": restore_success,
+            "failed": restore_failed,
+            "success_rate": round((restore_success / restore_total) * 100, 2) if restore_total else 0,
+            "avg_duration_seconds": round(sum(restore_durations) / len(restore_durations), 2) if restore_durations else 0,
+        },
+        "storage": {
+            "backup_used_bytes": backup_disk_used,
+            "backup_total_bytes": backup_disk_total,
+            "backup_free_bytes": backup_disk_free,
+            "backup_used_pct": round((backup_disk_used / backup_disk_total) * 100, 2) if backup_disk_total else 0,
+            "root_used_bytes": root_disk_used,
+            "root_total_bytes": root_disk_total,
+            "root_free_bytes": root_disk_free,
+            "root_used_pct": round((root_disk_used / root_disk_total) * 100, 2) if root_disk_total else 0,
+        },
+        "schedule": {
+            "tasks_total": len(schedule_config.get("tasks", [])),
+            "tasks_enabled": len(enabled_tasks),
+            "auto_backup_on": bool(enabled_tasks),
+            "next_run": next_task.get("next_run") if next_task else None,
+            "next_task": next_task,
+            "last_retention_applied": schedule_config.get("last_retention_applied"),
+        },
+        "services": {
+            "total": len(services),
+            "running": len(services) - len(failing_services),
+            "failing": len(failing_services),
+            "failing_names": [service.get("name") for service in failing_services[:12]],
+        },
+        "events": {
+            "recent": read_backup_events(limit=20, since_hours=24),
+        },
+    }
+
+
+def _prometheus_metrics(payload: dict) -> str:
+    lines = [
+        "# HELP asguard_backup_rpo_hours Hours since the latest known backup.",
+        "# TYPE asguard_backup_rpo_hours gauge",
+        f"asguard_backup_rpo_hours {payload['rpo']['hours'] if payload['rpo']['hours'] is not None else -1}",
+        "# HELP asguard_backup_total Number of known local backups.",
+        "# TYPE asguard_backup_total gauge",
+        f"asguard_backup_total {payload['backups']['total']}",
+        "# HELP asguard_backup_success_rate Backup success rate percent.",
+        "# TYPE asguard_backup_success_rate gauge",
+        f"asguard_backup_success_rate {payload['backups']['success_rate']}",
+        "# HELP asguard_backup_latest_health Latest backup health score.",
+        "# TYPE asguard_backup_latest_health gauge",
+        f"asguard_backup_latest_health {payload['backups']['latest']['health_score']}",
+        "# HELP asguard_restore_success_rate Restore success rate percent.",
+        "# TYPE asguard_restore_success_rate gauge",
+        f"asguard_restore_success_rate {payload['restores']['success_rate']}",
+        "# HELP asguard_backup_storage_used_pct Backup storage usage percent.",
+        "# TYPE asguard_backup_storage_used_pct gauge",
+        f"asguard_backup_storage_used_pct {payload['storage']['backup_used_pct']}",
+        "# HELP asguard_backup_schedule_enabled_tasks Enabled scheduled backup tasks.",
+        "# TYPE asguard_backup_schedule_enabled_tasks gauge",
+        f"asguard_backup_schedule_enabled_tasks {payload['schedule']['tasks_enabled']}",
+        "# HELP asguard_backup_services_failing Failing services visible from backup dashboard.",
+        "# TYPE asguard_backup_services_failing gauge",
+        f"asguard_backup_services_failing {payload['services']['failing']}",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+@swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="BACKUP DRP METRICS")
+@api_view(["GET"])
+@require_http_methods(["GET"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def get_backup_metrics(request):
+    payload = _build_backup_metrics_payload()
+    if str(request.GET.get("output", "")).lower() in {"prometheus", "prom"}:
+        from django.http import HttpResponse
+        return HttpResponse(_prometheus_metrics(payload), content_type="text/plain; version=0.0.4")
+    return JsonResponse(payload)
+
+
+@swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="BACKUP DRP PROMETHEUS METRICS")
+@api_view(["GET"])
+@require_http_methods(["GET"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def get_backup_metrics_prometheus(request):
+    from django.http import HttpResponse
+    return HttpResponse(
+        _prometheus_metrics(_build_backup_metrics_payload()),
+        content_type="text/plain; version=0.0.4",
+    )
+
+
+@swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="BACKUP OBSERVABILITY EVENTS")
+@api_view(["GET"])
+@require_http_methods(["GET"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def get_backup_events(request):
+    try:
+        limit = int(request.GET.get("limit", 200))
+    except Exception:
+        limit = 200
+    since_hours = request.GET.get("since_hours")
+    try:
+        since_hours = int(since_hours) if since_hours else None
+    except Exception:
+        since_hours = None
+    events = read_backup_events(limit=limit, since_hours=since_hours)
+    return JsonResponse({"count": len(events), "results": events})
 
 
 @swagger_auto_schema("POST", responses={200: "OK", 500: "Erreur"}, operation_summary="TEST TELEGRAM NOTIFICATION")
@@ -1744,11 +2496,23 @@ def test_telegram(request):
 @permission_classes([AllowAny])
 def create_db_backup(request):
     threading.Thread(target=notify_backup_started, args=("db_backup",), daemon=True).start()
+    append_backup_event(kind="backup", title="DB backup started", severity="info", status="running", source="api")
     result = SystemBackupService.create_db_backup()
+    _invalidate_backup_results_cache()
     ok = result.get("status") == "ok"
     backup_id = result.get("backup_id") or Path(result.get("file", "")).stem
     threading.Thread(target=notify_backup_completed, args=("db_backup", backup_id, ok), daemon=True).start()
     CloudStorageService.async_upload_after_backup(backup_id, None, "db_backup", result)
+    append_backup_event(
+        kind="backup",
+        title="DB backup completed" if ok else "DB backup failed",
+        severity="success" if ok else "error",
+        status="success" if ok else "error",
+        source="api",
+        ref_id=backup_id,
+        detail=result.get("message", ""),
+        extra={"backup_type": "db_backup", "file": result.get("file", "")},
+    )
     return JsonResponse(result)
 
 
@@ -1798,6 +2562,7 @@ def create_full_backup(request):
         from datetime import timezone as _tz2
         try:
             threading.Thread(target=notify_backup_started, args=("full_backup",), daemon=True).start()
+            append_backup_event(kind="backup", title="Full backup started", severity="info", status="running", source="api", ref_id=job_id)
             result = FullBackupService.create_full_backup(progress_callback=_make_cb())
             ok = result.get("status") in {"ok", "partial"}
             backup_id_result = result.get("backup_id", job_id)
@@ -1819,8 +2584,19 @@ def create_full_backup(request):
                 "result": result,
             })
             _write_backup_job_state(job_file, current)
+            _invalidate_backup_results_cache()
             threading.Thread(target=notify_backup_completed, args=("full_backup", backup_id_result, ok), daemon=True).start()
             CloudStorageService.async_upload_after_backup(backup_id_result, result.get("backup_dir"), "full_backup", result)
+            append_backup_event(
+                kind="backup",
+                title="Full backup completed" if ok else "Full backup failed",
+                severity="success" if result.get("status") == "ok" else ("warning" if ok else "error"),
+                status=current["status"],
+                source="api",
+                ref_id=backup_id_result,
+                detail=result.get("message", ""),
+                extra={"job_id": job_id, "backup_type": "full_backup", "summary": result.get("summary", {})},
+            )
         except Exception as exc:
             import traceback
             try:
@@ -1837,6 +2613,16 @@ def create_full_backup(request):
                 "result": {"message": str(exc), "traceback": traceback.format_exc()},
             })
             _write_backup_job_state(job_file, current)
+            append_backup_event(
+                kind="backup",
+                title="Full backup failed",
+                severity="error",
+                status="error",
+                source="api",
+                ref_id=job_id,
+                detail=str(exc),
+                extra={"job_id": job_id},
+            )
 
     threading.Thread(target=_run, daemon=True).start()
     return JsonResponse({"status": "queued", "job_id": job_id, "message": "Backup démarré en arrière-plan."}, status=202)
@@ -1869,6 +2655,7 @@ def create_safe_backup(request):
         "total": 0,
         "result": None,
     })
+    append_backup_event(kind="backup", title="Full backup queued", severity="info", status="queued", source="api", ref_id=job_id)
 
     def _make_cb():
         def _cb(progress):
@@ -1888,6 +2675,7 @@ def create_safe_backup(request):
         from datetime import timezone as _tz2
         try:
             threading.Thread(target=notify_backup_started, args=("safe_backup",), daemon=True).start()
+            append_backup_event(kind="backup", title="Safe backup started", severity="info", status="running", source="api", ref_id=job_id)
             result = FullBackupService.create_safe_backup(progress_callback=_make_cb())
             ok = result.get("status") in {"ok", "partial"}
             backup_id_result = result.get("backup_id", job_id)
@@ -1909,8 +2697,19 @@ def create_safe_backup(request):
                 "result": result,
             })
             _write_backup_job_state(job_file, current)
+            _invalidate_backup_results_cache()
             threading.Thread(target=notify_backup_completed, args=("safe_backup", backup_id_result, ok), daemon=True).start()
             CloudStorageService.async_upload_after_backup(backup_id_result, result.get("backup_dir"), "safe_backup", result)
+            append_backup_event(
+                kind="backup",
+                title="Safe backup completed" if ok else "Safe backup failed",
+                severity="success" if result.get("status") == "ok" else ("warning" if ok else "error"),
+                status=current["status"],
+                source="api",
+                ref_id=backup_id_result,
+                detail=result.get("message", ""),
+                extra={"job_id": job_id, "backup_type": "safe_backup", "summary": result.get("summary", {})},
+            )
         except Exception as exc:
             import traceback
             try:
@@ -1927,8 +2726,19 @@ def create_safe_backup(request):
                 "result": {"message": str(exc), "traceback": traceback.format_exc()},
             })
             _write_backup_job_state(job_file, current)
+            append_backup_event(
+                kind="backup",
+                title="Safe backup failed",
+                severity="error",
+                status="error",
+                source="api",
+                ref_id=job_id,
+                detail=str(exc),
+                extra={"job_id": job_id},
+            )
 
     threading.Thread(target=_run, daemon=True).start()
+    append_backup_event(kind="backup", title="Safe backup queued", severity="info", status="queued", source="api", ref_id=job_id)
     return JsonResponse({"status": "queued", "job_id": job_id, "message": "Backup démarré en arrière-plan."}, status=202)
 
 
@@ -1981,7 +2791,18 @@ def create_custom_backup(request):
         return JsonResponse({"status": "error", "message": "components must be a list."}, status=400)
 
     result = FullBackupService.create_custom_backup(components)
+    _invalidate_backup_results_cache()
     status_code = 200 if result["status"] == "ok" else (400 if result["status"] == "error" else 207)
+    append_backup_event(
+        kind="backup",
+        title="Custom backup completed" if result.get("status") in {"ok", "partial"} else "Custom backup failed",
+        severity="success" if result.get("status") == "ok" else ("warning" if result.get("status") == "partial" else "error"),
+        status=result.get("status", "unknown"),
+        source="api",
+        ref_id=result.get("backup_id", ""),
+        detail=result.get("message", ""),
+        extra={"backup_type": "custom", "components": components, "summary": result.get("summary", {})},
+    )
     return JsonResponse(result, status=status_code)
 
 
@@ -2048,13 +2869,145 @@ def restore_backup(request, backup_id):
     return _launch_detached_restore(backup_id=backup_id, mode="safe")
 
 
-@swagger_auto_schema("POST", responses={202: "Accepted"}, operation_summary="FULL RESTORE COMPLETE (WITH APPLICATION)")
+@swagger_auto_schema("POST", responses={202: "Accepted"}, operation_summary="FULL RESTORE UI-SAFE")
 @api_view(["POST"])
 @require_http_methods(["POST"])
 @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def restore_full_backup(request, backup_id):
-    return _launch_detached_restore(backup_id=backup_id, mode="complete")
+    return _launch_detached_restore(backup_id=backup_id, mode="ui_full")
+
+
+# ── Pre-restore preview ──────────────────────────────────────────────────────
+# Static metadata that explains why some components are intentionally excluded
+# from the UI-safe restore. Surfaced both to the operator (decision support
+# in the confirmation modal) and to the eventual sales pitch ("Asguard tells
+# you what it will and won't touch before doing anything").
+_UI_FULL_EXCLUSION_REASONS = {
+    "application":      ("Code de l'application (/asguard/asguard)",
+                         "Réécrire à chaud le code Python pendant qu'uvicorn tourne "
+                         "ferait crasher l'interface. Restauration possible uniquement "
+                         "en mode DR offline (script asguard-dr-restore en console)."),
+    "system_config":    ("Configuration /etc système globale",
+                         "Contient hostname, fstab, locale, sudoers — un restore à chaud "
+                         "couperait votre session SSH/web. Mode DR offline uniquement."),
+    "systemd_services": ("Unit files systemd custom",
+                         "Un daemon-reload massif provoque un timeout D-Bus qui gèle le "
+                         "système plusieurs minutes. Mode DR offline uniquement."),
+    "users_groups":     ("Comptes Linux (uvicorn, postgres)",
+                         "Les utilisateurs applicatifs Asguard sont restaurés via la DB. "
+                         "Les comptes système Linux ne doivent jamais bouger à chaud."),
+    "packages":         ("Liste des paquets RPM/DEB installés",
+                         "Liste sauvegardée pour DR. L'installation des paquets manquants "
+                         "se fait uniquement en mode console (peut bloquer dépendances)."),
+    "docker_state":     ("Images et volumes Docker",
+                         "Recréer les containers à chaud redémarre PostgreSQL — perte de "
+                         "connexion garantie. Mode DR offline uniquement."),
+    "logs":             ("Logs historiques /var/log",
+                         "Données forensiques sans valeur opérationnelle pour un restore "
+                         "à chaud. Restaurées en mode DR seulement si besoin d'audit."),
+    "vm_snapshot":      ("Métadonnées de snapshot LVM",
+                         "Géré via l'onglet VM Snapshot dédié — pas inclus dans ce backup."),
+}
+
+
+@swagger_auto_schema("GET", responses={200: "OK", 404: "Not Found"},
+                     operation_summary="RESTORE PREVIEW (UI-SAFE)")
+@api_view(["GET"])
+@require_http_methods(["GET"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def restore_preview(request, backup_id):
+    """Return what would happen if the user clicks 'Restore' on this backup.
+    Splits every component into three buckets:
+
+      - included : will be restored (config-only or DB-backed)
+      - excluded : explicitly skipped for safety (engine components)
+      - missing  : present in the backup but with no restore handler
+
+    Each entry carries a `reason` (for excluded) or `size_mb` so the operator
+    can make an informed decision. Pure read-only — no side effects.
+    """
+    import os
+    from pathlib import Path
+    import json as _json
+
+    from backend.backup.system_backup.restore_service import RestoreService
+
+    backup_dir = Path(_BACKUP_ROOT) / backup_id
+    if not backup_dir.exists():
+        return JsonResponse(
+            {"status": "error", "message": f"Backup '{backup_id}' introuvable"},
+            status=404,
+        )
+
+    meta_file = backup_dir / "backup_metadata.json"
+    if not meta_file.exists():
+        return JsonResponse(
+            {"status": "error", "message": "backup_metadata.json manquant"},
+            status=400,
+        )
+    try:
+        meta = _json.loads(meta_file.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return JsonResponse(
+            {"status": "error", "message": f"Lecture metadata: {exc}"},
+            status=500,
+        )
+
+    components_meta = meta.get("components", {})
+    excluded_set   = RestoreService.UI_FULL_EXCLUDED_COMPONENTS
+
+    included: list[dict] = []
+    excluded: list[dict] = []
+    for name, comp in components_meta.items():
+        size_mb = float(comp.get("size_mb", 0) or 0)
+        if name in excluded_set:
+            label, reason = _UI_FULL_EXCLUSION_REASONS.get(
+                name, (name, "Composant moteur — restore offline uniquement.")
+            )
+            excluded.append({
+                "name":    name,
+                "label":   label,
+                "size_mb": round(size_mb, 3),
+                "reason":  reason,
+                "status":  comp.get("status", "?"),
+            })
+        else:
+            included.append({
+                "name":    name,
+                "size_mb": round(size_mb, 3),
+                "status":  comp.get("status", "?"),
+            })
+
+    included.sort(key=lambda c: -c["size_mb"])
+    excluded.sort(key=lambda c: c["name"])
+
+    total_included_mb = round(sum(c["size_mb"] for c in included), 2)
+    total_excluded_mb = round(sum(c["size_mb"] for c in excluded), 2)
+
+    return JsonResponse({
+        "status":            "ok",
+        "backup_id":         backup_id,
+        "backup_type":       meta.get("backup_type") or (
+            "full" if "application" in components_meta else "safe"
+        ),
+        "created_at":        meta.get("created_at", ""),
+        "mode":              "ui_full",
+        "included":          included,
+        "excluded":          excluded,
+        "counts": {
+            "included": len(included),
+            "excluded": len(excluded),
+        },
+        "total_included_mb": total_included_mb,
+        "total_excluded_mb": total_excluded_mb,
+        "dr_hint": (
+            "Pour restaurer aussi les composants moteur (clone complet d'appliance "
+            "sur nouvelle VM), utilisez le script 'asguard-dr-restore' depuis la "
+            "console TTY après redémarrage."
+        ),
+    })
 
 
 @swagger_auto_schema(
@@ -2100,6 +3053,16 @@ def restore_components(request, backup_id):
         pass
 
     status_code = 200 if result.get("status") in ("success", "partial_success") else 400
+    append_backup_event(
+        kind="restore",
+        title="Custom restore completed" if status_code == 200 else "Custom restore failed",
+        severity="success" if result.get("status") == "success" else ("warning" if result.get("status") == "partial_success" else "error"),
+        status=result.get("status", "unknown"),
+        source="api",
+        ref_id=backup_id,
+        detail=result.get("message", ""),
+        extra={"job_id": job_id, "components": components, "summary": result.get("summary", {})},
+    )
     return JsonResponse(result, status=status_code)
 
 
@@ -2138,6 +3101,15 @@ def _launch_detached_restore(backup_id: str, mode: str):
 
     with open(state_file, "w", encoding="utf-8") as f:
         json.dump(initial_state, f, indent=2)
+    append_backup_event(
+        kind="restore",
+        title=f"{mode} restore queued",
+        severity="warning",
+        status="queued",
+        source="api",
+        ref_id=backup_id,
+        extra={"job_id": job_id, "mode": mode},
+    )
 
     unit_name = f"asguard-restore-{mode}-{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
@@ -2178,6 +3150,16 @@ def _launch_detached_restore(backup_id: str, mode: str):
                 launch.returncode,
                 launch.stdout.strip(),
             )
+            append_backup_event(
+                kind="restore",
+                title=f"{mode} restore launch failed",
+                severity="error",
+                status="error",
+                source="systemd-run",
+                ref_id=backup_id,
+                detail=launch.stdout.strip(),
+                extra={"job_id": job_id, "unit_name": unit_name, "returncode": launch.returncode, "mode": mode},
+            )
             return JsonResponse({
                 "status": "error",
                 "message": "Failed to launch detached restore unit.",
@@ -2188,6 +3170,16 @@ def _launch_detached_restore(backup_id: str, mode: str):
             }, status=500)
 
         logger.info("%s restore unit started: %s | output=%s", mode, unit_name, launch.stdout.strip())
+        append_backup_event(
+            kind="restore",
+            title=f"{mode} restore started",
+            severity="warning",
+            status="running",
+            source="systemd-run",
+            ref_id=backup_id,
+            detail=launch.stdout.strip(),
+            extra={"job_id": job_id, "unit_name": unit_name, "mode": mode},
+        )
 
         return JsonResponse({
             "status": "started",
@@ -2203,6 +3195,16 @@ def _launch_detached_restore(backup_id: str, mode: str):
 
     except Exception as e:
         logger.exception("Failed to launch %s restore for %s", mode, backup_id)
+        append_backup_event(
+            kind="restore",
+            title=f"{mode} restore launch failed",
+            severity="error",
+            status="error",
+            source="systemd-run",
+            ref_id=backup_id,
+            detail=str(e),
+            extra={"job_id": job_id, "mode": mode},
+        )
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
@@ -2250,6 +3252,7 @@ def get_restore_history(request):
             )
 
             entries.append({
+                "type": "backup",
                 "job_id": payload.get("job_id"),
                 "backup_id": payload.get("backup_id"),
                 "mode": payload.get("mode"),
@@ -2274,6 +3277,70 @@ def get_restore_history(request):
             })
         except Exception:
             logger.warning("Could not read restore job file %s", state_file.name)
+
+    # LVM snapshot restores
+    try:
+        from backend.backup.system_backup.lvm_snapshot_service import LVMSnapshotService as _Svc
+        _snap_jobs_dir = _Svc.JOBS_DIR
+        if _snap_jobs_dir.exists():
+            for snap_file in _snap_jobs_dir.glob("snap_restore_*.json"):
+                try:
+                    with open(snap_file, "r", encoding="utf-8") as f:
+                        sp = json.load(f)
+                    raw_status = sp.get("status", "unknown")
+                    norm_status = "success" if raw_status == "done" else raw_status
+                    sp_result = sp.get("result") or {}
+                    entries.append({
+                        # Frontend keeps the legacy 'vm_snapshot' type for
+                        # filter compatibility — only the displayed label is
+                        # changed to "LVM Snapshot".
+                        "type": "vm_snapshot",
+                        "job_id": sp.get("job_id"),
+                        "backup_id": sp.get("snap_id"),
+                        "snap_id": sp.get("snap_id"),
+                        "mode": "vm_snapshot",
+                        "status": norm_status,
+                        "started_at": sp.get("started_at"),
+                        "finished_at": sp.get("finished_at"),
+                        "duration_seconds": _duration_seconds_between(
+                            sp.get("started_at"), sp.get("finished_at")
+                        ),
+                        "message": sp.get("message", ""),
+                        "error": sp.get("error", ""),
+                        # Captured at restore-time in views_vm_snapshot.py.
+                        "description": sp.get("description", ""),
+                        "created_by": sp.get("created_by", ""),
+                        "created_at": sp.get("snapshot_created_at", ""),
+                        "phases": sp.get("phases", []),
+                        # What the restore actually touched. These come from
+                        # restore_snapshot's result dict — they are the proof
+                        # of coverage shown in the detail panel.
+                        "binds_restored":       sp_result.get("binds_restored",       []),
+                        "services_restarted":   sp_result.get("services_restarted",   []),
+                        "containers_restarted": sp_result.get("containers_restarted", []),
+                        "snapshot_preserved":   sp_result.get("snapshot_preserved", False),
+                        "recreated_snap_id":    sp_result.get("recreated_snap_id",  ""),
+                        "restore_warning":      sp_result.get("warning",            ""),
+                        # Content-level proof of rollback: list of
+                        # {table,label,group,before,after,delta,changed} entries
+                        # captured by lvm_snapshot_service.restore_snapshot().
+                        "db_changes":               sp_result.get("db_changes", []),
+                        "db_changes_total_delta":   sp_result.get("db_changes_total_delta", 0),
+                        "db_changes_tables_touched":sp_result.get("db_changes_tables_touched", 0),
+                        "summary": {
+                            "success": 1 if norm_status == "success" else 0,
+                            "failed": 1 if norm_status == "error" else 0,
+                            "skipped": 0,
+                        },
+                        "components_detail": [],
+                        "stabilization_status": None,
+                        "slowest_components": [],
+                        "log_file": None,
+                    })
+                except Exception:
+                    pass
+    except Exception:
+        pass
 
     entries.sort(key=lambda x: x.get("started_at") or "", reverse=True)
     total = len(entries)
@@ -2363,6 +3430,15 @@ def delete_backup(request, backup_id):
             shutil.rmtree(backup_dir)
         elif legacy_backup and legacy_backup.is_file():
             legacy_backup.unlink()
+        _invalidate_backup_results_cache()
+        append_backup_event(
+            kind="backup",
+            title="Backup deleted",
+            severity="warning",
+            status="success",
+            source="api",
+            ref_id=backup_id,
+        )
         return JsonResponse({"status": "success", "message": f"Backup {backup_id} deleted."})
     except Exception as e:
         logger.exception("Failed to delete backup %s", backup_id)
@@ -2568,6 +3644,16 @@ def _execute_scheduled_task(task_id: str):
         task["last_run_status"] = "error"
         task["last_run_message"] = "Unknown backup task type."
         _write_schedule_config(config)
+        append_backup_event(
+            kind="schedule",
+            title="Scheduled backup task failed",
+            severity="error",
+            status="error",
+            source="scheduler",
+            ref_id=task_id,
+            detail="Unknown backup task type.",
+            extra={"backup_type": backup_type, "task_name": task_name},
+        )
         return
 
     # Non-daemon so notifications complete even if spawning thread exits
@@ -2578,6 +3664,15 @@ def _execute_scheduled_task(task_id: str):
 
     t0 = time.monotonic()
     try:
+        append_backup_event(
+            kind="schedule",
+            title="Scheduled backup task started",
+            severity="info",
+            status="running",
+            source="scheduler",
+            ref_id=task_id,
+            extra={"backup_type": backup_type, "task_name": task_name},
+        )
         result = runner()
         duration = time.monotonic() - t0
         task["last_run_at"] = now
@@ -2592,6 +3687,16 @@ def _execute_scheduled_task(task_id: str):
         )
         t_completed.start()
         CloudStorageService.async_upload_after_backup(backup_id, result.get("backup_dir"), backup_type, result)
+        append_backup_event(
+            kind="schedule",
+            title="Scheduled backup task completed" if ok else "Scheduled backup task failed",
+            severity="success" if ok else "error",
+            status="success" if ok else "error",
+            source="scheduler",
+            ref_id=backup_id or task_id,
+            detail=result.get("message", ""),
+            extra={"task_id": task_id, "backup_type": backup_type, "duration_seconds": round(duration, 2)},
+        )
     except Exception as exc:
         duration = time.monotonic() - t0
         logger.exception("Scheduled backup task %s failed", task_id)
@@ -2604,6 +3709,16 @@ def _execute_scheduled_task(task_id: str):
             daemon=False,
         )
         t_completed.start()
+        append_backup_event(
+            kind="schedule",
+            title="Scheduled backup task failed",
+            severity="error",
+            status="error",
+            source="scheduler",
+            ref_id=task_id,
+            detail=str(exc),
+            extra={"backup_type": backup_type, "task_name": task_name, "duration_seconds": round(duration, 2)},
+        )
     _write_schedule_config(config)
 
 
@@ -2655,6 +3770,15 @@ def _queue_due_schedule_catchups(config: dict) -> bool:
     for task_id in queued_task_ids:
         _start_scheduled_task_thread(task_id)
     for task_name, backup_type, missed_at in queued_tasks_meta:
+        append_backup_event(
+            kind="schedule",
+            title="Missed backup catchup queued",
+            severity="warning",
+            status="queued",
+            source="scheduler",
+            detail=f"Missed slot {missed_at}",
+            extra={"task_name": task_name, "backup_type": backup_type, "missed_at": missed_at},
+        )
         threading.Thread(
             target=notify_missed_backup_catchup,
             args=(task_name, backup_type, missed_at),
@@ -2866,6 +3990,15 @@ def save_schedule_task(request):
         _sync_crontab(tasks, _get_schedule_tz(config))
     except Exception as exc:
         logger.warning("Crontab sync failed: %s", exc)
+    append_backup_event(
+        kind="schedule",
+        title="Scheduled backup task saved",
+        severity="info",
+        status="success",
+        source="api",
+        ref_id=task_id or tasks[-1].get("id", ""),
+        extra={"task": data},
+    )
     return JsonResponse({"status": "ok", "tasks": tasks})
 
 
@@ -2887,6 +4020,15 @@ def run_scheduled_task(request, task_id):
     # Run backup in a non-daemon thread so the cron curl returns immediately
     # and all notification threads complete independently of the HTTP lifecycle
     _start_scheduled_task_thread(task_id)
+    append_backup_event(
+        kind="schedule",
+        title="Scheduled backup task queued manually",
+        severity="info",
+        status="queued",
+        source="api",
+        ref_id=task_id,
+        extra={"backup_type": task.get("type"), "task_name": task.get("label", task_id)},
+    )
     return JsonResponse({"status": "queued", "task_id": task_id, "message": "Backup task started in background."}, status=202)
 
 
@@ -2903,6 +4045,14 @@ def delete_schedule_task(request, task_id):
         _sync_crontab(tasks, _get_schedule_tz(config))
     except Exception as exc:
         logger.warning("Crontab sync failed: %s", exc)
+    append_backup_event(
+        kind="schedule",
+        title="Scheduled backup task deleted",
+        severity="warning",
+        status="success",
+        source="api",
+        ref_id=task_id,
+    )
     return JsonResponse({"status": "ok", "tasks": tasks})
 
 
@@ -2915,6 +4065,14 @@ def update_retention(request):
     config = _read_schedule_config()
     config["retention"] = {**DEFAULT_RETENTION, **data}
     _write_schedule_config(config)
+    append_backup_event(
+        kind="retention",
+        title="Backup retention policy updated",
+        severity="info",
+        status="success",
+        source="api",
+        extra={"retention": config["retention"]},
+    )
     return JsonResponse({"status": "ok", "retention": config["retention"]})
 
 
@@ -2951,6 +4109,15 @@ def apply_retention_now(request):
     result = _apply_gfs_retention(retention)
     config["last_retention_applied"] = datetime.utcnow().isoformat()
     _write_schedule_config(config)
+    append_backup_event(
+        kind="retention",
+        title="Backup retention applied",
+        severity="warning" if result.get("total_deleted", 0) else "info",
+        status="success",
+        source="api",
+        detail=f"{result.get('total_deleted', 0)} backup(s) deleted",
+        extra=result,
+    )
     return JsonResponse({"status": "ok", **result})
 
 
@@ -2966,7 +4133,18 @@ def import_backup(request):
         return JsonResponse({"status": "error", "message": "No file uploaded."}, status=400)
 
     result = ExportImportService.import_backup(uploaded_file)
+    _invalidate_backup_results_cache()
     status_code = 200 if result.get("status") == "success" else 400
+    append_backup_event(
+        kind="backup",
+        title="Backup imported" if status_code == 200 else "Backup import failed",
+        severity="success" if status_code == 200 else "error",
+        status=result.get("status", "unknown"),
+        source="api",
+        ref_id=result.get("backup_id", ""),
+        detail=result.get("message", ""),
+        extra={"filename": getattr(uploaded_file, "name", "")},
+    )
     return JsonResponse(result, status=status_code)
 
 
@@ -3017,6 +4195,15 @@ def cloud_config(request):
     if secret and secret != "••••••••":
         cfg.secret_access_key = secret
     cfg.save()
+    append_backup_event(
+        kind="cloud",
+        title="Cloud backup configuration saved",
+        severity="info",
+        status="success",
+        source="api",
+        ref_id=str(cfg.pk),
+        extra={"provider": cfg.provider, "bucket": cfg.bucket_name, "auto_upload": cfg.auto_upload},
+    )
     return JsonResponse({"status": "ok", "id": cfg.pk})
 
 
@@ -3032,6 +4219,15 @@ def cloud_test(request):
         return JsonResponse({"ok": False, "message": "No cloud storage configured."}, status=400)
     result = CloudStorageService(cfg).test_connection()
     status = 200 if result["ok"] else 400
+    append_backup_event(
+        kind="cloud",
+        title="Cloud backup connection test succeeded" if result.get("ok") else "Cloud backup connection test failed",
+        severity="success" if result.get("ok") else "error",
+        status="success" if result.get("ok") else "error",
+        source="api",
+        detail=result.get("message", result.get("error", "")),
+        extra={"provider": cfg.provider, "bucket": cfg.bucket_name},
+    )
     return JsonResponse(result, status=status)
 
 
@@ -3079,6 +4275,16 @@ def cloud_sync(request, backup_id):
             cloud_error="",
         )
 
+    append_backup_event(
+        kind="cloud",
+        title="Cloud backup sync completed" if result.get("ok") else "Cloud backup sync failed",
+        severity="success" if result.get("ok") else "error",
+        status="success" if result.get("ok") else "error",
+        source="api",
+        ref_id=backup_id,
+        detail=result.get("message", result.get("error", "")),
+        extra={"key": result.get("key", ""), "size_mb": result.get("size_mb"), "provider": cfg.provider},
+    )
     return JsonResponse(result)
 
 
@@ -3091,3 +4297,32 @@ def cloud_backup_history(request):
 
     records = BackupRecord.objects.all()[:50]
     return JsonResponse({"records": [r.to_dict() for r in records]})
+
+
+# ── In-app alerts ──────────────────────────────────────────────────────────────
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def get_in_app_alerts(request):
+    try:
+        data = json.loads(IN_APP_ALERTS_FILE.read_text()) if IN_APP_ALERTS_FILE.exists() else {"alerts": [], "last_read": ""}
+    except Exception:
+        data = {"alerts": [], "last_read": ""}
+    return JsonResponse(data)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def mark_in_app_alerts_read(request):
+    try:
+        data = json.loads(IN_APP_ALERTS_FILE.read_text()) if IN_APP_ALERTS_FILE.exists() else {"alerts": [], "last_read": ""}
+        for alert in data.get("alerts", []):
+            alert["read"] = True
+        from datetime import timezone as _tz
+        data["last_read"] = datetime.now(_tz.utc).isoformat()
+        IN_APP_ALERTS_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+    except Exception:
+        pass
+    return JsonResponse({"ok": True})

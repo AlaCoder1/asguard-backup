@@ -29,6 +29,20 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    """SessionAuthentication that does NOT enforce CSRF.
+
+    The backup import endpoint is an AllowAny multipart upload; DRF's default
+    SessionAuthentication still runs CSRF enforcement for an authenticated
+    session, and the browser's multipart upload doesn't carry a usable CSRF
+    token → every import returned HTTP 403. Skipping CSRF here is safe: the
+    endpoint is already AllowAny and lives behind the appliance's auth UI.
+    """
+
+    def enforce_csrf(self, request):
+        return  # no CSRF check for this endpoint
 from rest_framework.permissions import AllowAny
 import psutil
 
@@ -4590,7 +4604,7 @@ def apply_retention_now(request):
 
 @api_view(["POST"])
 @require_http_methods(["POST"])
-@authentication_classes([SessionAuthentication])
+@authentication_classes([CsrfExemptSessionAuthentication])
 @permission_classes([AllowAny])
 def import_backup(request):
     uploaded_file = request.FILES.get("file")

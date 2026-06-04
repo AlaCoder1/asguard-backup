@@ -140,6 +140,18 @@
                               Restore
                             </button>
                             <button
+                              class="btn btn-preview"
+                              type="button"
+                              :disabled="loading || backup.type === 'database_only'"
+                              @click="openContentPreview(backup)"
+                            >
+                              <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1.5 8s2.5-5 6.5-5 6.5 5 6.5 5-2.5 5-6.5 5-6.5-5-6.5-5z"/>
+                                <circle cx="8" cy="8" r="2"/>
+                              </svg>
+                              Aperçu
+                            </button>
+                            <button
                               class="btn btn-light"
                               type="button"
                               :disabled="loading || backup.type === 'database_only'"
@@ -510,6 +522,133 @@
       </aside>
     </div>
 
+    <!-- ════════════════════════════════════════════════════════════════════
+         APERÇU DU CONTENU — modale dédiée pour répondre à "qu'est-ce
+         qu'il y a dans ce backup ?". Vue lisible, sans tableaux
+         imbriqués : une carte par catégorie, gros chiffre, badge delta
+         vs l'état actuel. Permet de choisir la bonne version de backup
+         avant même de penser au restore. CTA "Restaurer ce backup" en
+         bas si l'opérateur valide son choix.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <div v-if="previewDialog" class="modal-backdrop" @click.self="closeContentPreview">
+      <div class="preview-modal">
+        <header class="preview-head">
+          <div class="preview-head-copy">
+            <span class="preview-kicker">Aperçu du contenu</span>
+            <strong>{{ previewBackup ? previewBackup.id : "" }}</strong>
+            <div class="preview-meta">
+              <span v-if="previewBackup" class="preview-meta-pill">{{ typeLabel(previewBackup.type) }}</span>
+              <span v-if="previewBackup">{{ formatDate(previewBackup.modified_at) }}</span>
+              <span v-if="previewBackup">·</span>
+              <span v-if="previewBackup">{{ formatSize(previewBackup.sizeBytes) }}</span>
+            </div>
+          </div>
+          <button class="drawer-close" type="button" @click="closeContentPreview">×</button>
+        </header>
+
+        <!-- Filtre intelligent : "Tout" / "Différents de l'actuel" / "Identiques".
+             Aide l'opérateur à voir d'un coup d'œil ce qui changerait. -->
+        <div class="preview-filter-row">
+          <button
+            v-for="f in previewFilters"
+            :key="f.id"
+            class="preview-filter-chip"
+            :class="{ active: previewFilter === f.id }"
+            type="button"
+            @click="previewFilter = f.id"
+          >
+            {{ f.label }}
+            <span class="preview-filter-count">{{ f.count }}</span>
+          </button>
+        </div>
+
+        <!-- Bandeau résumé : total éléments + delta global. La phrase est
+             naturelle ("12 éléments, 3 de plus qu'actuellement") pour
+             ne demander aucune lecture technique. -->
+        <div v-if="previewSummaryText" class="preview-summary">
+          <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10" cy="10" r="8"/>
+            <path d="M10 6v5l3 2"/>
+          </svg>
+          <span v-html="previewSummaryText"></span>
+        </div>
+
+        <div v-if="previewLoading" class="preview-loading">Chargement de l'aperçu…</div>
+
+        <div v-else-if="previewCards.length === 0" class="preview-empty">
+          <strong>Aucune donnée comparable</strong>
+          <span>Ce backup ne contient que des fichiers de configuration — pas de données en base à comparer.</span>
+        </div>
+
+        <!-- Grille de cartes : une carte = un composant.
+             Couleur immédiate, gros chiffre, badge delta. -->
+        <div v-else class="preview-grid">
+          <article
+            v-for="card in previewCards"
+            :key="card.name"
+            class="preview-card"
+            :class="card.tone"
+          >
+            <header class="preview-card-head">
+              <span class="preview-card-icon" v-html="card.icon"></span>
+              <div class="preview-card-titles">
+                <strong>{{ card.title }}</strong>
+                <span>{{ card.subtitle }}</span>
+              </div>
+              <span
+                v-if="card.delta !== 0"
+                class="preview-card-delta"
+                :class="card.delta > 0 ? 'pos' : 'neg'"
+                :title="card.deltaTitle"
+              >
+                {{ card.delta > 0 ? "+" : "" }}{{ card.delta }}
+              </span>
+              <span v-else class="preview-card-delta neutral" title="Identique à l'état actuel">=</span>
+            </header>
+
+            <div class="preview-card-figure">
+              <span class="preview-card-big">{{ card.inBackup }}</span>
+              <span class="preview-card-unit">{{ card.unitLabel }}</span>
+            </div>
+
+            <footer class="preview-card-foot">
+              <span>Actuellement</span>
+              <strong>{{ card.current }}</strong>
+            </footer>
+
+            <details v-if="card.lines.length > 1" class="preview-card-detail">
+              <summary>Voir le détail</summary>
+              <ul>
+                <li v-for="line in card.lines" :key="line.model">
+                  <span>{{ line.label }}</span>
+                  <span class="preview-line-counts">
+                    <strong>{{ line.in_backup ?? 0 }}</strong>
+                    <span class="preview-line-arrow">{{ line.in_backup === line.current ? "=" : "→" }}</span>
+                    <strong>{{ line.current ?? 0 }}</strong>
+                  </span>
+                </li>
+              </ul>
+            </details>
+          </article>
+        </div>
+
+        <footer class="preview-foot">
+          <button class="btn btn-light" type="button" @click="closeContentPreview">Fermer</button>
+          <button
+            class="btn btn-primary"
+            type="button"
+            :disabled="!previewBackup"
+            @click="restoreFromPreview"
+          >
+            Restaurer ce backup
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-left:6px">
+              <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+          </button>
+        </footer>
+      </div>
+    </div>
+
     <div v-if="deleteConfirmDialog" class="modal-backdrop" @click.self="deleteConfirmDialog = false">
       <div class="action-modal action-modal-delete">
         <div class="action-modal-header">
@@ -668,6 +807,90 @@
           <strong>Indice de verification</strong>
           <span>{{ restoreMonitor.restoredComponentsLabel }}</span>
         </div>
+
+        <!-- Rapport diff post-restore : montre exactement quelles lignes
+             ont été ajoutées, supprimées ou modifiées pendant la
+             restauration. Ne s'affiche que si le moteur a calculé un diff
+             (composants DB-backed uniquement, restore terminé). -->
+        <div v-if="restoreMonitor.diff && diffComponents.length > 0" class="restore-diff">
+          <div class="restore-diff-head">
+            <strong>Rapport de changements</strong>
+            <span class="restore-diff-totals">
+              <span class="restore-diff-tot pos">+{{ restoreMonitor.diff.totals.added }} ajoutés</span>
+              <span class="restore-diff-tot neg">−{{ restoreMonitor.diff.totals.removed }} supprimés</span>
+              <span class="restore-diff-tot mod">~{{ restoreMonitor.diff.totals.modified }} modifiés</span>
+            </span>
+          </div>
+
+          <div class="restore-diff-list">
+            <details
+              v-for="comp in diffComponents"
+              :key="`diff-${comp.name}`"
+              class="restore-diff-comp"
+              open
+            >
+              <summary>
+                <span class="restore-diff-comp-name">{{ comp.name }}</span>
+                <span class="restore-diff-comp-summary">
+                  <span v-if="comp.summary.added" class="restore-diff-tot pos">+{{ comp.summary.added }}</span>
+                  <span v-if="comp.summary.removed" class="restore-diff-tot neg">−{{ comp.summary.removed }}</span>
+                  <span v-if="comp.summary.modified" class="restore-diff-tot mod">~{{ comp.summary.modified }}</span>
+                </span>
+              </summary>
+
+              <div v-for="m in comp.models" :key="m.path" class="restore-diff-model">
+                <div class="restore-diff-model-head">
+                  <strong>{{ m.label }}</strong>
+                  <span class="restore-diff-model-counts">{{ m.pre_count }} → {{ m.post_count }}</span>
+                </div>
+
+                <ul v-if="m.removed.length" class="restore-diff-rows neg">
+                  <li v-for="r in m.removed" :key="`r-${m.path}-${r.pk}`">
+                    <span class="restore-diff-op">−</span>
+                    <span class="restore-diff-pk">#{{ r.pk }}</span>
+                    <span class="restore-diff-summary">{{ r.summary }}</span>
+                  </li>
+                </ul>
+
+                <ul v-if="m.added.length" class="restore-diff-rows pos">
+                  <li v-for="r in m.added" :key="`a-${m.path}-${r.pk}`">
+                    <span class="restore-diff-op">+</span>
+                    <span class="restore-diff-pk">#{{ r.pk }}</span>
+                    <span class="restore-diff-summary">{{ r.summary }}</span>
+                  </li>
+                </ul>
+
+                <ul v-if="m.modified.length" class="restore-diff-rows mod">
+                  <li v-for="r in m.modified" :key="`m-${m.path}-${r.pk}`">
+                    <span class="restore-diff-op">~</span>
+                    <span class="restore-diff-pk">#{{ r.pk }}</span>
+                    <span class="restore-diff-summary">{{ r.summary }}</span>
+                    <details class="restore-diff-changes">
+                      <summary>{{ Object.keys(r.changes).length }} champ(s) modifié(s)</summary>
+                      <table>
+                        <tbody>
+                          <tr v-for="(ch, field) in r.changes" :key="field">
+                            <td class="field">{{ field }}</td>
+                            <td class="before">{{ ch.before == null ? "∅" : ch.before }}</td>
+                            <td class="arrow">→</td>
+                            <td class="after">{{ ch.after == null ? "∅" : ch.after }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </details>
+                  </li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </div>
+        <div
+          v-else-if="restoreMonitor.diff && diffComponents.length === 0 && !restoreMonitor.progressActive"
+          class="restore-diff restore-diff--empty"
+        >
+          <strong>Rapport de changements</strong>
+          <span>Aucun changement détecté en base — le contenu restauré était identique à l'état précédent.</span>
+        </div>
       </div>
     </transition>
 
@@ -753,6 +976,12 @@ export default {
       pageSize: 12,
       detailsDialog: false,
       selectedDetails: null,
+      // ── Aperçu du contenu (modale "qu'y a-t-il dans ce backup ?") ─────
+      previewDialog: false,
+      previewBackup: null,            // backup row currently previewed
+      previewPayload: null,           // restore-preview API response
+      previewLoading: false,
+      previewFilter: "all",           // 'all' | 'changed' | 'same'
       createDialog: false,
       createMode: "full",
       backupComponents: [],
@@ -779,6 +1008,7 @@ export default {
         verification: null,
         restoredComponentsLabel: "",
         liveComponents: null,
+        diff: null,    // post-restore row-level diff (added/removed/modified)
       },
       restorePoller: null,
       importMonitor: {
@@ -836,6 +1066,90 @@ export default {
     },
     showSafeRestoreMode() {
       return this.restoreTargetHasApplication;
+    },
+    // ── Aperçu du contenu : cartes par composant ────────────────────────
+    // Each "card" is one DB-backed component (firewall, NAT, ZTNA, …)
+    // turned into a glance-able tile: icon, title, big number, delta.
+    // Pure presentation — the raw data comes from restore-preview.
+    previewCardsAll() {
+      const included = this.previewPayload?.included || [];
+      return included
+        .filter(c => c.has_db_inventory && (c.inventory || []).length > 0)
+        .map(c => {
+          // Drop rows where both backup and live sides are zero — they
+          // contribute nothing to the operator's decision and would
+          // bloat the "Voir le détail" expander.
+          const lines = (c.inventory || []).filter(
+            r => (r.in_backup || 0) > 0 || (r.current || 0) > 0
+          );
+          const inBackup = c.total_in_backup || 0;
+          const current = c.total_current || 0;
+          const delta = inBackup - current;
+          const meta = this.componentDisplayMeta(c.name);
+          // tone drives card color: green = identical, blue = backup
+          // has MORE than current (restoring brings rows back),
+          // amber = backup has LESS than current (restoring drops rows).
+          let tone = "tone-same";
+          if (delta > 0) tone = "tone-pos";
+          else if (delta < 0) tone = "tone-neg";
+          return {
+            name: c.name,
+            title: meta.title,
+            subtitle: meta.subtitle,
+            icon: meta.icon,
+            unitLabel: meta.unit,
+            inBackup,
+            current,
+            delta,
+            deltaTitle: delta > 0
+              ? `${delta} élément(s) en plus dans ce backup`
+              : `${Math.abs(delta)} élément(s) en moins dans ce backup`,
+            tone,
+            lines,
+          };
+        })
+        // Show the most "interesting" cards first: biggest absolute
+        // delta on top so the operator sees what would change first.
+        .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta) || b.inBackup - a.inBackup);
+    },
+    previewCards() {
+      const all = this.previewCardsAll;
+      if (this.previewFilter === "changed") return all.filter(c => c.delta !== 0);
+      if (this.previewFilter === "same")    return all.filter(c => c.delta === 0);
+      return all;
+    },
+    previewFilters() {
+      const all = this.previewCardsAll;
+      const changed = all.filter(c => c.delta !== 0).length;
+      const same = all.length - changed;
+      return [
+        { id: "all",     label: "Tout",                count: all.length },
+        { id: "changed", label: "Différents de l'actuel", count: changed },
+        { id: "same",    label: "Identiques",          count: same },
+      ];
+    },
+    previewSummaryText() {
+      const all = this.previewCardsAll;
+      if (!all.length) return "";
+      let inBackup = 0, current = 0;
+      for (const c of all) { inBackup += c.inBackup; current += c.current; }
+      const delta = inBackup - current;
+      if (delta === 0) {
+        return `<strong>${inBackup}</strong> éléments en base — <strong class="pos">identiques à l'état actuel</strong>.`;
+      }
+      if (delta > 0) {
+        return `<strong>${inBackup}</strong> éléments dans le backup, soit <strong class="pos">+${delta}</strong> de plus qu'actuellement (<strong>${current}</strong>).`;
+      }
+      return `<strong>${inBackup}</strong> éléments dans le backup, soit <strong class="neg">${delta}</strong> de moins qu'actuellement (<strong>${current}</strong>).`;
+    },
+    diffComponents() {
+      const diff = this.restoreMonitor.diff;
+      if (!diff || !diff.components) return [];
+      return Object.entries(diff.components).map(([name, payload]) => ({
+        name,
+        summary: payload.summary || { added: 0, removed: 0, modified: 0 },
+        models: Object.entries(payload.models || {}).map(([path, m]) => ({ path, ...m })),
+      }));
     },
     restoreTargetHasApplication() {
       return this.backupHasApplication(this.restoreTarget);
@@ -1102,7 +1416,7 @@ export default {
       if (this.restoreMonitor.progressActive) return;
       this.restoreMonitor.visible = false;
     },
-    openRestoreMonitor({ backupId, modeLabel, title, subtitle, status = "running", statusLabel = "Running", progressActive = true, verification = null, progressPct = 0, done = 0, total = 0, liveComponents = null }) {
+    openRestoreMonitor({ backupId, modeLabel, title, subtitle, status = "running", statusLabel = "Running", progressActive = true, verification = null, progressPct = 0, done = 0, total = 0, liveComponents = null, diff = null }) {
       this.restoreMonitor = {
         visible: true,
         title,
@@ -1118,6 +1432,7 @@ export default {
         total,
         liveComponents,
         restoredComponentsLabel: verification ? this.buildRestoredComponentsLabel(verification.summary) : "",
+        diff,
       };
     },
     restoreCheckClass(status) {
@@ -1235,6 +1550,8 @@ export default {
             ? payload.components_progress
             : null;
 
+          const diff = isFinished ? (payload.result && payload.result.diff) || null : null;
+
           this.openRestoreMonitor({
             backupId: payload.backup_id || backupId,
             modeLabel,
@@ -1250,6 +1567,7 @@ export default {
             done: payload.done || 0,
             total: payload.total || 0,
             liveComponents,
+            diff,
           });
 
           if (isFinished) {
@@ -1262,6 +1580,16 @@ export default {
                   : "Restore termine avec erreur.",
               status === "success" ? "success" : "error"
             );
+            // Restored onto a VM without the LVM 2nd disk: the appliance was
+            // reconciled to run natively (LVM/bind lines stripped from fstab).
+            // Tell the operator and recommend a reboot for a clean mount state.
+            const fr = payload.result && payload.result.fstab_reconcile;
+            if (fr && fr.mode === "native" && fr.changed) {
+              this.notify(
+                "Mode natif activé : aucun 2e disque LVM détecté, les montages LVM ont été retirés du fstab. Un redémarrage est recommandé pour finaliser.",
+                "warning"
+              );
+            }
             await this.fetchBackups();
           }
         } catch (error) {
@@ -1508,6 +1836,7 @@ export default {
             statusLabel: this.restoreStatusLabel(response.data?.status || "success"),
             progressActive: false,
             verification,
+            diff: response.data?.diff || null,
           });
           await this.fetchBackups();
         } else {
@@ -1562,6 +1891,68 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+
+    // ── Aperçu du contenu ───────────────────────────────────────────────
+    // Opens a focused, visual modal answering "what's inside this backup,
+    // and how does it differ from the live system?". The technical
+    // Details drawer stays untouched — clear separation of concerns:
+    // Aperçu = decision support, Details = technical audit.
+    async openContentPreview(backup) {
+      this.previewBackup = backup;
+      this.previewPayload = null;
+      this.previewFilter = "all";
+      this.previewLoading = true;
+      this.previewDialog = true;
+      try {
+        const { data } = await axios.get(`/backup/${backup.id}/restore-preview`);
+        this.previewPayload = data;
+      } catch (e) {
+        this.notify("Impossible de charger l'aperçu du contenu.", "error");
+        this.previewPayload = null;
+      } finally {
+        this.previewLoading = false;
+      }
+    },
+    closeContentPreview() {
+      this.previewDialog = false;
+      this.previewPayload = null;
+      this.previewBackup = null;
+    },
+    restoreFromPreview() {
+      const backup = this.previewBackup;
+      this.closeContentPreview();
+      if (backup) this.openRestoreDialog(backup);
+    },
+    // Visual identity per backup component. Pure presentation: pretty
+    // title, one-line subtitle, inline SVG icon, unit label. Keeps the
+    // preview cards readable without forcing the operator to know
+    // backend component names (e.g. "ipsec_detailed" → "VPN IPsec").
+    componentDisplayMeta(name) {
+      const map = {
+        firewall:       { title: "Firewall",         subtitle: "Règles nftables", unit: "règle(s)",         icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L3 5v5c0 4 3 7 7 8 4-1 7-4 7-8V5l-7-3z"/></svg>' },
+        nat:            { title: "NAT",              subtitle: "DNAT, SNAT, 1-to-1",unit: "règle(s)",       icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11M11 4l3 3-3 3M17 13H6M9 16l-3-3 3-3"/></svg>' },
+        routing:        { title: "Routage",          subtitle: "Routes statiques",  unit: "route(s)",       icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="16" r="2"/><circle cx="16" cy="4" r="2"/><path d="M5 14c4-2 4-8 9-9"/></svg>' },
+        gateway:        { title: "Passerelles",      subtitle: "Gateways réseau",   unit: "passerelle(s)",  icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="14" height="10" rx="2"/><path d="M3 10h14M7 6V3M13 6V3"/></svg>' },
+        vpn:            { title: "VPN OpenVPN",      subtitle: "Serveurs et clients",unit: "instance(s)",    icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v6m0 0L7 5m3 3l3-3M3 13c0 3 3 5 7 5s7-2 7-5"/></svg>' },
+        ipsec_detailed: { title: "VPN IPsec",        subtitle: "Tunnels site-à-site",unit: "tunnel(s)",      icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10h4m8 0h4M6 10a4 4 0 014-4 4 4 0 014 4 4 4 0 01-4 4 4 4 0 01-4-4z"/></svg>' },
+        ztna:           { title: "ZTNA",             subtitle: "Identités et services",unit: "élément(s)",   icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7" r="3"/><path d="M3 17c0-4 3-6 7-6s7 2 7 6"/></svg>' },
+        waf:            { title: "WAF",              subtitle: "Pare-feu applicatif", unit: "règle(s)",       icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L3 5v6c0 4 3 7 7 8 4-1 7-4 7-8V5l-7-3z"/><path d="M7 10l2 2 4-4"/></svg>' },
+        ids:            { title: "IDS / IPS",        subtitle: "Suricata",          unit: "interface(s)",   icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5"/><path d="M13 13l4 4"/></svg>' },
+        proxy:          { title: "Proxy Squid",      subtitle: "Règles & utilisateurs",unit: "élément(s)",     icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h14v8H3z"/><path d="M3 10h14"/></svg>' },
+        dhcp:           { title: "DHCP",             subtitle: "Serveur DHCPv4",    unit: "serveur(s)",      icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M7 9h6M7 12h4"/></svg>' },
+        vlan:           { title: "VLAN",             subtitle: "Réseaux virtuels",  unit: "VLAN(s)",        icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h14M5 6h10M5 14h10"/></svg>' },
+        vxlan:          { title: "VXLAN",            subtitle: "Tunnels L2 overlay", unit: "VXLAN(s)",       icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h14M5 6l4 4-4 4M15 6l-4 4 4 4"/></svg>' },
+        sdwan:          { title: "SD-WAN",           subtitle: "Zones et politiques",unit: "élément(s)",     icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3v14"/></svg>' },
+        certificates:   { title: "Certificats",      subtitle: "PKI / CA",          unit: "certificat(s)",   icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="10" rx="2"/><path d="M7 17l3-2 3 2"/></svg>' },
+        double_mask:    { title: "Double Mask",      subtitle: "Anonymisation IP",  unit: "règle(s)",         icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="10" r="4"/><circle cx="13" cy="10" r="4"/></svg>' },
+      };
+      return map[name] || {
+        title: name,
+        subtitle: "Composant",
+        unit: "élément(s)",
+        icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/></svg>',
+      };
     },
     async exportBackup(backup) {
       if (backup.type === "database_only") {

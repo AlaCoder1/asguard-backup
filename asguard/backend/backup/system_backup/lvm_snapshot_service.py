@@ -39,6 +39,16 @@ class LVMSnapshotService:
     CONFIG_FILE = STATE_ROOT / "snapshot_config.json"
     JOBS_DIR    = STATE_ROOT / "snapshot_jobs"
 
+    # Where backups + schedule are staged (off the snapshotable LV) during a
+    # restore so a point-in-time rollback doesn't erase backups taken after the
+    # snapshot, and an off-LV marker the scheduler checks to suppress the
+    # missed-run catchup while a merge is in flight (the on-LV `.in_restore`
+    # lock gets reverted by the merge itself, so it can't cover this window).
+    STAGING_DIR        = STATE_ROOT / "restore_staging"
+    RESTORE_LOCK_FILE  = STATE_ROOT / ".restore_in_progress"
+    # Path on the snapshotable LV that holds the backup archives + schedule.
+    BACKUPS_ROOT       = Path("/var/backups/asguard")
+
     # Previous (on-LV) locations — migrated automatically on first use.
     _LEGACY_META_DIR    = Path("/var/backups/asguard/lvm_snapshots_meta")
     _LEGACY_CONFIG_FILE = Path("/var/backups/asguard/lvm_snapshot_config.json")
@@ -697,6 +707,107 @@ class LVMSnapshotService:
             pass
         return []
 
+    # ── Backup preservation across a merge ──────────────────────────────────
+    # /var/backups/asguard is bind-mounted onto the snapshotable LV, so a merge
+    # rolls it back to the snapshot's point-in-time — erasing every backup (and
+    # the schedule) created afterwards. We stage those off-LV before the merge
+    # and put them back after, so the backup LIST survives the restore while the
+    # system/config still reverts to the checkpoint.
+    @staticmethod
+    def _is_preserved(item: Path) -> bool:
+        n = item.name
+        # Transient job-progress dirs are not backups — let them revert.
+        if n in ("backup_jobs", "restore_jobs"):
+            return False
+        return (
+            n.startswith("backup_")        # backup_, backup_safe_, backup_custom_
+            or n.startswith("asguard_db_") # raw pg_dump files
+            or n in ("restored_logs", "schedule_config.json")
+        )
+
+    @classmethod
+    def _stage_preserved_backups(cls) -> list[str]:
+        """Copy backups + schedule off the LV BEFORE the merge. Best-effort:
+        never raises — returns a list of non-fatal errors."""
+        import shutil
+        errors: list[str] = []
+        staging = cls.STAGING_DIR
+        try:
+            if staging.exists():
+                shutil.rmtree(staging, ignore_errors=True)
+            staging.mkdir(parents=True, exist_ok=True)
+        except Exception as exc:
+            return [f"init staging: {exc}"]
+        if not cls.BACKUPS_ROOT.exists():
+            return errors
+        for item in cls.BACKUPS_ROOT.iterdir():
+            if not cls._is_preserved(item):
+                continue
+            dest = staging / item.name
+            try:
+                if item.is_dir():
+                    shutil.copytree(item, dest, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(item, dest)
+            except Exception as exc:
+                errors.append(f"stage {item.name}: {exc}")
+        return errors
+
+    @classmethod
+    def _restore_preserved_backups(cls) -> list[str]:
+        """After the merge + remount, put staged items back. Backup archives are
+        ADDED only when missing (identical otherwise); schedule_config.json is
+        OVERWRITTEN with the pre-restore version so the schedule is not reverted
+        and the scheduler doesn't see stale slots as 'missed'. Best-effort."""
+        import shutil
+        errors: list[str] = []
+        staging = cls.STAGING_DIR
+        if not staging.exists():
+            return errors
+        try:
+            cls.BACKUPS_ROOT.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        for item in staging.iterdir():
+            dest = cls.BACKUPS_ROOT / item.name
+            try:
+                if item.name == "schedule_config.json":
+                    shutil.copy2(item, dest)          # keep CURRENT schedule
+                elif item.is_dir():
+                    if not dest.exists():
+                        shutil.copytree(item, dest)
+                    else:
+                        for child in item.iterdir():   # merge missing children
+                            cdest = dest / child.name
+                            if cdest.exists():
+                                continue
+                            if child.is_dir():
+                                shutil.copytree(child, cdest)
+                            else:
+                                shutil.copy2(child, cdest)
+                elif not dest.exists():
+                    shutil.copy2(item, dest)
+            except Exception as exc:
+                errors.append(f"restore {item.name}: {exc}")
+        try:
+            shutil.rmtree(staging, ignore_errors=True)
+        except Exception:
+            pass
+        return errors
+
+    @classmethod
+    def _set_restore_lock(cls, on: bool) -> None:
+        """Off-LV marker the scheduler honors to suppress the missed-run catchup
+        during a merge (the on-LV `.in_restore` lock is reverted by the merge)."""
+        try:
+            cls._ensure_state_dirs()
+            if on:
+                cls.RESTORE_LOCK_FILE.write_text(datetime.now(LOCAL_TZ).isoformat())
+            elif cls.RESTORE_LOCK_FILE.exists():
+                cls.RESTORE_LOCK_FILE.unlink()
+        except Exception:
+            pass
+
     @classmethod
     def restore_snapshot(cls, snap_id: str) -> dict:
         """
@@ -715,6 +826,12 @@ class LVMSnapshotService:
         snap_path   = f"/dev/{cls.VG_NAME}/{snap_id}"
         origin_path = f"/dev/{cls.VG_NAME}/{cls.LV_NAME}"
 
+        # Suppress the scheduler's missed-run catchup for the whole restore
+        # window (off-LV marker — the on-LV `.in_restore` lock is reverted by
+        # the merge itself, so it cannot cover this). Cleared before every
+        # return below; also auto-expires on the scheduler side if we crash.
+        cls._set_restore_lock(True)
+
         binds    = cls._read_migration_binds()
         manifest = cls._read_migration_manifest()
         services   = [m["service"]   for m in manifest if m.get("service")]
@@ -722,6 +839,8 @@ class LVMSnapshotService:
 
         rebound: list[str] = []
         quiesce_errors: list[str] = []
+        stage_errors: list[str] = []
+        restore_preserve_errors: list[str] = []
 
         # 0. Capture snapshot metadata BEFORE the merge consumes everything.
         # We use this to recreate an identical snapshot at the end so the
@@ -743,6 +862,12 @@ class LVMSnapshotService:
         for ctr in containers:
             cls._run("docker", "stop", "-t", "30", ctr, timeout=60)
 
+        # 1bis. Stage the backup archives + schedule OFF the LV while it is still
+        # mounted, so the merge below doesn't erase backups taken after the
+        # snapshot (/var/backups/asguard is bind-mounted on the LV). Best-effort:
+        # a staging failure is reported but never aborts the restore.
+        stage_errors = cls._stage_preserved_backups()
+
         # 2. Release bind-mounts (reverse order) so the LV can be unmounted.
         for _src, target in reversed(binds):
             cls._run("umount", target, timeout=30)
@@ -761,6 +886,10 @@ class LVMSnapshotService:
                 cls._run("docker", "start", ctr, timeout=60)
             for svc in services:
                 cls._run("systemctl", "start", svc, timeout=30)
+            # Merge never happened, so the LV (and its backups) is untouched —
+            # just drop the staging copy and release the scheduler lock.
+            cls._restore_preserved_backups()
+            cls._set_restore_lock(False)
             return {"status": "error", "error": err or "lvconvert --merge échoué"}
 
         # 5. Deactivate → reactivate (triggers immediate merge for non-root LVs)
@@ -789,6 +918,13 @@ class LVMSnapshotService:
                     rebound.append(target)
                 else:
                     bind_errors.append(f"{target}: {berr}")
+
+        # 7bis. Put the staged backups + current schedule back onto the now-
+        # reverted LV so the FULL backup list survives the restore (only the
+        # system/config reverts to the checkpoint). Must run after the bind in
+        # step 7 so /var/backups/asguard points at the LV again.
+        if ok_mnt:
+            restore_preserve_errors = cls._restore_preserved_backups()
 
         # 8. Restart services then containers (containers last — Postgres needs
         #    its data dir bind-mount back in place first).
@@ -888,7 +1024,10 @@ class LVMSnapshotService:
             "db_changes_tables_touched": sum(1 for c in db_changes if c["changed"]),
             "nft_rebuild": nft_rebuild,
         }
-        problems = bind_errors + quiesce_errors
+        # Restore window is over — let the scheduler resume normal catchup.
+        cls._set_restore_lock(False)
+
+        problems = bind_errors + quiesce_errors + stage_errors + restore_preserve_errors
         if recreate_error:
             problems.append(f"recréation snapshot : {recreate_error}")
         if nft_rebuild.get("status") == "error":

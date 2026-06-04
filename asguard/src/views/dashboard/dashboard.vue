@@ -589,14 +589,22 @@ export default {
       eGui.style.lineHeight = "2";
       return eGui;
     }
+    // Critical services keep the appliance + web UI alive. Stopping them is
+    // self-defeating (the watchdog restarts them and a false "Échec" alert
+    // fires), so we never offer a Stop button for them — restart only.
+    const PROTECTED_SERVICES = ["uvicorn", "nginx", "NetworkManager", "nftables"];
+
     function actionCellRendererService(params) {
       let eGui = document.createElement("div");
+      const isProtected = PROTECTED_SERVICES.includes(params.data.service);
 
       if (params.data.status_started) {
-        eGui.innerHTML = `
+        const stopBtn = isProtected ? "" : `
          <button class="action-button stop" data-action="stop">
             <span class="mdi mdi-stop-circle fa-2x" style="color: red"></span>
-          </button>
+          </button>`;
+        eGui.innerHTML = `
+          ${stopBtn}
           <button class="action-button restart" data-action="restart">
             <span class="mdi mdi-reload fa-2x"></span>
           </button>

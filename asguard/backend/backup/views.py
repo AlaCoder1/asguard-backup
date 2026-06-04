@@ -14,6 +14,7 @@ from backend.backup.notifications import (
     notify_backup_completed,
     notify_backup_scheduled,
     notify_missed_backup_catchup,
+    notify_restore_completed,
     notify_vm_resource_risk,
     notify_vm_resource_resolved,
 )
@@ -477,6 +478,32 @@ def _build_restore_verification(job_payload: dict) -> dict:
     }
 
 
+def _db_port_reachable() -> bool:
+    """Truthful 'is the database up' check.
+
+    On this appliance PostgreSQL runs inside the `app-db-container` Docker
+    container, NOT as a systemd unit — so `systemctl is-active postgresql` is
+    always "inactive" and would wrongly flag the database as down in the drift
+    scan. A reachable DB port is the real signal. Uses the Django DB settings
+    so it stays correct if host/port change.
+    """
+    import socket
+    from django.conf import settings
+    db = settings.DATABASES.get("default", {})
+    host = db.get("HOST") or "127.0.0.1"
+    if host in ("", "localhost"):
+        host = "127.0.0.1"
+    try:
+        port = int(db.get("PORT") or 5432)
+    except (TypeError, ValueError):
+        port = 5432
+    try:
+        with socket.create_connection((host, port), timeout=2):
+            return True
+    except OSError:
+        return False
+
+
 def _load_dashboard_services() -> list[dict]:
     now = time.time()
     with _CACHE_LOCK:
@@ -493,17 +520,27 @@ def _load_dashboard_services() -> list[dict]:
             name = parsed.get("service_name")
             if not name or name in seen_names:
                 continue
+            running = bool(parsed.get("status_started"))
+            # "ipsec" is a legacy alias: there is no `ipsec` systemd unit, the
+            # real IPsec daemon is `strongswan`. So the DB row is always probed
+            # as stopped and showed a false drift even while IPsec is up. If
+            # strongswan is active, the IPsec service IS running.
+            if not running and name == "ipsec":
+                sw_out, _, sw_code = _run_readonly_command(
+                    ["systemctl", "is-active", "strongswan"], timeout=8)
+                if sw_code == 0 and sw_out.strip() == "active":
+                    running = True
             services.append({
                 "name": name,
                 "label": parsed.get("description") or name,
                 "description": parsed.get("description") or f"Service {name}",
                 "enabled": bool(parsed.get("status_enabled")),
-                "running": bool(parsed.get("status_started")),
+                "running": running,
                 "installed": bool(parsed.get("status_install")),
                 "manageable": True,
                 "kind": "service",
                 "category": "application",
-                "status_detail": "running" if parsed.get("status_started") else "stopped",
+                "status_detail": "running" if running else "stopped",
                 "source": "dashboard services table",
             })
             seen_names.add(name)
@@ -530,6 +567,17 @@ def _load_dashboard_services() -> list[dict]:
                         "installed": "not-found" not in (enabled_out + enabled_err + active_err).lower(),
                     }
                     break
+
+            # PostgreSQL runs in Docker (app-db-container), not via systemd, so
+            # the is-active check above always reports it stopped. Trust the
+            # actual DB port instead — otherwise the drift scan shows a scary
+            # (and false) "Base de données arrêtée".
+            if service_def["key"] == "postgresql" and _db_port_reachable():
+                resolved_name = resolved_name or "postgresql"
+                if state is None:
+                    state = {"enabled": True, "installed": True}
+                state["running"] = True
+                state.setdefault("installed", True)
 
             if resolved_name and resolved_name not in seen_names and state:
                 services.append({
@@ -629,6 +677,86 @@ def _safe_percent(value: int, total: int) -> int:
     if total <= 0:
         return 100
     return round((value / total) * 100)
+
+
+# Structural / non-rule lines in `nft list ruleset` output — never counted
+# as duplicate "rules" because they legitimately repeat across chains.
+_NFT_STRUCTURAL_PREFIXES = (
+    "table ", "chain ", "set ", "map ", "element", "type ", "policy ",
+    "comment ", "flags ", "elements ", "}", "{",
+)
+
+
+def _detect_nft_duplicates(table_filter: str | None = None) -> list[dict]:
+    """
+    Parse `nft list ruleset` and report rule lines that appear more than
+    once inside the SAME chain — the kernel-side duplication bug.
+
+    `nft -f` only ADDS rules; a restore that reloads a config without a
+    prior `nft flush ruleset` leaves N copies of every rule. A substring
+    "is the rule present?" check cannot see this — the rule IS present,
+    just N times. This helper counts occurrences per (table, chain, line)
+    so the sync analysis can flag real duplication.
+
+    `table_filter` (e.g. "nat") restricts the scan to tables whose
+    declaration line contains that keyword; None scans every table.
+
+    Returns a list of drift dicts ready to append to a sync module.
+    """
+    stdout, stderr, code = _run_readonly_command(["nft", "list", "ruleset"], timeout=10)
+    if code != 0 or not stdout:
+        # Retry with sudo — nft often needs root to read the ruleset.
+        stdout, stderr, code = _run_readonly_command(
+            ["sudo", "-n", "nft", "list", "ruleset"], timeout=10
+        )
+        if code != 0 or not stdout:
+            return []
+
+    drifts: list[dict] = []
+    current_table = ""
+    current_chain = ""
+    # {(table, chain): {rule_line: count}}
+    seen: dict[tuple[str, str], dict[str, int]] = {}
+
+    for raw in stdout.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("table "):
+            current_table = line[len("table "):].rstrip(" {").strip()
+            current_chain = ""
+            continue
+        if line.startswith("chain "):
+            current_chain = line[len("chain "):].rstrip(" {").strip()
+            continue
+        if line.startswith(_NFT_STRUCTURAL_PREFIXES):
+            continue
+        if not current_chain:
+            continue
+        if table_filter and table_filter.lower() not in current_table.lower():
+            continue
+        # Drop the trailing "# handle N" so identical rules with different
+        # kernel handles still compare equal.
+        rule_line = line.split("# handle", 1)[0].strip()
+        if not rule_line:
+            continue
+        bucket = seen.setdefault((current_table, current_chain), {})
+        bucket[rule_line] = bucket.get(rule_line, 0) + 1
+
+    for (table, chain), bucket in seen.items():
+        for rule_line, count in bucket.items():
+            if count > 1:
+                drifts.append({
+                    "kind": "rule_duplicated",
+                    "label": f"{chain}: {rule_line[:60]}",
+                    "detail": (
+                        f"Regle presente {count}x dans la chaine '{chain}' "
+                        f"(table {table}) — duplication noyau detectee. "
+                        f"Attendu: 1 occurrence. Cause probable: rechargement "
+                        f"`nft -f` sans `nft flush ruleset` prealable lors d'une restauration."
+                    ),
+                })
+    return drifts
 
 
 def _build_sync_module(
@@ -764,6 +892,10 @@ def _scan_nat_sync() -> dict:
             "detail": f"Une regle NAT existe dans nftables sans correspondance claire en base: {rule.split('# handle', 1)[0].strip()}",
         })
 
+    # Kernel-side duplication check restricted to the `nat` table.
+    for dup in _detect_nft_duplicates(table_filter="nat"):
+        drifts.append(dup)
+
     return _build_sync_module(
         "nat",
         "NAT",
@@ -831,6 +963,20 @@ def _scan_firewall_sync() -> dict:
                 "status": "ok",
                 "detail": f"visible dans {source_path.name}",
             })
+
+    # Kernel-side duplication check — catches the "restore reloaded the
+    # ruleset without flushing it" bug that a substring presence check
+    # above can never detect. Skip the dedicated `nat` table (covered by
+    # _scan_nat_sync) so each drift is reported by exactly one module.
+    for dup in _detect_nft_duplicates():
+        if "table nat" in dup.get("detail", "").lower():
+            continue
+        drifts.append(dup)
+        entities.append({
+            "label": dup["label"],
+            "status": "drift",
+            "detail": "duplication noyau",
+        })
 
     checked_items = len(active_rules)
     return _build_sync_module(
@@ -1939,6 +2085,9 @@ def _build_dashboard_alerts(backups: list[dict], services: list[dict], live_metr
     return alerts[:8]
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  SECTION: DASHBOARD & RISK AI  — overview, risk analysis, ping, metrics
+# ═════════════════════════════════════════════════════════════════════════════
 @swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="BACKUP DASHBOARD OVERVIEW")
 @api_view(["GET"])
 @require_http_methods(["GET"])
@@ -2489,6 +2638,9 @@ def test_telegram(request):
         return JsonResponse({"status": "error", "message": str(exc)}, status=500)
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  SECTION: BACKUP CREATION  — db / full / safe / custom backup endpoints
+# ═════════════════════════════════════════════════════════════════════════════
 @swagger_auto_schema("POST", responses={200: "OK"}, operation_summary="CREATE DATABASE BACKUP (LEGACY)")
 @api_view(["POST"])
 @require_http_methods(["POST"])
@@ -2790,6 +2942,7 @@ def create_custom_backup(request):
     if not isinstance(components, list):
         return JsonResponse({"status": "error", "message": "components must be a list."}, status=400)
 
+    threading.Thread(target=notify_backup_started, args=("custom_backup",), daemon=True).start()
     result = FullBackupService.create_custom_backup(components)
     _invalidate_backup_results_cache()
     status_code = 200 if result["status"] == "ok" else (400 if result["status"] == "error" else 207)
@@ -2803,9 +2956,20 @@ def create_custom_backup(request):
         detail=result.get("message", ""),
         extra={"backup_type": "custom", "components": components, "summary": result.get("summary", {})},
     )
+    # Push/email notification — custom backups were previously silent.
+    _ok = result.get("status") in {"ok", "partial"}
+    threading.Thread(
+        target=notify_backup_completed,
+        args=("custom_backup", result.get("backup_id", ""), _ok),
+        kwargs={"message": f"Composants : {', '.join(components)}"},
+        daemon=True,
+    ).start()
     return JsonResponse(result, status=status_code)
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  SECTION: BACKUP LISTING  — list backups, component catalog, details
+# ═════════════════════════════════════════════════════════════════════════════
 @swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="LIST ALL BACKUPS")
 @api_view(["GET"])
 @require_http_methods(["GET"])
@@ -2860,6 +3024,9 @@ def get_backup_details(request, backup_id):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  SECTION: RESTORE  — safe / ui_full / custom restore, preview, history
+# ═════════════════════════════════════════════════════════════════════════════
 @swagger_auto_schema("POST", responses={202: "Accepted"}, operation_summary="SAFE FULL RESTORE (WITHOUT APPLICATION)")
 @api_view(["POST"])
 @require_http_methods(["POST"])
@@ -2958,6 +3125,68 @@ def restore_preview(request, backup_id):
     components_meta = meta.get("components", {})
     excluded_set   = RestoreService.UI_FULL_EXCLUDED_COMPONENTS
 
+    # ── Per-component DB inventory ──────────────────────────────────────────
+    # For every data-driven component we read its component_db.json
+    # (counts written at backup time) and compare those numbers against
+    # the current live DB. This is what produces the "5 NAT DNAT in
+    # backup vs 7 currently — 2 will be deleted" preview the operator sees.
+    try:
+        from backend.backup.component_db import (
+            COMPONENT_MODELS, MODEL_LABELS, DB_SNAPSHOT_FILENAME, _resolve_model,
+        )
+    except Exception:
+        COMPONENT_MODELS, MODEL_LABELS, DB_SNAPSHOT_FILENAME, _resolve_model = (
+            {}, {}, "component_db.json", lambda _p: None,
+        )
+
+    def _read_backup_counts(component: str) -> dict:
+        snap = backup_dir / component / DB_SNAPSHOT_FILENAME
+        if not snap.exists():
+            return {}
+        try:
+            data = _json.loads(snap.read_text(encoding="utf-8"))
+            return data.get("counts", {}) or {}
+        except Exception:
+            return {}
+
+    def _current_db_counts(component: str) -> dict:
+        out = {}
+        for path in COMPONENT_MODELS.get(component, []):
+            Model = _resolve_model(path)
+            if Model is None:
+                continue
+            try:
+                out[path] = Model.objects.count()
+            except Exception:
+                out[path] = None
+        return out
+
+    def _component_inventory(component: str) -> list[dict]:
+        """Per-model rows ready to render in the preview table."""
+        backup_counts = _read_backup_counts(component)
+        current_counts = _current_db_counts(component)
+        all_paths = list(dict.fromkeys(
+            list(COMPONENT_MODELS.get(component, [])) + list(backup_counts.keys())
+        ))
+        rows = []
+        for path in all_paths:
+            in_backup = backup_counts.get(path)
+            current = current_counts.get(path)
+            # Delta = how the live DB count will move once restored.
+            # Only meaningful when both sides are known integers.
+            if isinstance(in_backup, int) and isinstance(current, int):
+                delta = in_backup - current
+            else:
+                delta = None
+            rows.append({
+                "model":     path,
+                "label":     MODEL_LABELS.get(path, path),
+                "in_backup": in_backup,
+                "current":   current,
+                "delta":     delta,
+            })
+        return rows
+
     included: list[dict] = []
     excluded: list[dict] = []
     for name, comp in components_meta.items():
@@ -2974,11 +3203,30 @@ def restore_preview(request, backup_id):
                 "status":  comp.get("status", "?"),
             })
         else:
+            inventory = _component_inventory(name)
+            total_in_backup = sum(
+                r["in_backup"] for r in inventory if isinstance(r["in_backup"], int)
+            )
+            total_current = sum(
+                r["current"] for r in inventory if isinstance(r["current"], int)
+            )
             included.append({
-                "name":    name,
-                "size_mb": round(size_mb, 3),
-                "status":  comp.get("status", "?"),
+                "name":             name,
+                "size_mb":          round(size_mb, 3),
+                "status":           comp.get("status", "?"),
+                "inventory":        inventory,
+                "total_in_backup":  total_in_backup,
+                "total_current":    total_current,
+                "has_db_inventory": bool(inventory),
             })
+
+    # Contrôle d'intégrité signé : un backup altéré ne doit jamais être
+    # restauré tel quel. Lecture seule, n'empêche pas l'aperçu de répondre.
+    try:
+        from backend.backup.integrity import verify_manifest
+        integrity = verify_manifest(backup_dir)
+    except Exception as exc:
+        integrity = {"status": "error", "message": f"Vérification impossible: {exc}"}
 
     included.sort(key=lambda c: -c["size_mb"])
     excluded.sort(key=lambda c: c["name"])
@@ -3002,12 +3250,46 @@ def restore_preview(request, backup_id):
         },
         "total_included_mb": total_included_mb,
         "total_excluded_mb": total_excluded_mb,
+        "integrity": integrity,
         "dr_hint": (
             "Pour restaurer aussi les composants moteur (clone complet d'appliance "
             "sur nouvelle VM), utilisez le script 'asguard-dr-restore' depuis la "
             "console TTY après redémarrage."
         ),
     })
+
+
+@swagger_auto_schema("GET", responses={200: "OK", 404: "Not Found"},
+                     operation_summary="VERIFY BACKUP INTEGRITY")
+@api_view(["GET"])
+@require_http_methods(["GET"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def verify_backup_integrity(request, backup_id):
+    """Contrôle anti-falsification d'un backup.
+
+    Recalcule l'empreinte SHA-256 de chaque fichier du backup et la compare au
+    manifeste signé (HMAC) écrit à la création. Détecte : fichier altéré
+    (ransomware/corruption), fichier manquant, fichier intrus, manifeste
+    falsifié. Lecture seule — aucun effet de bord.
+    """
+    backup_dir = Path(_BACKUP_ROOT) / backup_id
+    if not backup_dir.exists():
+        return JsonResponse(
+            {"status": "error", "message": f"Backup '{backup_id}' introuvable"},
+            status=404,
+        )
+    try:
+        from backend.backup.integrity import verify_manifest
+        report = verify_manifest(backup_dir)
+    except Exception as exc:
+        return JsonResponse(
+            {"status": "error", "message": f"Vérification impossible: {exc}"},
+            status=500,
+        )
+
+    report["backup_id"] = backup_id
+    return JsonResponse(report)
 
 
 @swagger_auto_schema(
@@ -3063,6 +3345,17 @@ def restore_components(request, backup_id):
         detail=result.get("message", ""),
         extra={"job_id": job_id, "components": components, "summary": result.get("summary", {})},
     )
+    # Push/email notification — custom restores were previously silent.
+    _summary = result.get("summary", {}) or {}
+    threading.Thread(
+        target=notify_restore_completed,
+        args=(backup_id, "custom", result.get("status") == "success"),
+        kwargs={
+            "components_ok":     _summary.get("success", 0),
+            "components_failed": _summary.get("failed", 0),
+        },
+        daemon=True,
+    ).start()
     return JsonResponse(result, status=status_code)
 
 
@@ -3274,6 +3567,11 @@ def get_restore_history(request):
                 "stabilization_status": (result.get("stabilization") or {}).get("status"),
                 "slowest_components": [{"name": n, "duration_seconds": round(d, 2)} for n, d in slowest],
                 "log_file": payload.get("log_file"),
+                # Row-level diff produced by backend/backup/restore_diff.py.
+                # Persisted as result.diff at restore time. Surfaced here so
+                # the Historique Restores view can render "rule X added,
+                # rule Y removed" retroactively, not just live.
+                "diff": result.get("diff") or None,
             })
         except Exception:
             logger.warning("Could not read restore job file %s", state_file.name)
@@ -3400,6 +3698,9 @@ def get_backup_progress(request, job_id):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  SECTION: BACKUP LIFECYCLE  — delete, export
+# ═════════════════════════════════════════════════════════════════════════════
 @swagger_auto_schema("DELETE", responses={200: "OK"}, operation_summary="DELETE BACKUP")
 @api_view(["DELETE"])
 @require_http_methods(["DELETE"])
@@ -3697,6 +3998,33 @@ def _execute_scheduled_task(task_id: str):
             detail=result.get("message", ""),
             extra={"task_id": task_id, "backup_type": backup_type, "duration_seconds": round(duration, 2)},
         )
+
+        # Auto-apply GFS retention right after a successful scheduled backup.
+        # Previously retention only ran when the operator clicked "Appliquer la
+        # rétention" — meaning a long-running appliance would keep accumulating
+        # backups indefinitely between manual clicks. The retention computation
+        # is cheap (filesystem stat only) and the actual deletion is bounded by
+        # the policy (keep N daily / N weekly / N monthly / absolute cap).
+        if ok:
+            try:
+                retention_cfg = {**DEFAULT_RETENTION, **config.get("retention", {})}
+                ret_result = _apply_gfs_retention(retention_cfg)
+                deleted = ret_result.get("total_deleted", 0)
+                config["last_retention_applied"] = datetime.utcnow().isoformat()
+                if deleted:
+                    append_backup_event(
+                        kind="retention",
+                        title="Backup retention applied (auto)",
+                        severity="info",
+                        status="success",
+                        source="scheduler",
+                        ref_id=task_id,
+                        detail=f"{deleted} backup(s) deleted after scheduled run",
+                        extra=ret_result,
+                    )
+            except Exception as ret_exc:
+                # Retention failure must NOT mark the backup itself as failed.
+                logger.warning("Auto-retention after task %s failed: %s", task_id, ret_exc)
     except Exception as exc:
         duration = time.monotonic() - t0
         logger.exception("Scheduled backup task %s failed", task_id)
@@ -3732,7 +4060,34 @@ def _start_scheduled_task_thread(task_id: str):
     thread.start()
 
 
-def _queue_due_schedule_catchups(config: dict) -> bool:
+# How long after a scheduled slot we wait before the page-load/startup fallback
+# treats it as missed. Must comfortably exceed the cron retry window (~5 min)
+# plus the longest backup duration so we never race a run that fired on time.
+_MISSED_RUN_GRACE = timedelta(minutes=15)
+
+# Off-LV marker written by LVMSnapshotService.restore_snapshot for the duration
+# of a merge. While it is present the data volume (backups + schedule_config)
+# is mid-rollback, so every past slot looks "missed" — we must NOT catch up or
+# we flood the operator with bogus backups + "Sauvegarde manquée" alerts.
+_LVM_RESTORE_LOCK     = Path("/var/lib/asguard/lvm/.restore_in_progress")
+_RESTORE_LOCK_MAX_AGE = timedelta(minutes=30)
+
+
+def _lvm_restore_in_progress() -> bool:
+    """True while an LVM snapshot restore is merging the volume. Auto-expires so
+    a crashed restore can never wedge the scheduler permanently."""
+    try:
+        age = time.time() - _LVM_RESTORE_LOCK.stat().st_mtime
+    except OSError:
+        return False
+    return age <= _RESTORE_LOCK_MAX_AGE.total_seconds()
+
+
+def _queue_due_schedule_catchups(config: dict, *, at_startup: bool = False) -> bool:
+    # A restore is rolling the volume back — any "missed" slot is an artifact of
+    # the rollback, not a real miss. Stay quiet until the restore completes.
+    if _lvm_restore_in_progress():
+        return False
     changed = False
     queued_task_ids = []
     queued_tasks_meta = []
@@ -3745,6 +4100,17 @@ def _queue_due_schedule_catchups(config: dict) -> bool:
         cron_utc = _cron_local_to_utc(task.get("cron", ""), tz_name)
         previous_run = _compute_cron_run(cron_utc, after=now, reverse=True)
         if not previous_run:
+            continue
+        # Grace period — but ONLY on a running system (page-load / endpoint
+        # triggers). On a live system the crontab fires *at* the slot, then
+        # waits up to ~5 min for uvicorn before the backup starts; treating the
+        # slot as "missed" any sooner races that on-time run and emits a false
+        # alert. At STARTUP we skip the grace: if the VM was off (or booting)
+        # at the slot, cron could never have fired it and never will — this is
+        # the genuine "VM démarrée après l'heure planifiée" case, so we recover
+        # immediately. `_latest_backup_after` below still suppresses the
+        # catchup if the run actually did happen.
+        if not at_startup and (now - previous_run) < _MISSED_RUN_GRACE:
             continue
         last_run = _safe_parse_datetime(task.get("last_run_at"))
         last_queued_for = task.get("last_queued_for")
@@ -3790,29 +4156,42 @@ def _queue_due_schedule_catchups(config: dict) -> bool:
 def _sync_crontab(tasks, tz_name: str | None = None):
     result = subprocess.run(["crontab", "-l"], capture_output=True, text=True)
     existing = result.stdout.splitlines() if result.returncode == 0 else []
-    # Strip old asguard task lines and any previous TZ= override
-    clean = [line for line in existing if "# asguard_task:" not in line and not line.startswith("TZ=")]
-    # Force UTC so cronie fires at the same time Django's UTC datetime.now() expects
-    clean.insert(0, "TZ=UTC")
+    # Strip old asguard task lines and any previous TZ= / CRON_TZ= overrides we
+    # may have written before. We no longer inject a timezone header: cronie
+    # IGNORES `TZ=` for schedule evaluation (it only honors `CRON_TZ=`), so the
+    # old `TZ=UTC` header silently made jobs fire in *system local* time, i.e.
+    # one hour early here, when uvicorn was still booting → the run was missed
+    # and the catchup wrongly reported it. We now schedule in the system's
+    # local time, exactly matching the hour the user picked. Django keeps
+    # computing the slot in UTC (via _cron_local_to_utc) — same wall-clock
+    # instant — so the catchup stays consistent.
+    clean = [line for line in existing
+             if "# asguard_task:" not in line
+             and not line.startswith("TZ=")
+             and not line.startswith("CRON_TZ=")]
     for task in tasks:
         if not task.get("enabled", True):
             continue
         endpoint = f"schedule/run/{task['id']}" if TASK_ENDPOINT_MAP.get(task.get("type", "")) else ""
         if not endpoint:
             continue
-        # Convert cron from configured timezone to UTC to match TZ=UTC crontab header
-        cron_utc = _cron_local_to_utc(task['cron'], tz_name)
-        # Retry loop: wait up to 5 minutes for uvicorn to be reachable, then POST backup
+        # Cron fires in system local time — use the user's cron expression as-is.
+        cron_local = task['cron']
+        # Retry loop: wait up to 5 minutes for uvicorn to be reachable, then POST
+        # the backup. Uses `if/then/else/fi` (no brace groups) so the back-off
+        # branch is valid shell — the previous `{{ }}` form was invalid and the
+        # `sleep`/retry never ran, so a not-yet-ready uvicorn meant no backup.
+        url = "http://127.0.0.1:8000"
         retry_cmd = (
             "/bin/bash -c '"
             "for i in $(seq 1 30); do "
-            "curl -sf --max-time 3 http://127.0.0.1:8000/swagger/ > /dev/null 2>&1 && "
-            f"{{ curl -s -X POST http://127.0.0.1:8000/backup/{endpoint} && break; }} || "
-            "{{ echo \"[$(date)] uvicorn not ready, retry $i/30...\"; sleep 10; }}; "
+            f"if curl -sf --max-time 3 {url}/swagger/ >/dev/null 2>&1; then "
+            f"curl -s -X POST {url}/backup/{endpoint}; break; "
+            "else echo \"[$(date)] uvicorn not ready ($i/30)\"; sleep 10; fi; "
             "done'"
         )
         line = (
-            f"{cron_utc} "
+            f"{cron_local} "
             f"{retry_cmd}"
             f" >> /var/log/asguard/backup-cron.log 2>&1"
             f" # asguard_task:{task['id']}"
@@ -3944,10 +4323,40 @@ def get_schedule(request):
         except Exception:
             pass
     stat = shutil.disk_usage(str(_BACKUP_ROOT))
+
+    # Per-task next/previous-run enrichment.
+    # The frontend was computing this client-side with a buggy weekday loop that
+    # always rendered "demain" for anything > 24 h in the future and ignored the
+    # configured scheduler timezone entirely. Backend has the correct helpers —
+    # convert local cron → UTC, then match against UTC `now` (Django runs in UTC).
+    tz_name = _get_schedule_tz(config)
+    now_utc = datetime.utcnow()
+    enriched_tasks = []
+    for task in config.get("tasks", []):
+        item = dict(task)
+        cron = task.get("cron", "")
+        try:
+            cron_utc = _cron_local_to_utc(cron, tz_name)
+            nxt = _compute_cron_run(cron_utc, after=now_utc) if task.get("enabled", True) else None
+            prv = _compute_cron_run(cron_utc, after=now_utc, reverse=True)
+            # Returned datetimes are naive UTC — tag them so JS parses correctly.
+            item["next_run"]     = nxt.isoformat() + "Z" if nxt else None
+            item["previous_run"] = prv.isoformat() + "Z" if prv else None
+        except Exception:
+            # Don't break the whole listing if one cron is malformed.
+            item["next_run"] = None
+            item["previous_run"] = None
+        enriched_tasks.append(item)
+
     return JsonResponse({
-        "tasks": config.get("tasks", []),
+        "tasks": enriched_tasks,
         "retention": {**DEFAULT_RETENTION, **config.get("retention", {})},
-        "schedule_timezone": _get_schedule_tz(config),
+        "schedule_timezone": tz_name,
+        # Surfaced so the UI's "Revenir au précédent" undo button knows
+        # what to roll back to after a page reload.
+        "previous_timezone": config.get("previous_timezone"),
+        "timezone_changed_at": config.get("timezone_changed_at"),
+        "server_now": now_utc.isoformat() + "Z",     # lets the UI compute "dans X" without clock drift
         "stats": {
             "total_backups": len(backups),
             "total_size_gb": round(total_size / (1024 ** 3), 2),
@@ -4081,6 +4490,20 @@ def update_retention(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def update_schedule_timezone(request):
+    """Change the scheduler timezone with two safety guarantees:
+
+    1) **No retroactive backups.** Re-interpreting an existing cron in a new
+       timezone shifts every past "slot" to a different UTC instant. The
+       catchup logic (_queue_due_schedule_catchups) would then see those
+       freshly-shifted slots as "missed" and trigger them — meaning a simple
+       Tunis→New_York switch could fire a Safe backup immediately. We
+       prevent that by stamping each enabled task's `last_queued_for` with
+       the new TZ's current previous slot, so the catchup logic treats it as
+       already handled. Future runs fire normally at the next *future* slot.
+
+    2) **Reversible.** We persist `previous_timezone` so the UI can offer a
+       one-click "revert" within the same session.
+    """
     tz = (request.data.get("timezone") or "").strip()
     if not tz:
         return JsonResponse({"status": "error", "message": "timezone required"}, status=400)
@@ -4089,14 +4512,54 @@ def update_schedule_timezone(request):
         ZoneInfo(tz)  # validate IANA name
     except Exception:
         return JsonResponse({"status": "error", "message": f"Invalid timezone: {tz}"}, status=400)
+
     config = _read_schedule_config()
+    old_tz = _get_schedule_tz(config)
+    # No-op short-circuit — avoid pointless writes / log spam if the user
+    # re-selects the timezone that's already active.
+    if old_tz == tz:
+        return JsonResponse({"status": "ok", "schedule_timezone": tz,
+                             "previous_timezone": old_tz, "noop": True})
+
+    # Pre-stamp every enabled task with its new-TZ previous-slot key so the
+    # catchup logic in _queue_due_schedule_catchups skips it (the matching
+    # branch is `if last_queued_for == previous_run_key: continue`).
+    now_utc = datetime.utcnow()
+    for task in config.get("tasks", []):
+        if not task.get("enabled", True):
+            continue
+        try:
+            cron_utc_new = _cron_local_to_utc(task.get("cron", ""), tz)
+            prev = _compute_cron_run(cron_utc_new, after=now_utc, reverse=True)
+            if prev:
+                task["last_queued_for"] = prev.isoformat()
+                # Don't touch `last_run_at` — that's a real historical fact.
+        except Exception:
+            # Bad cron in one task must not block the timezone change.
+            pass
+
+    config["previous_timezone"] = old_tz
     config["schedule_timezone"] = tz
+    config["timezone_changed_at"] = now_utc.isoformat() + "Z"
     _write_schedule_config(config)
     try:
         _sync_crontab(config.get("tasks", []), tz)
     except Exception as exc:
         logger.warning("Crontab sync after tz change failed: %s", exc)
-    return JsonResponse({"status": "ok", "schedule_timezone": tz})
+
+    append_backup_event(
+        kind="schedule",
+        title="Scheduler timezone changed",
+        severity="info",
+        status="success",
+        source="api",
+        detail=f"{old_tz} → {tz}",
+        extra={"previous_timezone": old_tz, "new_timezone": tz},
+    )
+
+    return JsonResponse({"status": "ok",
+                         "schedule_timezone": tz,
+                         "previous_timezone": old_tz})
 
 
 @swagger_auto_schema("POST", responses={200: "OK"}, operation_summary="APPLY GFS RETENTION NOW")
@@ -4121,7 +4584,9 @@ def apply_retention_now(request):
     return JsonResponse({"status": "ok", **result})
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ═════════════════════════════════════════════════════════════════════════════
+#  SECTION: IMPORT  — restore an exported backup archive
+# ═════════════════════════════════════════════════════════════════════════════
 
 @api_view(["POST"])
 @require_http_methods(["POST"])
@@ -4149,154 +4614,9 @@ def import_backup(request):
 
 
 # ── Cloud Storage API ──────────────────────────────────────────────────────────
-
-@api_view(["GET", "POST"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([AllowAny])
-def cloud_config(request):
-    """GET: return current cloud config. POST: save cloud config."""
-    from backend.backup.models import CloudStorageConfig
-
-    if request.method == "GET":
-        cfg = CloudStorageConfig.objects.first()
-        if not cfg:
-            return JsonResponse({"configured": False})
-        return JsonResponse({
-            "configured":             True,
-            "id":                     cfg.pk,
-            "provider":               cfg.provider,
-            "endpoint_url":           cfg.endpoint_url,
-            "access_key_id":          cfg.access_key_id,
-            "secret_access_key":      "••••••••",
-            "bucket_name":            cfg.bucket_name,
-            "region":                 cfg.region,
-            "prefix":                 cfg.prefix,
-            "enabled":                cfg.enabled,
-            "auto_upload":            cfg.auto_upload,
-            "upload_db_only_to_cloud": cfg.upload_db_only_to_cloud,
-            "max_cloud_copies":       cfg.max_cloud_copies,
-        })
-
-    # POST — save config
-    data = request.data if hasattr(request, "data") else json.loads(request.body)
-    cfg  = CloudStorageConfig.objects.first() or CloudStorageConfig()
-    cfg.provider        = data.get("provider", "backblaze_b2")
-    cfg.endpoint_url    = data.get("endpoint_url", "")
-    cfg.access_key_id   = data.get("access_key_id", "")
-    cfg.bucket_name     = data.get("bucket_name", "")
-    cfg.region          = data.get("region", "us-east-1")
-    cfg.prefix          = data.get("prefix", "asguard-backups/")
-    cfg.enabled         = bool(data.get("enabled", True))
-    cfg.auto_upload     = bool(data.get("auto_upload", True))
-    cfg.upload_db_only_to_cloud = bool(data.get("upload_db_only_to_cloud", False))
-    cfg.max_cloud_copies = int(data.get("max_cloud_copies", 10))
-    # only update secret if provided (not masked)
-    secret = data.get("secret_access_key", "")
-    if secret and secret != "••••••••":
-        cfg.secret_access_key = secret
-    cfg.save()
-    append_backup_event(
-        kind="cloud",
-        title="Cloud backup configuration saved",
-        severity="info",
-        status="success",
-        source="api",
-        ref_id=str(cfg.pk),
-        extra={"provider": cfg.provider, "bucket": cfg.bucket_name, "auto_upload": cfg.auto_upload},
-    )
-    return JsonResponse({"status": "ok", "id": cfg.pk})
-
-
-@api_view(["POST"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([AllowAny])
-def cloud_test(request):
-    """Test connection to the configured cloud bucket."""
-    from backend.backup.models import CloudStorageConfig
-
-    cfg = CloudStorageConfig.objects.filter(enabled=True).first()
-    if not cfg:
-        return JsonResponse({"ok": False, "message": "No cloud storage configured."}, status=400)
-    result = CloudStorageService(cfg).test_connection()
-    status = 200 if result["ok"] else 400
-    append_backup_event(
-        kind="cloud",
-        title="Cloud backup connection test succeeded" if result.get("ok") else "Cloud backup connection test failed",
-        severity="success" if result.get("ok") else "error",
-        status="success" if result.get("ok") else "error",
-        source="api",
-        detail=result.get("message", result.get("error", "")),
-        extra={"provider": cfg.provider, "bucket": cfg.bucket_name},
-    )
-    return JsonResponse(result, status=status)
-
-
-@api_view(["GET"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([AllowAny])
-def cloud_list(request):
-    """List all backups currently stored in the cloud bucket."""
-    from backend.backup.models import CloudStorageConfig
-
-    cfg = CloudStorageConfig.objects.filter(enabled=True).first()
-    if not cfg:
-        return JsonResponse({"ok": False, "backups": [], "message": "No cloud storage configured."})
-    backups = CloudStorageService(cfg).list_cloud_backups()
-    return JsonResponse({"ok": True, "backups": backups, "count": len(backups)})
-
-
-@api_view(["POST"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([AllowAny])
-def cloud_sync(request, backup_id):
-    """Manually push a local backup to cloud."""
-    from backend.backup.models import CloudStorageConfig, BackupRecord
-    from django.utils import timezone as tz
-
-    cfg = CloudStorageConfig.objects.filter(enabled=True).first()
-    if not cfg:
-        return JsonResponse({"ok": False, "message": "No cloud storage configured."}, status=400)
-
-    backup_dir = _BACKUP_ROOT / backup_id
-    if not backup_dir.exists():
-        return JsonResponse({"ok": False, "message": f"Backup {backup_id} not found locally."}, status=404)
-
-    service = CloudStorageService(cfg)
-    result  = service.upload_backup_folder(backup_id, backup_dir)
-
-    if result.get("ok"):
-        BackupRecord.objects.filter(backup_id=backup_id).update(
-            cloud_uploaded=True,
-            cloud_provider=cfg.provider,
-            cloud_bucket=cfg.bucket_name,
-            cloud_key=result.get("key", ""),
-            cloud_size_mb=result.get("size_mb"),
-            cloud_uploaded_at=tz.now(),
-            cloud_error="",
-        )
-
-    append_backup_event(
-        kind="cloud",
-        title="Cloud backup sync completed" if result.get("ok") else "Cloud backup sync failed",
-        severity="success" if result.get("ok") else "error",
-        status="success" if result.get("ok") else "error",
-        source="api",
-        ref_id=backup_id,
-        detail=result.get("message", result.get("error", "")),
-        extra={"key": result.get("key", ""), "size_mb": result.get("size_mb"), "provider": cfg.provider},
-    )
-    return JsonResponse(result)
-
-
-@api_view(["GET"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([AllowAny])
-def cloud_backup_history(request):
-    """Return backup history from DB (BackupRecord)."""
-    from backend.backup.models import BackupRecord
-
-    records = BackupRecord.objects.all()[:50]
-    return JsonResponse({"records": [r.to_dict() for r in records]})
+# Extracted to views_cloud.py during the code-review cleanup. The endpoints
+# (cloud_config, cloud_test, cloud_list, cloud_sync, cloud_backup_history)
+# remain reachable under /backup/cloud/* — see urls.py for the route map.
 
 
 # ── In-app alerts ──────────────────────────────────────────────────────────────

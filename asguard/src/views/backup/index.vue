@@ -6,16 +6,6 @@
       <template #toolbar-status>
         <div class="bap-toolbar-pills">
           <div
-            class="bap-pill bap-pill--drp"
-            title="Ouvrir le cockpit DRP Metrics"
-            @click="activeTab = 'Dashboard & Monitoring'"
-          >
-            <span class="bap-dot bap-dot--blue"></span>
-            <span class="bap-label">DRP Metrics</span>
-            <span class="bap-sep"></span>
-            <span class="bap-clock">v2</span>
-          </div>
-          <div
             v-if="notifStore.notificationsConfigured"
             class="bap-pill bap-pill--live"
             title="Notifications actives — système surveillé"

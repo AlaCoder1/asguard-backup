@@ -19,6 +19,71 @@
       </div>
     </header>
 
+    <!-- ─── Intelligence des logs — bandeau santé + à retenir ─── -->
+    <section class="bl-intel" :class="'tone-' + (intel.overall_state || 'idle')">
+      <!-- Bandeau santé : état clair + tendance -->
+      <div class="bl-intel-banner">
+        <div class="bl-intel-banner-main">
+          <span class="bl-intel-status" :class="'st-' + (intel.overall_state || 'idle')">
+            <span class="bl-intel-status-dot"></span>
+          </span>
+          <div class="bl-intel-banner-text">
+            <h3 class="bl-intel-headline">{{ headline }}</h3>
+            <p class="bl-intel-summary" v-if="intel.summary">{{ intel.summary }}</p>
+          </div>
+        </div>
+        <div class="bl-intel-trend" :class="'trend-' + trendChip.cls">
+          <span class="bl-intel-trend-cap">Tendance</span>
+          <span class="bl-intel-trend-val">
+            <span class="bl-intel-trend-arrow">{{ trendChip.arrow }}</span>{{ trendChip.label }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Ligne de chiffres clés, en langage clair -->
+      <div class="bl-intel-statline" v-if="intel.counts">
+        <span class="bl-intel-stat ok">{{ intel.counts.backups_ok || 0 }} sauvegardes OK</span>
+        <template v-if="intel.counts.backups_ko">
+          <span class="bl-intel-stat-sep">·</span>
+          <span class="bl-intel-stat ko">{{ intel.counts.backups_ko }} à vérifier</span>
+        </template>
+        <span class="bl-intel-stat-sep">·</span>
+        <span class="bl-intel-stat">{{ intel.counts.errors || 0 }} erreur(s) sur 24 h</span>
+      </div>
+
+      <!-- À retenir : liste d'éléments prioritaires en langage clair -->
+      <div class="bl-intel-retenir">
+        <div class="bl-intel-retenir-cap">À retenir</div>
+        <ul class="bl-intel-insights">
+          <li v-for="ins in insights" :key="ins.id"
+              class="bl-intel-insight" :class="['sev-' + ins.sev, { clickable: ins.incident }]"
+              @click="ins.incident && toggleIncident(ins.incident.id)">
+            <span class="bl-intel-insight-icon">{{ ins.icon }}</span>
+            <div class="bl-intel-insight-body">
+              <div class="bl-intel-insight-row">
+                <span class="bl-intel-insight-text">{{ ins.text }}</span>
+                <span class="bl-intel-insight-when" v-if="ins.when">{{ ins.when }}</span>
+              </div>
+              <div class="bl-intel-insight-sub" v-if="ins.sub">{{ ins.sub }}</div>
+              <!-- Détails repliables (incident uniquement) -->
+              <div v-if="ins.incident && expandedIncidents.has(ins.incident.id)"
+                   class="bl-intel-insight-events">
+                <div v-for="(ev, j) in ins.incident.events" :key="j"
+                     class="bl-intel-insight-event" :class="'sev-' + ev.severity">
+                  <span class="ev-ts">{{ formatTime(ev.ts) }}</span>
+                  <span class="ev-src">{{ ev.source }}</span>
+                  <span class="ev-title">{{ ev.title }}</span>
+                </div>
+              </div>
+            </div>
+            <span class="bl-intel-insight-chevron" v-if="ins.incident">{{
+              expandedIncidents.has(ins.incident.id) ? '▾' : '▸'
+            }}</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
     <!-- ─── KPI row ─── -->
     <section class="bl-kpis">
       <div class="bl-kpi">
@@ -46,94 +111,6 @@
           <span v-for="(n, k) in stats.by_kind" :key="k" class="bl-kind-chip" :class="'k-'+k">
             {{ kindLabel(k) }} · {{ n }}
           </span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- ═══ CHAOS ENGINEERING LAB  (split view: scenarios | terminal) ═══ -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <section class="bl-chaos">
-      <div class="bl-chaos-banner">
-        <div class="bl-chaos-banner-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-        </div>
-        <div class="bl-chaos-banner-text">
-          <h3>Chaos Engineering Lab</h3>
-          <p>Inspiré <strong>Netflix Chaos Monkey</strong> · Tester la résilience en conditions réelles</p>
-        </div>
-        <span class="bl-chaos-badge">PFE Innovation</span>
-      </div>
-
-      <div class="bl-chaos-body">
-        <!-- LEFT: scenarios list -->
-        <div class="bl-chaos-left">
-          <div class="bl-chaos-section-head">
-            <span>Scénarios de chaos</span>
-            <span class="bl-chaos-count">{{ scenarios.length }} disponibles</span>
-          </div>
-          <div class="bl-chaos-list">
-            <article v-for="s in scenarios" :key="s.id"
-                     class="bl-chaos-item" :class="['sev-'+s.severity, { selected: selectedScenario === s.id }]"
-                     @click="selectedScenario = s.id">
-              <div class="bl-chaos-item-bolt">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                </svg>
-              </div>
-              <div class="bl-chaos-item-body">
-                <div class="bl-chaos-item-name">{{ s.label }}</div>
-                <div class="bl-chaos-item-sub">{{ s.short || s.description.split('.')[0] }}</div>
-              </div>
-              <span class="bl-chaos-item-sev" :class="s.severity">{{ severityFr(s.severity) }}</span>
-            </article>
-          </div>
-          <button class="bl-chaos-launch"
-                  :class="{ running: isRunning }"
-                  :disabled="!selectedScenario || isRunning"
-                  @click="launchSelected">
-            <svg v-if="!isRunning" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-            <svg v-else class="bl-spin" viewBox="0 0 50 50" width="14" height="14">
-              <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5"
-                      stroke-linecap="round" stroke-dasharray="80"/>
-            </svg>
-            {{ isRunning ? 'CHAOS EN COURS…' : 'LANCER LE CHAOS' }}
-          </button>
-        </div>
-
-        <!-- RIGHT: live terminal -->
-        <div class="bl-chaos-right">
-          <div class="bl-chaos-section-head">
-            <span>Réaction du système</span>
-            <span class="bl-chaos-status" :class="chaosStatusClass">
-              <span class="bl-chaos-status-dot"></span>{{ chaosStatusLabel }}
-            </span>
-          </div>
-          <div class="bl-chaos-terminal" ref="termRef">
-            <div v-if="!chaosOutput.length" class="bl-chaos-term-empty">
-              # Aucun scénario lancé pour l'instant.<br/>
-              # Sélectionnez un scénario à gauche puis cliquez sur LANCER LE CHAOS.
-            </div>
-            <div v-for="(ln, i) in chaosOutput" :key="i" class="bl-chaos-term-line" :class="'sev-'+ln.severity">
-              <span class="bl-chaos-term-ts">{{ ln.ts }}</span>
-              <span class="bl-chaos-term-text">{{ ln.line }}</span>
-            </div>
-          </div>
-          <div class="bl-chaos-progress" v-if="currentChaos">
-            <div class="bl-chaos-progress-meta">
-              <span class="bl-chaos-progress-phase">{{ currentChaos.phase || '—' }}</span>
-              <span class="bl-chaos-progress-pct">{{ currentChaos.progress_pct || 0 }}%</span>
-            </div>
-            <div class="bl-chaos-progress-bar">
-              <span :style="{ width: (currentChaos.progress_pct || 0) + '%' }"
-                    :class="'sev-' + (currentChaos.status === 'error' ? 'error' :
-                                       currentChaos.status === 'done'  ? 'ok'   : 'warning')"></span>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -352,7 +329,6 @@
 <script>
 import axios from "axios";
 const API = "/backup";
-const LS_KEY = "asguard_chaos_active_job";
 
 export default {
   name: "BackupLogs",
@@ -366,10 +342,21 @@ export default {
       tabCounts: { all: 0, system_change: 0, alert: 0, auth: 0 },
       filters: { q: "", severity: "all", since: "24h" },
 
-      // Chaos
-      scenarios: [], selectedScenario: null,
-      currentChaos: null,        // { job_id, status, phase, progress_pct, output, ... }
-      chaosOutput: [],
+      // AI Log Intelligence — anomaly / incident / forecast snapshot
+      // produced by backend log_intelligence.logs_intelligence.
+      intel: {
+        overall_state: "idle",        // healthy | watch | degraded | critical
+        summary: "",
+        anomalies: [],
+        incidents: [],
+        forecast: { predicted_state: "idle", confidence_pct: 0,
+                    rationale: "", series: [] },
+        stats: { events_analyzed: 0 },
+      },
+      // Set of incident IDs the user expanded to see the underlying events.
+      // Vue 3's reactivity tracks the Set reference, so toggleIncident() must
+      // assign a fresh Set rather than mutating in place.
+      expandedIncidents: new Set(),
 
       // Server activity (parsed journalctl)
       serverUnit: "uvicorn",
@@ -397,19 +384,64 @@ export default {
       const denom = c.success + c.error + c.critical;
       return denom ? Math.round((c.success / denom) * 100) : 100;
     },
-    isRunning() {
-      return this.currentChaos && this.currentChaos.status === "running";
+
+    // ── Intelligence des logs ───────────────────────────────────────────
+    // Plain-language headline for the health banner (no model jargon).
+    headline() {
+      return { healthy:  "Système sain", watch:    "Vigilance",
+               degraded: "Dégradé",      critical: "Critique",
+               idle:     "Analyse en cours" }[this.intel.overall_state] || "—";
     },
-    chaosStatusLabel() {
-      if (!this.currentChaos) return "Inactif";
-      if (this.currentChaos.status === "running") return "En cours";
-      if (this.currentChaos.status === "done")    return "Terminé";
-      if (this.currentChaos.status === "error")   return "Erreur";
-      return this.currentChaos.status;
+    // Trend chip — derived from the forecast direction, shown as a simple
+    // arrow + word. No percentage, no slope, no confidence figure.
+    trendChip() {
+      const f = this.intel.forecast || {};
+      const dir = f.direction
+        || ({ stable: "flat", watch: "flat", risk: "up" }[f.predicted_state] || "flat");
+      return {
+        up:   { cls: "up",   arrow: "↗", label: "En hausse" },
+        down: { cls: "down", arrow: "↘", label: "En baisse" },
+        flat: { cls: "flat", arrow: "→", label: "Stable" },
+      }[dir];
     },
-    chaosStatusClass() {
-      if (!this.currentChaos) return "off";
-      return this.currentChaos.status;
+    // Single prioritized "À retenir" feed merging failed backups, correlated
+    // incidents and anomalies into plain-language items. Incidents stay
+    // expandable so an operator can drill into the underlying events.
+    insights() {
+      const out = [];
+      const c = this.intel.counts || {};
+      if (c.backups_ko) {
+        out.push({
+          id: "bko", sev: "warning", icon: "⚠",
+          text: `${c.backups_ko} sauvegarde${c.backups_ko > 1 ? "s" : ""} en échec — à vérifier`,
+        });
+      }
+      for (const inc of (this.intel.incidents || [])) {
+        const comps = (inc.components || []).join(", ");
+        out.push({
+          id: "inc-" + inc.id,
+          sev: inc.severity || "warning",
+          icon: inc.severity === "critical" ? "⛔" : "⚠",
+          text: inc.root_cause || (comps ? `Incident sur ${comps}` : "Incident détecté"),
+          sub: comps ? `${comps} · ${inc.event_count} événements` : "",
+          when: this.relativeTime(inc.started_at),
+          incident: inc,
+        });
+      }
+      for (const a of (this.intel.anomalies || [])) {
+        out.push({
+          id: "anom-" + a.id,
+          sev: a.severity || "info",
+          icon: "ℹ",
+          text: a.title || `Pic d'activité sur « ${a.source} »`,
+          sub: a.detail || "",
+        });
+      }
+      if (!out.length) {
+        out.push({ id: "ok", sev: "success", icon: "✓",
+                   text: "Aucune anomalie inhabituelle détectée." });
+      }
+      return out;
     },
     filteredServer() {
       if (!this.serverFilter) return this.serverEntries;
@@ -423,7 +455,7 @@ export default {
   mounted() {
     this.refreshAll();
     this.scheduleLive();
-    this.loadScenarios().then(() => this.tryResumeFromLocalStorage());
+    this.loadIntelligence();
   },
   beforeUnmount() { this.clearTimers(); },
   watch: {
@@ -436,9 +468,13 @@ export default {
     },
     scheduleLive() {
       this.clearTimers();
-      this._timers.stats    = setInterval(this.reloadStats,    8000);
-      this._timers.timeline = setInterval(this.reloadTimeline, 5000);
-      this._timers.server   = setInterval(this.reloadServer,   4000);
+      this._timers.stats    = setInterval(this.reloadStats,        8000);
+      this._timers.timeline = setInterval(this.reloadTimeline,     5000);
+      this._timers.server   = setInterval(this.reloadServer,       4000);
+      // Intelligence is a heavier compute, refresh slower (15 s) — anomalies
+      // and incidents don't change second-by-second, and we don't want the
+      // 24h aggregator running 12× per minute.
+      this._timers.intel    = setInterval(this.loadIntelligence,  15000);
     },
     debouncedReload() {
       clearTimeout(this._searchTimer);
@@ -558,93 +594,37 @@ export default {
       } catch (e) {}
     },
 
-    async loadScenarios() {
+    // ── AI Log Intelligence ─────────────────────────────────────────────
+    // Single GET → backend computes anomalies + incidents + 30-min forecast
+    // + NL summary in one pass. We don't merge incrementally because the
+    // detection thresholds depend on the *full* 24h baseline anyway.
+    async loadIntelligence() {
       try {
-        const { data } = await axios.get(`${API}/logs/chaos/scenarios`);
-        // Add a short tagline per scenario for the compact card
-        const tags = {
-          cpu_burst:     "Sature 4 cœurs CPU pendant 60s",
-          service_drill: "Tue squid · attente détection · auto-restart",
-          dr_drill:      "Exercice de reprise complet (PRA)",
-        };
-        this.scenarios = (data.scenarios || []).map(s => ({ ...s, short: tags[s.id] || "" }));
-      } catch (e) {}
+        const { data } = await axios.get(`${API}/logs/intelligence`);
+        this.intel = data;
+      } catch (e) { /* transient errors are harmless — UI keeps last snapshot */ }
     },
 
-    async tryResumeFromLocalStorage() {
-      try {
-        const saved = localStorage.getItem(LS_KEY);
-        if (!saved) return;
-        const { job_id, scenario } = JSON.parse(saved);
-        if (!job_id) return;
-        const { data } = await axios.get(`${API}/logs/chaos/status/${job_id}`);
-        if (data && data.status) {
-          this.currentChaos     = data;
-          this.chaosOutput      = data.output || [];
-          this.selectedScenario = scenario || data.scenario;
-          if (data.status === "running") {
-            this.flash("Reprise du scénario en cours…", "info");
-            this.pollChaos(job_id);
-          } else {
-            // Already finished while we were away — show toast + clear
-            this.flash(
-              data.status === "done"
-                ? `Scénario terminé : ${data.scenario_label || data.scenario}`
-                : `Scénario en erreur : ${data.message || ""}`,
-              data.status === "done" ? "success" : "error"
-            );
-            localStorage.removeItem(LS_KEY);
-          }
-        }
-      } catch (e) {
-        localStorage.removeItem(LS_KEY);
-      }
+    toggleIncident(id) {
+      // Replace the Set reference so Vue 3 detects the change.
+      const next = new Set(this.expandedIncidents);
+      next.has(id) ? next.delete(id) : next.add(id);
+      this.expandedIncidents = next;
     },
 
-    async launchSelected() {
-      if (!this.selectedScenario || this.isRunning) return;
-      const id = this.selectedScenario;
-      try {
-        const { data } = await axios.post(`${API}/logs/chaos/run/${id}`);
-        if (data.ok) {
-          this.currentChaos = { job_id: data.job_id, scenario: id,
-                                status: "running", progress_pct: 0,
-                                phase: "Initialisation", output: [] };
-          this.chaosOutput = [];
-          localStorage.setItem(LS_KEY, JSON.stringify({ job_id: data.job_id, scenario: id }));
-          this.pollChaos(data.job_id);
-          this.flash(`Scénario « ${this.scenarios.find(s => s.id === id)?.label} » lancé`, "info");
-        } else {
-          this.flash(data.error || "Échec lancement", "error");
-        }
-      } catch (e) { this.flash("Erreur réseau", "error"); }
+    stateLabel(s) {
+      return { healthy:  "Sain",       watch:    "Vigilance",
+               degraded: "Dégradé",    critical: "Critique",
+               idle:     "Initialisation" }[s] || "—";
     },
 
-    async pollChaos(jobId) {
-      clearInterval(this._timers.chaos);
-      this._timers.chaos = setInterval(async () => {
-        try {
-          const { data } = await axios.get(`${API}/logs/chaos/status/${jobId}`);
-          this.currentChaos = data;
-          this.chaosOutput  = data.output || [];
-          this.$nextTick(() => {
-            const t = this.$refs.termRef;
-            if (t) t.scrollTop = t.scrollHeight;
-          });
-          if (data.status === "done" || data.status === "error") {
-            clearInterval(this._timers.chaos);
-            localStorage.removeItem(LS_KEY);
-            this.flash(
-              data.status === "done"
-                ? `Scénario terminé · ${data.scenario_label || data.scenario}`
-                : `Erreur : ${data.message || ""}`,
-              data.status === "done" ? "success" : "error"
-            );
-            await this.reloadTimeline();
-            await this.reloadStats();
-          }
-        } catch (e) { /* tolerate transient errors */ }
-      }, 1500);
+    relativeTime(iso) {
+      if (!iso) return "—";
+      const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+      if (diff < 60)    return "à l'instant";
+      if (diff < 3600)  return `il y a ${Math.round(diff / 60)} min`;
+      if (diff < 86400) return `il y a ${Math.round(diff / 3600)} h`;
+      return `il y a ${Math.round(diff / 86400)} j`;
     },
 
     exportCsv() {
@@ -665,14 +645,11 @@ export default {
 
     kindLabel(k) {
       return { backup: "Backups", restore: "Restaurations", snapshot: "Snapshots",
-               migration: "Migration", notify: "Notifs", chaos: "Chaos" }[k] || k;
+               migration: "Migration", notify: "Notifs" }[k] || k;
     },
     sevLabel(s) {
       return { info: "Info", success: "Succès", warning: "Avert.",
                error: "Erreur", critical: "Critique" }[s] || s;
-    },
-    severityFr(s) {
-      return { warning: "Avertissement", critical: "Critique", info: "Info" }[s] || s;
     },
     formatTime(iso) {
       if (!iso) return "—";
@@ -694,718 +671,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.bl-root {
-  padding: 20px 22px 40px;
-  font-size: 13px; color: #0f172a;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-/* ── Header ──────────────────────────────────── */
-.bl-header {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 24px; padding: 18px 22px; margin-bottom: 18px;
-  background: #fff; border: 1px solid #e9d5ff; border-radius: 10px;
-  position: relative; overflow: hidden;
-}
-.bl-header::before {
-  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-  background: linear-gradient(180deg, #7c3aed 0%, #5b21b6 100%);
-}
-.bl-header h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
-.bl-header p  { margin: 4px 0 0; font-size: 12.5px; color: #64748b; line-height: 1.5; }
-.bl-header-actions { display: flex; gap: 8px; align-items: center; }
-
-.bl-btn {
-  padding: 8px 14px; font-size: 12.5px; font-weight: 600;
-  border-radius: 6px; border: 1px solid transparent; cursor: pointer;
-  transition: all 0.15s;
-}
-.bl-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-.bl-btn-primary {
-  background: linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%);
-  color: #fff; border-color: #6d28d9;
-  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25);
-}
-.bl-btn-primary:hover:not(:disabled) { background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%); }
-.bl-btn-secondary { background: #fff; color: #0f172a; border-color: #cbd5e1; }
-.bl-btn-secondary:hover:not(:disabled) { background: #f8fafc; border-color: #94a3b8; }
-
-.bl-live-toggle { cursor: pointer; }
-.bl-live-toggle input { display: none; }
-.bl-live-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 11px; background: #f1f5f9;
-  border: 1px solid #cbd5e1; border-radius: 999px;
-  font-size: 11.5px; font-weight: 700; color: #475569;
-  transition: all 0.15s;
-}
-.bl-live-pill.on { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
-.bl-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; }
-.bl-live-pill.on .bl-live-dot {
-  background: #dc2626; animation: bl-pulse 1.6s infinite;
-  box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
-}
-@keyframes bl-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
-  50%      { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
-}
-
-/* ── KPI row ──────────────────────────────── */
-.bl-kpis {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 12px; margin-bottom: 18px;
-}
-.bl-kpi {
-  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
-  padding: 14px 16px;
-  display: flex; flex-direction: column; gap: 4px;
-}
-.bl-kpi-label {
-  font-size: 10.5px; font-weight: 700; color: #64748b;
-  text-transform: uppercase; letter-spacing: 0.6px;
-}
-.bl-kpi-value {
-  font-size: 28px; font-weight: 800; color: #0f172a; line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.bl-kpi-foot { font-size: 11px; color: #94a3b8; }
-.bl-spark { width: 100%; height: 24px; margin-top: 4px; }
-.bl-kpi-crit .bl-kpi-value { color: #b91c1c; }
-.bl-kpi-crit { border-left: 3px solid #dc2626; }
-.bl-kpi-ok   .bl-kpi-value { color: #047857; }
-.bl-kpi-ok   { border-left: 3px solid #10b981; }
-.bl-kind-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-.bl-kind-chip {
-  font-size: 10px; font-weight: 600; padding: 2px 7px;
-  background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px;
-  color: #475569;
-}
-.k-backup    { --kc: #2563eb; }
-.k-restore   { --kc: #7c3aed; }
-.k-snapshot  { --kc: #c026d3; }
-.k-migration { --kc: #0891b2; }
-.k-notify    { --kc: #b45309; }
-.k-chaos     { --kc: #dc2626; }
-.k-auth      { --kc: #ea580c; }
-.bl-kind-chip.k-backup    { color: #1e40af; background: #eff6ff; border-color: #bfdbfe; }
-.bl-kind-chip.k-restore   { color: #5b21b6; background: #faf5ff; border-color: #ddd6fe; }
-.bl-kind-chip.k-snapshot  { color: #86198f; background: #fdf4ff; border-color: #f5d0fe; }
-.bl-kind-chip.k-migration { color: #155e75; background: #ecfeff; border-color: #a5f3fc; }
-.bl-kind-chip.k-notify    { color: #92400e; background: #fffbeb; border-color: #fde68a; }
-.bl-kind-chip.k-chaos     { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
-
-/* ═══════════════════════════════════════════════ */
-/* ═══ CHAOS LAB                                 ═══ */
-/* ═══════════════════════════════════════════════ */
-.bl-chaos {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 18px;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.06);
-}
-.bl-chaos-banner {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 20px;
-  background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 50%, #fce7f3 100%);
-  border-bottom: 1px solid #e9d5ff;
-  position: relative;
-}
-.bl-chaos-banner-icon {
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
-  color: #fff;
-  border-radius: 8px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-}
-.bl-chaos-banner-text { flex: 1; min-width: 0; }
-.bl-chaos-banner-text h3 {
-  margin: 0; font-size: 16px; font-weight: 800;
-  color: #5b21b6; letter-spacing: -0.01em;
-}
-.bl-chaos-banner-text p {
-  margin: 2px 0 0; font-size: 12px; color: #7c3aed; font-weight: 500;
-}
-.bl-chaos-banner-text strong { color: #5b21b6; }
-.bl-chaos-badge {
-  flex-shrink: 0;
-  background: #ede9fe;
-  color: #5b21b6;
-  border: 1px solid #c4b5fd;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 10.5px; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.6px;
-}
-
-.bl-chaos-body {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 0;
-  background: #f8fafc;
-}
-.bl-chaos-left, .bl-chaos-right {
-  padding: 16px 18px;
-  display: flex; flex-direction: column; gap: 12px;
-  min-width: 0;
-}
-.bl-chaos-left { border-right: 1px solid #e2e8f0; background: #fff; }
-
-.bl-chaos-section-head {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 12.5px; font-weight: 700; color: #0f172a;
-}
-.bl-chaos-count {
-  font-size: 10.5px; font-weight: 700;
-  color: #b45309; background: #fffbeb;
-  border: 1px solid #fde68a;
-  padding: 2px 9px;
-  border-radius: 999px;
-}
-
-/* Scenario list */
-.bl-chaos-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-.bl-chaos-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px;
-  background: #fff;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.bl-chaos-item:hover {
-  border-color: #c4b5fd;
-  transform: translateX(2px);
-}
-.bl-chaos-item.selected {
-  border-color: #dc2626;
-  background: #fef2f2;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-}
-.bl-chaos-item.sev-warning.selected  { border-color: #f59e0b; background: #fffbeb; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12); }
-.bl-chaos-item-bolt {
-  width: 26px; height: 26px;
-  display: flex; align-items: center; justify-content: center;
-  background: #fef3c7; color: #b45309;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-.bl-chaos-item.sev-critical .bl-chaos-item-bolt { background: #fee2e2; color: #b91c1c; }
-.bl-chaos-item-body { flex: 1; min-width: 0; }
-.bl-chaos-item-name { font-weight: 700; color: #0f172a; font-size: 13.5px; }
-.bl-chaos-item-sub  {
-  font-size: 11px; color: #64748b; margin-top: 2px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.bl-chaos-item-sev {
-  font-size: 9.5px; font-weight: 800;
-  padding: 3px 9px;
-  border-radius: 999px;
-  text-transform: uppercase; letter-spacing: 0.5px;
-  border: 1px solid;
-  flex-shrink: 0;
-}
-.bl-chaos-item-sev.warning  { color: #b45309; background: #fffbeb; border-color: #fde68a; }
-.bl-chaos-item-sev.critical { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
-.bl-chaos-item-sev.info     { color: #1e40af; background: #eff6ff; border-color: #bfdbfe; }
-
-/* Big launch button */
-.bl-chaos-launch {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px 16px;
-  font-size: 13.5px; font-weight: 800;
-  letter-spacing: 0.6px; text-transform: uppercase;
-  color: #fff;
-  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.32);
-  transition: all 0.15s;
-}
-.bl-chaos-launch:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.42);
-  background: linear-gradient(180deg, #f87171 0%, #ef4444 100%);
-}
-.bl-chaos-launch:disabled {
-  opacity: 0.6; cursor: not-allowed;
-  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
-  box-shadow: none;
-}
-.bl-chaos-launch.running {
-  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
-  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.42);
-  opacity: 1;
-}
-.bl-spin { animation: bl-spin 0.9s linear infinite; }
-@keyframes bl-spin { to { transform: rotate(360deg); } }
-
-/* Status pill on the right */
-.bl-chaos-status {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 10.5px; font-weight: 700;
-  border: 1px solid;
-}
-.bl-chaos-status.off     { color: #64748b; background: #f1f5f9; border-color: #cbd5e1; }
-.bl-chaos-status.running { color: #b45309; background: #fffbeb; border-color: #fde68a; }
-.bl-chaos-status.done    { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
-.bl-chaos-status.error   { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
-.bl-chaos-status-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: currentColor;
-}
-.bl-chaos-status.running .bl-chaos-status-dot { animation: bl-pulse 1.6s infinite; }
-
-/* Live terminal */
-.bl-chaos-terminal {
-  flex: 1;
-  min-height: 280px; max-height: 380px;
-  background: #0a0f1c;
-  border-radius: 8px;
-  padding: 12px 0;
-  overflow-y: auto;
-  font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
-  font-size: 12px; line-height: 1.55;
-}
-.bl-chaos-term-empty {
-  padding: 24px 16px; color: #475569; line-height: 1.7;
-}
-.bl-chaos-term-line {
-  display: flex; gap: 10px;
-  padding: 1px 14px;
-  color: #cbd5e1;
-  transition: background 0.1s;
-}
-.bl-chaos-term-line:hover { background: rgba(124, 58, 237, 0.08); }
-.bl-chaos-term-ts {
-  color: #475569;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-  width: 56px;
-}
-.bl-chaos-term-text { flex: 1; min-width: 0; word-break: break-word; }
-.bl-chaos-term-line.sev-info  .bl-chaos-term-text { color: #93c5fd; }
-.bl-chaos-term-line.sev-warn  .bl-chaos-term-text { color: #fcd34d; }
-.bl-chaos-term-line.sev-error .bl-chaos-term-text { color: #fca5a5; font-weight: 600; }
-.bl-chaos-term-line.sev-ok    .bl-chaos-term-text { color: #86efac; }
-
-/* Progress bar at bottom of terminal */
-.bl-chaos-progress { margin-top: 2px; }
-.bl-chaos-progress-meta {
-  display: flex; justify-content: space-between;
-  font-size: 11px; color: #475569;
-  margin-bottom: 4px;
-}
-.bl-chaos-progress-phase { font-weight: 600; color: #0f172a; }
-.bl-chaos-progress-pct   { font-weight: 700; font-variant-numeric: tabular-nums; color: #7c3aed; }
-.bl-chaos-progress-bar {
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 3px;
-  overflow: hidden;
-}
-.bl-chaos-progress-bar > span {
-  display: block; height: 100%;
-  transition: width 0.3s ease;
-}
-.bl-chaos-progress-bar > span.sev-warning {
-  background: linear-gradient(90deg, #f59e0b 0%, #dc2626 100%);
-}
-.bl-chaos-progress-bar > span.sev-ok {
-  background: linear-gradient(90deg, #10b981 0%, #047857 100%);
-}
-.bl-chaos-progress-bar > span.sev-error {
-  background: linear-gradient(90deg, #dc2626 0%, #7f1d1d 100%);
-}
-
-/* ── Timeline panel ─────────────────────── */
-.bl-panel {
-  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
-  overflow: hidden;
-}
-.bl-panel-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%);
-}
-.bl-panel-head-tabs {
-  flex-direction: column; align-items: stretch;
-  gap: 10px; padding: 0 16px;
-}
-.bl-tabs {
-  display: flex; gap: 0;
-  margin: 0 -16px; padding: 0 16px;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%);
-}
-.bl-tab {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 12px 14px;
-  background: transparent; border: none;
-  border-bottom: 2px solid transparent;
-  font-size: 12.5px; font-weight: 600;
-  color: #64748b; cursor: pointer; transition: all 0.15s;
-  margin-bottom: -1px;
-}
-.bl-tab:hover { color: #0f172a; }
-.bl-tab.active {
-  color: #5b21b6;
-  border-bottom-color: #7c3aed;
-  background: rgba(124, 58, 237, 0.04);
-}
-.bl-tab-count {
-  display: inline-block;
-  padding: 1px 8px;
-  background: #f1f5f9; color: #475569;
-  border-radius: 999px;
-  font-size: 10.5px; font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.bl-tab.active .bl-tab-count { background: #ede9fe; color: #5b21b6; }
-.bl-panel-head-tabs .bl-filters { padding: 0 0 10px; }
-
-.bl-filters { display: flex; gap: 6px; flex-wrap: wrap; }
-.bl-filters select, .bl-search {
-  padding: 5px 10px; font-size: 11.5px; font-family: inherit;
-  border: 1px solid #cbd5e1; border-radius: 5px; background: #fff;
-}
-.bl-filters select:focus, .bl-search:focus {
-  outline: none; border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
-}
-.bl-search { min-width: 180px; }
-
-.bl-timeline { max-height: 560px; overflow-y: auto; padding: 6px 0; }
-.bl-event {
-  display: flex; gap: 0; padding: 10px 16px 6px;
-  transition: background 0.12s;
-}
-.bl-event:hover { background: #faf5ff; }
-.bl-event-rail {
-  display: flex; flex-direction: column; align-items: center;
-  flex-shrink: 0; width: 18px; padding-top: 6px;
-}
-.bl-event-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--kc, #94a3b8);
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 2px var(--kc, #94a3b8);
-  flex-shrink: 0;
-}
-.bl-event-line {
-  flex: 1; width: 2px; background: #e9d5ff;
-  margin-top: 4px; margin-bottom: -10px; min-height: 12px;
-}
-.bl-event:last-child .bl-event-line { display: none; }
-.bl-event-body { flex: 1; min-width: 0; padding-left: 12px; }
-.bl-event-row {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  font-size: 11px; margin-bottom: 3px;
-}
-.bl-event-source { font-weight: 700; color: var(--kc, #475569); font-size: 11px; }
-.bl-event-time {
-  margin-left: auto; font-size: 11px; color: #94a3b8;
-  font-variant-numeric: tabular-nums;
-}
-.bl-event-title { font-weight: 600; color: #0f172a; font-size: 12.5px; line-height: 1.35; }
-.bl-event-detail { font-size: 11.5px; color: #64748b; margin-top: 2px; line-height: 1.45; }
-.bl-event-ref {
-  display: inline-block; margin-top: 4px; font-size: 10px;
-  background: #f1f5f9; border: 1px solid #e2e8f0;
-  border-radius: 3px; padding: 1px 6px; color: #475569;
-  font-family: ui-monospace, "SF Mono", monospace;
-}
-.bl-event-sev {
-  font-size: 9.5px; font-weight: 700; padding: 2px 7px;
-  border-radius: 3px;
-  text-transform: uppercase; letter-spacing: 0.5px;
-  border: 1px solid;
-}
-.bl-event-sev.info     { color: #1e3a8a; background: #eff6ff; border-color: #bfdbfe; }
-.bl-event-sev.success  { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
-.bl-event-sev.warning  { color: #78350f; background: #fffbeb; border-color: #fde68a; }
-.bl-event-sev.error    { color: #7f1d1d; background: #fef2f2; border-color: #fecaca; }
-.bl-event-sev.critical { color: #fff;    background: #b91c1c; border-color: #b91c1c; }
-
-.bl-empty { padding: 40px 20px; text-align: center; font-size: 12px; color: #94a3b8; }
-.bl-empty-hint { font-size: 11px; color: #cbd5e1; margin-top: 8px; }
-
-/* System Changes table */
-.bl-changes { max-height: 560px; overflow-y: auto; }
-.bl-changes-table { display: flex; flex-direction: column; }
-.bl-changes-row {
-  display: grid;
-  grid-template-columns: 95px 170px 110px 1fr;
-  gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 12px;
-  align-items: start;
-  transition: background 0.1s;
-}
-.bl-changes-row:hover { background: #faf5ff; }
-.bl-changes-head {
-  background: #f8fafc;
-  font-size: 10.5px; font-weight: 700;
-  color: #475569;
-  text-transform: uppercase; letter-spacing: 0.6px;
-  position: sticky; top: 0; z-index: 2;
-  border-bottom: 2px solid #ddd6fe;
-}
-.bl-changes-head:hover { background: #f8fafc; }
-.bl-c-time {
-  color: #94a3b8; font-variant-numeric: tabular-nums; font-size: 11.5px;
-}
-.bl-c-entity {
-  display: flex; align-items: center; gap: 7px;
-  font-weight: 600; color: #0f172a;
-}
-.bl-c-entity-icon {
-  width: 6px; height: 28px;
-  border-radius: 3px;
-  background: #7c3aed;
-  flex-shrink: 0;
-}
-.bl-c-action-pill {
-  display: inline-block; padding: 2px 9px; border-radius: 4px;
-  font-size: 10.5px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.4px;
-  border: 1px solid;
-}
-.bl-c-action-pill.a-créé,
-.bl-c-action-pill.a-démarré { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
-.bl-c-action-pill.a-supprimé,
-.bl-c-action-pill.a-arrêté  { color: #7f1d1d; background: #fef2f2; border-color: #fecaca; }
-.bl-c-action-pill.a-modifié,
-.bl-c-action-pill.a-redémarré { color: #78350f; background: #fffbeb; border-color: #fde68a; }
-.bl-c-action-pill.a-résolu  { color: #1e40af; background: #eff6ff; border-color: #bfdbfe; }
-.bl-c-action-pill.a-other,
-.bl-c-action-pill.a-       { color: #475569; background: #f1f5f9; border-color: #cbd5e1; }
-.bl-c-title  { font-weight: 600; color: #0f172a; font-size: 12.5px; }
-.bl-c-detail { font-size: 11px; color: #64748b; margin-top: 2px; }
-
-/* ── Server Activity (parsed journalctl) ─────────── */
-.bl-serv { margin-top: 18px; }
-.bl-serv-controls {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-}
-.bl-serv-select {
-  padding: 5px 10px;
-  font-size: 11.5px; font-family: ui-monospace, "SF Mono", monospace;
-  font-weight: 700;
-  border: 1px solid #cbd5e1; border-radius: 5px;
-  background: #fff;
-}
-.bl-serv-search { min-width: 160px; }
-.bl-serv-counts {
-  display: flex; gap: 6px;
-  padding-left: 4px;
-  border-left: 1px solid #e2e8f0; margin-left: 4px;
-}
-.bl-serv-count {
-  font-size: 10.5px; font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid;
-}
-.bl-serv-count.bl-c-success { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
-.bl-serv-count.bl-c-warning { color: #78350f; background: #fffbeb; border-color: #fde68a; }
-.bl-serv-count.bl-c-error   { color: #7f1d1d; background: #fef2f2; border-color: #fecaca; }
-.bl-mini-btn {
-  padding: 4px 9px;
-  background: #fff; color: #475569;
-  border: 1px solid #cbd5e1; border-radius: 5px;
-  font-size: 12px; cursor: pointer;
-  transition: all 0.15s;
-}
-.bl-mini-btn:hover { background: #f1f5f9; border-color: #7c3aed; color: #5b21b6; }
-.bl-mini-btn:active { transform: scale(0.92); }
-.bl-mini-btn.active { background: #7c3aed; border-color: #7c3aed; color: #fff;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18); }
-.bl-mini-btn.spinning { animation: bl-spin 0.6s linear; pointer-events: none; }
-@keyframes bl-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-
-/* Diagnostic banner — shows above the log feed when the selected unit is
-   failed/inactive. Gives the operator the technical cause without scrolling. */
-.bl-serv-diag {
-  display: flex; gap: 12px; align-items: flex-start;
-  padding: 12px 14px; margin: 0 12px 8px;
-  border-radius: 8px;
-  font-size: 12.5px;
-}
-.bl-serv-diag--err {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border: 1px solid #fca5a5;
-  color: #7f1d1d;
-}
-.bl-serv-diag--ok {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border: 1px solid #6ee7b7;
-  color: #065f46;
-  padding: 8px 14px;
-  align-items: center;
-}
-.bl-serv-diag-icon { color: #dc2626; flex-shrink: 0; margin-top: 1px; }
-.bl-serv-diag-body { flex: 1; }
-.bl-serv-diag-head {
-  display: flex; justify-content: space-between; gap: 12px;
-  align-items: baseline; margin-bottom: 4px;
-}
-.bl-serv-diag-head strong { font-size: 13px; }
-.bl-serv-diag-state {
-  font-size: 11px; padding: 2px 8px; border-radius: 999px;
-  background: rgba(220, 38, 38, 0.15); color: #991b1b;
-  font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
-}
-.bl-serv-diag-cause {
-  font-size: 12.5px; color: #7f1d1d;
-  background: rgba(255,255,255,0.6);
-  padding: 6px 10px; border-radius: 6px;
-  border-left: 3px solid #dc2626;
-  margin-bottom: 4px;
-  line-height: 1.5;
-}
-.bl-serv-diag-cause--unknown {
-  color: #78350f; border-left-color: #d97706;
-  background: rgba(255,251,235,0.7); font-style: italic;
-}
-.bl-serv-diag-meta { font-size: 11px; color: #9f1239; opacity: 0.85; }
-.bl-serv-diag-pulse {
-  width: 8px; height: 8px; border-radius: 50%; background: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
-  animation: bl-pulse 1.6s ease-in-out infinite; flex-shrink: 0;
-}
-@keyframes bl-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25); }
-  50%      { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.0); }
-}
-
-.bl-serv-body {
-  max-height: 480px;
-  overflow-y: auto;
-  background: #f8fafc;
-  padding: 4px 0;
-}
-.bl-serv-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 6px 16px;
-  font-size: 12px;
-  font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
-  border-bottom: 1px solid #eef2f7;
-  transition: background 0.1s;
-}
-.bl-serv-row:hover { background: rgba(124, 58, 237, 0.04); }
-.bl-serv-row.lvl-error    { background: rgba(220, 38, 38, 0.04); }
-.bl-serv-row.lvl-warning  { background: rgba(245, 158, 11, 0.04); }
-.bl-serv-row.lvl-success  { background: rgba(16, 185, 129, 0.025); }
-
-.bl-serv-ts {
-  width: 64px; flex-shrink: 0;
-  color: #94a3b8;
-  font-variant-numeric: tabular-nums;
-  font-size: 11px;
-}
-.bl-serv-src {
-  width: 90px; flex-shrink: 0;
-  color: #475569;
-  font-weight: 600;
-  font-size: 11px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
-/* HTTP method badge */
-.bl-serv-method {
-  display: inline-block;
-  width: 52px; flex-shrink: 0;
-  text-align: center;
-  padding: 2px 0;
-  border-radius: 4px;
-  font-size: 10px; font-weight: 800;
-  letter-spacing: 0.5px;
-  color: #fff;
-}
-.bl-serv-method.m-get    { background: #2563eb; }
-.bl-serv-method.m-post   { background: #16a34a; }
-.bl-serv-method.m-put    { background: #d97706; }
-.bl-serv-method.m-patch  { background: #d97706; }
-.bl-serv-method.m-delete { background: #dc2626; }
-.bl-serv-method.m-options{ background: #64748b; }
-
-.bl-serv-path {
-  flex: 1; min-width: 0;
-  color: #1e1b4b;
-  font-weight: 500;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
-.bl-serv-status {
-  width: 52px; flex-shrink: 0;
-  text-align: center;
-  padding: 2px 0;
-  border-radius: 4px;
-  font-size: 10.5px; font-weight: 800;
-  border: 1px solid;
-  font-variant-numeric: tabular-nums;
-}
-.bl-serv-status.ok    { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
-.bl-serv-status.redir { color: #1e40af; background: #eff6ff; border-color: #bfdbfe; }
-.bl-serv-status.warn  { color: #78350f; background: #fffbeb; border-color: #fde68a; }
-.bl-serv-status.err   { color: #fff;    background: #b91c1c; border-color: #b91c1c; }
-
-.bl-serv-user {
-  width: 96px; flex-shrink: 0; text-align: right;
-  font-size: 10.5px; color: #64748b;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
-/* Non-HTTP rows: level badge + message */
-.bl-serv-lvl {
-  width: 52px; flex-shrink: 0;
-  text-align: center;
-  padding: 2px 0;
-  border-radius: 4px;
-  font-size: 10px; font-weight: 800;
-  border: 1px solid;
-}
-.bl-serv-lvl.lvl-info     { color: #1e40af; background: #eff6ff; border-color: #bfdbfe; }
-.bl-serv-lvl.lvl-success  { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
-.bl-serv-lvl.lvl-warning  { color: #78350f; background: #fffbeb; border-color: #fde68a; }
-.bl-serv-lvl.lvl-error    { color: #fff;    background: #b91c1c; border-color: #b91c1c; }
-
-.bl-serv-msg {
-  flex: 1; min-width: 0;
-  color: #334155;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.bl-serv-msg-raw { color: #64748b; font-style: italic; }
-
-/* Toast */
-.bl-toast {
-  position: fixed; bottom: 20px; right: 20px;
-  padding: 11px 18px; background: #fff; border-radius: 6px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-  font-size: 12.5px; font-weight: 600;
-  border-left: 3px solid; z-index: 9999;
-  max-width: 380px;
-}
-.bl-toast.success { color: #047857; border-color: #10b981; }
-.bl-toast.error   { color: #b91c1c; border-color: #dc2626; }
-.bl-toast.info    { color: #5b21b6; border-color: #7c3aed; }
-.bl-toast-enter-active, .bl-toast-leave-active { transition: all 0.25s; }
-.bl-toast-enter-from, .bl-toast-leave-to { opacity: 0; transform: translateX(20px); }
-
-@media (max-width: 960px) {
-  .bl-chaos-body { grid-template-columns: 1fr; }
-  .bl-chaos-left { border-right: none; border-bottom: 1px solid #e2e8f0; }
-  .bl-kpis { grid-template-columns: repeat(2, 1fr); }
-}
-</style>
+<style scoped lang="scss" src="../../../assets/scss/BackupLogs.scss"></style>

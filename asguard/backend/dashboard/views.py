@@ -19,6 +19,11 @@ from backend.backup.notifications import notify_service_action
 _WD_CONFIG   = Path("/etc/asguard/watchdog_config.json")
 _WD_INCIDENTS = Path("/var/log/asguard/watchdog_incidents.json")
 
+# Services whose stop/disable would take down the appliance itself (web UI,
+# API, network, firewall). The watchdog keeps them alive, so the UI must not
+# offer a Stop button for them and the API must refuse stop/disable.
+PROTECTED_SERVICES = {"uvicorn", "nginx", "NetworkManager", "nftables"}
+
 _DEFAULT_WD_CONFIG = {
     "enabled": True,
     "check_interval_seconds": 30,
@@ -112,6 +117,21 @@ def set_actions_service(request):
         data_in=request.data
         service=data_in.get('service',None)
         action=data_in.get('action',None)
+
+        # Critical services keep the appliance and its web UI alive. Stopping
+        # or disabling them is self-defeating: the watchdog (and systemd
+        # Restart=on-failure) immediately bring them back, which only produces
+        # a false "Échec" alert and a restart storm. Refuse such actions.
+        if (service in PROTECTED_SERVICES
+                and action is not None
+                and action.lower() in ("stop", "disable")):
+            return JsonResponse(
+                {"msg": _("This service is protected by the watchdog and "
+                          "cannot be stopped or disabled (it would break the "
+                          "appliance).")},
+                status=400,
+            )
+
         if action is not None and service is not None:
             match action.lower():
                 case "enable":
@@ -251,7 +271,10 @@ def toggle_watchdog_daemon(request):
     if action not in ("start", "stop", "restart", "enable", "disable"):
         return JsonResponse({"msg": "Action invalide"}, status=400)
 
-    r = subprocess.run(["systemctl", action, "asguard-watchdog"],
+    # Django runs as the unprivileged `uvicorn` user, which cannot talk to
+    # systemd directly ("Interactive authentication required"). uvicorn has a
+    # NOPASSWD sudo rule for /usr/bin/systemctl, so go through sudo.
+    r = subprocess.run(["sudo", "-n", "systemctl", action, "asguard-watchdog"],
                        capture_output=True, text=True)
     if r.returncode != 0:
         return JsonResponse({"msg": r.stderr.strip() or "Erreur systemctl"}, status=500)

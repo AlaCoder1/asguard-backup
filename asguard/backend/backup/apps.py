@@ -20,7 +20,11 @@ class BackupConfig(AppConfig):
                 config = _read_schedule_config()
                 from backend.backup.views import _get_schedule_tz
                 _sync_crontab(config.get("tasks", []), _get_schedule_tz(config))
-                _queue_due_schedule_catchups(config)
+                # at_startup=True: the VM just booted, so any past slot with no
+                # backup was genuinely missed (VM was off / booting at the
+                # planned hour). Recover it immediately without the grace delay
+                # — this is the "VM démarrée après le cron" recovery path.
+                _queue_due_schedule_catchups(config, at_startup=True)
             except Exception:
                 pass
 

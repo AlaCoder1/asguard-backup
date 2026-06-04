@@ -121,6 +121,18 @@ class RestoreService:
         total = len(all_runner_names)
         components_progress = {c: "pending" for c in all_runner_names}
 
+        # Pre-restore DB snapshot — captured *before* any component runs so
+        # we can produce a row-level diff once the restore finishes. We
+        # only snapshot components whose runner is actually about to fire
+        # (selected/non-excluded) to keep the dump small.
+        pre_snapshot: dict = {}
+        try:
+            from backend.backup.restore_diff import snapshot_db_state
+            pre_snapshot = snapshot_db_state(all_runner_names)
+        except Exception:
+            logger.exception("Pre-restore DB snapshot failed (non-fatal)")
+            pre_snapshot = {}
+
         if progress_callback:
             try:
                 progress_callback({
@@ -168,6 +180,24 @@ class RestoreService:
                     try:
                         result = runner(backup_dir, comp_meta)
                         results[component_name] = result.to_dict()
+                        # After the component's config files are restored,
+                        # replay its PostgreSQL rows from the per-component
+                        # DB snapshot so the database matches what the UI
+                        # shows (NAT rules, routes, WAF rules, …).
+                        if results[component_name].get("status") != "failed":
+                            db_ok, db_msg = cls._restore_component_db(backup_dir, component_name)
+                            if db_msg:
+                                existing = results[component_name].get("message", "") or ""
+                                # DB detail FIRST — it is the most meaningful
+                                # part and the UI column truncates long text.
+                                results[component_name]["message"] = (
+                                    f"{db_msg} · {existing}".strip(" ·")
+                                )
+                                results[component_name]["db_restore"] = {
+                                    "ok": db_ok, "message": db_msg,
+                                }
+                            if not db_ok:
+                                results[component_name]["status"] = "partial_success"
                     except Exception as e:
                         logger.exception("Restore failed for component %s", component_name)
                         results[component_name] = ComponentResult.failed(component_name, str(e)).to_dict()
@@ -193,6 +223,33 @@ class RestoreService:
 
         global_status = "success" if failed == 0 else ("failed" if success == 0 else "partial_success")
 
+        # Reconcile /etc/fstab with THIS host: if the LVM volume group isn't
+        # present (restored onto a VM without the 2nd disk), strip the LVM/bind
+        # lines so the box runs natively instead of hanging on missing devices.
+        # Best-effort — must never turn a successful restore into a failure.
+        fstab_reconcile: dict = {}
+        try:
+            fstab_reconcile = cls._reconcile_fstab_native()
+        except Exception:
+            logger.exception("fstab reconcile failed (non-fatal)")
+            fstab_reconcile = {"mode": "unknown", "changed": False}
+
+        # Post-restore diff — capture the live DB state again and compare
+        # against the pre-snapshot to give the operator a row-level
+        # report (which rules vanished, which ZTNA identities reappeared,
+        # which NAT entries changed). Whole block is best-effort: a
+        # broken diff must never mask a successful restore.
+        diff_payload: dict = {}
+        try:
+            from backend.backup.restore_diff import snapshot_db_state, diff_db_states
+            post_snapshot = snapshot_db_state(all_runner_names)
+            diff_payload = diff_db_states(pre_snapshot, post_snapshot)
+        except Exception:
+            logger.exception("Post-restore diff computation failed (non-fatal)")
+            diff_payload = {"components": {}, "totals": {
+                "added": 0, "removed": 0, "modified": 0, "changed_components": 0,
+            }}
+
         return {
             "status": global_status,
             "backup_id": backup_id,
@@ -203,6 +260,8 @@ class RestoreService:
                 "failed": failed,
                 "skipped": skipped,
             },
+            "diff": diff_payload,
+            "fstab_reconcile": fstab_reconcile,
         }
 
     @classmethod
@@ -309,6 +368,74 @@ class RestoreService:
             return False, res.get("error", res.get("stderr", "archive extraction failed"))
         return True, ""
 
+    # ── fstab safety (full-VM restore onto a possibly-different machine) ──────
+    # /etc/fstab describes THIS host's physical disks + LVM layout. Adopting a
+    # backed-up machine's fstab is dangerous: mismatched partition UUIDs or an
+    # LVM volume that doesn't exist here (no 2nd disk) make mounts fail → the
+    # box becomes slow, loses nginx/uvicorn, and can drop to emergency mode on
+    # reboot. So we never let the restore overwrite the target's fstab, and we
+    # strip the asguard LVM/bind lines when LVM isn't available (native mode).
+    _FSTAB              = Path("/etc/fstab")
+    _FSTAB_LVM_MARKER   = "# asguard-lvm-migration"
+
+    @classmethod
+    def _write_root_file(cls, path: str, content: str) -> bool:
+        try:
+            tmp = Path("/tmp/.asguard_fstab.tmp")
+            tmp.write_text(content)
+            res = run_cmd(["sudo", "/usr/bin/cp", str(tmp), path], timeout=20)
+            try:
+                tmp.unlink()
+            except Exception:
+                pass
+            return bool(res.get("success"))
+        except Exception as exc:
+            logger.warning("write %s failed: %s", path, exc)
+            return False
+
+    @classmethod
+    def _lvm_volume_group_present(cls) -> bool:
+        try:
+            res = run_cmd(["sudo", "-n", "vgs", "--noheadings", "asguard-vg"], timeout=15)
+            return bool(res.get("success"))
+        except Exception:
+            return False
+
+    @classmethod
+    def _reconcile_fstab_native(cls) -> dict:
+        """If the asguard LVM volume group is absent here (e.g. restored onto a
+        VM without the 2nd disk), strip the LVM mount + bind-mount lines from
+        /etc/fstab so the appliance boots and runs natively (configs in /etc,
+        backups in /var/backups, postgres in its Docker volume) instead of
+        hanging on missing devices. No-op when LVM IS present. Best-effort."""
+        if cls._lvm_volume_group_present():
+            return {"mode": "lvm", "changed": False}
+        try:
+            lines = cls._FSTAB.read_text().splitlines()
+        except Exception as exc:
+            return {"mode": "native", "changed": False, "error": str(exc)}
+
+        kept, removed = [], 0
+        for line in lines:
+            is_lvm_mount = ("asguard-vg/asguard-data" in line
+                            or "asguard--vg-asguard--data" in line) and "/var/asguard_data" in line
+            if cls._FSTAB_LVM_MARKER in line or is_lvm_mount:
+                removed += 1
+                continue
+            kept.append(line)
+
+        if removed == 0:
+            return {"mode": "native", "changed": False}
+
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        run_cmd(["sudo", "/usr/bin/cp", str(cls._FSTAB),
+                 f"/etc/fstab.asguard-pre-restore.{ts}"], timeout=20)
+        ok = cls._write_root_file(str(cls._FSTAB), "\n".join(kept).rstrip("\n") + "\n")
+        if ok:
+            run_cmd(["sudo", "systemctl", "daemon-reload"], timeout=30)
+        return {"mode": "native", "changed": ok, "removed": removed,
+                "backup": f"/etc/fstab.asguard-pre-restore.{ts}"}
+
     @classmethod
     def _service_exists(cls, service_name: str) -> bool:
         unit = service_name if service_name.endswith(".service") else f"{service_name}.service"
@@ -397,10 +524,23 @@ class RestoreService:
         name = cls._component_name_from_meta(component_meta)
         archive = backup_dir / component_meta["file"]
 
+        # system_config's etc.tar.gz contains the SOURCE machine's /etc/fstab.
+        # Never adopt it (wrong disk UUIDs / LVM layout breaks this host) —
+        # snapshot the target's own fstab and put it back after extraction.
+        saved_fstab = None
+        if name == "system_config":
+            try:
+                saved_fstab = cls._FSTAB.read_text()
+            except Exception:
+                saved_fstab = None
+
         with Timer() as t:
             ok, msg = cls._extract_archive_to_root(archive, timeout=180)
             if not ok:
                 return ComponentResult.failed(name, msg)
+
+        if name == "system_config" and saved_fstab is not None:
+            cls._write_root_file(str(cls._FSTAB), saved_fstab)
 
         return ComponentResult(
             name=name,
@@ -486,10 +626,16 @@ class RestoreService:
                     if not ok:
                         return ComponentResult.failed(name, msg)
 
+                    # Flush the kernel ruleset BEFORE reloading. `nft -f`
+                    # only ADDS, so without an explicit flush every restore
+                    # would append the rules again — producing duplicate
+                    # lines in the running ruleset.
+                    run_cmd(["sudo", "/usr/bin/nft", "flush", "ruleset"], timeout=15)
                     apply_res = run_cmd(["sudo", "/usr/bin/nft", "-f", "/etc/nftables.conf"], timeout=30)
                     if not apply_res["success"]:
                         if backup_conf.exists():
                             shutil.copy2(backup_conf, current_conf)
+                            run_cmd(["sudo", "/usr/bin/nft", "flush", "ruleset"], timeout=15)
                             run_cmd(["sudo", "/usr/bin/nft", "-f", "/etc/nftables.conf"], timeout=30)
                         return ComponentResult.failed(name, apply_res.get("error", "nft reload failed"))
 
@@ -507,6 +653,33 @@ class RestoreService:
             duration_s=t.elapsed,
             message="Firewall config restored and firewall rule database synchronized.",
         )
+
+    @classmethod
+    def _restore_component_db(cls, backup_dir: Path, component_name: str) -> tuple[bool, str]:
+        """Replay a component's PostgreSQL rows from its per-component DB
+        snapshot (component_db.json), written at backup time. Returns
+        (ok, message). No snapshot / no DB models → (True, "") so legacy
+        backups and files-only components are silently fine."""
+        try:
+            from backend.backup.component_db import (
+                has_db_snapshot, restore_component_db, DB_SNAPSHOT_FILENAME,
+            )
+        except Exception as exc:
+            return True, ""  # component_db unavailable — skip silently
+
+        if not has_db_snapshot(component_name):
+            return True, ""
+
+        snap_file = backup_dir / component_name / DB_SNAPSHOT_FILENAME
+        if not snap_file.exists():
+            return True, "base de données non incluse (ancien format de backup)"
+
+        try:
+            snapshot = json.loads(snap_file.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return False, f"lecture snapshot DB impossible : {exc}"
+
+        return restore_component_db(component_name, snapshot)
 
     @classmethod
     def _restore_firewall_rules_db(cls, extracted_root: Path) -> tuple[bool, str]:
@@ -934,6 +1107,9 @@ class RestoreService:
                 if not validate["success"]:
                     return ComponentResult.failed(name, validate.get("error", "nft validation failed after NAT restore"))
 
+                # Flush before reload — `nft -f` only adds, so without this
+                # every NAT restore would duplicate the running rules.
+                run_cmd(["sudo", "nft", "flush", "ruleset"], timeout=15)
                 apply_res = run_cmd(["sudo", "nft", "-f", "/etc/nftables.conf"], timeout=30)
                 if not apply_res["success"]:
                     return ComponentResult.failed(name, apply_res.get("error", "nft reload failed after NAT restore"))

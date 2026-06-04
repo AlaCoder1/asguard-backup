@@ -30,6 +30,7 @@ CATEGORIES = [
     # Operations
     {"id": "backup",          "label": "Sauvegardes",                    "group": "Opérations",  "severity_default": "info"},
     {"id": "restore",         "label": "Restaurations",                   "group": "Opérations",  "severity_default": "warning"},
+    {"id": "drp",             "label": "Exercices de reprise (DR Drill)", "group": "Opérations",  "severity_default": "info"},
     {"id": "vm_risk",         "label": "Pression ressources (CPU/RAM)",   "group": "Opérations",  "severity_default": "critical"},
     {"id": "service_status",  "label": "Services système",                "group": "Opérations",  "severity_default": "warning"},
     # Security
@@ -509,6 +510,7 @@ def notify_backup_completed(backup_type, backup_id, success, duration_s=None, me
         "full_backup": "Sauvegarde Full DR",
         "db_backup":   "Sauvegarde Base de données",
     }
+    type_labels.setdefault("custom_backup", "Sauvegarde personnalisée")
     label   = type_labels.get(backup_type, backup_type)
     ok      = success
     color   = "#16a34a" if ok else "#dc2626"
@@ -543,6 +545,13 @@ def notify_backup_completed(backup_type, backup_id, success, duration_s=None, me
         f"{label} {'réussie ✓' if ok else 'échouée ✗'}",
         html,
         f"Sauvegarde {'réussie' if ok else 'échouée'}\nType: {label}\nStatut: {status}\nHeure: {ts}",
+    )
+    # In-app alert (bell icon) — backup events were previously push/email only.
+    write_in_app_alert(
+        "backup",
+        f"{label} {'réussie' if ok else 'échouée'}",
+        f"{backup_id or '—'}" + (f" · {message}" if message else ""),
+        "success" if ok else "error",
     )
 
 
@@ -605,7 +614,9 @@ def notify_missed_backup_catchup(task_name, backup_type, missed_at=""):
             ("Type",             label,           None),
             ("Heure manquée",    missed_at or "—", "#d97706"),
             ("Récupération à",   ts,              None),
-            ("Cause probable",   "VM arrêtée ou non démarrée à l'heure planifiée", None),
+            ("Cause probable",   "Tâche planifiée non exécutée à l'heure prévue "
+                                 "(VM éteinte au moment prévu, ou planificateur indisponible). "
+                                 "Rattrapage automatique effectué.", None),
         ],
     )
     send_notification(
@@ -728,6 +739,14 @@ def notify_restore_completed(backup_id: str, mode: str, success: bool,
         f"Restauration {mode_label} {'réussie ✓' if ok else 'échouée ✗'}",
         html,
         f"Restauration {'réussie' if ok else 'échouée'}\nBackup: {backup_id}\nStatut: {status}\nHeure: {ts}",
+    )
+    # In-app alert (bell icon) — restore events were previously push/email only.
+    write_in_app_alert(
+        "restore",
+        f"Restauration {mode_label} {'réussie' if ok else 'échouée'}",
+        f"{backup_id} · {components_ok} OK"
+        + (f" / {components_failed} KO" if components_failed else ""),
+        "success" if ok else "error",
     )
 
 

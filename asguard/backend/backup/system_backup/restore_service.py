@@ -358,12 +358,28 @@ class RestoreService:
 
         return True, ""
 
+    # Host-identity files that describe THIS physical machine, not the backed-up
+    # one. Restoring them onto a different box breaks boot (fstab: wrong UUIDs /
+    # missing LVM disk) or causes IP conflicts (the NetworkManager connection
+    # profiles pin the LAN/WAN IP — two appliances would claim the same address).
+    # We exclude them from extraction so the target keeps its own identity.
+    _HOST_IDENTITY_EXCLUDES = (
+        "etc/fstab", "./etc/fstab",
+        "etc/NetworkManager/system-connections",
+        "etc/NetworkManager/system-connections/*",
+        "./etc/NetworkManager/system-connections",
+        "./etc/NetworkManager/system-connections/*",
+    )
+
     @classmethod
-    def _extract_archive_to_root(cls, archive: Path, timeout: int = 180) -> tuple[bool, str]:
-        res = run_cmd(
-            ["sudo", "/usr/bin/tar", "--overwrite", "-xzf", str(archive), "-C", "/"],
-            timeout=timeout,
-        )
+    def _extract_archive_to_root(cls, archive: Path, timeout: int = 180,
+                                 preserve_identity: bool = False) -> tuple[bool, str]:
+        cmd = ["sudo", "/usr/bin/tar", "--overwrite"]
+        if preserve_identity:
+            for pattern in cls._HOST_IDENTITY_EXCLUDES:
+                cmd.append(f"--exclude={pattern}")
+        cmd += ["-xzf", str(archive), "-C", "/"]
+        res = run_cmd(cmd, timeout=timeout)
         if not res["success"]:
             return False, res.get("error", res.get("stderr", "archive extraction failed"))
         return True, ""
@@ -524,23 +540,16 @@ class RestoreService:
         name = cls._component_name_from_meta(component_meta)
         archive = backup_dir / component_meta["file"]
 
-        # system_config's etc.tar.gz contains the SOURCE machine's /etc/fstab.
-        # Never adopt it (wrong disk UUIDs / LVM layout breaks this host) —
-        # snapshot the target's own fstab and put it back after extraction.
-        saved_fstab = None
-        if name == "system_config":
-            try:
-                saved_fstab = cls._FSTAB.read_text()
-            except Exception:
-                saved_fstab = None
+        # system_config's etc.tar.gz carries the SOURCE machine's /etc/fstab AND
+        # its NetworkManager connection profiles (the IP). Never adopt those —
+        # exclude them so the target keeps its own boot + network identity.
+        preserve_identity = (name == "system_config")
 
         with Timer() as t:
-            ok, msg = cls._extract_archive_to_root(archive, timeout=180)
+            ok, msg = cls._extract_archive_to_root(archive, timeout=180,
+                                                   preserve_identity=preserve_identity)
             if not ok:
                 return ComponentResult.failed(name, msg)
-
-        if name == "system_config" and saved_fstab is not None:
-            cls._write_root_file(str(cls._FSTAB), saved_fstab)
 
         return ComponentResult(
             name=name,
@@ -849,7 +858,11 @@ class RestoreService:
         archive = backup_dir / component_meta["file"]
 
         with Timer() as t:
-            ok, msg = cls._extract_archive_to_root(archive, timeout=120)
+            # Preserve the target's NetworkManager connection profiles (its IP
+            # assignment) — restoring the backed-up machine's IP onto another
+            # box causes IP conflicts. Other network config is still restored.
+            ok, msg = cls._extract_archive_to_root(archive, timeout=120,
+                                                   preserve_identity=True)
             if not ok:
                 return ComponentResult.failed(name, msg)
 
@@ -860,7 +873,7 @@ class RestoreService:
             size_mb=archive.stat().st_size / (1024 ** 2),
             sha256=component_meta.get("sha256", ""),
             duration_s=t.elapsed,
-            message="Network config restored on disk.",
+            message="Network config restored (host IP identity preserved).",
         )
 
     @classmethod

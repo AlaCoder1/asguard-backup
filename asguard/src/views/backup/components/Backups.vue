@@ -394,18 +394,20 @@
         <div v-if="restoreMode === 'complete' && restorePreview" class="restore-preview">
           <div class="restore-preview-head">
             <strong>Aperçu — ce qui sera fait</strong>
-            <span class="restore-preview-badge restore-preview-badge--ui">mode ui_full</span>
+            <span class="restore-preview-badge restore-preview-badge--ui">restauration complète · toute la VM</span>
           </div>
 
           <div class="restore-preview-cols">
             <div class="restore-preview-col restore-preview-col--ok">
               <div class="restore-preview-col-head">
                 <span class="restore-preview-dot restore-preview-dot--ok"></span>
-                <span><strong>{{ restorePreview.counts.included }}</strong> composants restaurés</span>
-                <span class="restore-preview-size">{{ restorePreview.total_included_mb }} MB</span>
+                <span><strong>{{ restorePreview.counts.included + restorePreview.counts.excluded }}</strong> composants restaurés (code application inclus)</span>
               </div>
               <div class="restore-preview-list">
-                <span v-for="c in restorePreview.included" :key="c.name" class="restore-preview-chip restore-preview-chip--ok">
+                <span v-for="c in restorePreview.included" :key="'i-' + c.name" class="restore-preview-chip restore-preview-chip--ok">
+                  {{ c.name }}
+                </span>
+                <span v-for="c in restorePreview.excluded" :key="'e-' + c.name" class="restore-preview-chip restore-preview-chip--ok">
                   {{ c.name }}
                 </span>
               </div>
@@ -413,19 +415,13 @@
 
             <div class="restore-preview-col restore-preview-col--skip">
               <div class="restore-preview-col-head">
-                <span class="restore-preview-dot restore-preview-dot--skip"></span>
-                <span><strong>{{ restorePreview.counts.excluded }}</strong> composants moteur protégés</span>
-                <span class="restore-preview-size">{{ restorePreview.total_excluded_mb }} MB</span>
+                <span class="restore-preview-dot restore-preview-dot--ok"></span>
+                <span>Identité de la machine préservée</span>
               </div>
               <div class="restore-preview-skip-list">
-                <details v-for="c in restorePreview.excluded" :key="c.name" class="restore-preview-skip-item">
-                  <summary>
-                    <span class="restore-preview-skip-name">{{ c.name }}</span>
-                    <span class="restore-preview-skip-label">{{ c.label }}</span>
-                    <span class="restore-preview-skip-size">{{ c.size_mb }} MB</span>
-                  </summary>
-                  <p class="restore-preview-skip-reason">{{ c.reason }}</p>
-                </details>
+                <p class="restore-preview-skip-reason">• Adresse IP conservée — pas de conflit réseau.</p>
+                <p class="restore-preview-skip-reason">• /etc/fstab conservé — montages LVM ignorés si pas de 2e disque (mode natif).</p>
+                <p class="restore-preview-skip-reason">• uvicorn redémarre automatiquement à la fin (l'interface se recharge).</p>
               </div>
             </div>
           </div>
@@ -435,7 +431,7 @@
               <circle cx="8" cy="8" r="6.5"/>
               <path d="M8 5v4M8 11v.5"/>
             </svg>
-            <span>{{ restorePreview.dr_hint }}</span>
+            <span>Restauration complète de toute la VM (système + code + données). L'identité réseau et le fstab de cette machine sont préservés.</span>
           </div>
         </div>
         <div v-else-if="restoreMode === 'complete' && restorePreviewLoading" class="restore-preview restore-preview--loading">
@@ -1192,28 +1188,20 @@ export default {
     restoreModeMeta() {
       const meta = {
         safe: {
-          eyebrow: "Restore prudent",
-          title: "Restauration sans toucher a l'application",
-          description: "Remet les couches de config et de securite tout en gardant le code actuellement en place.",
-          highlights: ["Application preservee", "Moins intrusif", "Bon pour un retour rapide"],
-          noteLabel: "Disponible",
-          note: "Ce mode apparait seulement quand le backup contient aussi la couche application.",
+          eyebrow: "Restore prudent (UI-safe)",
+          title: "Restauration du système Asguard uniquement",
+          description: "Restaure uniquement la config Asguard (firewall, VPN, IDS, proxy, réseau, NAT…) sans toucher au code de l'application, au socle /etc OS ni à l'identité de la machine. L'interface ne tombe jamais.",
+          highlights: ["Interface jamais coupée", "Code & OS préservés", "Config Asguard restaurée"],
+          noteLabel: "UI-safe",
+          note: "Idéal pour rétablir la configuration métier sans risque de couper la session web/SSH.",
         },
         complete: {
-          eyebrow: "Restore UI-safe",
-          title: this.restoreTargetHasApplication
-            ? "Restauration full sans couper le moteur"
-            : "Restauration de tout le contenu disponible",
-          description: this.restoreTargetHasApplication
-            ? "Restaure les donnees et configurations appliance sans remplacer l'application, les services de boot ou le socle /etc global a chaud."
-            : "Applique tout ce que ce backup contient. Si l'application n'est pas dedans, elle n'est pas touchee.",
-          highlights: this.restoreTargetHasApplication
-            ? ["Interface preservee", "Boot services non touches", "Config metier restauree"]
-            : ["Tous les composants du backup", "Sans couche application", "Restore global du contenu disponible"],
-          noteLabel: "Protection UI",
-          note: this.restoreTargetHasApplication
-            ? "Le backup reste Full DR; depuis l'UI, les composants moteur sont gardes pour un restore offline/console."
-            : "Ce backup ne contient pas l'application, donc seuls full et custom sont proposes.",
+          eyebrow: "Restore complet",
+          title: "Restauration complète de toute la VM",
+          description: "Restaure TOUT : système, configurations, données et le code de l'application. L'adresse IP et le /etc/fstab de cette machine sont préservés ; les montages LVM sont ignorés s'il n'y a pas de 2e disque (mode natif).",
+          highlights: ["Toute la VM (code inclus)", "IP + fstab préservés", "uvicorn redémarre à la fin"],
+          noteLabel: "Identité préservée",
+          note: "L'adresse IP et le fstab de cette machine ne sont jamais écrasés par le backup source.",
         },
         custom: {
           eyebrow: "Restore cible",

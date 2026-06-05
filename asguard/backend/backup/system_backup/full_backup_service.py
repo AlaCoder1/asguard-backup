@@ -298,6 +298,45 @@ class FullBackupService:
             results[result.name] = result
             components_progress[result.name] = result.status
 
+            # Per-component DB snapshot — alongside the component's config
+            # files, dump the PostgreSQL rows it owns (NAT rules, routes,
+            # WAF rules, …) so a component-level restore can roll the
+            # database back too. See backend/backup/component_db.py.
+            try:
+                from backend.backup.component_db import (
+                    has_db_snapshot, dump_component_db, DB_SNAPSHOT_FILENAME,
+                )
+                if result.status != "failed" and has_db_snapshot(result.name):
+                    comp_dir = backup_dir / result.name
+                    comp_dir.mkdir(parents=True, exist_ok=True)
+                    snapshot = dump_component_db(result.name)
+                    with open(comp_dir / DB_SNAPSHOT_FILENAME, "w", encoding="utf-8") as _fh:
+                        import json as _json
+                        _json.dump(snapshot, _fh, indent=2, ensure_ascii=False)
+                # Firewall is intentionally OUT of COMPONENT_MODELS (it keeps its
+                # bespoke restore path), so the generic dump skips it. Write a
+                # snapshot anyway — FOR THE PREVIEW DIFF ONLY. The restore ignores
+                # it (has_db_snapshot('firewall') is False → no double-restore);
+                # this just lets "Aperçu" show changed firewall rules.
+                if result.name == "firewall" and result.status != "failed":
+                    try:
+                        from django.core import serializers as _ser
+                        from backend.rules.models import Rule as _Rule
+                        comp_dir = backup_dir / "firewall"
+                        comp_dir.mkdir(parents=True, exist_ok=True)
+                        import json as _json
+                        with open(comp_dir / DB_SNAPSHOT_FILENAME, "w", encoding="utf-8") as _fh:
+                            _json.dump({
+                                "component": "firewall",
+                                "models": {"rules.Rule": _ser.serialize("json", _Rule.objects.all())},
+                                "counts": {"rules.Rule": _Rule.objects.count()},
+                                "errors": [],
+                            }, _fh, indent=2, ensure_ascii=False)
+                    except Exception as _fexc:
+                        logger.warning("firewall preview snapshot skipped: %s", _fexc)
+            except Exception as _exc:
+                logger.warning("component_db dump skipped for %s: %s", result.name, _exc)
+
             if progress_callback:
                 try:
                     progress_callback({
@@ -335,6 +374,17 @@ class FullBackupService:
 
         with open(backup_dir / "backup_metadata.json", "w", encoding="utf-8") as fh:
             json.dump(metadata, fh, indent=2)
+
+        # Manifeste d'intégrité signé — écrit en TOUT DERNIER (tous les fichiers,
+        # metadata incluse, sont présents). Permet de détecter avant restauration
+        # toute altération du backup (ransomware, corruption, falsification).
+        # Voir backend/backup/integrity.py. N'échoue jamais le backup.
+        try:
+            from backend.backup.integrity import write_manifest
+            ok_manifest, manifest_msg = write_manifest(backup_dir)
+            logger.info("integrity manifest for %s: %s", backup_id, manifest_msg)
+        except Exception as _exc:
+            logger.warning("integrity manifest skipped for %s: %s", backup_id, _exc)
 
         counts = {"success": 0, "failed": 0, "skipped": 0}
         for r in results.values():

@@ -3212,6 +3212,43 @@ def restore_preview(request, backup_id):
             })
         return rows
 
+    def _component_changes(component: str) -> dict:
+        """Real CONTENT diff between the live DB and the backup for a component.
+
+        Count-deltas miss a row that was *modified* in place (same count). Here
+        we compare actual rows by primary key + fields, so a changed firewall
+        rule shows up. Returns what restoring this backup WOULD do to the live
+        DB: added (back), removed (your post-backup rows), modified (reverted).
+        """
+        snap = backup_dir / component / DB_SNAPSHOT_FILENAME
+        if not snap.exists():
+            return {"added": 0, "removed": 0, "modified": 0, "available": False}
+        try:
+            bdata = _json.loads(snap.read_text(encoding="utf-8"))
+        except Exception:
+            return {"added": 0, "removed": 0, "modified": 0, "available": False}
+        from django.core import serializers as _ser
+        added = removed = modified = 0
+        for path, blob in (bdata.get("models") or {}).items():
+            Model = _resolve_model(path)
+            if Model is None:
+                continue
+            try:
+                backup_rows = _json.loads(blob) if isinstance(blob, str) else (blob or [])
+                live_rows = _json.loads(_ser.serialize("json", Model.objects.all()))
+            except Exception:
+                continue
+            b = {r.get("pk"): r.get("fields", {}) for r in backup_rows}
+            l = {r.get("pk"): r.get("fields", {}) for r in live_rows}
+            bk, lk = set(b), set(l)
+            added += len(bk - lk)        # in backup, missing now → would reappear
+            removed += len(lk - bk)      # added after backup → would be deleted
+            modified += sum(1 for pk in (bk & lk) if b[pk] != l[pk])  # changed → reverted
+        return {
+            "added": added, "removed": removed, "modified": modified,
+            "available": True, "total": added + removed + modified,
+        }
+
     included: list[dict] = []
     excluded: list[dict] = []
     for name, comp in components_meta.items():
@@ -3235,6 +3272,7 @@ def restore_preview(request, backup_id):
             total_current = sum(
                 r["current"] for r in inventory if isinstance(r["current"], int)
             )
+            changes = _component_changes(name)
             included.append({
                 "name":             name,
                 "size_mb":          round(size_mb, 3),
@@ -3243,6 +3281,7 @@ def restore_preview(request, backup_id):
                 "total_in_backup":  total_in_backup,
                 "total_current":    total_current,
                 "has_db_inventory": bool(inventory),
+                "changes":          changes,
             })
 
     # Contrôle d'intégrité signé : un backup altéré ne doit jamais être
@@ -3259,9 +3298,17 @@ def restore_preview(request, backup_id):
     total_included_mb = round(sum(c["size_mb"] for c in included), 2)
     total_excluded_mb = round(sum(c["size_mb"] for c in excluded), 2)
 
+    changes_total = {
+        "added":    sum((c.get("changes") or {}).get("added", 0) for c in included),
+        "removed":  sum((c.get("changes") or {}).get("removed", 0) for c in included),
+        "modified": sum((c.get("changes") or {}).get("modified", 0) for c in included),
+    }
+    changes_total["total"] = changes_total["added"] + changes_total["removed"] + changes_total["modified"]
+
     return JsonResponse({
         "status":            "ok",
         "backup_id":         backup_id,
+        "changes_total":     changes_total,
         "backup_type":       meta.get("backup_type") or (
             "full" if "application" in components_meta else "safe"
         ),

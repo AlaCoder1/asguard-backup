@@ -397,6 +397,25 @@
             <span class="restore-preview-badge restore-preview-badge--ui">restauration complète · toute la VM</span>
           </div>
 
+          <!-- Vraie différence de CONTENU entre l'état actuel et le backup -->
+          <div class="restore-preview-diffbox" v-if="restorePreview.changes_total">
+            <template v-if="restorePreview.changes_total.total > 0">
+              <div class="rpd-head">
+                <strong>Différences avec l'état actuel</strong>
+                <span class="rpd-tot rpd-add" v-if="restorePreview.changes_total.added">+{{ restorePreview.changes_total.added }} restaurés</span>
+                <span class="rpd-tot rpd-rem" v-if="restorePreview.changes_total.removed">−{{ restorePreview.changes_total.removed }} supprimés</span>
+                <span class="rpd-tot rpd-mod" v-if="restorePreview.changes_total.modified">~{{ restorePreview.changes_total.modified }} modifiés</span>
+              </div>
+              <div class="rpd-list">
+                <span v-for="c in changedComponents" :key="c.name" class="rpd-chip">
+                  {{ c.name }} : {{ changeLabel(c.changes) }}
+                </span>
+              </div>
+              <div class="rpd-note">Ces éléments seront ramenés à l'état du backup.</div>
+            </template>
+            <div v-else class="rpd-none">✓ Aucune différence détectée — l'état actuel est déjà identique à ce backup.</div>
+          </div>
+
           <div class="restore-preview-cols">
             <div class="restore-preview-col restore-preview-col--ok">
               <div class="restore-preview-col-head">
@@ -1220,6 +1239,10 @@ export default {
       };
       return meta[this.restoreMode] || meta.complete;
     },
+    changedComponents() {
+      const inc = (this.restorePreview && this.restorePreview.included) || [];
+      return inc.filter(c => c.changes && c.changes.total > 0);
+    },
     visiblePages() {
       const pages = [];
       const start = Math.max(1, this.currentPage - 2);
@@ -1647,6 +1670,14 @@ export default {
 
       poll();
       this.restorePoller = window.setInterval(poll, 2500);
+    },
+    changeLabel(ch) {
+      if (!ch) return "";
+      const parts = [];
+      if (ch.modified) parts.push(`${ch.modified} modifié${ch.modified > 1 ? "s" : ""}`);
+      if (ch.added) parts.push(`${ch.added} à restaurer`);
+      if (ch.removed) parts.push(`${ch.removed} à supprimer`);
+      return parts.join(", ") || "—";
     },
     restoreStatusLabel(status) {
       const labels = {

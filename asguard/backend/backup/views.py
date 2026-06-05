@@ -3041,22 +3041,33 @@ def get_backup_details(request, backup_id):
 # ═════════════════════════════════════════════════════════════════════════════
 #  SECTION: RESTORE  — safe / ui_full / custom restore, preview, history
 # ═════════════════════════════════════════════════════════════════════════════
-@swagger_auto_schema("POST", responses={202: "Accepted"}, operation_summary="SAFE FULL RESTORE (WITHOUT APPLICATION)")
+# Restore behaviour model:
+#   • "Safe"  (this endpoint)        → UI-safe: only the Asguard system config
+#       (firewall, VPN, IDS, proxy, network, NAT…). Leaves the OS, the app code
+#       and the machine identity untouched → the web UI never drops.
+#   • "Full"  (restore_full_backup)  → COMPLETE: the whole VM, application code
+#       included. Runs in a detached systemd unit that restarts uvicorn at the
+#       end (so hot-rewriting the code is safe). It still PRESERVES the host
+#       identity — the target keeps its own IP (NetworkManager profiles) and its
+#       own /etc/fstab, and on a VM without the 2nd LVM disk the LVM mounts are
+#       stripped (native mode). See restore_service.py _HOST_IDENTITY_EXCLUDES
+#       and _reconcile_fstab_native.
+@swagger_auto_schema("POST", responses={202: "Accepted"}, operation_summary="SAFE RESTORE (UI-SAFE — ASGUARD SYSTEM ONLY)")
 @api_view(["POST"])
 @require_http_methods(["POST"])
 @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def restore_backup(request, backup_id):
-    return _launch_detached_restore(backup_id=backup_id, mode="safe")
+    return _launch_detached_restore(backup_id=backup_id, mode="ui_full")
 
 
-@swagger_auto_schema("POST", responses={202: "Accepted"}, operation_summary="FULL RESTORE UI-SAFE")
+@swagger_auto_schema("POST", responses={202: "Accepted"}, operation_summary="FULL RESTORE (COMPLETE — WHOLE VM)")
 @api_view(["POST"])
 @require_http_methods(["POST"])
 @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def restore_full_backup(request, backup_id):
-    return _launch_detached_restore(backup_id=backup_id, mode="ui_full")
+    return _launch_detached_restore(backup_id=backup_id, mode="complete")
 
 
 # ── Pre-restore preview ──────────────────────────────────────────────────────

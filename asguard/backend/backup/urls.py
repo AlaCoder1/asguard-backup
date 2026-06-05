@@ -50,7 +50,7 @@ urlpatterns = [
     path("<str:backup_id>/verify-integrity", views.verify_backup_integrity, name="verifyBackupIntegrity"),
 
     path("restore-full-status/<str:job_id>", views.get_restore_full_status, name="getRestoreFullStatus"),
-    path("restore-active", views.get_restore_active, name="getRestoreActive"),
+    path("restore/active", views.restore_active, name="restoreActive"),
     path("progress/<str:job_id>", views.get_backup_progress, name="getBackupProgress"),
     path("restore-history", views.get_restore_history, name="getRestoreHistory"),
 

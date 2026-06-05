@@ -3710,44 +3710,35 @@ def get_restore_full_status(request, job_id):
 @require_http_methods(["GET"])
 @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
-def get_restore_active(request):
+def restore_active(request):
     """Latest restore job + whether it's still running.
 
-    Source of truth held on disk by the detached runner, so ANY client can
-    re-attach to an in-flight restore after a page refresh, a browser
-    close/reopen, or a uvicorn restart (the complete restore restarts uvicorn) —
-    no job_id needed. The frontend calls this on load to resume the live tracker.
+    Source of truth is the on-disk job file (not the browser), so the UI can
+    re-attach to an in-progress restore after a page reload, a browser
+    close/reopen, or the uvicorn restart that a COMPLETE restore triggers.
     """
-    FINISHED = {"success", "partial_success", "error", "done", "complete", "failed"}
     try:
-        files = sorted(RESTORE_JOBS_DIR.glob("*.json"),
-                       key=lambda p: p.stat().st_mtime, reverse=True)
+        files = list(RESTORE_JOBS_DIR.glob("*.json")) if RESTORE_JOBS_DIR.exists() else []
     except Exception:
         files = []
     if not files:
-        return JsonResponse({"active": False, "finished": False, "job": None})
-
-    latest = files[0]
+        return JsonResponse({"active": False})
+    latest = max(files, key=lambda p: p.stat().st_mtime)
     try:
-        with open(latest, "r", encoding="utf-8") as f:
-            payload = json.load(f)
+        data = json.loads(latest.read_text())
     except Exception:
-        return JsonResponse({"active": False, "finished": False, "job": None})
-
-    payload["job_id"] = payload.get("job_id") or latest.stem
-    payload["verification"] = _build_restore_verification(payload)
-    status = payload.get("status", "running")
-    running = status not in FINISHED
+        return JsonResponse({"active": False})
+    status = data.get("status", "running")
+    finished = status in ("success", "partial_success", "error")
     age = time.time() - latest.stat().st_mtime
     return JsonResponse({
-        "active": running,
-        "finished": not running,
-        "age_seconds": round(age, 1),
-        # No progress write for a while while still "running" → the API is most
-        # likely restarting (normal for a complete restore). The UI uses this to
-        # show "reconnecting…" then advice instead of a hard error.
-        "stalled": running and age > 90,
-        "job": payload,
+        "active": (not finished) and age < 1800,   # running + updated within 30 min
+        "finished": finished,
+        "job_id": data.get("job_id") or latest.stem,
+        "backup_id": data.get("backup_id"),
+        "mode": data.get("mode"),
+        "status": status,
+        "age_seconds": int(age),
     })
 
 

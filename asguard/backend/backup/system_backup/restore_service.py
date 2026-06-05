@@ -1243,6 +1243,19 @@ class RestoreService:
                     if not ok:
                         raise RuntimeError(f"backend healthcheck failed after app restore: {msg}")
 
+                    # The app archive intentionally excludes node_modules — but
+                    # the swap above leaves the new APP_ROOT without it, which
+                    # breaks `yarn build` after a restore (encore missing). Carry
+                    # the previous install over (same filesystem → instant rename).
+                    try:
+                        nm_new = cls.APP_ROOT / "node_modules"
+                        nm_old = previous_dir / "node_modules"
+                        if not nm_new.exists() and nm_old.is_dir():
+                            os.rename(nm_old, nm_new)
+                            logger.info("[APP] carried node_modules over from previous install")
+                    except Exception:
+                        logger.warning("[APP] could not carry node_modules over after restore", exc_info=True)
+
                 except Exception as e:
                     logger.exception("[APP] Application swap/start failed: %s", e)
 

@@ -1,5 +1,13 @@
 from django.urls import path
-from . import views, views_vm_snapshot, views_lvm_migration, views_alerts, views_logs
+from . import (
+    views,
+    views_vm_snapshot,
+    views_lvm_migration,
+    views_alerts,
+    views_logs,
+    views_cloud,
+    log_intelligence,
+)
 
 urlpatterns = [
     path("ping", views.ping, name="backupPing"),
@@ -8,13 +16,12 @@ urlpatterns = [
     path("alerts/config",                     views_alerts.alerts_config,        name="alertsConfig"),
     path("alerts/test/<str:channel>",         views_alerts.alerts_test_channel,  name="alertsTestChannel"),
 
-    # Logs / audit timeline / system tail / chaos lab
+    # Logs / audit timeline / system tail
     path("logs/timeline",                     views_logs.logs_timeline,          name="logsTimeline"),
     path("logs/stats",                        views_logs.logs_stats,             name="logsStats"),
     path("logs/tail",                         views_logs.logs_tail,              name="logsTail"),
-    path("logs/chaos/scenarios",              views_logs.chaos_scenarios,        name="logsChaosScenarios"),
-    path("logs/chaos/run/<str:scenario>",     views_logs.chaos_run,              name="logsChaosRun"),
-    path("logs/chaos/status/<str:job_id>",    views_logs.chaos_status,           name="logsChaosStatus"),
+    # AI Log Intelligence — anomalies, incidents, 30-min forecast, NL summary.
+    path("logs/intelligence",                 log_intelligence.logs_intelligence, name="logsIntelligence"),
     path("dashboard-overview", views.get_dashboard_overview, name="getBackupDashboardOverview"),
     path("metrics", views.get_backup_metrics, name="getBackupMetrics"),
     path("metrics/prometheus", views.get_backup_metrics_prometheus, name="getBackupMetricsPrometheus"),
@@ -39,8 +46,11 @@ urlpatterns = [
     path("<str:backup_id>/restore-components", views.restore_components, name="restoreComponents"),
     # Pre-restore preview: what WILL be restored vs what will be SKIPPED + why.
     path("<str:backup_id>/restore-preview", views.restore_preview, name="restorePreview"),
+    # Anti-tamper: SHA-256 + HMAC integrity check of a backup before restoring it.
+    path("<str:backup_id>/verify-integrity", views.verify_backup_integrity, name="verifyBackupIntegrity"),
 
     path("restore-full-status/<str:job_id>", views.get_restore_full_status, name="getRestoreFullStatus"),
+    path("restore-active", views.get_restore_active, name="getRestoreActive"),
     path("progress/<str:job_id>", views.get_backup_progress, name="getBackupProgress"),
     path("restore-history", views.get_restore_history, name="getRestoreHistory"),
 
@@ -60,11 +70,11 @@ urlpatterns = [
     path("telegram-test", views.test_telegram, name="telegramTest"),
 
     # Cloud Storage
-    path("cloud/config",                  views.cloud_config,         name="cloudConfig"),
-    path("cloud/test",                    views.cloud_test,           name="cloudTest"),
-    path("cloud/backups",                 views.cloud_list,           name="cloudList"),
-    path("cloud/sync/<str:backup_id>",    views.cloud_sync,           name="cloudSync"),
-    path("cloud/history",                 views.cloud_backup_history, name="cloudBackupHistory"),
+    path("cloud/config",                  views_cloud.cloud_config,         name="cloudConfig"),
+    path("cloud/test",                    views_cloud.cloud_test,           name="cloudTest"),
+    path("cloud/backups",                 views_cloud.cloud_list,           name="cloudList"),
+    path("cloud/sync/<str:backup_id>",    views_cloud.cloud_sync,           name="cloudSync"),
+    path("cloud/history",                 views_cloud.cloud_backup_history, name="cloudBackupHistory"),
 
     # VM Snapshots
     path("vm-snapshot/running-jobs",                  views_vm_snapshot.vm_snapshot_running_jobs,    name="vmSnapshotRunningJobs"),
@@ -72,7 +82,6 @@ urlpatterns = [
     path("vm-snapshot/info",                         views_vm_snapshot.vm_snapshot_info,           name="vmSnapshotInfo"),
     path("vm-snapshot/test-connection",              views_vm_snapshot.vm_snapshot_test_connection, name="vmSnapshotTestConnection"),
     path("vm-snapshot/list",                         views_vm_snapshot.vm_snapshot_list,           name="vmSnapshotList"),
-    path("vm-snapshot/verify",                       views_vm_snapshot.vm_snapshot_verify,         name="vmSnapshotVerify"),
     path("vm-snapshot/create",                       views_vm_snapshot.vm_snapshot_create,         name="vmSnapshotCreate"),
     path("vm-snapshot/progress/<str:job_id>",        views_vm_snapshot.vm_snapshot_progress,       name="vmSnapshotProgress"),
     path("vm-snapshot/config",                       views_vm_snapshot.vm_snapshot_config,         name="vmSnapshotConfig"),
@@ -81,14 +90,23 @@ urlpatterns = [
     path("vm-snapshot/<str:snap_id>/delete",         views_vm_snapshot.vm_snapshot_delete,         name="vmSnapshotDelete"),
     path("vm-snapshot/<str:job_id>/cancel",          views_vm_snapshot.vm_snapshot_cancel,          name="vmSnapshotCancel"),
 
-    # LVM coverage migration — extends snapshot scope to system configs
-    path("lvm-migration/status",                  views_lvm_migration.lvm_migration_status,   name="lvmMigrationStatus"),
-    path("lvm-migration/plan",                    views_lvm_migration.lvm_migration_plan,     name="lvmMigrationPlan"),
-    path("lvm-migration/config",                  views_lvm_migration.lvm_migration_config,   name="lvmMigrationConfig"),
-    path("lvm-migration/apply",                   views_lvm_migration.lvm_migration_apply,    name="lvmMigrationApply"),
-    path("lvm-migration/progress/<str:job_id>",   views_lvm_migration.lvm_migration_progress, name="lvmMigrationProgress"),
-    path("lvm-migration/rollback",                views_lvm_migration.lvm_migration_rollback, name="lvmMigrationRollback"),
-    path("lvm-migration/audit",                   views_lvm_migration.lvm_migration_audit,    name="lvmMigrationAudit"),
+    # ─── LVM coverage migration ───────────────────────────────────────────────
+    # Extends snapshot scope by bind-mounting /etc/* config paths onto the
+    # snapshotable LV. This is a deployment / DR operation — only `status` and
+    # `plan` are consumed by the UI (read-only previews in the VM Snapshot
+    # tab). The other endpoints are intentionally kept for the asguard-dr-
+    # restore script and for one-shot provisioning on a fresh appliance:
+    #   - config / apply / progress  : invoked by the deployment installer
+    #   - rollback / audit           : recovery hooks used by support scripts
+    # Do not remove them: removing the URL without also removing the view
+    # would 404 the deployment flow on a new client install.
+    path("lvm-migration/status",                  views_lvm_migration.lvm_migration_status,   name="lvmMigrationStatus"),    # UI
+    path("lvm-migration/plan",                    views_lvm_migration.lvm_migration_plan,     name="lvmMigrationPlan"),      # UI
+    path("lvm-migration/config",                  views_lvm_migration.lvm_migration_config,   name="lvmMigrationConfig"),    # deployment
+    path("lvm-migration/apply",                   views_lvm_migration.lvm_migration_apply,    name="lvmMigrationApply"),     # deployment
+    path("lvm-migration/progress/<str:job_id>",   views_lvm_migration.lvm_migration_progress, name="lvmMigrationProgress"),  # deployment
+    path("lvm-migration/rollback",                views_lvm_migration.lvm_migration_rollback, name="lvmMigrationRollback"),  # support
+    path("lvm-migration/audit",                   views_lvm_migration.lvm_migration_audit,    name="lvmMigrationAudit"),     # support
 
     # In-app alerts
     path("in-app-alerts",            views.get_in_app_alerts,       name="getInAppAlerts"),

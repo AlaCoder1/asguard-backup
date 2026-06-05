@@ -1377,6 +1377,9 @@ export default {
   mounted() {
     this.fetchBackups();
     this.emitter.on("retention-applied", () => this.fetchBackups());
+    // Re-attach to any restore that is running / just finished — survives page
+    // refresh, browser close+reopen, and the uvicorn restart of a full restore.
+    this.resumeActiveRestore();
   },
   beforeUnmount() {
     this.stopRestorePolling();
@@ -1520,6 +1523,11 @@ export default {
     },
     startRestorePolling(jobId, backupId, modeLabel) {
       this.stopRestorePolling();
+      this.restoreReconnectTries = 0;
+      try {
+        localStorage.setItem("asguard_active_restore",
+          JSON.stringify({ jobId, backupId, modeLabel }));
+      } catch (e) {}
       this.openRestoreMonitor({
         backupId,
         modeLabel,
@@ -1530,6 +1538,7 @@ export default {
       const poll = async () => {
         try {
           const response = await axios.get(`/backup/restore-full-status/${jobId}`);
+          this.restoreReconnectTries = 0;
           const payload = response.data || {};
           const verification = payload.verification || null;
           const status = payload.status || "running";
@@ -1560,6 +1569,10 @@ export default {
 
           if (isFinished) {
             this.stopRestorePolling();
+            try {
+              localStorage.removeItem("asguard_active_restore");
+              localStorage.setItem("asguard_seen_restore", jobId);
+            } catch (e) {}
             this.notify(
               status === "success"
                 ? "Restore termine et verifie."
@@ -1581,23 +1594,74 @@ export default {
             await this.fetchBackups();
           }
         } catch (error) {
-          this.stopRestorePolling();
+          // The API is very likely restarting (a COMPLETE restore restarts
+          // uvicorn at the end) or briefly unreachable. Do NOT give up — the
+          // restore continues in a detached systemd process. Keep polling; show
+          // a reassuring "reconnecting" message, then actionable advice if the
+          // API stays down for a while.
+          this.restoreReconnectTries = (this.restoreReconnectTries || 0) + 1;
+          const advise = this.restoreReconnectTries >= 12; // ~30 s of failures
           this.openRestoreMonitor({
             backupId,
             modeLabel,
-            title: "Suivi restore interrompu",
-            subtitle: "Impossible de lire le statut du job de restore.",
-            status: "error",
-            statusLabel: "Error",
-            progressActive: false,
-            verification: null,
-            liveComponents: null,
+            title: "Restauration en cours…",
+            subtitle: advise
+              ? "L'API ne répond pas (elle redémarre sûrement). La restauration CONTINUE en arrière-plan. Patientez 1–2 min : le suivi reprend tout seul. Sinon rechargez la page (Ctrl+Shift+R) ou redémarrez la VM — au retour le suivi reprend et le résultat est dans « Historique Restores »."
+              : "Reconnexion à l'interface… (l'API redémarre — c'est normal pour un restore complet)",
+            status: "running",
+            statusLabel: "Reconnexion",
+            progressActive: true,
           });
+          // IMPORTANT: keep the poller alive (do not stopRestorePolling) so it
+          // reconnects automatically once uvicorn is back.
         }
       };
 
       poll();
       this.restorePoller = window.setInterval(poll, 2500);
+    },
+
+    // Re-attach to an in-flight (or just-finished) restore on page load / browser
+    // reopen / after a uvicorn restart. The server is the source of truth, so
+    // this survives refreshes and closing the browser.
+    async resumeActiveRestore() {
+      try {
+        const { data } = await axios.get("/backup/restore-active");
+        if (!data || !data.job) return;
+        const job = data.job;
+        const jobId = job.job_id;
+        const modeLabel = this.modeLabelFromJob(job);
+        if (data.active) {
+          this.startRestorePolling(jobId, job.backup_id, modeLabel);
+          return;
+        }
+        if (data.finished && jobId) {
+          let seen = null;
+          try { seen = localStorage.getItem("asguard_seen_restore"); } catch (e) {}
+          if (seen !== jobId && data.age_seconds < 900) {
+            const status = job.status || "success";
+            this.openRestoreMonitor({
+              backupId: job.backup_id,
+              modeLabel,
+              title: "Restore terminé",
+              subtitle: "Résultat de la dernière restauration.",
+              status,
+              statusLabel: this.restoreStatusLabel(status),
+              progressActive: false,
+              verification: job.verification || null,
+              diff: (job.result && job.result.diff) || null,
+            });
+            try { localStorage.setItem("asguard_seen_restore", jobId); } catch (e) {}
+          }
+        }
+      } catch (e) { /* no active restore / endpoint unreachable — ignore */ }
+    },
+    modeLabelFromJob(job) {
+      const m = (job && job.mode) || "";
+      return m === "complete" ? "Full DR (complete)"
+        : m === "ui_full" ? "Full UI-safe"
+        : m === "safe" ? "Safe"
+        : "Restore";
     },
     restoreStatusLabel(status) {
       const labels = {

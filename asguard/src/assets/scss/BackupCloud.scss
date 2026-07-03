@@ -1,0 +1,171 @@
+/* ─────────────────────────────────────────────────────────
+   BackupCloud — styles (externalised from the SFC during code
+   review). Still scoped: the .vue references this file via
+   <style scoped src="./BackupCloud.scss">, so vue-loader keeps the
+   data-v hash isolation — no global leakage.
+   ───────────────────────────────────────────────────────── */
+/* ── Root ────────────────────────────────────────────────────────── */
+.bc-wrap { padding: 20px 24px; min-height: 400px; font-family: inherit; }
+
+/* ── Toast ───────────────────────────────────────────────────────── */
+.bc-toast {
+  position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+  border-radius: 10px; font-size: 14px; font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-width: 420px;
+}
+.bc-toast.success { background: #166534; color: #dcfce7; }
+.bc-toast.error   { background: #7f1d1d; color: #fee2e2; }
+.bc-toast.info    { background: #1e3a5f; color: #dbeafe; }
+.bc-toast-icon    { font-size: 16px; }
+.bc-toast-anim-enter-active, .bc-toast-anim-leave-active { transition: all 0.3s ease; }
+.bc-toast-anim-enter-from, .bc-toast-anim-leave-to { opacity: 0; transform: translateY(12px); }
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.bc-topbar {
+  display: flex; align-items: center; gap: 16px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;
+}
+.bc-provider-block { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.bc-status-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.bc-status-dot.ok      { background: #22c55e; box-shadow: 0 0 0 3px #dcfce7; }
+.bc-status-dot.offline { background: #94a3b8; box-shadow: 0 0 0 3px #f1f5f9; }
+.bc-provider-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bc-provider-name { font-size: 13px; font-weight: 700; color: #0f172a; }
+.bc-provider-sub  { font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.bc-btn {
+  display: flex; align-items: center; gap: 6px;
+  border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap; border: 1px solid transparent;
+}
+.bc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.bc-btn-primary { background: #0f172a; color: #fff; border-color: #0f172a; }
+.bc-btn-primary:hover:not(:disabled) { background: #1e293b; }
+.bc-btn-ghost { background: #fff; color: #374151; border-color: #e2e8f0; }
+.bc-btn-ghost:hover:not(:disabled) { background: #f8fafc; }
+
+/* ── Stats row ───────────────────────────────────────────────────── */
+.bc-stats-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.bc-stat-card {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 12px 16px; flex: 1; min-width: 160px;
+}
+.bc-stat-icon {
+  width: 36px; height: 36px; border-radius: 9px; font-size: 18px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.bc-stat-val   { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.2; }
+.bc-stat-label { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+/* ── Config card ─────────────────────────────────────────────────── */
+.bc-config-card { margin-bottom: 16px; }
+.bc-config-body { padding: 18px; }
+.bc-form-row { display: flex; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+.bc-form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 200px; }
+.bc-label { font-size: 12px; font-weight: 600; color: #475569; }
+.bc-input, .bc-select {
+  padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 7px;
+  font-size: 13px; color: #0f172a; background: #fff; outline: none;
+  transition: border-color 0.15s;
+}
+.bc-input:focus, .bc-select:focus { border-color: #6366f1; }
+.bc-form-toggles { display: flex; gap: 24px; margin-bottom: 14px; flex-wrap: wrap; }
+.bc-toggle-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151; cursor: pointer; }
+.bc-checkbox { width: 15px; height: 15px; cursor: pointer; }
+.bc-config-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ── Slide transition ────────────────────────────────────────────── */
+.bc-slide-enter-active, .bc-slide-leave-active { transition: all 0.25s ease; }
+.bc-slide-enter-from, .bc-slide-leave-to { opacity: 0; transform: translateY(-8px); }
+
+/* ── Grid ────────────────────────────────────────────────────────── */
+.bc-grid { display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+@media (max-width: 1100px) { .bc-grid { grid-template-columns: 1fr; } }
+.bc-col-right { display: flex; flex-direction: column; gap: 16px; }
+.bc-card-wide { grid-column: 1; }
+
+/* ── Card ────────────────────────────────────────────────────────── */
+.bc-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.bc-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid #f1f5f9; background: #f8fafc;
+}
+.bc-card-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; color: #0f172a; }
+.bc-count-badge { background: #e0e7ff; color: #3730a3; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+.bc-provider-badge { background: #0f172a; color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; }
+.bc-icon-btn { background: none; border: none; cursor: pointer; font-size: 16px; color: #94a3b8; padding: 2px 6px; border-radius: 5px; }
+.bc-icon-btn:hover { background: #f1f5f9; }
+
+/* ── State blocks ────────────────────────────────────────────────── */
+.bc-state-block { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 40px 20px; color: #94a3b8; font-size: 13px; }
+.bc-state-sm    { padding: 20px; }
+.bc-empty-icon  { font-size: 32px; }
+.bc-add-link    { background: none; border: none; color: #6366f1; font-size: 13px; cursor: pointer; text-decoration: underline; }
+.bc-spin        { display: inline-block; animation: bc-spin 1s linear infinite; }
+.bc-spin-lg     { font-size: 28px; animation: bc-spin 1s linear infinite; display: inline-block; }
+@keyframes bc-spin { to { transform: rotate(360deg); } }
+
+/* ── Table ───────────────────────────────────────────────────────── */
+.bc-table-wrap { overflow-x: auto; }
+.bc-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.bc-table thead tr { background: #f8fafc; }
+.bc-table th { padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; }
+.bc-table td { padding: 10px 14px; border-bottom: 1px solid #f8fafc; color: #1e293b; }
+.bc-table tbody tr:last-child td { border-bottom: none; }
+.bc-table tbody tr:hover td { background: #f8fafc; }
+.bc-filename { display: flex; align-items: center; gap: 8px; font-family: monospace; font-size: 12px; max-width: 340px; word-break: break-all; }
+.bc-size { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bc-date { white-space: nowrap; color: #64748b; }
+
+/* ── Type dots & badges ──────────────────────────────────────────── */
+.bc-type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.bc-type-dot.safe_backup { background: #22c55e; }
+.bc-type-dot.full_backup { background: #3b82f6; }
+.bc-type-dot.db_backup   { background: #a855f7; }
+.bc-type-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 8px; text-transform: uppercase; }
+.bc-type-badge.safe_backup { background: #dcfce7; color: #166534; }
+.bc-type-badge.full_backup { background: #dbeafe; color: #1d4ed8; }
+.bc-type-badge.db_backup   { background: #f3e8ff; color: #7e22ce; }
+
+/* ── History list ────────────────────────────────────────────────── */
+.bc-hist-list { padding: 4px 0; max-height: 260px; overflow-y: auto; }
+.bc-hist-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; border-bottom: 1px solid #f8fafc; gap: 10px;
+}
+.bc-hist-item:last-child { border-bottom: none; }
+.bc-hist-left  { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bc-hist-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.bc-hist-id    { font-size: 11px; font-family: monospace; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.bc-hist-date  { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+.bc-run-badge  { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; text-transform: uppercase; white-space: nowrap; }
+.bc-run-badge.ok, .bc-run-badge.success { background: #dcfce7; color: #166534; }
+.bc-run-badge.error   { background: #fee2e2; color: #dc2626; }
+.bc-run-badge.partial { background: #fef3c7; color: #92400e; }
+.bc-cloud-badge { font-size: 10px; background: #dbeafe; color: #1d4ed8; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+
+/* ── Sync panel ──────────────────────────────────────────────────── */
+.bc-sync-body { padding: 14px 16px; }
+.bc-sync-desc { font-size: 12px; color: #64748b; margin: 0 0 12px; }
+.bc-sync-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+.bc-sync-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 7px; gap: 10px;
+}
+.bc-sync-item-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bc-sync-name { font-size: 11px; font-family: monospace; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-sync-btn {
+  background: #6366f1; color: #fff; border: none; border-radius: 6px;
+  padding: 4px 10px; font-size: 13px; cursor: pointer; flex-shrink: 0;
+  transition: background 0.15s;
+}
+.bc-sync-btn:hover:not(:disabled) { background: #4f46e5; }
+.bc-sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }

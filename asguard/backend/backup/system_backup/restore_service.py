@@ -2,6 +2,7 @@ import json
 import os
 import logging
 import shutil
+import threading
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -15,12 +16,44 @@ from .base import ComponentResult, run_cmd, safe_extract, Timer, compute_sha256
 logger = logging.getLogger(__name__)
 
 
+def _run_bounded(fn, timeout: float, default):
+    """Run `fn()` on a daemon thread and give up after `timeout` seconds.
+
+    The post-restore DB diff runs right after a COMPLETE restore has restarted
+    uvicorn and reloaded PostgreSQL — connections can be in a half-broken state
+    with no statement timeout, so a naive call can hang the whole restore runner
+    forever (the exact failure that strands the progress banner). This caps it:
+    a slow/hung diff is dropped, never blocking the terminal-status write."""
+    box = {"value": default}
+
+    def _target():
+        try:
+            box["value"] = fn()
+        except Exception:
+            logger.exception("bounded call failed (non-fatal)")
+
+    t = threading.Thread(target=_target, daemon=True)
+    t.start()
+    t.join(timeout)
+    if t.is_alive():
+        logger.warning("bounded call exceeded %ss — using default", timeout)
+        return default
+    return box["value"]
+
+
 class RestoreService:
     BACKUP_ROOT = Path("/var/backups/asguard")
     DB_CONTAINER = "app-db-container"
     DB_NAME = "postgres"
     APP_ROOT = Path("/asguard/asguard")
     RESTORE_MODE = "safe"
+    # Set by _restore_network during a clone restore; read into the top-level
+    # result so the UI can tell the operator the target IP to reconnect to.
+    _LAST_CLONE_NETWORK: dict | None = None
+    # Set at the start of every restore: which LVM snapshots are present (kept,
+    # not touched). Surfaced in the report so the operator knows the restore ran
+    # under low I/O priority because copy-on-write amplification was in play.
+    _LAST_LVM_SNAPSHOTS: dict | None = None
     UI_FULL_EXCLUDED_COMPONENTS = {
         "application",
         "system_config",
@@ -74,10 +107,24 @@ class RestoreService:
         progress_callback=None,
     ) -> dict:
         cls.RESTORE_MODE = "complete" if include_application else "safe"
+        cls._LAST_CLONE_NETWORK = None   # reset per-run clone network info
 
         backup_dir = cls.BACKUP_ROOT / backup_id
         if not backup_dir.exists():
             return {"status": "error", "message": f"Backup {backup_id} not found."}
+
+        # ── LVM snapshots & restore safety ──────────────────────────────────────
+        # The appliance bind-mounts /etc/* + PostgreSQL + backups onto the asguard-vg
+        # data LV. An active snapshot of that LV copy-on-write amplifies every
+        # restore write, which can saturate I/O and take the VM down. Snapshots are
+        # VM-local (never part of a backup, never cloned). Per operator decision, a
+        # COMPLETE (whole-VM/DR) restore REMOVES active snapshots up front so the
+        # amplification can't happen; the target re-creates its own afterwards if it
+        # has a 2nd disk. Lighter restores only record what's present.
+        if include_application:
+            cls._LAST_LVM_SNAPSHOTS = cls._clear_snapshots_before_restore()
+        else:
+            cls._LAST_LVM_SNAPSHOTS = cls._detect_lvm_snapshots()
 
         metadata_file = backup_dir / "backup_metadata.json"
         if not metadata_file.exists():
@@ -132,6 +179,10 @@ class RestoreService:
         except Exception:
             logger.exception("Pre-restore DB snapshot failed (non-fatal)")
             pre_snapshot = {}
+
+        # System identity BEFORE the restore (root password hash, system users,
+        # hostname) so we can report the system-level changes — not just DB rows.
+        pre_system = cls._capture_system_identity()
 
         if progress_callback:
             try:
@@ -223,6 +274,21 @@ class RestoreService:
 
         global_status = "success" if failed == 0 else ("failed" if success == 0 else "partial_success")
 
+        # Network DB ↔ system reconcile. The file-based restore brings back the
+        # NM profiles (network component) and/or the DB (database component)
+        # independently; re-derive the DB network rows from the just-restored
+        # profiles so UI ↔ system ↔ DB agree without waiting for the startup
+        # reconcile. Best-effort: never turns a successful restore into a failure.
+        network_db_reconcile: dict = {}
+        if all_runner_names and any(
+            c in all_runner_names for c in ("network", "vlan", "vxlan", "database")
+        ):
+            try:
+                from backend.network.reconcile import reconcile_network_db_from_system
+                network_db_reconcile = reconcile_network_db_from_system()
+            except Exception:
+                logger.exception("post-restore network reconcile failed (non-fatal)")
+
         # Reconcile /etc/fstab with THIS host: if the LVM volume group isn't
         # present (restored onto a VM without the 2nd disk), strip the LVM/bind
         # lines so the box runs natively instead of hanging on missing devices.
@@ -239,16 +305,28 @@ class RestoreService:
         # report (which rules vanished, which ZTNA identities reappeared,
         # which NAT entries changed). Whole block is best-effort: a
         # broken diff must never mask a successful restore.
-        diff_payload: dict = {}
-        try:
+        # `available: False` marks a diff that could NOT be computed (timed out /
+        # DB unreachable) — distinct from a diff that ran and found no changes. The
+        # UI must say "report unavailable", NOT the misleading "identical".
+        _empty_diff = {"components": {}, "totals": {
+            "added": 0, "removed": 0, "modified": 0, "changed_components": 0,
+        }, "available": False}
+
+        def _compute_post_diff():
             from backend.backup.restore_diff import snapshot_db_state, diff_db_states
             post_snapshot = snapshot_db_state(all_runner_names)
-            diff_payload = diff_db_states(pre_snapshot, post_snapshot)
-        except Exception:
-            logger.exception("Post-restore diff computation failed (non-fatal)")
-            diff_payload = {"components": {}, "totals": {
-                "added": 0, "removed": 0, "modified": 0, "changed_components": 0,
-            }}
+            out = diff_db_states(pre_snapshot, post_snapshot)
+            out["available"] = True
+            return out
+
+        # Bounded so a hung query can't strand the runner. Now that the restore runs
+        # under an I/O cap, the DB stays responsive, so a generous 120s is safe.
+        diff_payload = _run_bounded(_compute_post_diff, timeout=120, default=_empty_diff)
+
+        # System-level changes (root password, system users, hostname) — what the
+        # restore actually changed at the OS level, which the DB row-diff can't show.
+        post_system = cls._capture_system_identity()
+        system_changes = cls._diff_system_identity(pre_system, post_system)
 
         return {
             "status": global_status,
@@ -261,7 +339,11 @@ class RestoreService:
                 "skipped": skipped,
             },
             "diff": diff_payload,
+            "system_changes": system_changes,
             "fstab_reconcile": fstab_reconcile,
+            "network_db_reconcile": network_db_reconcile,
+            "clone_network": cls._LAST_CLONE_NETWORK,
+            "lvm_snapshots": cls._LAST_LVM_SNAPSHOTS,
         }
 
     @classmethod
@@ -358,26 +440,47 @@ class RestoreService:
 
         return True, ""
 
-    # Host-identity files that describe THIS physical machine, not the backed-up
-    # one. Restoring them onto a different box breaks boot (fstab: wrong UUIDs /
-    # missing LVM disk) or causes IP conflicts (the NetworkManager connection
-    # profiles pin the LAN/WAN IP — two appliances would claim the same address).
-    # We exclude them from extraction so the target keeps its own identity.
-    _HOST_IDENTITY_EXCLUDES = (
-        "etc/fstab", "./etc/fstab",
+    # /etc/fstab describes THIS host's physical disks + LVM layout. It is ALWAYS
+    # excluded from extraction (and reconciled separately): adopting a backed-up
+    # machine's fstab with an LVM volume that doesn't exist here makes mounts fail
+    # → emergency mode on reboot. fstab is disk geometry, not "config", so excluding
+    # it does not affect the clone the operator sees.
+    _FSTAB_EXCLUDES = ("etc/fstab", "./etc/fstab")
+
+    # NetworkManager connection profiles pin the LAN/WAN IP. They are the network
+    # IDENTITY of the appliance. A COMPLETE (DR) restore reproduces the exact VM —
+    # same IP — so it RESTORES them. Lighter modes (safe / ui_full) keep the
+    # target's current IP to avoid disrupting a live box, so they exclude these.
+    _NETWORK_IDENTITY_EXCLUDES = (
         "etc/NetworkManager/system-connections",
         "etc/NetworkManager/system-connections/*",
         "./etc/NetworkManager/system-connections",
         "./etc/NetworkManager/system-connections/*",
     )
 
+    # Back-compat alias (fstab + network identity) for any external caller.
+    _HOST_IDENTITY_EXCLUDES = _FSTAB_EXCLUDES + _NETWORK_IDENTITY_EXCLUDES
+
+    @classmethod
+    def _clone_excludes(cls) -> tuple:
+        """Extraction excludes for an /etc-bearing archive. fstab is always out
+        (disk safety); network identity is out only when NOT doing a complete/DR
+        clone. In complete mode this returns just the fstab excludes, so the source
+        machine's IP / NM profiles ARE restored → a true clone."""
+        if cls.RESTORE_MODE == "complete":
+            return cls._FSTAB_EXCLUDES
+        return cls._FSTAB_EXCLUDES + cls._NETWORK_IDENTITY_EXCLUDES
+
     @classmethod
     def _extract_archive_to_root(cls, archive: Path, timeout: int = 180,
-                                 preserve_identity: bool = False) -> tuple[bool, str]:
+                                 preserve_identity: bool = False,
+                                 excludes: tuple | None = None) -> tuple[bool, str]:
         cmd = ["sudo", "/usr/bin/tar", "--overwrite"]
-        if preserve_identity:
-            for pattern in cls._HOST_IDENTITY_EXCLUDES:
-                cmd.append(f"--exclude={pattern}")
+        patterns = excludes if excludes is not None else (
+            cls._HOST_IDENTITY_EXCLUDES if preserve_identity else ()
+        )
+        for pattern in patterns:
+            cmd.append(f"--exclude={pattern}")
         cmd += ["-xzf", str(archive), "-C", "/"]
         res = run_cmd(cmd, timeout=timeout)
         if not res["success"]:
@@ -411,11 +514,31 @@ class RestoreService:
 
     @classmethod
     def _lvm_volume_group_present(cls) -> bool:
+        """True if the asguard LVM is present. MUST NOT return a false negative:
+        a wrong "absent" makes _reconcile_fstab_native strip the LVM/bind lines
+        from fstab, which unmounts the volume that holds PostgreSQL data, the
+        backups and all /etc binds → total outage. So we trust strong, cheap
+        signals first (device exists / volume mounted) and only fall back to
+        `vgs` with retries to ride out transient failures under I/O load."""
+        # Strongest signals — if true, LVM is unquestionably present.
         try:
-            res = run_cmd(["sudo", "-n", "vgs", "--noheadings", "asguard-vg"], timeout=15)
-            return bool(res.get("success"))
+            if (os.path.exists("/dev/asguard-vg/asguard-data")
+                    or os.path.exists("/dev/mapper/asguard--vg-asguard--data")
+                    or os.path.ismount("/var/asguard_data")):
+                return True
         except Exception:
-            return False
+            pass
+        # Retry vgs to survive a transient timeout under heavy restore I/O.
+        for attempt in range(3):
+            try:
+                res = run_cmd(["sudo", "-n", "vgs", "--noheadings", "asguard-vg"], timeout=15)
+                if res.get("success"):
+                    return True
+            except Exception:
+                pass
+            if attempt < 2:
+                run_cmd(["sleep", "2"], timeout=4)
+        return False
 
     @classmethod
     def _reconcile_fstab_native(cls) -> dict:
@@ -424,8 +547,39 @@ class RestoreService:
         /etc/fstab so the appliance boots and runs natively (configs in /etc,
         backups in /var/backups, postgres in its Docker volume) instead of
         hanging on missing devices. No-op when LVM IS present. Best-effort."""
+        # 2nd disk + asguard LVM present → keep the fstab LVM/bind lines AND bring
+        # the volume online automatically (activate VG + mount) so the data volume
+        # is usable immediately, without waiting for a reboot. No 2nd disk → fall
+        # through to native mode below so the box never hangs on a missing device.
         if cls._lvm_volume_group_present():
-            return {"mode": "lvm", "changed": False}
+            activated = run_cmd(["sudo", "vgchange", "-ay", "asguard-vg"], timeout=30)
+            # Only run `mount -a` if the data volume isn't already mounted (e.g.
+            # restored onto a fresh 2nd-disk VM that hasn't mounted it yet). On a
+            # normally-booted appliance it's already mounted, so we skip the churn.
+            already = os.path.ismount("/var/asguard_data")
+            mounted = {"success": True}
+            if not already:
+                mounted = run_cmd(["sudo", "mount", "-a"], timeout=45)
+            return {
+                "mode": "lvm",
+                "changed": False,
+                "activated": bool(activated.get("success")),
+                "mounted": bool(mounted.get("success")),
+                "mount_skipped": already,
+            }
+        # Defense-in-depth: NEVER strip mount lines while the device exists or the
+        # volume is mounted. The bind mounts carry PostgreSQL data, backups and the
+        # /etc configs — stripping them on a live LVM box is catastrophic. If we got
+        # here but these are present, treat it as LVM mode (no change).
+        try:
+            if (os.path.exists("/dev/asguard-vg/asguard-data")
+                    or os.path.exists("/dev/mapper/asguard--vg-asguard--data")
+                    or os.path.ismount("/var/asguard_data")):
+                logger.warning("fstab reconcile: refusing to strip — LVM device/mount present")
+                return {"mode": "lvm", "changed": False, "guard": "device_or_mount_present"}
+        except Exception:
+            pass
+
         try:
             lines = cls._FSTAB.read_text().splitlines()
         except Exception as exc:
@@ -451,6 +605,104 @@ class RestoreService:
             run_cmd(["sudo", "systemctl", "daemon-reload"], timeout=30)
         return {"mode": "native", "changed": ok, "removed": removed,
                 "backup": f"/etc/fstab.asguard-pre-restore.{ts}"}
+
+    @staticmethod
+    def _capture_system_identity() -> dict:
+        """Read OS-level identity (root password hash, system users, hostname) so
+        a restore can report what it changed at the system level. The detached
+        complete restore runs as root and can read /etc/shadow; under uvicorn it
+        is unreadable → root_hash stays None (best-effort)."""
+        out = {"root_hash": None, "users": [], "hostname": None}
+        try:
+            for line in Path("/etc/shadow").read_text(errors="ignore").splitlines():
+                if line.startswith("root:"):
+                    out["root_hash"] = line.split(":")[1]
+                    break
+        except Exception:
+            pass
+        try:
+            out["users"] = sorted(
+                l.split(":")[0] for l in Path("/etc/passwd").read_text(errors="ignore").splitlines()
+                if l.strip() and not l.startswith("#")
+            )
+        except Exception:
+            pass
+        try:
+            out["hostname"] = Path("/etc/hostname").read_text().strip()
+        except Exception:
+            pass
+        return out
+
+    @staticmethod
+    def _diff_system_identity(pre: dict, post: dict) -> dict:
+        """Compare two _capture_system_identity() snapshots (pre vs post restore)
+        into a human-facing summary of what the restore changed at the OS level."""
+        pre = pre or {}
+        post = post or {}
+        pre_u, post_u = set(pre.get("users") or []), set(post.get("users") or [])
+        pwd_changed = bool(
+            pre.get("root_hash") and post.get("root_hash")
+            and pre["root_hash"] != post["root_hash"]
+        )
+        users_removed = sorted(pre_u - post_u)   # were present, gone after restore
+        users_added = sorted(post_u - pre_u)     # appeared after restore
+        host_changed = bool(
+            pre.get("hostname") is not None and post.get("hostname") is not None
+            and pre["hostname"] != post["hostname"]
+        )
+        return {
+            "root_password_changed": pwd_changed,
+            "users_removed": users_removed,
+            "users_added": users_added,
+            "hostname_changed": host_changed,
+            "hostname_from": pre.get("hostname"),
+            "hostname_to": post.get("hostname"),
+            "any": bool(pwd_changed or users_removed or users_added or host_changed),
+            "checked": bool(pre.get("root_hash") or pre.get("users")),
+        }
+
+    @classmethod
+    def _list_active_snapshots(cls) -> list[str]:
+        """Names of real LVM snapshots on asguard-vg (best-effort, never raises)."""
+        names = []
+        try:
+            from .lvm_snapshot_service import LVMSnapshotService as _Svc
+            for s in _Svc.list_snapshots() or []:
+                name = s.get("lv_name") or s.get("name") or ""
+                attr = s.get("attr", "") or ""
+                origin = s.get("origin", "") or ""
+                if name and (attr[:1] in ("s", "S") or bool(origin)):
+                    names.append(name)
+        except Exception as exc:
+            logger.warning("LVM snapshot list: %s", exc)
+        return names
+
+    @classmethod
+    def _detect_lvm_snapshots(cls) -> dict:
+        """Record active snapshots WITHOUT touching them (lighter restore modes)."""
+        present = cls._list_active_snapshots()
+        return {"checked": True, "present": present, "count": len(present), "removed": []}
+
+    @classmethod
+    def _clear_snapshots_before_restore(cls) -> dict:
+        """Remove active LVM snapshots before a COMPLETE restore so their copy-on-
+        write amplification can't saturate I/O and take the VM down. Snapshots are
+        VM-local and recreatable. Best-effort; never raises, never fails the
+        restore. Runs as root in the detached restore unit (lvremove in sudoers)."""
+        result = {"checked": True, "present": [], "removed": [], "errors": []}
+        names = cls._list_active_snapshots()
+        result["present"] = list(names)
+        for name in names:
+            res = run_cmd(["sudo", "lvremove", "-f", f"asguard-vg/{name}"], timeout=180)
+            if res.get("success"):
+                logger.info("Restore: removed LVM snapshot %s (avoid I/O amplification)", name)
+                result["removed"].append(name)
+            else:
+                err = res.get("error") or res.get("stderr") or "lvremove failed"
+                logger.warning("Restore: could not remove snapshot %s: %s", name, err)
+                result["errors"].append({"name": name, "error": err})
+        result["count"] = len(result["removed"])
+        return result
 
     @classmethod
     def _service_exists(cls, service_name: str) -> bool:
@@ -541,13 +793,14 @@ class RestoreService:
         archive = backup_dir / component_meta["file"]
 
         # system_config's etc.tar.gz carries the SOURCE machine's /etc/fstab AND
-        # its NetworkManager connection profiles (the IP). Never adopt those —
-        # exclude them so the target keeps its own boot + network identity.
-        preserve_identity = (name == "system_config")
+        # its NetworkManager connection profiles (the IP). fstab is always excluded
+        # (disk safety); the IP profiles are restored in a COMPLETE/DR clone but
+        # kept in lighter modes — see _clone_excludes().
+        excludes = cls._clone_excludes() if name == "system_config" else ()
 
         with Timer() as t:
             ok, msg = cls._extract_archive_to_root(archive, timeout=180,
-                                                   preserve_identity=preserve_identity)
+                                                   excludes=excludes)
             if not ok:
                 return ComponentResult.failed(name, msg)
 
@@ -586,10 +839,15 @@ class RestoreService:
             if not copy_res["success"]:
                 return ComponentResult.failed(name, copy_res.get("error", "docker cp failed"))
 
+            # ATOMIC restore: --single-transaction makes the whole drop+recreate
+            # one transaction, so an interruption (container restart, I/O stall)
+            # rolls back to the previous DB instead of leaving it half-dropped /
+            # empty. --if-exists avoids DROP errors aborting the transaction.
             restore_res = run_cmd(
                 [
                     "docker", "exec", "-u", "postgres", cls.DB_CONTAINER,
-                    "pg_restore", "-c", "-d", cls.DB_NAME, "/tmp/postgres_restore.dump",
+                    "pg_restore", "-c", "--if-exists", "--single-transaction",
+                    "-d", cls.DB_NAME, "/tmp/postgres_restore.dump",
                 ],
                 timeout=300,
             )
@@ -856,15 +1114,59 @@ class RestoreService:
     def _restore_network(cls, backup_dir: Path, component_meta: dict) -> ComponentResult:
         name = "network"
         archive = backup_dir / component_meta["file"]
+        clone = (cls.RESTORE_MODE == "complete")
 
         with Timer() as t:
-            # Preserve the target's NetworkManager connection profiles (its IP
-            # assignment) — restoring the backed-up machine's IP onto another
-            # box causes IP conflicts. Other network config is still restored.
+            # COMPLETE / DR clone → restore the NetworkManager profiles too (the
+            # source IP), so the rebuilt VM is identical. Lighter modes keep the
+            # target's current IP to avoid disrupting a live appliance.
+            excludes = () if clone else cls._NETWORK_IDENTITY_EXCLUDES
             ok, msg = cls._extract_archive_to_root(archive, timeout=120,
-                                                   preserve_identity=True)
+                                                   excludes=excludes)
             if not ok:
                 return ComponentResult.failed(name, msg)
+
+            restored_ips: list[str] = []
+            ui_net_restored: list[str] = []
+            applied = "preserved"
+            if clone:
+                # tar --overwrite brings the backup's profiles IN, but never
+                # DELETES profiles that exist here yet were absent from the backup
+                # (e.g. a VLAN/connection created after the snapshot). A true clone
+                # must not keep those stray interfaces — prune them so the restored
+                # box matches the backup exactly.
+                cls._prune_stale_nm_profiles(archive)
+                restored_ips = cls._restored_nm_ips()
+                # Re-read the profile files into NetworkManager WITHOUT bouncing
+                # interfaces (so we never drop the live session mid-restore). The
+                # new IP fully applies on the next reboot — which the UI recommends.
+                applied = "reloaded"
+                reload_res = run_cmd(["sudo", "nmcli", "connection", "reload"], timeout=30)
+                if not reload_res["success"]:
+                    # Fall back to a NM service reload; still best-effort.
+                    run_cmd(["sudo", "systemctl", "reload-or-restart", "--no-block", "NetworkManager"], timeout=15)
+            else:
+                # UI-SAFE: the physical NIC identity (ens33/ens34 IP) stays
+                # excluded so the live session never drops — BUT the UI-managed
+                # VLAN/VXLAN objects ARE restored (additive, never touch the
+                # physical NIC). So a VLAN/VXLAN deleted since the backup comes
+                # back on a UI-safe restore, matching what the operator sees in
+                # the interface.
+                ui_net_restored = cls._restore_ui_vlan_vxlan_profiles(archive)
+
+        if clone:
+            ip_txt = ", ".join(restored_ips) if restored_ips else "DHCP/auto"
+            message = (f"Identité réseau restaurée (clone) — IP cible: {ip_txt}. "
+                       f"Redémarrage recommandé pour appliquer entièrement.")
+        elif ui_net_restored:
+            message = ("Config réseau restaurée — identité IP préservée ; "
+                       f"VLAN/VXLAN rétablis : {', '.join(ui_net_restored)}.")
+        else:
+            message = "Network config restored (host IP identity preserved)."
+
+        if clone:
+            # Surface where to reconnect after a clone restore (read at result level).
+            cls._LAST_CLONE_NETWORK = {"restored_ips": restored_ips, "applied": applied}
 
         return ComponentResult(
             name=name,
@@ -873,8 +1175,118 @@ class RestoreService:
             size_mb=archive.stat().st_size / (1024 ** 2),
             sha256=component_meta.get("sha256", ""),
             duration_s=t.elapsed,
-            message="Network config restored (host IP identity preserved).",
+            message=message,
         )
+
+    @classmethod
+    def _restore_ui_vlan_vxlan_profiles(cls, archive: Path) -> list[str]:
+        """UI-SAFE restore only. Bring back ONLY the VLAN/VXLAN NetworkManager
+        profiles from the network archive — the UI-managed, additive network
+        objects — and never the physical NIC profiles (ens33/ens34) that carry
+        the host IP. So a VLAN/VXLAN deleted since the backup is restored on a
+        UI-safe restore, while the live session's IP is never touched.
+
+        Returns the list of connection names restored (for the result message).
+        """
+        restored: list[str] = []
+        listing = run_cmd(["sudo", "/usr/bin/tar", "tzf", str(archive)], timeout=60)
+        if not listing["success"]:
+            return restored
+        profiles = [
+            ln for ln in listing["stdout"].splitlines()
+            if "NetworkManager/system-connections/" in ln
+            and ln.rstrip("/").endswith(".nmconnection")
+        ]
+        if not profiles:
+            return restored
+
+        tmp = Path("/tmp/.asguard_nm_ui")
+        run_cmd(["sudo", "/usr/bin/rm", "-rf", str(tmp)], timeout=15)
+        run_cmd(["sudo", "/usr/bin/mkdir", "-p", str(tmp)], timeout=15)
+        # Extract only the profile members into tmp (they keep their archive path).
+        if not run_cmd(["sudo", "/usr/bin/tar", "-xzf", str(archive), "-C", str(tmp), *profiles],
+                       timeout=90)["success"]:
+            run_cmd(["sudo", "/usr/bin/rm", "-rf", str(tmp)], timeout=15)
+            return restored
+
+        nm_dir = Path("/etc/NetworkManager/system-connections")
+        for rel in profiles:
+            src = tmp / rel
+            content = run_cmd(["sudo", "/usr/bin/cat", str(src)], timeout=15)
+            if not content["success"]:
+                continue
+            body = content["stdout"]
+            # Keep ONLY VLAN/VXLAN profiles — physical NIC profiles are skipped
+            # so the host IP identity is never re-applied on a live box.
+            if "[vlan]" not in body and "[vxlan]" not in body:
+                continue
+            dst = nm_dir / Path(rel).name
+            if not run_cmd(["sudo", "/usr/bin/cp", str(src), str(dst)], timeout=15)["success"]:
+                continue
+            run_cmd(["sudo", "/usr/bin/chmod", "600", str(dst)], timeout=15)
+            restored.append(Path(rel).name[:-len(".nmconnection")])
+
+        if restored:
+            # Re-read profiles into NM, then activate each VLAN/VXLAN. Bringing a
+            # VLAN up never disturbs its parent NIC's own address.
+            run_cmd(["sudo", "nmcli", "connection", "reload"], timeout=30)
+            for conn in restored:
+                run_cmd(["sudo", "nmcli", "connection", "up", conn], timeout=30)
+        run_cmd(["sudo", "/usr/bin/rm", "-rf", str(tmp)], timeout=15)
+        return restored
+
+    @classmethod
+    def _prune_stale_nm_profiles(cls, archive: Path) -> None:
+        """COMPLETE restore only. Remove live NetworkManager *.nmconnection
+        profiles that the backup did NOT contain, so a restored clone keeps no
+        stray VLANs/connections created after the snapshot.
+
+        SAFETY: if the archive carries no profiles at all (e.g. an older backup
+        made before profiles were captured — empty system-connections/), we prune
+        NOTHING. Wiping the live identity in that case could lock the operator
+        out. Pruning therefore only kicks in for backups that actually hold the
+        network identity."""
+        nm_dir = Path("/etc/NetworkManager/system-connections")
+        if not nm_dir.exists():
+            return
+        listing = run_cmd(["sudo", "/usr/bin/tar", "tzf", str(archive)], timeout=60)
+        if not listing["success"]:
+            return  # can't read the archive → never risk deleting live profiles
+        archived = {
+            Path(line).name
+            for line in listing["stdout"].splitlines()
+            if "NetworkManager/system-connections/" in line
+            and line.rstrip("/").endswith(".nmconnection")
+        }
+        if not archived:
+            return  # backup has no profiles → preserve live identity (safety)
+        for prof in nm_dir.glob("*.nmconnection"):
+            if prof.name not in archived:
+                run_cmd(["sudo", "rm", "-f", str(prof)], timeout=15)
+                logger.info("Restore clone: pruned stale NM profile %s", prof.name)
+
+    @classmethod
+    def _restored_nm_ips(cls) -> list[str]:
+        """Parse static IPs from the NetworkManager profiles that were just
+        restored into /etc/NetworkManager/system-connections. Best-effort; used
+        only to tell the operator where to reconnect after a clone restore. The
+        detached complete restore runs as root, so it can read the 0600 files."""
+        ips: list[str] = []
+        nm_dir = Path("/etc/NetworkManager/system-connections")
+        try:
+            for f in nm_dir.glob("*.nmconnection"):
+                try:
+                    for line in f.read_text(errors="ignore").splitlines():
+                        line = line.strip()
+                        if line.startswith("address1="):
+                            ip = line.split("=", 1)[1].split("/")[0].strip()
+                            if ip and ip not in ips:
+                                ips.append(ip)
+                except Exception:
+                    continue
+        except Exception:
+            logger.exception("Could not parse restored NM IPs (non-fatal)")
+        return ips
 
     @classmethod
     def _restore_security(cls, backup_dir: Path, component_meta: dict) -> ComponentResult:
@@ -899,26 +1311,91 @@ class RestoreService:
         return ComponentResult(name=name, status="success", file=component_meta["file"], duration_s=t.elapsed)
 
     @classmethod
+    def _has_network(cls) -> bool:
+        """Quick reachability probe — without repos we can't (re)install packages."""
+        for host, port in (("8.8.8.8", 53), ("1.1.1.1", 53)):
+            res = run_cmd(["bash", "-c",
+                           f"timeout 4 bash -c 'cat < /dev/null > /dev/tcp/{host}/{port}' 2>/dev/null && echo ok"],
+                          timeout=8)
+            if res.get("success") and "ok" in (res.get("stdout") or ""):
+                return True
+        return False
+
+    @classmethod
+    def _installed_package_set(cls, is_pacman: bool) -> set:
+        """Set of currently-installed package names on the target."""
+        cmd = ["pacman", "-Qq"] if is_pacman else ["dpkg-query", "-W", "-f=${Package}\n"]
+        res = run_cmd(cmd, timeout=60)
+        if not res.get("success"):
+            return set()
+        return {l.strip() for l in (res.get("stdout") or "").splitlines() if l.strip()}
+
+    @classmethod
     def _restore_packages(cls, backup_dir: Path, component_meta: dict) -> ComponentResult:
+        """Reproduce the backed-up package set on the target.
+
+        On a COMPLETE (DR clone) restore we detect which packages from the backup
+        are MISSING here and best-effort (re)install them so a rebuilt/cloned VM
+        actually gets the operator's added packages. It is deliberately careful:
+        only runs in complete mode, requires network (else reports the gap instead
+        of guessing), and NEVER crashes the restore. Lighter modes just report the
+        list. (A guaranteed byte-identical OS — exact versions, every file — needs
+        a disk-image backup; this brings back the *installed package set*.)"""
         name = "packages"
         pkg_file = backup_dir / component_meta["file"]
 
         with Timer() as t:
-            if pkg_file.name.endswith("pacman_packages.txt") or "pacman" in pkg_file.name:
-                return ComponentResult.skipped(name, "Package restore not auto-applied for pacman yet")
+            if not pkg_file.exists():
+                return ComponentResult.skipped(name, "Aucune liste de paquets dans la sauvegarde.")
 
-            if pkg_file.name.endswith("dpkg_selections.txt"):
-                r = run_cmd(
-                    ["sudo", "dpkg", "--set-selections"],
-                    input_data=pkg_file.read_text(encoding="utf-8"),
-                    timeout=30,
-                )
-                if not r["success"]:
-                    return ComponentResult.failed(name, r.get("error", "dpkg --set-selections failed"))
+            is_pacman = "pacman" in pkg_file.name or Path("/usr/bin/pacman").exists()
+            is_dpkg = "dpkg" in pkg_file.name or Path("/usr/bin/apt-get").exists()
 
-                return ComponentResult(name=name, status="success", file=component_meta["file"], duration_s=t.elapsed)
+            pkgs = [l.split()[0].strip()
+                    for l in pkg_file.read_text(encoding="utf-8", errors="ignore").splitlines()
+                    if l.strip() and not l.startswith("#") and l.split()[0] != "install"]
+            # dpkg --set-selections lines look like "pkg\tinstall" — keep the name.
+            pkgs = [p for p in pkgs if p and p not in ("install", "deinstall")]
+            if not pkgs:
+                return ComponentResult.skipped(name, "Liste de paquets vide.")
 
-        return ComponentResult.skipped(name, "Unknown package format")
+            # Lighter restores don't touch the OS package set — just record it.
+            if cls.RESTORE_MODE != "complete":
+                return ComponentResult.skipped(
+                    name, f"{len(pkgs)} paquets listés (réinstallation auto uniquement en restauration complète).")
+
+            installed = cls._installed_package_set(is_pacman)
+            missing = [p for p in pkgs if p not in installed] if installed else pkgs
+
+            if not missing:
+                return ComponentResult(
+                    name=name, status="success", file=component_meta["file"], duration_s=t.elapsed,
+                    message=f"{len(pkgs)} paquets de la sauvegarde déjà présents sur la cible.")
+
+            if not cls._has_network():
+                return ComponentResult.failed(
+                    name,
+                    f"{len(missing)} paquet(s) manquant(s) mais aucun réseau pour les installer "
+                    f"(restauration des configs OK). Manquants: "
+                    f"{', '.join(missing[:8])}{'…' if len(missing) > 8 else ''}.")
+
+            if is_pacman:
+                install_res = run_cmd(["sudo", "pacman", "-S", "--needed", "--noconfirm"] + missing, timeout=1200)
+            else:
+                run_cmd(["sudo", "apt-get", "update"], timeout=240)
+                install_res = run_cmd(["sudo", "apt-get", "install", "-y"] + missing, timeout=1200)
+
+            still_missing = [p for p in missing if p not in cls._installed_package_set(is_pacman)]
+            done = len(missing) - len(still_missing)
+            if not still_missing:
+                return ComponentResult(
+                    name=name, status="success", file=component_meta["file"], duration_s=t.elapsed,
+                    message=f"{done} paquet(s) réinstallés depuis la sauvegarde.")
+            return ComponentResult.failed(
+                name,
+                f"{done}/{len(missing)} paquet(s) réinstallés ; échec sur "
+                f"{', '.join(still_missing[:8])}{'…' if len(still_missing) > 8 else ''}. "
+                f"{(install_res.get('error') or '')[:150]}")
 
     @classmethod
     def _restore_users_groups(cls, backup_dir: Path, component_meta: dict) -> ComponentResult:
@@ -1214,7 +1691,15 @@ class RestoreService:
 
                 shutil.copytree(extracted_root, staged_dir, symlinks=True)
 
-                stop_res = run_cmd(["systemctl", "stop", "uvicorn"], timeout=30)
+                # Under a heavy restore (service-restart + systemd/D-Bus storm) a
+                # 30s `systemctl stop uvicorn` times out and wrongly fails the whole
+                # `application` component. Reset stale state, give it 120s, and retry
+                # once so a busy box tolerates it.
+                run_cmd(["systemctl", "reset-failed", "uvicorn"], timeout=15)
+                stop_res = run_cmd(["systemctl", "stop", "uvicorn"], timeout=120)
+                if not stop_res["success"]:
+                    run_cmd(["systemctl", "reset-failed", "uvicorn"], timeout=15)
+                    stop_res = run_cmd(["systemctl", "stop", "uvicorn"], timeout=120)
                 if not stop_res["success"]:
                     shutil.rmtree(staged_dir, ignore_errors=True)
                     return ComponentResult.failed(name, stop_res.get("error", "failed to stop uvicorn"))
@@ -1224,7 +1709,7 @@ class RestoreService:
                     os.chdir("/")
 
                     if not cls.APP_ROOT.exists():
-                        run_cmd(["systemctl", "start", "uvicorn"], timeout=30)
+                        run_cmd(["systemctl", "start", "uvicorn"], timeout=120)
                         shutil.rmtree(staged_dir, ignore_errors=True)
                         return ComponentResult.failed(name, f"live application root not found: {cls.APP_ROOT}")
 
@@ -1232,7 +1717,7 @@ class RestoreService:
                     os.rename(staged_dir, cls.APP_ROOT)
                     swapped = True
 
-                    start_res = run_cmd(["systemctl", "start", "uvicorn"], timeout=30)
+                    start_res = run_cmd(["systemctl", "start", "uvicorn"], timeout=120)
                     if not start_res["success"]:
                         raise RuntimeError(start_res.get("error", "failed to start uvicorn after application restore"))
 
@@ -1243,24 +1728,11 @@ class RestoreService:
                     if not ok:
                         raise RuntimeError(f"backend healthcheck failed after app restore: {msg}")
 
-                    # The app archive intentionally excludes node_modules — but
-                    # the swap above leaves the new APP_ROOT without it, which
-                    # breaks `yarn build` after a restore (encore missing). Carry
-                    # the previous install over (same filesystem → instant rename).
-                    try:
-                        nm_new = cls.APP_ROOT / "node_modules"
-                        nm_old = previous_dir / "node_modules"
-                        if not nm_new.exists() and nm_old.is_dir():
-                            os.rename(nm_old, nm_new)
-                            logger.info("[APP] carried node_modules over from previous install")
-                    except Exception:
-                        logger.warning("[APP] could not carry node_modules over after restore", exc_info=True)
-
                 except Exception as e:
                     logger.exception("[APP] Application swap/start failed: %s", e)
 
                     try:
-                        run_cmd(["systemctl", "stop", "uvicorn"], timeout=30)
+                        run_cmd(["systemctl", "stop", "uvicorn"], timeout=120)
                     except Exception:
                         pass
 
@@ -1276,7 +1748,7 @@ class RestoreService:
                     except Exception:
                         logger.exception("[APP] Failed to rollback previous app directory")
 
-                    rollback_start = run_cmd(["systemctl", "start", "uvicorn"], timeout=30)
+                    rollback_start = run_cmd(["systemctl", "start", "uvicorn"], timeout=120)
                     if not rollback_start["success"]:
                         logger.exception("[APP] Failed to restart uvicorn after rollback")
 
@@ -1284,6 +1756,12 @@ class RestoreService:
 
                 if swapped and previous_dir.exists():
                     logger.info("[APP] Previous application kept at %s", previous_dir)
+
+                # Backups EXCLUDE node_modules (huge), so the swapped-in app dir
+                # has none — which breaks `yarn build` and any node tooling after
+                # every restore. Re-point a symlink to the stable, never-swapped
+                # /asguard/node_modules so node_modules survives EVERY restore.
+                cls._ensure_node_modules_symlink()
 
         return ComponentResult(
             name=name,
@@ -1294,3 +1772,30 @@ class RestoreService:
             duration_s=t.elapsed,
             message="Application restored and uvicorn restarted automatically.",
         )
+
+    _STABLE_NODE_MODULES = Path("/asguard/node_modules")
+
+    @classmethod
+    def _ensure_node_modules_symlink(cls) -> None:
+        """Guarantee <app>/node_modules resolves to the stable external copy after
+        an app swap. Non-fatal — the UI runs from prebuilt static/ assets, so a
+        missing stable dir only affects rebuilding, not serving."""
+        link = cls.APP_ROOT / "node_modules"
+        try:
+            if link.is_symlink():
+                # Drop a dangling or wrong-target symlink so we can recreate it.
+                try:
+                    if not link.exists() or link.resolve() != cls._STABLE_NODE_MODULES.resolve():
+                        link.unlink()
+                except Exception:
+                    link.unlink()
+            if link.exists():
+                return  # valid symlink or a real node_modules dir already present
+            if cls._STABLE_NODE_MODULES.exists():
+                os.symlink(cls._STABLE_NODE_MODULES, link)
+                logger.info("[APP] node_modules symlink recreated -> %s", cls._STABLE_NODE_MODULES)
+            else:
+                logger.warning("[APP] stable node_modules %s missing; build will need `yarn install`",
+                               cls._STABLE_NODE_MODULES)
+        except Exception:
+            logger.exception("[APP] node_modules symlink recreation failed (non-fatal)")

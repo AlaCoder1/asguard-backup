@@ -543,21 +543,6 @@ class LVMSnapshotService:
                        created_by="manual", extra={"duration_seconds": duration})
         cls._apply_retention()
 
-        # Notify the operator (ntfy/email/in-app) that a restore point exists —
-        # best-effort, never blocks/breaks snapshot creation.
-        try:
-            import threading
-            from backend.backup.notifications import notify_backup_completed
-            threading.Thread(
-                target=notify_backup_completed,
-                args=("lvm_snapshot", snap_name, True, duration),
-                kwargs={"message": f"Snapshot LVM « {description or snap_name} » créé "
-                                   f"(point de restauration rapide config + base)."},
-                daemon=True,
-            ).start()
-        except Exception:
-            pass
-
         return {
             "status": "success",
             "snap_id": snap_name,

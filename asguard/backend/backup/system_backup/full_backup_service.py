@@ -515,7 +515,13 @@ class FullBackupService:
 
         with Timer() as t:
             try:
-                r = run_cmd(["tar", "--ignore-failed-read", "-czf", str(dest)] + sources, timeout=timeout)
+                # sudo: many config paths backed up here (NetworkManager
+                # *.nmconnection profiles, IPsec secrets, nginx/modsec, LDAP) are
+                # root-owned 0600. Run as the uvicorn service user, --ignore-failed-read
+                # would SILENTLY skip them, yielding a "successful" backup whose
+                # system-connections/ is empty — VLANs, tunnels and interface
+                # profiles were never captured (and thus never restorable).
+                r = run_cmd(["sudo", "-n", "/usr/bin/tar", "--ignore-failed-read", "-czf", str(dest)] + sources, timeout=timeout)
                 if not r["success"]:
                     return ComponentResult.failed(name, r.get("error", r.get("stderr", "tar failed")))
             except Exception as exc:
@@ -681,7 +687,7 @@ class FullBackupService:
 
                     tar_sources = [str(snapshot_root)] + sources
                     r = run_cmd(
-                        ["tar", "--ignore-failed-read", "-czf", str(dest)] + tar_sources,
+                        ["sudo", "-n", "/usr/bin/tar", "--ignore-failed-read", "-czf", str(dest)] + tar_sources,
                         timeout=60,
                     )
                     if not r["success"]:
@@ -829,7 +835,7 @@ class FullBackupService:
             try:
                 r = run_cmd(
                     [
-                        "tar",
+                        "sudo", "-n", "/usr/bin/tar",
                         "--ignore-failed-read",
                         "--exclude=/etc/mtab",
                         "-czf",
@@ -932,7 +938,7 @@ class FullBackupService:
                 if custom_systemd.exists():
                     run_cmd(
                         [
-                            "tar",
+                            "sudo", "-n", "/usr/bin/tar",
                             "--ignore-failed-read",
                             "-czf",
                             str(dest_dir / "custom_units.tar.gz"),

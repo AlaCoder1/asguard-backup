@@ -1,0 +1,13 @@
+# Asguard — DR Readiness Drill planifié (exercice de reprise mesuré)
+# -----------------------------------------------------------------------------
+# Déposer ce fichier dans /etc/cron.d/asguard-dr-drill (propriété root, 0644).
+# Chaque nuit à 03:00, lance un exercice de reprise à blanc : RPO, RTO estimé,
+# intégrité, score de préparation PRA /100 — et notifie le score (?notify=1).
+#
+# Indépendant du crontab géré par la planification des backups : aucun conflit
+# avec _sync_crontab(). Les rapports sont écrits dans
+# /var/backups/asguard/dr_drills/ et consultables via GET /backup/dr-drill/latest.
+#
+# La boucle attend que uvicorn réponde avant de lancer le drill (mêmes
+# précautions que les tâches de backup planifiées).
+0 3 * * * root /bin/bash -c 'for i in $(seq 1 30); do curl -sf --max-time 3 http://127.0.0.1:8000/swagger/ >/dev/null 2>&1 && { curl -s -X POST "http://127.0.0.1:8000/backup/dr-drill/run?notify=1" >/dev/null 2>&1 && break; } || sleep 10; done' >> /var/log/asguard/dr-drill-cron.log 2>&1

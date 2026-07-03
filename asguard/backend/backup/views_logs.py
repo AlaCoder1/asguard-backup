@@ -1,11 +1,11 @@
 """
-Backup & Restore — Logs / Audit Timeline / System tail / Chaos Lab
-==================================================================
+Backup & Restore — Logs / Audit Timeline / System tail
+======================================================
 Single aggregated view of everything the backup/recovery subsystem did:
   • backups, restores, snapshots, migrations
   • notifications fired (in-app alerts file)
   • AI Risk Center transitions
-  • plus a live system-log tail (journalctl) and safe chaos scenarios
+  • plus a live system-log tail (journalctl)
 
 Every event is normalized to the same shape so the UI renders one timeline.
 """
@@ -15,9 +15,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import threading
-import time
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -38,8 +35,6 @@ LVM_AUDIT_DIR     = Path("/var/log/asguard")          # migration_*.json
 RESOURCE_NOTIFY   = Path("/var/log/asguard/resource_risk_notify.json")
 RISK_AI_STATE     = Path("/var/log/asguard/risk_ai_state.json")
 OBS_EVENTS_FILE   = BACKUP_DIR / "events.ndjson"
-
-CHAOS_JOBS_DIR    = Path("/var/lib/asguard/chaos_jobs")
 
 
 # ── Severity helpers ──────────────────────────────────────────────────────────
@@ -93,7 +88,7 @@ def _parse_iso(s: str | None, fallback_job_id: str | None = None) -> str:
 
 
 # Category classification for the timeline.
-#   operation     — backup/restore/snapshot/migration/chaos (backup subsystem)
+#   operation     — backup/restore/snapshot/migration (backup subsystem)
 #   system_change — firewall/nat/service/cert/user/network/routing config CRUD
 #   alert         — risk pressure, WAF/IDS violations
 #   auth          — login / logout / failed login
@@ -352,31 +347,6 @@ def _collect_in_app_alerts() -> list[dict]:
     return out
 
 
-def _collect_chaos_jobs() -> list[dict]:
-    out = []
-    if not CHAOS_JOBS_DIR.exists():
-        return out
-    for p in sorted(CHAOS_JOBS_DIR.glob("*.json"), reverse=True)[:50]:
-        try:
-            d = json.loads(p.read_text())
-        except Exception:
-            continue
-        status = d.get("status", "?")
-        out.append(_event(
-            category="operation",
-            kind="chaos", source="Chaos Lab",
-            title=f"Scénario chaos · {d.get('scenario_label', d.get('scenario'))}",
-            detail=d.get("message") or status,
-            severity={"running": "warning", "done": "success",
-                      "error": "error"}.get(status, "info"),
-            ts=_parse_iso(d.get("started_at"), d.get("job_id") or p.stem),
-            ref_id=d.get("job_id") or "",
-            extra={"job_id": d.get("job_id"), "scenario": d.get("scenario"),
-                   "duration": d.get("duration_seconds")},
-        ))
-    return out
-
-
 def _aggregate(since_iso: str | None = None,
                kind_filter: str | None = None,
                severity_filter: str | None = None,
@@ -386,8 +356,7 @@ def _aggregate(since_iso: str | None = None,
     events = []
     for collector in (_collect_backup_jobs, _collect_restore_jobs,
                        _collect_snapshot_jobs, _collect_migration_audits,
-                       _collect_observability_events, _collect_in_app_alerts,
-                       _collect_chaos_jobs):
+                       _collect_observability_events, _collect_in_app_alerts):
         try:
             events.extend(collector())
         except Exception:
@@ -628,282 +597,3 @@ def logs_tail(request):
         return JsonResponse({"error": "journalctl timeout"}, status=504)
     except Exception as exc:
         return JsonResponse({"error": str(exc)}, status=500)
-
-
-# ── Chaos Lab ─────────────────────────────────────────────────────────────────
-CHAOS_SCENARIOS = {
-    "cpu_burst": {
-        "label":     "CPU Burst",
-        "severity":  "warning",
-        "duration":  60,
-        "description": "Sature 4 cœurs CPU pendant 60s pour déclencher l'alerte "
-                       "de pression VM et vérifier que l'IA Risk Center réagit.",
-        "auto_recovery": True,
-    },
-    "service_drill": {
-        "label":     "Service Drill",
-        "severity":  "warning",
-        "duration":  120,
-        "description": "Arrête le service Squid (proxy web) pour vérifier "
-                       "la détection de service-down et la procédure de "
-                       "redémarrage automatique depuis l'IA Risk Center.",
-        "auto_recovery": True,
-    },
-    "dr_drill": {
-        "label":     "DRP Drill",
-        "severity":  "critical",
-        "duration":  90,
-        "description": "Exercice de reprise complète : crée un snapshot, "
-                       "modifie un fichier témoin, restaure le snapshot, "
-                       "vérifie que le fichier a disparu. Démonstration "
-                       "complète du Plan de Reprise d'Activité.",
-        "auto_recovery": True,
-    },
-}
-
-
-def _write_chaos_job(job_id: str, payload: dict) -> None:
-    CHAOS_JOBS_DIR.mkdir(parents=True, exist_ok=True)
-    tmp = CHAOS_JOBS_DIR / f"{job_id}.tmp"
-    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
-    tmp.replace(CHAOS_JOBS_DIR / f"{job_id}.json")
-
-
-def _chaos_log(base: dict, severity: str, line: str) -> None:
-    """Append a single coloured line to the chaos job 'output' stream — the
-    frontend tail-polls this list and renders it in the black terminal pane."""
-    ts = datetime.now().strftime("%H:%M:%S")
-    base.setdefault("output", []).append({
-        "ts": ts, "severity": severity, "line": line,
-    })
-    # Cap to avoid unbounded growth on a buggy scenario.
-    if len(base["output"]) > 400:
-        base["output"] = base["output"][-400:]
-    _write_chaos_job(base["job_id"], base)
-
-
-def _read_chaos_job(job_id: str) -> dict | None:
-    p = CHAOS_JOBS_DIR / f"{job_id}.json"
-    if not p.exists():
-        return None
-    try:
-        return json.loads(p.read_text())
-    except Exception:
-        return None
-
-
-def _scenario_cpu_burst(job_id: str, base: dict) -> None:
-    started = time.time()
-    base["status"] = "running"
-    base["phase"]  = "Injection de charge CPU"
-    base["message"] = "Test de pression CPU contrôlé"
-    base["output"] = []
-    _chaos_log(base, "info",    f"# Chaos: CPU Burst (job {job_id[:20]}…)")
-    _chaos_log(base, "info",    "[BOOT] Lancement de 4 processus 'yes' (1 par cœur)")
-
-    procs = []
-    try:
-        for i in range(4):
-            procs.append(subprocess.Popen(
-                ["bash", "-c", "yes > /dev/null"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            ))
-            _chaos_log(base, "info", f"[FORK] yes #{i+1} pid={procs[-1].pid}")
-
-        _chaos_log(base, "warn",  "[STRESS] Charge CPU attendue à 100% sur 60s")
-        elapsed = 0
-        last_msg_at = -1
-        while elapsed < 60:
-            time.sleep(3)
-            elapsed = time.time() - started
-            base["elapsed_seconds"] = round(elapsed, 1)
-            base["progress_pct"]    = min(100, round((elapsed / 60) * 100))
-            # Milestone logs (every ~15s)
-            bucket = int(elapsed) // 15
-            if bucket != last_msg_at:
-                last_msg_at = bucket
-                msgs = ["[T+15s] Charge maintenue — l'IA Risk Center devrait noter une pression",
-                        "[T+30s] AI Risk Center : score VM en hausse, alerte attendue",
-                        "[T+45s] Phase de stress avancée — notification ntfy probable",
-                        "[T+60s] Fin de la phase d'injection"]
-                if bucket < len(msgs):
-                    _chaos_log(base, "warn", msgs[bucket])
-    finally:
-        _chaos_log(base, "info", "[CLEANUP] Terminaison des processus 'yes'")
-        for p in procs:
-            try: p.terminate()
-            except Exception: pass
-        subprocess.run(["pkill", "-9", "yes"], capture_output=True)
-        _chaos_log(base, "ok",   "[OK] Tous les workers tués — CPU libéré")
-        _chaos_log(base, "ok",   "[OK] Vérifiez la timeline : 'Pression VM' puis 'Retour à la normale'")
-        base["status"]  = "done"
-        base["phase"]   = "Terminé"
-        base["progress_pct"] = 100
-        base["duration_seconds"] = round(time.time() - started, 1)
-        base["finished_at"]      = datetime.now(timezone.utc).isoformat()
-        base["message"] = "CPU restauré. Test réussi."
-        _write_chaos_job(job_id, base)
-
-
-def _scenario_service_drill(job_id: str, base: dict) -> None:
-    started = time.time()
-    base["status"] = "running"
-    base["output"] = []
-    sudo = [] if os.geteuid() == 0 else ["sudo", "-n"]
-    _chaos_log(base, "info", f"# Chaos: Service Drill (job {job_id[:20]}…)")
-    _chaos_log(base, "info", "[TARGET] service = squid (proxy web — non critique pour la démo)")
-
-    try:
-        base["phase"] = "Arrêt du service squid"
-        _chaos_log(base, "warn", "[KILL] systemctl stop squid")
-        r = subprocess.run(sudo + ["systemctl", "stop", "squid"],
-                           capture_output=True, text=True, timeout=20)
-        if r.returncode != 0:
-            _chaos_log(base, "error", f"[ERR] Stop a échoué : {r.stderr[:150]}")
-        else:
-            _chaos_log(base, "ok", "[OK] Squid arrêté — le watchdog devrait détecter")
-
-        # Wait so the watchdog has time to detect
-        for sec in (15, 30, 45, 60, 75, 90):
-            time.sleep(15)
-            base["elapsed_seconds"] = sec
-            base["progress_pct"]    = round((sec / 105) * 100)
-            base["phase"]           = f"Attente détection ({sec}s)"
-            if sec == 30:
-                _chaos_log(base, "warn", "[WATCH] watchdog devrait avoir détecté à T+30s")
-            elif sec == 60:
-                _chaos_log(base, "info", "[WATCH] Notification ntfy probablement envoyée")
-            _write_chaos_job(job_id, base)
-
-        base["phase"] = "Redémarrage automatique"
-        _chaos_log(base, "info", "[RECOVERY] systemctl start squid")
-        r = subprocess.run(sudo + ["systemctl", "start", "squid"],
-                           capture_output=True, text=True, timeout=20)
-        if r.returncode == 0:
-            _chaos_log(base, "ok", "[OK] Squid relancé — notification 'Service démarré' émise")
-        else:
-            _chaos_log(base, "error", f"[ERR] Restart : {r.stderr[:150]}")
-        base["status"]  = "done"
-        base["phase"]   = "Service restauré"
-        base["progress_pct"] = 100
-        base["duration_seconds"] = round(time.time() - started, 1)
-        base["finished_at"]      = datetime.now(timezone.utc).isoformat()
-        base["message"] = "Drill terminé — squid OK."
-        _write_chaos_job(job_id, base)
-    except Exception as exc:
-        subprocess.run(sudo + ["systemctl", "start", "squid"], capture_output=True)
-        _chaos_log(base, "error", f"[EXC] {exc}")
-        _chaos_log(base, "info",  "[RESCUE] squid relancé en sécurité")
-        base["status"]  = "error"
-        base["message"] = str(exc)
-        _write_chaos_job(job_id, base)
-
-
-def _scenario_dr_drill(job_id: str, base: dict) -> None:
-    """Guided DRP exercise. We DO NOT actually run an LVM merge here (too long
-    and intrusive for a chaos drill) — instead we walk through the steps as a
-    visual flight check + create a real witness file the operator can verify."""
-    started = time.time()
-    base["status"] = "running"
-    base["output"] = []
-    witness = Path("/var/asguard_data/chaos_witness.txt")
-    _chaos_log(base, "info", f"# Chaos: DRP Drill (job {job_id[:20]}…)")
-    try:
-        base["phase"] = "Création d'un fichier témoin"
-        base["progress_pct"] = 20
-        _chaos_log(base, "info", "[STEP 1/3] Création du fichier témoin sur le LV")
-        body = (
-            f"DRP drill {job_id} — created at {datetime.now(timezone.utc).isoformat()}\n"
-            "If you restore the most recent snapshot taken before this moment,\n"
-            "this file will disappear, proving the LVM rollback works.\n"
-        )
-        # /var/asguard_data is root-owned. From the uvicorn user we shell out
-        # via sudo (NOPASSWD on tee — already trusted by the LVM migration).
-        sudo = [] if os.geteuid() == 0 else ["sudo", "-n"]
-        try:
-            subprocess.run(sudo + ["mkdir", "-p", str(witness.parent)],
-                           capture_output=True, timeout=10, check=False)
-            r = subprocess.run(sudo + ["tee", str(witness)],
-                               input=body, capture_output=True, text=True,
-                               timeout=10)
-            if r.returncode != 0:
-                raise RuntimeError(r.stderr.strip() or "tee failed")
-            _chaos_log(base, "ok", f"[OK] Témoin écrit : {witness}")
-        except Exception as wexc:
-            _chaos_log(base, "warn",
-                       f"[SIM] Écriture du témoin simulée ({wexc}) — drill continue")
-        _write_chaos_job(job_id, base)
-        time.sleep(2)
-
-        base["phase"] = "Préparation du rollback"
-        base["progress_pct"] = 60
-        _chaos_log(base, "info", "[STEP 2/3] Vérification de la couverture LVM")
-        _chaos_log(base, "ok",   "[OK] Configurations couvertes : firewall, VPN, certs, BDD")
-        _write_chaos_job(job_id, base)
-        time.sleep(2)
-
-        _chaos_log(base, "warn",  "[STEP 3/3] Prêt — exécutez le restore depuis VM Snapshot")
-        _chaos_log(base, "info",  "[HINT] Le fichier témoin doit disparaître après restore")
-        base["phase"]            = "Témoin prêt — restaurez un snapshot pour valider"
-        base["progress_pct"]     = 100
-        base["status"]           = "done"
-        base["duration_seconds"] = round(time.time() - started, 1)
-        base["finished_at"]      = datetime.now(timezone.utc).isoformat()
-        base["message"]          = "Drill amorcé. Validez le rollback depuis VM Snapshot."
-        _write_chaos_job(job_id, base)
-    except Exception as exc:
-        _chaos_log(base, "error", f"[EXC] {exc}")
-        base["status"]  = "error"
-        base["message"] = str(exc)
-        _write_chaos_job(job_id, base)
-
-
-_SCENARIO_RUNNERS = {
-    "cpu_burst":     _scenario_cpu_burst,
-    "service_drill": _scenario_service_drill,
-    "dr_drill":      _scenario_dr_drill,
-}
-
-
-@api_view(["GET"])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def chaos_scenarios(request):
-    return JsonResponse({"scenarios": [
-        {"id": sid, **s} for sid, s in CHAOS_SCENARIOS.items()
-    ]})
-
-
-@api_view(["POST"])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def chaos_run(request, scenario: str):
-    spec = CHAOS_SCENARIOS.get(scenario)
-    if not spec:
-        return JsonResponse({"error": f"Scénario inconnu: {scenario}"}, status=400)
-
-    job_id = f"chaos_{scenario}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
-    base = {
-        "job_id": job_id, "scenario": scenario,
-        "scenario_label": spec["label"],
-        "status": "queued", "phase": "Initialisation",
-        "started_at": datetime.now(timezone.utc).isoformat(),
-        "duration_target": spec["duration"],
-        "progress_pct": 0, "elapsed_seconds": 0,
-    }
-    _write_chaos_job(job_id, base)
-
-    runner = _SCENARIO_RUNNERS[scenario]
-    threading.Thread(target=runner, args=(job_id, base), daemon=True,
-                     name=f"chaos-{scenario}").start()
-    return JsonResponse({"ok": True, "job_id": job_id, "scenario": scenario})
-
-
-@api_view(["GET"])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def chaos_status(request, job_id: str):
-    data = _read_chaos_job(job_id)
-    if data is None:
-        return JsonResponse({"error": "Job introuvable"}, status=404)
-    return JsonResponse(data)

@@ -126,3 +126,4 @@ whitenoise==6.9.0
 zope.interface==7.2
 python-decouple
 colorlogboto3==1.43.2
+scikit-learn==1.6.1

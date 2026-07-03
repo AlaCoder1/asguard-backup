@@ -177,6 +177,28 @@ def write_in_app_alert(alert_type: str, title: str, message: str,
             except Exception:
                 pass
         alerts = data.get("alerts", [])
+
+        # Edge-triggered de-duplication. A level-based caller (e.g. a drift /
+        # service-health scan that runs every poll) calls this every cycle while
+        # a service stays down. Without dedup we'd mint a NEW id each time, the UI
+        # would treat it as a brand-new alert and re-toast it forever → spam.
+        # If an UNREAD alert with the same (type, title) already exists, just
+        # refresh its timestamp in place (same id) instead of inserting a clone.
+        # The alert therefore fires ONCE; it can only fire again after the user
+        # marks it read (resolves it) or the condition changes (different title).
+        for existing in alerts:
+            if (not existing.get("read")
+                    and existing.get("type") == alert_type
+                    and existing.get("title") == title):
+                existing["time"] = alert["time"]
+                existing["message"] = message
+                if details:
+                    existing["details"] = details
+                tmp = _IN_APP_ALERTS.with_suffix(".tmp")
+                tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+                tmp.replace(_IN_APP_ALERTS)
+                return
+
         alerts.insert(0, alert)
         data["alerts"] = alerts[:50]
         tmp = _IN_APP_ALERTS.with_suffix(".tmp")
@@ -336,7 +358,10 @@ def send_notification(subject, html, plain, extra_recipients=None):
         msg["To"]      = ", ".join(recipients)
         msg.set_content(plain)
         msg.add_alternative(html, subtype="html")
-        with smtplib.SMTP(smtp_host, smtp_port) as s:
+        # timeout is ESSENTIAL: without it, SMTP connect (DNS + TCP to the mail
+        # server) hangs ~2 min when the WAN is down, holding a uvicorn worker
+        # thread hostage and freezing the local UI. Bound every SMTP step.
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as s:
             s.ehlo()
             s.starttls()
             s.login(smtp_user, smtp_pass)
@@ -1079,6 +1104,14 @@ def _diagnose_service_failure(unit: str) -> dict:
     """
     import re
     import subprocess as _sub
+
+    # "ipsec" is a legacy alias kept in a few service tables, but there is NO
+    # `ipsec.service` systemd unit on this appliance — the real IPsec daemon is
+    # `strongswan`. Probing "ipsec" returns "NoSuchUnit: ipsec.service not found",
+    # which surfaced as a scary false "Unit illisible" alert. Map it to the real
+    # unit so the diagnosis reflects strongswan's actual state.
+    if unit in ("ipsec", "ipsec.service"):
+        unit = "strongswan"
 
     if not unit:
         return {}

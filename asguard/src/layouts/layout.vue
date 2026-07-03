@@ -115,6 +115,7 @@
     </v-main>
 
     <TheFooter />
+    <AsguardAssistant />
   </v-layout>
 </template>
 
@@ -127,6 +128,7 @@ import axios from "axios";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { user_privilege } from "@/mixins/user_privilege.js";
 import VButton from "@/components/VButton.vue";
+import AsguardAssistant from "@/components/AsguardAssistant.vue";
 
 export default {
   name: "BaseLayout",
@@ -136,6 +138,7 @@ export default {
     TheSidebarVue,
     licenseSidebar,
     TheFooter,
+    AsguardAssistant,
   },
   props: {
     title: {
@@ -304,11 +307,19 @@ export default {
 </script>
 
 <style>
+/* TheFooter is position:fixed (height 47px, z-index 1000), so without padding
+   the last 47 px of every page content sits behind it — making backup tables,
+   retention forms, and dialog buttons partially invisible. We push the v-main
+   scroll container down by the footer height plus a small breathing margin. */
+.v-main {
+  padding-bottom: 60px !important;
+}
+
 /* .v-main {
   padding-top: 0px;
   left: 0;
   right: 0;
-  
+
 } */
 
 .asguard_toolbar {

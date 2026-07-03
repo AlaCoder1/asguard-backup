@@ -334,13 +334,19 @@
             title="Restore sans application"
             @click="restoreMode = 'safe'"
           >
+            <span class="mode-card-ico">🛡</span>
             <strong>Safe</strong>
+            <small>Config interface · sans risque</small>
           </button>
           <button :class="['mode-card', 'mode-card-full', restoreMode === 'complete' ? 'active' : '']" type="button" title="Restore full" @click="restoreMode = 'complete'">
+            <span class="mode-card-ico">💽</span>
             <strong>Full</strong>
+            <small>Toute la VM · clone DR</small>
           </button>
           <button :class="['mode-card', 'mode-card-custom', restoreMode === 'custom' ? 'active' : '']" type="button" title="Restaure seulement certains composants" @click="enableCustomRestoreMode">
+            <span class="mode-card-ico">🎯</span>
             <strong>Custom</strong>
+            <small>À la carte</small>
           </button>
         </div>
 
@@ -370,6 +376,9 @@
         <div class="component-picker">
           <div class="component-picker-head">
             <strong>Composants restaurables</strong>
+            <span v-if="restoreMode !== 'custom'" class="coverage-count">
+              {{ coveredComponentsCount }}/{{ restoreComponents.length }} couverts par ce mode
+            </span>
             <button
               class="link-btn"
               type="button"
@@ -379,10 +388,20 @@
               Tout sélectionner
             </button>
           </div>
+          <!-- Coverage legend — makes each mode's scope obvious at a glance -->
+          <div v-if="restoreMode !== 'custom'" class="coverage-legend">
+            <span class="cov-key cov-key--covered"><i></i>Restauré par ce mode</span>
+            <span class="cov-key cov-key--protected"><i></i>Protégé — jamais touché (critique)</span>
+          </div>
           <div class="component-grid">
-          <label v-for="component in restoreComponents" :key="component" class="check-row">
-            <input v-model="selectedRestoreComponents" :value="component" type="checkbox" :disabled="restoreMode !== 'custom'" />
-            <span>{{ component }}</span>
+          <label
+            v-for="component in restoreComponents"
+            :key="component"
+            :class="['check-row', restoreMode !== 'custom' ? 'cov-' + componentCoverage(component) : 'cov-selectable']"
+          >
+            <input v-if="restoreMode === 'custom'" v-model="selectedRestoreComponents" :value="component" type="checkbox" />
+            <span v-else class="cov-badge">{{ componentCoverage(component) === 'covered' ? '✓' : '🛡' }}</span>
+            <span class="cov-name">{{ component }}</span>
           </label>
           </div>
         </div>
@@ -561,9 +580,67 @@
           <button class="drawer-close" type="button" @click="closeContentPreview">×</button>
         </header>
 
+        <div v-if="previewLoading" class="preview-loading">Chargement de l'aperçu…</div>
+
+        <!-- Corps scrollable unique : hero + système + filtre + cartes défilent
+             ENSEMBLE, donc la section "Sécurité & système" n'est jamais coupée
+             (le bug du tab "Tout"). Le header et le footer restent figés. -->
+        <div v-else class="preview-body">
+        <!-- HERO : une phrase claire = "ce que cette restauration va faire". -->
+        <div class="preview-hero" :class="previewHasChanges ? 'preview-hero--change' : 'preview-hero--same'">
+          <div class="preview-hero-icon">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/>
+            </svg>
+          </div>
+          <div class="preview-hero-copy">
+            <strong>Restaurer remet le système dans l'état du {{ previewHeroDate }}.</strong>
+            <p v-if="previewHasChanges">Voici précisément ce qui changera par rapport à maintenant :</p>
+            <p v-else>Aucune différence détectée avec l'état actuel — la restauration est sans risque.</p>
+            <div v-if="previewImpactItems.length" class="preview-hero-impact">
+              <span
+                v-for="it in previewImpactItems"
+                :key="it.key"
+                class="preview-impact-chip"
+                :class="`impact-${it.tone}`"
+                :title="it.hint"
+              >
+                <b>{{ it.icon }}</b> {{ it.label }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SÉCURITÉ & SYSTÈME : ce qu'un clone complet réapplique au niveau OS.
+             Chaque élément = une mini-carte avec sa pastille colorée. -->
+        <div v-if="previewSystem && previewSystemRows.length" class="preview-system">
+          <div class="preview-system-head">
+            <span class="preview-system-badge">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1l5 2v4c0 3.5-2.2 6-5 7-2.8-1-5-3.5-5-7V3z"/></svg>
+              Clone complet
+            </span>
+            <strong>Ce qui sera modifié au niveau système</strong>
+          </div>
+          <div class="preview-system-grid">
+            <div v-for="row in previewSystemRows" :key="row.key" class="preview-system-card"
+                 :class="[`sys-${row.key}`, row.changed === true ? 'sys-changed' : (row.changed === false ? 'sys-same' : '')]">
+              <span class="preview-system-tile">{{ row.icon }}</span>
+              <div class="preview-system-text">
+                <strong>
+                  {{ row.title }}
+                  <span v-if="row.status" class="sys-badge"
+                        :class="row.status === 'changera' ? 'sys-badge-change' : 'sys-badge-same'">{{ row.status }}</span>
+                </strong>
+                <span>{{ row.desc }}</span>
+                <em v-if="row.detail" class="sys-detail">{{ row.detail }}</em>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Filtre intelligent : "Tout" / "Différents de l'actuel" / "Identiques".
-             Aide l'opérateur à voir d'un coup d'œil ce qui changerait. -->
-        <div class="preview-filter-row">
+             Collant en haut du corps scrollable. -->
+        <div class="preview-filter-row preview-filter-sticky">
           <button
             v-for="f in previewFilters"
             :key="f.id"
@@ -577,26 +654,13 @@
           </button>
         </div>
 
-        <!-- Bandeau résumé : total éléments + delta global. La phrase est
-             naturelle ("12 éléments, 3 de plus qu'actuellement") pour
-             ne demander aucune lecture technique. -->
-        <div v-if="previewSummaryText" class="preview-summary">
-          <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="10" cy="10" r="8"/>
-            <path d="M10 6v5l3 2"/>
-          </svg>
-          <span v-html="previewSummaryText"></span>
-        </div>
-
-        <div v-if="previewLoading" class="preview-loading">Chargement de l'aperçu…</div>
-
-        <div v-else-if="previewCards.length === 0" class="preview-empty">
+        <div v-if="previewCards.length === 0" class="preview-empty">
           <strong>Aucune donnée comparable</strong>
           <span>Ce backup ne contient que des fichiers de configuration — pas de données en base à comparer.</span>
         </div>
 
         <!-- Grille de cartes : une carte = un composant.
-             Couleur immédiate, gros chiffre, badge delta. -->
+             Couleur immédiate, gros chiffre, verdict en clair. -->
         <div v-else class="preview-grid">
           <article
             v-for="card in previewCards"
@@ -618,12 +682,20 @@
               >
                 {{ card.delta > 0 ? "+" : "" }}{{ card.delta }}
               </span>
+              <span v-else-if="card.changed > 0" class="preview-card-delta warn" title="Contenu modifié à comptage égal">≠</span>
               <span v-else class="preview-card-delta neutral" title="Identique à l'état actuel">=</span>
             </header>
 
             <div class="preview-card-figure">
               <span class="preview-card-big">{{ card.inBackup }}</span>
               <span class="preview-card-unit">{{ card.unitLabel }}</span>
+            </div>
+
+            <!-- Verdict en clair : ce que la restauration ferait à ce composant. -->
+            <div class="preview-card-verdict" :class="card.changed > 0 ? 'has-change' : 'no-change'">
+              <svg v-if="card.changed > 0" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1v14M1 8h14"/></svg>
+              <svg v-else viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3.2L13 5"/></svg>
+              <span>{{ card.verdict }}</span>
             </div>
 
             <footer class="preview-card-foot">
@@ -645,6 +717,7 @@
               </ul>
             </details>
           </article>
+        </div>
         </div>
 
         <footer class="preview-foot">
@@ -752,162 +825,356 @@
       </div>
     </transition>
 
-    <transition name="restore-monitor-fade">
-      <div v-if="restoreMonitor.visible" class="restore-monitor" :class="restoreMonitor.status">
-        <div class="restore-monitor-head">
-          <div>
-            <strong>{{ restoreMonitor.title }}</strong>
-            <span>{{ restoreMonitor.subtitle }}</span>
-          </div>
-          <button class="restore-monitor-close" type="button" @click="closeRestoreMonitor">×</button>
-        </div>
+    <!-- ════════ FULL-SCREEN RESTORE OVERLAY ════════
+         Replaces the old floating banner. A COMPLETE restore swaps the app code
+         and restarts uvicorn, so the UI briefly disappears; this overlay takes
+         over the screen, follows the restore through stabilization, and resolves
+         to a clear "system is operational" / "needs attention" verdict — the
+         single signal the operator needs to know the restore worked. Mirrors the
+         LVM-snapshot restore overlay UX. -->
+    <Teleport to="body">
+      <Transition name="rfs-fade">
+        <div v-if="restoreMonitor.visible" class="rfs-overlay" :class="`rfs-${restoreOverlayState}`">
+          <div class="rfs-card">
 
-        <div class="restore-monitor-pill-row">
-          <span class="restore-pill">{{ restoreMonitor.modeLabel }}</span>
-          <span class="restore-pill">{{ restoreMonitor.backupId }}</span>
-          <span class="restore-pill">{{ restoreMonitor.statusLabel }}</span>
-        </div>
-
-        <div v-if="restoreMonitor.progressActive || restoreMonitor.progressPct > 0" class="pm-progress-wrap">
-          <div class="pm-progress-track">
-            <div class="pm-progress-fill" :class="{ 'pm-indeterminate': restoreMonitor.total === 0 }" :style="restoreMonitor.total > 0 ? { width: restoreMonitor.progressPct + '%' } : {}"></div>
-          </div>
-          <span class="pm-progress-label">{{ restoreMonitor.total > 0 ? `${restoreMonitor.done}/${restoreMonitor.total} composants` : "Initialisation..." }}</span>
-        </div>
-
-        <div v-if="restoreMonitor.liveComponents && Object.keys(restoreMonitor.liveComponents).length > 0" class="pm-component-grid">
-          <div
-            v-for="(status, name) in restoreMonitor.liveComponents"
-            :key="name"
-            class="pm-component-chip"
-            :class="status === 'success' ? 'pm-ok' : status === 'failed' ? 'pm-fail' : status === 'skipped' ? 'pm-skip' : status === 'running' ? 'pm-running' : 'pm-pending'"
-          >
-            <span class="pm-chip-dot"></span>
-            <span class="pm-chip-name">{{ name }}</span>
-          </div>
-        </div>
-
-        <div v-if="restoreMonitor.verification" class="restore-check-grid">
-          <div
-            v-for="check in restoreMonitor.verification.checks || []"
-            :key="check.key"
-            class="restore-check"
-            :class="restoreCheckClass(check.status)"
-          >
-            <strong>{{ check.label }}</strong>
-            <span>{{ check.detail }}</span>
-          </div>
-        </div>
-
-        <div v-if="restoreMonitor.verification" class="restore-summary">
-          <div class="restore-summary-card">
-            <span>Succes</span>
-            <strong>{{ restoreMonitor.verification.summary.success }}</strong>
-          </div>
-          <div class="restore-summary-card">
-            <span>Failed</span>
-            <strong>{{ restoreMonitor.verification.summary.failed }}</strong>
-          </div>
-          <div class="restore-summary-card">
-            <span>Skipped</span>
-            <strong>{{ restoreMonitor.verification.summary.skipped }}</strong>
-          </div>
-          <div class="restore-summary-card">
-            <span>Duree</span>
-            <strong>{{ formatDuration(restoreMonitor.verification.duration_seconds) }}</strong>
-          </div>
-        </div>
-
-        <div v-if="restoreMonitor.restoredComponentsLabel" class="restore-evidence">
-          <strong>Indice de verification</strong>
-          <span>{{ restoreMonitor.restoredComponentsLabel }}</span>
-        </div>
-
-        <!-- Rapport diff post-restore : montre exactement quelles lignes
-             ont été ajoutées, supprimées ou modifiées pendant la
-             restauration. Ne s'affiche que si le moteur a calculé un diff
-             (composants DB-backed uniquement, restore terminé). -->
-        <div v-if="restoreMonitor.diff && diffComponents.length > 0" class="restore-diff">
-          <div class="restore-diff-head">
-            <strong>Rapport de changements</strong>
-            <span class="restore-diff-totals">
-              <span class="restore-diff-tot pos">+{{ restoreMonitor.diff.totals.added }} ajoutés</span>
-              <span class="restore-diff-tot neg">−{{ restoreMonitor.diff.totals.removed }} supprimés</span>
-              <span class="restore-diff-tot mod">~{{ restoreMonitor.diff.totals.modified }} modifiés</span>
-            </span>
-          </div>
-
-          <div class="restore-diff-list">
-            <details
-              v-for="comp in diffComponents"
-              :key="`diff-${comp.name}`"
-              class="restore-diff-comp"
-              open
-            >
-              <summary>
-                <span class="restore-diff-comp-name">{{ comp.name }}</span>
-                <span class="restore-diff-comp-summary">
-                  <span v-if="comp.summary.added" class="restore-diff-tot pos">+{{ comp.summary.added }}</span>
-                  <span v-if="comp.summary.removed" class="restore-diff-tot neg">−{{ comp.summary.removed }}</span>
-                  <span v-if="comp.summary.modified" class="restore-diff-tot mod">~{{ comp.summary.modified }}</span>
-                </span>
-              </summary>
-
-              <div v-for="m in comp.models" :key="m.path" class="restore-diff-model">
-                <div class="restore-diff-model-head">
-                  <strong>{{ m.label }}</strong>
-                  <span class="restore-diff-model-counts">{{ m.pre_count }} → {{ m.post_count }}</span>
-                </div>
-
-                <ul v-if="m.removed.length" class="restore-diff-rows neg">
-                  <li v-for="r in m.removed" :key="`r-${m.path}-${r.pk}`">
-                    <span class="restore-diff-op">−</span>
-                    <span class="restore-diff-pk">#{{ r.pk }}</span>
-                    <span class="restore-diff-summary">{{ r.summary }}</span>
-                  </li>
-                </ul>
-
-                <ul v-if="m.added.length" class="restore-diff-rows pos">
-                  <li v-for="r in m.added" :key="`a-${m.path}-${r.pk}`">
-                    <span class="restore-diff-op">+</span>
-                    <span class="restore-diff-pk">#{{ r.pk }}</span>
-                    <span class="restore-diff-summary">{{ r.summary }}</span>
-                  </li>
-                </ul>
-
-                <ul v-if="m.modified.length" class="restore-diff-rows mod">
-                  <li v-for="r in m.modified" :key="`m-${m.path}-${r.pk}`">
-                    <span class="restore-diff-op">~</span>
-                    <span class="restore-diff-pk">#{{ r.pk }}</span>
-                    <span class="restore-diff-summary">{{ r.summary }}</span>
-                    <details class="restore-diff-changes">
-                      <summary>{{ Object.keys(r.changes).length }} champ(s) modifié(s)</summary>
-                      <table>
-                        <tbody>
-                          <tr v-for="(ch, field) in r.changes" :key="field">
-                            <td class="field">{{ field }}</td>
-                            <td class="before">{{ ch.before == null ? "∅" : ch.before }}</td>
-                            <td class="arrow">→</td>
-                            <td class="after">{{ ch.after == null ? "∅" : ch.after }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </details>
-                  </li>
-                </ul>
+            <div class="rfs-head">
+              <div class="rfs-icon" :class="`rfs-icon-${restoreOverlayState}`">
+                <svg v-if="restoreOverlayState === 'success'" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                <svg v-else-if="restoreOverlayState === 'error'" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <svg v-else-if="restoreOverlayState === 'partial'" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><line x1="12" y1="9" x2="12" y2="14"/><line x1="12" y1="17.5" x2="12" y2="18"/></svg>
+                <svg v-else class="rfs-spin" width="40" height="40" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12 A 16 16 0 1 1 8 36"/><path d="M8 12 L 8 4 L 16 4"/></svg>
               </div>
-            </details>
+              <div class="rfs-head-text">
+                <div class="rfs-title">{{ restoreOverlayTitle }}</div>
+                <div class="rfs-sub">{{ restoreOverlaySub }}</div>
+              </div>
+              <button v-if="restoreOverlayTerminal" class="rfs-close" type="button" @click="dismissRestoreOverlay">×</button>
+            </div>
+
+            <div class="rfs-pills">
+              <span class="rfs-pill">{{ restoreMonitor.modeLabel }}</span>
+              <span class="rfs-pill">{{ restoreMonitor.backupId }}</span>
+              <span class="rfs-pill rfs-pill-status">{{ restoreMonitor.statusLabel }}</span>
+            </div>
+
+            <!-- ── In progress / stabilizing / reconnecting ── -->
+            <template v-if="!restoreOverlayTerminal">
+              <div class="rfs-bar">
+                <div class="rfs-bar-fill"
+                     :class="{ 'rfs-indeterminate': restoreMonitor.total === 0 && restoreOverlayState !== 'stabilizing' }"
+                     :style="(restoreMonitor.total > 0 || restoreOverlayState === 'stabilizing') ? { width: restoreOverlayPct + '%' } : {}"></div>
+              </div>
+              <div class="rfs-bar-label">
+                <span>{{ restoreMonitor.total > 0 ? `${restoreMonitor.done}/${restoreMonitor.total} composants` : "Initialisation…" }}</span>
+                <span class="rfs-pct">{{ restoreOverlayPct }}%</span>
+              </div>
+
+              <!-- Time row: elapsed + estimated remaining / stabilization window. -->
+              <div class="rfs-time">
+                <span class="rfs-time-chip">⏱ Écoulé : <strong>{{ fmtClock(restoreElapsed) }}</strong></span>
+                <span v-if="restoreOverlayState === 'stabilizing'" class="rfs-time-chip rfs-time-chip-accent">
+                  🩺 Stabilisation : <strong>~{{ fmtClock(restoreStabilizeRemaining) }}</strong> restant
+                </span>
+                <span v-else-if="restoreEtaRemaining > 0" class="rfs-time-chip">
+                  ⏳ Restant estimé : <strong>~{{ fmtClock(restoreEtaRemaining) }}</strong>
+                </span>
+                <span v-else-if="restoreMonitor.etaSeconds" class="rfs-time-chip">⏳ Finalisation…</span>
+              </div>
+
+              <div v-if="restoreMonitor.liveComponents && Object.keys(restoreMonitor.liveComponents).length > 0" class="rfs-comp-grid">
+                <div
+                  v-for="(status, name) in restoreMonitor.liveComponents"
+                  :key="name"
+                  class="rfs-comp"
+                  :class="status === 'success' ? 'rfs-ok' : status === 'failed' ? 'rfs-fail' : status === 'skipped' ? 'rfs-skip' : status === 'running' ? 'rfs-running' : 'rfs-pending'"
+                >
+                  <span class="rfs-comp-dot"></span>
+                  <span class="rfs-comp-name">{{ name }}</span>
+                </div>
+              </div>
+
+              <div class="rfs-note" :class="{ 'rfs-note-reco': restoreMonitor.statusLabel === 'Reconnexion…' }">
+                <span v-if="restoreOverlayState === 'stabilizing'">🩺 Tous les composants sont restaurés. Vérification des services (uvicorn, nginx, base de données)…</span>
+                <span v-else-if="restoreMonitor.statusLabel === 'Reconnexion…'">⏳ L'interface redémarre pendant la restauration complète. Reconnexion automatique en cours — <strong>ne fermez pas l'onglet</strong>.</span>
+                <span v-else>⚠️ Restauration en cours. L'interface peut être indisponible 1–2 min pendant le remplacement du code et le redémarrage des services. <strong>Ne fermez pas l'onglet.</strong></span>
+              </div>
+            </template>
+
+            <!-- ── Terminal: success / partial / error ── -->
+            <template v-else>
+              <div class="rfs-verdict" :class="`rfs-verdict-${restoreOverlayState}`">
+                {{ restoreVerdictText }}
+              </div>
+
+              <!-- Exactly which components did NOT restore, and why. Makes a
+                   "partiel" result self-explanatory instead of a vague failure. -->
+              <div v-if="restoreFailedDetails.length" class="rfs-failed">
+                <strong>⚠️ Composant(s) non restauré(s) — le reste a réussi :</strong>
+                <div v-for="c in restoreFailedDetails" :key="c.name" class="rfs-failed-item">
+                  <span class="rfs-failed-name">{{ c.name }}</span>
+                  <span class="rfs-failed-msg">{{ c.message || 'échec' }}</span>
+                </div>
+              </div>
+
+              <div v-if="restoreMonitor.selfHealed" class="rfs-selfheal">
+                ℹ️ Le suivi a été interrompu pendant la stabilisation ; l'état final a été reconstitué automatiquement à partir de la progression enregistrée.
+              </div>
+
+              <!-- Clone network: this restore reproduced the source VM's IP. Tell
+                   the operator where to reconnect if the address changed. -->
+              <div v-if="restoreOverlayState !== 'error' && restoreMonitor.cloneNetwork && restoreTargetIp" class="rfs-netclone" :class="{ 'rfs-netclone-changed': restoreIpChanged }">
+                <strong>🌐 Identité réseau clonée</strong>
+                <span v-if="restoreIpChanged">
+                  La VM a repris l'adresse de la source : <code>{{ restoreTargetIp }}</code>.
+                  Cet onglet est sur une autre adresse — rouvrez l'interface ici après le redémarrage :
+                  <a :href="restoreTargetUrl" class="rfs-netclone-link">{{ restoreTargetUrl }}</a>
+                </span>
+                <span v-else>
+                  IP cible restaurée : <code>{{ restoreTargetIp }}</code> (identique à votre accès actuel — aucune reconnexion nécessaire).
+                </span>
+              </div>
+
+              <!-- Final connectivity check before the auto-reload. -->
+              <div v-if="restoreFinalizing" class="rfs-finalizing">
+                <span class="rfs-finalizing-dot"></span>
+                Vérification finale de la connexion… l'interface se rechargera dès qu'elle répond (jamais sur une page cassée).
+              </div>
+
+              <div v-if="restoreMonitor.verification" class="rfs-summary">
+                <div class="rfs-stat rfs-stat-ok"><span>Réussis</span><strong>{{ restoreMonitor.verification.summary.success }}</strong></div>
+                <div class="rfs-stat rfs-stat-fail"><span>Échecs</span><strong>{{ restoreMonitor.verification.summary.failed }}</strong></div>
+                <div class="rfs-stat rfs-stat-skip"><span>Ignorés</span><strong>{{ restoreMonitor.verification.summary.skipped }}</strong></div>
+                <div class="rfs-stat"><span>Durée</span><strong>{{ formatDuration(restoreMonitor.verification.duration_seconds) }}</strong></div>
+              </div>
+
+              <div v-if="restoreMonitor.verification" class="rfs-checks">
+                <div
+                  v-for="check in restoreMonitor.verification.checks || []"
+                  :key="check.key"
+                  class="rfs-check"
+                  :class="restoreCheckClass(check.status)"
+                >
+                  <strong>{{ check.label }}</strong>
+                  <span>{{ check.detail }}</span>
+                </div>
+              </div>
+
+              <div v-if="restoreMonitor.restoredComponentsLabel" class="rfs-evidence">
+                <strong>Indice de vérification</strong>
+                <span>{{ restoreMonitor.restoredComponentsLabel }}</span>
+              </div>
+
+              <!-- System-level changes (root password, system users, hostname). -->
+              <div v-if="restoreSystemChanges && restoreSystemChanges.checked && restoreSystemChanges.any" class="rfs-syschanges">
+                <strong>Changements système restaurés</strong>
+                <div v-if="restoreSystemChanges.root_password_changed" class="rfs-syschange">🔑 Mot de passe root restauré</div>
+                <div v-for="u in restoreSystemChanges.users_removed" :key="'u-'+u" class="rfs-syschange">👤 Utilisateur système supprimé : <code>{{ u }}</code></div>
+                <div v-for="u in restoreSystemChanges.users_added" :key="'ua-'+u" class="rfs-syschange">👤 Utilisateur système ajouté : <code>{{ u }}</code></div>
+                <div v-if="restoreSystemChanges.hostname_changed" class="rfs-syschange">🏷️ Hostname : {{ restoreSystemChanges.hostname_from }} → {{ restoreSystemChanges.hostname_to }}</div>
+              </div>
+
+              <!-- Diff couldn't be computed (DB busy during restore) — never claim "identical". -->
+              <div v-if="restoreMonitor.diff && restoreMonitor.diff.available === false" class="rfs-diff-unavail">
+                ⚠️ Rapport de changements base de données indisponible (système occupé pendant la restauration). Les changements système ci-dessus restent fiables.
+              </div>
+
+              <!-- Row-level diff: exactly which DB rows were added/removed/modified. -->
+              <details v-if="restoreMonitor.diff && diffComponents.length > 0" class="rfs-diff">
+                <summary>
+                  <strong>Rapport de changements</strong>
+                  <span class="restore-diff-totals">
+                    <span class="restore-diff-tot pos">+{{ restoreMonitor.diff.totals.added }}</span>
+                    <span class="restore-diff-tot neg">−{{ restoreMonitor.diff.totals.removed }}</span>
+                    <span class="restore-diff-tot mod">~{{ restoreMonitor.diff.totals.modified }}</span>
+                  </span>
+                </summary>
+
+                <div class="restore-diff-list">
+                  <details
+                    v-for="comp in diffComponents"
+                    :key="`diff-${comp.name}`"
+                    class="restore-diff-comp"
+                  >
+                    <summary>
+                      <span class="restore-diff-comp-name">{{ comp.name }}</span>
+                      <span class="restore-diff-comp-summary">
+                        <span v-if="comp.summary.added" class="restore-diff-tot pos">+{{ comp.summary.added }}</span>
+                        <span v-if="comp.summary.removed" class="restore-diff-tot neg">−{{ comp.summary.removed }}</span>
+                        <span v-if="comp.summary.modified" class="restore-diff-tot mod">~{{ comp.summary.modified }}</span>
+                      </span>
+                    </summary>
+
+                    <div v-for="m in comp.models" :key="m.path" class="restore-diff-model">
+                      <div class="restore-diff-model-head">
+                        <strong>{{ m.label }}</strong>
+                        <span class="restore-diff-model-counts">{{ m.pre_count }} → {{ m.post_count }}</span>
+                      </div>
+
+                      <ul v-if="m.removed.length" class="restore-diff-rows neg">
+                        <li v-for="r in m.removed" :key="`r-${m.path}-${r.pk}`">
+                          <span class="restore-diff-op">−</span>
+                          <span class="restore-diff-pk">#{{ r.pk }}</span>
+                          <span class="restore-diff-summary">{{ r.summary }}</span>
+                        </li>
+                      </ul>
+
+                      <ul v-if="m.added.length" class="restore-diff-rows pos">
+                        <li v-for="r in m.added" :key="`a-${m.path}-${r.pk}`">
+                          <span class="restore-diff-op">+</span>
+                          <span class="restore-diff-pk">#{{ r.pk }}</span>
+                          <span class="restore-diff-summary">{{ r.summary }}</span>
+                        </li>
+                      </ul>
+
+                      <ul v-if="m.modified.length" class="restore-diff-rows mod">
+                        <li v-for="r in m.modified" :key="`m-${m.path}-${r.pk}`">
+                          <span class="restore-diff-op">~</span>
+                          <span class="restore-diff-pk">#{{ r.pk }}</span>
+                          <span class="restore-diff-summary">{{ r.summary }}</span>
+                          <details class="restore-diff-changes">
+                            <summary>{{ Object.keys(r.changes).length }} champ(s) modifié(s)</summary>
+                            <table>
+                              <tbody>
+                                <tr v-for="(ch, field) in r.changes" :key="field">
+                                  <td class="field">{{ field }}</td>
+                                  <td class="before">{{ ch.before == null ? "∅" : ch.before }}</td>
+                                  <td class="arrow">→</td>
+                                  <td class="after">{{ ch.after == null ? "∅" : ch.after }}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </details>
+                        </li>
+                      </ul>
+                    </div>
+                  </details>
+                </div>
+              </details>
+
+              <!-- Recommandation de redémarrage TEMPORISÉE : un restore COMPLET
+                   réécrit l'état noyau (réseau, systemd, /etc) et déclenche une
+                   rafale de redémarrages de services. On laisse la VM se stabiliser
+                   pendant ~5 min (compte à rebours), puis l'alerte passe en mode
+                   "redémarrer maintenant". Le reboot reste possible à tout moment. -->
+              <div v-if="restoreRebootRecommended" class="rfs-reboot-reco" :class="{ 'rfs-reboot-alert': rebootAlertActive }">
+
+                <!-- CAS 1 — succès vérifié + fenêtre de stabilisation en cours :
+                     redémarrage AUTOMATIQUE programmé (annulable). -->
+                <template v-if="rebootAlertCountdown > 0 && !rebootAlertCancelled">
+                  <div class="rfs-reboot-reco-head">
+                    <span class="rfs-reboot-reco-icon">🔄</span>
+                    <strong>Redémarrage automatique programmé</strong>
+                  </div>
+                  <p>
+                    Restauration <b>complète vérifiée</b>. La VM se stabilise, puis
+                    redémarrera <b>automatiquement dans {{ fmtClock(rebootAlertCountdown) }}</b>
+                    pour repartir propre (réseau, services, système).
+                  </p>
+                  <div class="rfs-reboot-wait">
+                    <div class="rfs-reboot-wait-bar"><div class="rfs-reboot-wait-fill" :style="{ width: rebootAlertProgress + '%' }"></div></div>
+                  </div>
+                  <div class="rfs-reboot-reco-actions">
+                    <button class="rfs-btn rfs-btn-warn" type="button" :class="{ 'rfs-armed': rebootArmed }" @click="rebootArmed ? rebootVm() : (rebootArmed = true)">
+                      <span v-if="rebootArmed">Confirmer maintenant</span>
+                      <span v-else>Redémarrer maintenant</span>
+                    </button>
+                    <button class="rfs-btn rfs-btn-ghost" type="button" @click="cancelRebootAuto">Annuler le redémarrage auto</button>
+                  </div>
+                </template>
+
+                <!-- CAS 2 — fenêtre écoulée : auto-reboot en cours (succès) ou
+                     alerte manuelle (restauration partielle / annulé). -->
+                <template v-else-if="rebootAlertActive">
+                  <div class="rfs-reboot-reco-head">
+                    <span class="rfs-reboot-reco-icon">⚠️</span>
+                    <strong>{{ restoreOverlayState === 'success' && !rebootAlertCancelled ? 'Redémarrage de la VM en cours…' : 'Redémarrez la VM maintenant' }}</strong>
+                  </div>
+                  <p>
+                    La période de stabilisation est terminée. Pour finir de remonter
+                    proprement le système restauré et éviter tout ralentissement
+                    résiduel ou perte de connexion, <b>la VM doit redémarrer</b>.
+                  </p>
+                  <div class="rfs-reboot-reco-actions">
+                    <button class="rfs-btn rfs-btn-warn" type="button" :class="{ 'rfs-armed': rebootArmed }" @click="rebootArmed ? rebootVm() : (rebootArmed = true)">
+                      <span v-if="rebootArmed">Confirmer le redémarrage</span>
+                      <span v-else>Redémarrer la VM maintenant</span>
+                    </button>
+                    <button class="rfs-btn rfs-btn-ghost" type="button" @click="reloadAfterRestore">Recharger l'interface</button>
+                  </div>
+                </template>
+
+                <!-- CAS 3 — auto-reboot annulé, ou restauration partielle sans
+                     minuterie : recommandation manuelle simple. -->
+                <template v-else>
+                  <div class="rfs-reboot-reco-head">
+                    <span class="rfs-reboot-reco-icon">🔄</span>
+                    <strong>Redémarrage recommandé</strong>
+                  </div>
+                  <p>
+                    La restauration <b>complète</b> est appliquée. Pour que la VM reparte
+                    proprement (réseau, services, système) et éviter tout ralentissement
+                    résiduel, redémarrez-la.
+                  </p>
+                  <div class="rfs-reboot-reco-actions">
+                    <button class="rfs-btn rfs-btn-warn" type="button" :class="{ 'rfs-armed': rebootArmed }" @click="rebootArmed ? rebootVm() : (rebootArmed = true)">
+                      <span v-if="rebootArmed">Confirmer le redémarrage</span>
+                      <span v-else>Redémarrer la VM maintenant</span>
+                    </button>
+                    <button class="rfs-btn rfs-btn-ghost" type="button" @click="reloadAfterRestore">Plus tard — recharger l'interface</button>
+                  </div>
+                </template>
+              </div>
+
+              <div class="rfs-actions">
+                <template v-if="restoreOverlayState === 'success'">
+                  <!-- Clone moved us to a new IP: the only safe action is to open
+                       the new address (a reload here would hit a dead host). -->
+                  <template v-if="restoreIpChanged">
+                    <a class="rfs-btn rfs-btn-primary" :href="restoreTargetUrl">Ouvrir à la nouvelle adresse →</a>
+                    <button class="rfs-btn rfs-btn-warn" type="button" :class="{ 'rfs-armed': rebootArmed }" @click="rebootArmed ? rebootVm() : (rebootArmed = true)">
+                      {{ rebootArmed ? "Confirmer le redémarrage" : "Redémarrer la VM" }}
+                    </button>
+                    <button class="rfs-btn rfs-btn-ghost" type="button" @click="dismissRestoreOverlay">Fermer</button>
+                  </template>
+                  <!-- Reboot already offered prominently above for a complete
+                       restore — here we only keep the lightweight "continue". -->
+                  <template v-else-if="restoreRebootRecommended">
+                    <button class="rfs-btn rfs-btn-ghost" type="button" @click="dismissRestoreOverlay">Fermer</button>
+                  </template>
+                  <template v-else>
+                    <button class="rfs-btn rfs-btn-primary" type="button" :disabled="restoreFinalizing" @click="reloadAfterRestore">
+                      <span v-if="restoreFinalizing">Vérification…</span>
+                      <span v-else>Continuer<span v-if="restoreReloadCountdown > 0"> ({{ restoreReloadCountdown }}s)</span></span>
+                    </button>
+                    <button v-if="restoreReloadCountdown > 0 || restoreFinalizing" class="rfs-btn rfs-btn-ghost" type="button" @click="cancelAutoReload">Rester sur la page</button>
+                  </template>
+                </template>
+                <template v-else-if="restoreOverlayState === 'partial'">
+                  <button class="rfs-btn rfs-btn-primary" type="button" @click="reloadAfterRestore">Recharger l'interface</button>
+                  <button class="rfs-btn rfs-btn-warn" type="button" :class="{ 'rfs-armed': rebootArmed }" @click="rebootArmed ? rebootVm() : (rebootArmed = true)">
+                    {{ rebootArmed ? "Confirmer le redémarrage" : "Redémarrer la VM" }}
+                  </button>
+                  <button class="rfs-btn rfs-btn-ghost" type="button" @click="dismissRestoreOverlay">Fermer</button>
+                </template>
+                <template v-else>
+                  <button class="rfs-btn rfs-btn-primary" type="button" @click="reloadAfterRestore">Recharger l'interface</button>
+                  <button class="rfs-btn rfs-btn-danger" type="button" :class="{ 'rfs-armed': rebootArmed }" @click="rebootArmed ? rebootVm() : (rebootArmed = true)">
+                    {{ rebootArmed ? "Confirmer le redémarrage" : "Redémarrer la VM" }}
+                  </button>
+                  <button class="rfs-btn rfs-btn-ghost" type="button" @click="dismissRestoreOverlay">Fermer</button>
+                </template>
+              </div>
+
+              <div v-if="restoreOverlayState !== 'success'" class="rfs-advice">
+                <span v-if="restoreOverlayState === 'error'">💡 Si l'interface reste instable : <strong>Redémarrer la VM</strong> finit proprement de remonter le système restauré. Les logs détaillés sont dans l'onglet <em>Logs</em>.</span>
+                <span v-else>💡 La restauration est appliquée mais un ou plusieurs services n'ont pas confirmé leur état. Rechargez l'interface ; si un service reste indisponible, un redémarrage de la VM le rétablit.</span>
+              </div>
+            </template>
+
           </div>
         </div>
-        <div
-          v-else-if="restoreMonitor.diff && diffComponents.length === 0 && !restoreMonitor.progressActive"
-          class="restore-diff restore-diff--empty"
-        >
-          <strong>Rapport de changements</strong>
-          <span>Aucun changement détecté en base — le contenu restauré était identique à l'état précédent.</span>
-        </div>
-      </div>
-    </transition>
+      </Transition>
+    </Teleport>
 
     <transition name="restore-monitor-fade">
       <div v-if="importMonitor.visible" class="restore-monitor im-monitor" :class="importMonitor.status">
@@ -1024,8 +1291,30 @@ export default {
         restoredComponentsLabel: "",
         liveComponents: null,
         diff: null,    // post-restore row-level diff (added/removed/modified)
+        selfHealed: false,
+        phase: "",
+        etaSeconds: 0,           // estimated total restore duration (from backend)
+        stabilizeEtaSeconds: 0,  // estimated stabilization window
+        cloneNetwork: null,      // { restored_ips:[], applied } when a clone restored the IP
+        mode: "",
       },
       restorePoller: null,
+      restoreReloadCountdown: 0,   // auto-reload countdown shown on success
+      reloadTimer: null,
+      rebootArmed: false,          // two-click guard on the "Reboot VM" action
+      restoreStartedAt: 0,         // ms epoch when the current restore began
+      restoreElapsed: 0,           // seconds elapsed, ticked every 1s
+      elapsedTimer: null,
+      // Timed reboot alert after a COMPLETE restore: count down the stabilization
+      // window, then escalate the banner into an actionable "reboot now" alert.
+      rebootAlertDelay: 300,       // 5 min stabilization window before escalation
+      rebootAlertCountdown: 0,     // seconds remaining before the alert fires
+      rebootAlertActive: false,    // true once the window elapsed → escalate
+      rebootAlertTimer: null,
+      rebootAlertStarted: false,   // guard so we arm the countdown only once
+      rebootAlertCancelled: false, // operator opted out of the auto-reboot
+      restoreFinalizing: false,    // "final health check before reload" state
+      healthProbeTimer: null,      // setTimeout handle for the pre-reload probe
       importMonitor: {
         visible: false,
         title: "",
@@ -1104,9 +1393,26 @@ export default {
           // tone drives card color: green = identical, blue = backup
           // has MORE than current (restoring brings rows back),
           // amber = backup has LESS than current (restoring drops rows).
+          // Real content diff for THIS component (added/removed/modified rows).
+          // A rule edited in place keeps the count identical, so without this a
+          // modified firewall rule would look "= identique" — exactly the gap
+          // the operator complained about.
+          const ch = c.changes || {};
+          const changed = (ch.added || 0) + (ch.removed || 0) + (ch.modified || 0);
           let tone = "tone-same";
-          if (delta > 0) tone = "tone-pos";
+          if (changed > 0 && (ch.modified || 0) > 0 && delta === 0) tone = "tone-warn";
+          else if (delta > 0) tone = "tone-pos";
           else if (delta < 0) tone = "tone-neg";
+          else if (changed > 0) tone = "tone-warn";
+          // One-line, jargon-free verdict shown on every card.
+          let verdict = "Identique à l'état actuel";
+          if (changed > 0) {
+            const bits = [];
+            if (ch.added)    bits.push(`${ch.added} rétabli(s)`);
+            if (ch.removed)  bits.push(`${ch.removed} supprimé(s)`);
+            if (ch.modified) bits.push(`${ch.modified} modifié(s)`);
+            verdict = bits.join(" · ");
+          }
           return {
             name: c.name,
             title: meta.title,
@@ -1116,6 +1422,9 @@ export default {
             inBackup,
             current,
             delta,
+            changed,
+            changes: { added: ch.added || 0, removed: ch.removed || 0, modified: ch.modified || 0 },
+            verdict,
             deltaTitle: delta > 0
               ? `${delta} élément(s) en plus dans ce backup`
               : `${Math.abs(delta)} élément(s) en moins dans ce backup`,
@@ -1123,19 +1432,23 @@ export default {
             lines,
           };
         })
-        // Show the most "interesting" cards first: biggest absolute
-        // delta on top so the operator sees what would change first.
-        .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta) || b.inBackup - a.inBackup);
+        // Show the most "interesting" cards first: anything with a real content
+        // change on top, then biggest count delta, so the operator sees what
+        // would actually change before the identical rows.
+        .sort((a, b) => (b.changed - a.changed) || (Math.abs(b.delta) - Math.abs(a.delta)) || b.inBackup - a.inBackup);
     },
+    // A card "changes" the system if its content diff is non-empty OR its row
+    // count moves — so a modified-in-place rule (delta 0) still counts.
     previewCards() {
       const all = this.previewCardsAll;
-      if (this.previewFilter === "changed") return all.filter(c => c.delta !== 0);
-      if (this.previewFilter === "same")    return all.filter(c => c.delta === 0);
+      const isChanged = c => c.changed > 0 || c.delta !== 0;
+      if (this.previewFilter === "changed") return all.filter(isChanged);
+      if (this.previewFilter === "same")    return all.filter(c => !isChanged(c));
       return all;
     },
     previewFilters() {
       const all = this.previewCardsAll;
-      const changed = all.filter(c => c.delta !== 0).length;
+      const changed = all.filter(c => c.changed > 0 || c.delta !== 0).length;
       const same = all.length - changed;
       return [
         { id: "all",     label: "Tout",                count: all.length },
@@ -1157,6 +1470,93 @@ export default {
       }
       return `<strong>${inBackup}</strong> éléments dans le backup, soit <strong class="neg">${delta}</strong> de moins qu'actuellement (<strong>${current}</strong>).`;
     },
+    // ── Aperçu : résumé "humain" en haut de la modale ───────────────────────
+    // changes_total = vrai diff de CONTENU (ajoutés/supprimés/modifiés), pas un
+    // simple écart de comptes — détecte une règle modifiée en place.
+    previewChanges() {
+      return this.previewPayload?.changes_total || null;
+    },
+    previewHeroDate() {
+      const raw = this.previewPayload?.created_at || this.previewBackup?.modified_at;
+      return raw ? this.formatDate(raw) : "";
+    },
+    // Plain-language list of what restoring would do, ready to render as chips.
+    previewImpactItems() {
+      const c = this.previewChanges;
+      if (!c) return [];
+      const out = [];
+      if (c.added)    out.push({ key: "added",    icon: "↩", tone: "pos",  label: `${c.added} élément(s) rétabli(s)`,  hint: "présents dans le backup, absents aujourd'hui" });
+      if (c.removed)  out.push({ key: "removed",  icon: "✕", tone: "neg",  label: `${c.removed} ajout(s) supprimé(s)`,  hint: "créés après ce backup — seront retirés" });
+      if (c.modified) out.push({ key: "modified", icon: "↻", tone: "warn", label: `${c.modified} modification(s) annulée(s)`, hint: "valeurs changées depuis — reviennent à l'état du backup" });
+      return out;
+    },
+    previewHasChanges() {
+      const c = this.previewChanges;
+      return !!(c && c.total > 0);
+    },
+    // ── Aperçu : section Sécurité & système (clone complet) ──────────────────
+    previewSystem() {
+      const s = this.previewPayload?.system;
+      return s && s.applicable ? s : null;
+    },
+    previewSystemRows() {
+      const s = this.previewSystem;
+      if (!s) return [];
+      const d = s.diff || {};
+      // status: true = will change, false = identical, null = unknown/not comparable
+      const badge = (changed) => (changed === null || changed === undefined ? null : (changed ? "changera" : "identique"));
+      const rows = [];
+
+      if (s.root_password) {
+        const ch = d.root_password ? d.root_password.changes : null;
+        rows.push({
+          key: "pw", icon: "🔑", title: "Mot de passe root",
+          desc: ch === false ? "Identique au mot de passe actuel — aucun changement"
+              : ch === true ? "Différent de l'actuel — sera remplacé (login + SSH)"
+              : "Remis au mot de passe de ce backup (login + SSH)",
+          changed: ch, status: badge(ch),
+        });
+      }
+      if (s.login_users && s.login_users.length) {
+        const du = d.users || {};
+        const added = du.added || [], removed = du.removed || [];
+        const changed = added.length + removed.length > 0;
+        const bits = [];
+        if (added.length) bits.push(`+ ${added.join(", ")} (ajouté${added.length > 1 ? "s" : ""})`);
+        if (removed.length) bits.push(`− ${removed.join(", ")} (retiré${removed.length > 1 ? "s" : ""})`);
+        rows.push({
+          key: "users", icon: "👥", title: "Comptes de connexion",
+          desc: `Backup : ${s.login_users.join(", ")}`,
+          detail: changed ? bits.join(" · ") : "Identiques à l'actuel",
+          changed, status: badge(changed),
+        });
+      }
+      if (s.hostname) {
+        const dh = d.hostname || {};
+        const changed = !!dh.changes;
+        rows.push({
+          key: "host", icon: "🏷️", title: "Nom d'hôte",
+          desc: changed ? `${dh.current || "?"}  →  « ${s.hostname} »` : `« ${s.hostname} » — inchangé`,
+          changed, status: badge(changed),
+        });
+      }
+      if (s.packages_count) {
+        const dp = d.packages || {};
+        const miss = dp.missing_count;
+        rows.push({
+          key: "pkg", icon: "📦", title: "Paquets système",
+          desc: miss === 0 ? `${s.packages_count} paquets — tous déjà installés`
+              : miss > 0 ? `${miss} paquet(s) manquant(s) à réinstaller sur ${s.packages_count}`
+              : `${s.packages_count} paquets réinstallés si manquants`,
+          detail: dp.missing && dp.missing.length ? dp.missing.join(", ") : null,
+          changed: miss === null || miss === undefined ? null : miss > 0,
+          status: badge(miss === null || miss === undefined ? null : miss > 0),
+        });
+      }
+      if (s.has_application)
+        rows.push({ key: "app", icon: "💽", title: "Code de l'application", desc: "Réécrit — clone complet de la VM", changed: null, status: null });
+      return rows;
+    },
     diffComponents() {
       const diff = this.restoreMonitor.diff;
       if (!diff || !diff.components) return [];
@@ -1165,6 +1565,117 @@ export default {
         summary: payload.summary || { added: 0, removed: 0, modified: 0 },
         models: Object.entries(payload.models || {}).map(([path, m]) => ({ path, ...m })),
       }));
+    },
+    // ── Restore overlay state machine ──────────────────────────────────────
+    // Collapses the raw job status into the 5 visual states the overlay renders.
+    restoreOverlayState() {
+      const s = this.restoreMonitor.status;
+      if (s === "success") return "success";
+      if (s === "error") return "error";
+      if (s === "partial_success") return "partial";
+      if (s === "stabilizing" || this.restoreMonitor.phase === "stabilizing") return "stabilizing";
+      return "progress";   // running / queued / reconnecting
+    },
+    restoreOverlayTerminal() {
+      return ["success", "partial", "error"].includes(this.restoreOverlayState);
+    },
+    restoreOverlayPct() {
+      if (this.restoreOverlayState === "stabilizing") return 100;
+      const pct = Number(this.restoreMonitor.progressPct) || 0;
+      return Math.max(0, Math.min(100, Math.round(pct)));
+    },
+    restoreOverlayTitle() {
+      switch (this.restoreOverlayState) {
+        case "success":     return "Restauration réussie";
+        case "partial":     return "Restauration terminée avec réserves";
+        case "error":       return "Restauration échouée";
+        case "stabilizing": return "Stabilisation du système…";
+        default:
+          return this.restoreMonitor.statusLabel === "Reconnexion…"
+            ? "Restauration en cours — reconnexion…"
+            : "Restauration en cours…";
+      }
+    },
+    restoreFailedDetails() {
+      const s = this.restoreMonitor.verification && this.restoreMonitor.verification.summary;
+      return (s && s.failed_details) || [];
+    },
+    // A COMPLETE (whole-VM) restore re-applies kernel-level state — network
+    // profiles, systemd units, /etc — and triggers a service-restart storm that
+    // can keep the box sluggish for a couple of minutes. A clean reboot is the
+    // reliable way to finish bringing the restored system up, so we recommend it
+    // explicitly on a successful complete restore (and never for a same-IP UI
+    // restore, which only reloads the page).
+    restoreRebootRecommended() {
+      return (
+        this.restoreMonitor.mode === "complete" &&
+        ["success", "partial"].includes(this.restoreOverlayState) &&
+        !this.restoreIpChanged
+      );
+    },
+    // Fill % of the stabilization-wait bar (0 → 100 as the countdown drains).
+    rebootAlertProgress() {
+      if (!this.rebootAlertDelay) return 100;
+      const done = this.rebootAlertDelay - this.rebootAlertCountdown;
+      return Math.max(0, Math.min(100, Math.round((done / this.rebootAlertDelay) * 100)));
+    },
+    restoreOverlaySub() {
+      switch (this.restoreOverlayState) {
+        case "success":     return "Le système restauré est opérationnel.";
+        case "partial":     return "La restauration est appliquée mais la vérification est incomplète.";
+        case "error":       return "La restauration ne s'est pas terminée correctement.";
+        case "stabilizing": return "Composants restaurés — vérification des services en cours.";
+        default:            return `Backup ${this.restoreMonitor.backupId || ""}`;
+      }
+    },
+    restoreVerdictText() {
+      switch (this.restoreOverlayState) {
+        case "success":
+          return "✅ Restauration vérifiée — tous les composants sont restaurés et les services (uvicorn, nginx) sont actifs. Le système est 100% opérationnel.";
+        case "partial":
+          return "⚠️ La restauration a été appliquée, mais la stabilisation des services est incomplète. Vérifiez les contrôles ci-dessous puis rechargez ; un redémarrage de la VM peut finir de rétablir le système.";
+        case "error":
+          return "❌ La restauration a échoué ou s'est interrompue. Consultez les contrôles ci-dessous, rechargez l'interface, ou redémarrez la VM pour repartir d'un état propre.";
+        default:
+          return "";
+      }
+    },
+    // ── ETA / time helpers shown in the overlay ────────────────────────────
+    restoreEtaRemaining() {
+      const eta = Number(this.restoreMonitor.etaSeconds) || 0;
+      if (!eta) return 0;
+      return Math.max(0, eta - this.restoreElapsed);
+    },
+    restoreStabilizeRemaining() {
+      const eta = Number(this.restoreMonitor.stabilizeEtaSeconds) || 0;
+      if (!eta) return 0;
+      // Stabilization is the tail of the restore; estimate from elapsed-vs-total.
+      const total = Number(this.restoreMonitor.etaSeconds) || eta;
+      const intoStabilize = Math.max(0, this.restoreElapsed - (total - eta));
+      return Math.max(0, Math.round(eta - intoStabilize));
+    },
+    // First static IP the clone restored — where to reconnect if the IP changed.
+    restoreTargetIp() {
+      const ips = this.restoreMonitor.cloneNetwork && this.restoreMonitor.cloneNetwork.restored_ips;
+      return Array.isArray(ips) && ips.length ? ips[0] : "";
+    },
+    // True when a clone restore moved the appliance to an IP this tab isn't on,
+    // so a plain reload would land on a dead host — we must point the user to the
+    // new address instead of auto-reloading.
+    restoreIpChanged() {
+      const ip = this.restoreTargetIp;
+      if (!ip) return false;
+      try { return !String(window.location.host).includes(ip); }
+      catch (e) { return false; }
+    },
+    restoreTargetUrl() {
+      const ip = this.restoreTargetIp;
+      if (!ip) return "";
+      const proto = (typeof window !== "undefined" && window.location.protocol) || "https:";
+      return `${proto}//${ip}/asguard/`;
+    },
+    restoreSystemChanges() {
+      return this.restoreMonitor.systemChanges || null;
     },
     restoreTargetHasApplication() {
       return this.backupHasApplication(this.restoreTarget);
@@ -1208,11 +1719,11 @@ export default {
       const meta = {
         safe: {
           eyebrow: "Restore prudent (UI-safe)",
-          title: "Restauration du système Asguard uniquement",
-          description: "Restaure uniquement la config Asguard (firewall, VPN, IDS, proxy, réseau, NAT…) sans toucher au code de l'application, au socle /etc OS ni à l'identité de la machine. L'interface ne tombe jamais.",
-          highlights: ["Interface jamais coupée", "Code & OS préservés", "Config Asguard restaurée"],
+          title: "Restauration de la config de l'interface",
+          description: "Restaure tout ce qui se gère dans l'interface (firewall, VPN, IDS, proxy, NAT, VLAN/VXLAN, certificats…) sans toucher au code de l'application, au socle OS, aux users Linux ni à l'IP physique de la machine. L'interface ne tombe jamais.",
+          highlights: ["Interface jamais coupée", "Réseau UI (VLAN/VXLAN) restauré", "Code, OS & IP préservés"],
           noteLabel: "UI-safe",
-          note: "Idéal pour rétablir la configuration métier sans risque de couper la session web/SSH.",
+          note: "Rétablit la configuration métier — VLAN/VXLAN inclus — sans risque de couper la session web/SSH.",
         },
         complete: {
           eyebrow: "Restore complet",
@@ -1238,6 +1749,27 @@ export default {
         },
       };
       return meta[this.restoreMode] || meta.complete;
+    },
+    // Components UI-safe deliberately does NOT restore — mirrors the backend
+    // UI_FULL_EXCLUDED_COMPONENTS (code, OS socle, host identity, users…). The
+    // network config (incl. VLAN/VXLAN) IS covered by UI-safe; only the
+    // physical NIC IP identity is protected inside the network component.
+    safeProtectedComponents() {
+      return [
+        "application",
+        "system_config",
+        "systemd_services",
+        "logs",
+        "users_groups",
+        "packages",
+        "docker_state",
+        "vm_snapshot",
+      ];
+    },
+    coveredComponentsCount() {
+      return this.restoreComponents.filter(
+        (c) => this.componentCoverage(c) === "covered"
+      ).length;
     },
     changedComponents() {
       const inc = (this.restorePreview && this.restorePreview.included) || [];
@@ -1400,11 +1932,15 @@ export default {
   mounted() {
     this.fetchBackups();
     this.emitter.on("retention-applied", () => this.fetchBackups());
+    this.showPostRestoreMessage();
     this.resumeActiveRestore();
   },
   beforeUnmount() {
     this.stopRestorePolling();
     this.stopBackupPolling();
+    this.cancelAutoReload();
+    this.stopElapsedTimer();
+    this.stopRebootAlertCountdown();
   },
   methods: {
     setCsrfHeader() {
@@ -1424,6 +1960,102 @@ export default {
         this.restorePoller = null;
       }
     },
+    startElapsedTimer() {
+      this.stopElapsedTimer();
+      if (!this.restoreStartedAt) this.restoreStartedAt = Date.now();
+      this.restoreElapsed = Math.round((Date.now() - this.restoreStartedAt) / 1000);
+      this.elapsedTimer = window.setInterval(() => {
+        this.restoreElapsed = Math.round((Date.now() - this.restoreStartedAt) / 1000);
+      }, 1000);
+    },
+    stopElapsedTimer() {
+      if (this.elapsedTimer) {
+        window.clearInterval(this.elapsedTimer);
+        this.elapsedTimer = null;
+      }
+    },
+    // ── Timed reboot alert (COMPLETE restore only) ─────────────────────────
+    // Let the VM stabilize for `rebootAlertDelay` seconds, then escalate the
+    // reboot banner into an active alert (+ a toast) so the operator is told
+    // to reboot once the service-restart storm has settled.
+    startRebootAlertCountdown() {
+      if (this.rebootAlertStarted) return;     // arm only once per restore
+      this.rebootAlertStarted = true;
+      this.rebootAlertActive = false;
+      this.rebootAlertCancelled = false;
+      this.rebootAlertCountdown = this.rebootAlertDelay;
+      this.stopRebootAlertCountdown(false);
+      this.rebootAlertTimer = window.setInterval(() => {
+        this.rebootAlertCountdown -= 1;
+        if (this.rebootAlertCountdown <= 0) {
+          this.rebootAlertCountdown = 0;
+          this.stopRebootAlertCountdown(false);
+          this.onRebootWindowElapsed();
+        }
+      }, 1000);
+    },
+    // Window elapsed: only AUTO-reboot when the restore is a verified full
+    // success (everything restored). On a partial/degraded restore we never
+    // reboot on our own — we just escalate the banner to a manual alert.
+    onRebootWindowElapsed() {
+      this.rebootAlertActive = true;
+      const verifiedSuccess = this.restoreOverlayState === "success";
+      try {
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification("Asguard — Redémarrage de la VM", {
+            body: verifiedSuccess
+              ? "Restauration complète stabilisée — redémarrage automatique en cours."
+              : "Restauration stabilisée — redémarrez la VM pour finaliser.",
+          });
+        }
+      } catch (e) { /* ignore */ }
+      if (verifiedSuccess && !this.rebootAlertCancelled) {
+        this.notify("VM stabilisée et restauration vérifiée — redémarrage automatique…", "warning");
+        this.rebootVm();
+      } else {
+        this.notify(
+          "VM stabilisée — redémarrez-la manuellement pour finaliser la restauration.",
+          "warning"
+        );
+      }
+    },
+    // Operator opted out of the auto-reboot — keep the overlay, manual only.
+    cancelRebootAuto() {
+      this.rebootAlertCancelled = true;
+      this.stopRebootAlertCountdown(false);
+      this.rebootAlertActive = false;
+      this.notify("Redémarrage automatique annulé. Vous pouvez redémarrer manuellement.", "info");
+    },
+    stopRebootAlertCountdown(reset = true) {
+      if (this.rebootAlertTimer) {
+        window.clearInterval(this.rebootAlertTimer);
+        this.rebootAlertTimer = null;
+      }
+      if (reset) {
+        this.rebootAlertStarted = false;
+        this.rebootAlertActive = false;
+        this.rebootAlertCancelled = false;
+        this.rebootAlertCountdown = 0;
+      }
+    },
+    // mm:ss for the overlay clock/ETA chips.
+    fmtClock(seconds) {
+      const s = Math.max(0, Math.round(Number(seconds) || 0));
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return m > 0 ? `${m}min ${r.toString().padStart(2, "0")}s` : `${r}s`;
+    },
+    // After the success auto-reload, surface a confirmation toast so the
+    // operator returns to a normal interface WITH a clear "it worked" signal.
+    showPostRestoreMessage() {
+      let done = null;
+      try { done = JSON.parse(localStorage.getItem("asguard_restore_done") || "null"); }
+      catch (e) { done = null; }
+      if (done && done.status === "success") {
+        this.notify(`✅ Restauration réussie — système opérationnel (${done.backupId || "backup"}).`, "success");
+      }
+      try { localStorage.removeItem("asguard_restore_done"); } catch (e) { /* ignore */ }
+    },
     // Re-attach the restore banner on page load / browser reopen. Source of
     // truth = server (GET /backup/restore/active); localStorage is a hint.
     resumeActiveRestore() {
@@ -1436,7 +2068,7 @@ export default {
             this.startRestorePolling(
               data.job_id,
               data.backup_id || (saved && saved.backupId) || "",
-              (saved && saved.modeLabel) || (data.mode === "complete" ? "Full restore" : "Restore"),
+              (saved && saved.modeLabel) || (data.mode === "complete" ? "Restauration complète (VM entière)" : "Restauration UI-safe"),
             );
           } else if (saved && saved.jobId) {
             this.startRestorePolling(saved.jobId, saved.backupId, saved.modeLabel);
@@ -1456,7 +2088,8 @@ export default {
       if (this.restoreMonitor.progressActive) return;
       this.restoreMonitor.visible = false;
     },
-    openRestoreMonitor({ backupId, modeLabel, title, subtitle, status = "running", statusLabel = "Running", progressActive = true, verification = null, progressPct = 0, done = 0, total = 0, liveComponents = null, diff = null }) {
+    openRestoreMonitor({ backupId, modeLabel, title, subtitle, status = "running", statusLabel = "Running", progressActive = true, verification = null, progressPct = 0, done = 0, total = 0, liveComponents = null, diff = null, selfHealed = false, phase = "", etaSeconds = null, stabilizeEtaSeconds = null, cloneNetwork = undefined, mode = undefined, systemChanges = undefined }) {
+      const prev = this.restoreMonitor || {};
       this.restoreMonitor = {
         visible: true,
         title,
@@ -1473,7 +2106,93 @@ export default {
         liveComponents,
         restoredComponentsLabel: verification ? this.buildRestoredComponentsLabel(verification.summary) : "",
         diff,
+        selfHealed,
+        phase,
+        // Sticky fields: keep last known value when a poll tick doesn't carry it.
+        etaSeconds: etaSeconds != null ? etaSeconds : (prev.etaSeconds || 0),
+        stabilizeEtaSeconds: stabilizeEtaSeconds != null ? stabilizeEtaSeconds : (prev.stabilizeEtaSeconds || 0),
+        cloneNetwork: cloneNetwork !== undefined ? cloneNetwork : (prev.cloneNetwork || null),
+        mode: mode !== undefined ? mode : (prev.mode || ""),
+        systemChanges: systemChanges !== undefined ? systemChanges : (prev.systemChanges || null),
       };
+    },
+    // ── Restore overlay actions ────────────────────────────────────────────
+    dismissRestoreOverlay() {
+      if (!this.restoreOverlayTerminal) return;   // can't dismiss while live
+      this.cancelAutoReload();
+      this.stopRestorePolling();
+      this.stopRebootAlertCountdown();
+      this.rebootArmed = false;
+      this.restoreMonitor.visible = false;
+      try { localStorage.removeItem("asguard_active_restore"); } catch (e) { /* ignore */ }
+    },
+    reloadAfterRestore() {
+      this.cancelAutoReload();
+      try { localStorage.removeItem("asguard_active_restore"); } catch (e) { /* ignore */ }
+      window.location.reload();
+    },
+    // Only reload once the backend is confirmed reachable, so the operator never
+    // lands on a half-up interface (their explicit concern). The success status
+    // already came from a live API call, so this is usually instant; if the box
+    // is still settling we keep probing (showing "vérification finale") and only
+    // then start the short visible countdown.
+    beginHealthGatedReload() {
+      this.cancelAutoReload();
+      this.restoreFinalizing = true;
+      let tries = 0;
+      const probe = async () => {
+        tries += 1;
+        try {
+          await axios.get("/backup/restore/active", { timeout: 4000 });
+          this.restoreFinalizing = false;
+          this.startRestoreReloadCountdown(4);
+        } catch (e) {
+          if (tries >= 40) {            // ~60s of settling → reload anyway
+            this.restoreFinalizing = false;
+            this.startRestoreReloadCountdown(3);
+            return;
+          }
+          this.healthProbeTimer = window.setTimeout(probe, 1500);
+        }
+      };
+      probe();
+    },
+    startRestoreReloadCountdown(seconds = 6) {
+      this.cancelAutoReload();
+      this.restoreReloadCountdown = seconds;
+      this.reloadTimer = window.setInterval(() => {
+        this.restoreReloadCountdown -= 1;
+        if (this.restoreReloadCountdown <= 0) {
+          this.reloadAfterRestore();
+        }
+      }, 1000);
+    },
+    cancelAutoReload() {
+      if (this.reloadTimer) {
+        window.clearInterval(this.reloadTimer);
+        this.reloadTimer = null;
+      }
+      if (this.healthProbeTimer) {
+        window.clearTimeout(this.healthProbeTimer);
+        this.healthProbeTimer = null;
+      }
+      this.restoreFinalizing = false;
+      this.restoreReloadCountdown = 0;
+    },
+    async rebootVm() {
+      try {
+        this.stopRebootAlertCountdown(false);   // we're rebooting — stop the timer
+        this.setCsrfHeader();
+        await axios.post("/backup/system/reboot");
+        this.notify("Redémarrage de la VM lancé. La page se reconnectera au retour.", "warning");
+        this.restoreMonitor = {
+          ...this.restoreMonitor,
+          statusLabel: "Redémarrage…",
+        };
+      } catch (e) {
+        this.notify(e.response?.data?.message || "Impossible de redémarrer la VM (action non autorisée).", "error");
+        this.rebootArmed = false;
+      }
     },
     restoreCheckClass(status) {
       if (status === "passed") return "passed";
@@ -1573,6 +2292,12 @@ export default {
     startRestorePolling(jobId, backupId, modeLabel) {
       this.stopRestorePolling();
       this._restoreReconnectTries = 0;
+      this.rebootArmed = false;
+      // Anchor the elapsed clock. Re-attach (after a reload) restarts the clock
+      // from "now"; the backend ETA still drives the remaining-time estimate.
+      this.restoreStartedAt = Date.now();
+      this.restoreElapsed = 0;
+      this.startElapsedTimer();
       // Persist so the banner re-attaches after a page reload / browser reopen
       // (the server endpoint /backup/restore/active is the real source of truth;
       // this is a hint for which job to poll).
@@ -1595,11 +2320,19 @@ export default {
           const verification = payload.verification || null;
           const status = payload.status || "running";
           const isFinished = ["success", "partial_success", "error"].includes(status);
+          // "stabilizing" = component loop done, services being verified. Still
+          // non-terminal, but the overlay shows a distinct "verifying" phase.
+          const isStabilizing = status === "stabilizing";
           const liveComponents = (!isFinished && payload.components_progress)
             ? payload.components_progress
             : null;
 
-          const diff = isFinished ? (payload.result && payload.result.diff) || null : null;
+          const diff = (isFinished || isStabilizing)
+            ? (payload.result && payload.result.diff) || null
+            : null;
+
+          const cloneNetwork = (payload.result && payload.result.clone_network) || undefined;
+          const systemChanges = (payload.result && payload.result.system_changes) || undefined;
 
           this.openRestoreMonitor({
             backupId: payload.backup_id || backupId,
@@ -1609,19 +2342,27 @@ export default {
               ? "Verification finale du restore disponible ci-dessous."
               : `Composant actuel: ${payload.current_component || "initialisation..."}`,
             status,
-            statusLabel: this.restoreStatusLabel(status),
+            statusLabel: isStabilizing ? "Stabilisation…" : this.restoreStatusLabel(status),
             progressActive: !isFinished,
             verification: isFinished ? verification : null,
-            progressPct: payload.progress_pct || 0,
+            progressPct: isStabilizing ? 100 : (payload.progress_pct || 0),
             done: payload.done || 0,
             total: payload.total || 0,
             liveComponents,
             diff,
+            selfHealed: !!payload.self_healed,
+            phase: payload.phase || (isStabilizing ? "stabilizing" : ""),
+            etaSeconds: payload.estimated_seconds != null ? payload.estimated_seconds : null,
+            stabilizeEtaSeconds: payload.stabilize_estimate_seconds != null ? payload.stabilize_estimate_seconds : null,
+            cloneNetwork,
+            systemChanges,
+            mode: payload.mode,
           });
 
           if (isFinished) {
             this.stopRestorePolling();
-            try { localStorage.removeItem("asguard_active_restore"); } catch (e) { /* ignore */ }
+            this.stopElapsedTimer();
+            this.rebootArmed = false;
             this.notify(
               status === "success"
                 ? "Restore termine et verifie."
@@ -1639,6 +2380,31 @@ export default {
                 "Mode natif activé : aucun 2e disque LVM détecté, les montages LVM ont été retirés du fstab. Un redémarrage est recommandé pour finaliser.",
                 "warning"
               );
+            }
+            // On a verified success: if a clone restore moved us to a NEW IP this
+            // tab can't reach, do NOT reload (we'd land on a dead host) — the
+            // overlay shows the reconnect link instead. Otherwise, only reload
+            // AFTER a final health probe confirms the backend is truly reachable,
+            // so the operator never lands on a half-up interface.
+            if (status === "success") {
+              try {
+                localStorage.setItem("asguard_restore_done",
+                  JSON.stringify({ status, backupId: payload.backup_id || backupId, ts: Date.now() }));
+              } catch (e) { /* ignore */ }
+              // For a COMPLETE restore we DON'T auto-reload (bouncing the page
+              // would drop the operator onto a still-stabilizing system). Instead
+              // we arm a timed reboot: let the VM stabilize for ~5 min, then
+              // AUTO-reboot it (only because this is a verified success) to bring
+              // the restored system up clean. The operator can reboot early or
+              // cancel the auto-reboot from the overlay.
+              if (this.restoreMonitor.mode === "complete" && !this.restoreIpChanged) {
+                this.startRebootAlertCountdown();
+              } else if (!this.restoreIpChanged) {
+                this.beginHealthGatedReload();
+              }
+              // else: keep overlay up; user clicks the new-IP link or reboots.
+            } else {
+              try { localStorage.removeItem("asguard_active_restore"); } catch (e) { /* ignore */ }
             }
             await this.fetchBackups();
           }
@@ -1874,6 +2640,19 @@ export default {
       this.restoreMode = "custom";
       this.selectedRestoreComponents = [];
     },
+    // Per-mode coverage state of one component (for the visual picker):
+    //  - "covered"   : this mode WILL restore it (green ✓)
+    //  - "protected" : this mode never touches it — critical/host item (grey 🛡)
+    // Full restores everything; Safe protects the socle/OS/identity list.
+    componentCoverage(component) {
+      if (this.restoreMode === "complete") return "covered";
+      if (this.restoreMode === "safe") {
+        return this.safeProtectedComponents.includes(component)
+          ? "protected"
+          : "covered";
+      }
+      return "covered";
+    },
     async submitRestoreBackup() {
       if (!this.restoreTarget) return;
       this.loading = true;
@@ -1881,10 +2660,10 @@ export default {
       try {
         let response;
         const modeLabel = this.restoreMode === "complete"
-          ? "Full UI-safe restore"
+          ? "Restauration complète (VM entière)"
           : this.restoreMode === "custom"
-            ? "Custom restore"
-            : "Safe restore";
+            ? "Restauration personnalisée"
+            : "Restauration UI-safe";
         if (this.restoreMode === "custom") {
           response = await axios.post(
             `/backup/${this.restoreTarget.id}/restore-components`,

@@ -56,19 +56,11 @@ def vm_snapshot_list(request):
     return JsonResponse({"snapshots": Svc.list_snapshots()})
 
 
-@api_view(["POST"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def vm_snapshot_verify(request):
-    connection = Svc.test_connection()
-    snapshots  = Svc.list_snapshots()
-    return JsonResponse({
-        "status":     "success" if connection.get("connected") and connection.get("lv_ok") else "warning",
-        "checked_at": datetime.now(LOCAL_TZ).isoformat(),
-        "connection": connection,
-        "snapshots":  snapshots,
-        "count":      len(snapshots),
-    })
+# NOTE: `vm_snapshot_verify` was removed during code review (commit cleanup) —
+# it was never consumed by the frontend or any script. The UI uses the lighter
+# `vm-snapshot/test-connection` + `vm-snapshot/list` combo to achieve the
+# same result with finer granularity. If a future audit endpoint is needed,
+# prefer composing those two rather than reintroducing a fused one.
 
 
 # ── Create snapshot (async) ────────────────────────────────────────────────────

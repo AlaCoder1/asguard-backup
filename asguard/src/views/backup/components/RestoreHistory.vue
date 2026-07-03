@@ -557,6 +557,128 @@
                   </div>
                   <div v-else class="rh-detail-empty" style="margin: 8px 0 16px">Aucun détail disponible (restore en cours ou ancien job).</div>
 
+                  <!-- Rapport diff ligne par ligne — quand le restore a été
+                       fait avec le nouveau code (restore_diff.py), on a un
+                       diff exact des lignes ajoutées / supprimées / modifiées
+                       par composant. Le placeholder s'affiche pour les
+                       anciens restores qui n'ont pas généré de diff. -->
+                  <div v-if="entry.diff && rhDiffComponents(entry).length > 0" class="rh-rowdiff-section">
+                    <div class="rh-detail-title">
+                      Rapport de changements ligne par ligne
+                      <span class="rh-rowdiff-totals">
+                        <span v-if="entry.diff.totals.added"   class="rh-rowdiff-tot pos">+{{ entry.diff.totals.added }} ajouté{{ entry.diff.totals.added>1?'s':'' }}</span>
+                        <span v-if="entry.diff.totals.removed" class="rh-rowdiff-tot neg">−{{ entry.diff.totals.removed }} supprimé{{ entry.diff.totals.removed>1?'s':'' }}</span>
+                        <span v-if="entry.diff.totals.modified" class="rh-rowdiff-tot mod">~{{ entry.diff.totals.modified }} modifié{{ entry.diff.totals.modified>1?'s':'' }}</span>
+                      </span>
+                    </div>
+
+                    <div class="rh-rowdiff-list">
+                      <details
+                        v-for="comp in rhDiffComponents(entry)"
+                        :key="`rdiff-${entry.job_id}-${comp.name}`"
+                        class="rh-rowdiff-comp"
+                      >
+                        <summary>
+                          <span class="rh-rowdiff-comp-name">{{ comp.name }}</span>
+                          <span class="rh-rowdiff-comp-summary">
+                            <span v-if="comp.summary.added"    class="rh-rowdiff-tot pos">+{{ comp.summary.added }}</span>
+                            <span v-if="comp.summary.removed"  class="rh-rowdiff-tot neg">−{{ comp.summary.removed }}</span>
+                            <span v-if="comp.summary.modified" class="rh-rowdiff-tot mod">~{{ comp.summary.modified }}</span>
+                          </span>
+                        </summary>
+
+                        <div v-for="m in comp.models" :key="m.path" class="rh-rowdiff-model">
+                          <div class="rh-rowdiff-model-head">
+                            <strong>{{ m.label }}</strong>
+                            <span class="rh-rowdiff-model-counts">{{ m.pre_count }} → {{ m.post_count }}</span>
+                          </div>
+
+                          <ul v-if="m.removed.length" class="rh-rowdiff-rows neg">
+                            <li v-for="r in m.removed" :key="`r-${m.path}-${r.pk}`">
+                              <span class="rh-rowdiff-op">−</span>
+                              <span class="rh-rowdiff-pk">#{{ r.pk }}</span>
+                              <span class="rh-rowdiff-summary">{{ r.summary }}</span>
+                            </li>
+                          </ul>
+
+                          <ul v-if="m.added.length" class="rh-rowdiff-rows pos">
+                            <li v-for="r in m.added" :key="`a-${m.path}-${r.pk}`">
+                              <span class="rh-rowdiff-op">+</span>
+                              <span class="rh-rowdiff-pk">#{{ r.pk }}</span>
+                              <span class="rh-rowdiff-summary">{{ r.summary }}</span>
+                            </li>
+                          </ul>
+
+                          <ul v-if="m.modified.length" class="rh-rowdiff-rows mod">
+                            <li v-for="r in m.modified" :key="`m-${m.path}-${r.pk}`">
+                              <span class="rh-rowdiff-op">~</span>
+                              <span class="rh-rowdiff-pk">#{{ r.pk }}</span>
+                              <span class="rh-rowdiff-summary">{{ r.summary }}</span>
+                              <details v-if="r.changes" class="rh-rowdiff-changes">
+                                <summary>{{ Object.keys(r.changes).length }} champ(s)</summary>
+                                <table>
+                                  <tbody>
+                                    <tr v-for="(ch, field) in r.changes" :key="field">
+                                      <td class="field">{{ field }}</td>
+                                      <td class="before">{{ ch.before == null ? "∅" : ch.before }}</td>
+                                      <td class="arrow">→</td>
+                                      <td class="after">{{ ch.after == null ? "∅" : ch.after }}</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </details>
+                            </li>
+                          </ul>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                  <!-- Diff could NOT be computed (timed out / DB busy during the
+                       restore I/O window) — do NOT claim "identical". -->
+                  <div
+                    v-else-if="entry.diff && entry.diff.available === false"
+                    class="rh-rowdiff-section rh-rowdiff-empty rh-rowdiff-unavail"
+                  >
+                    <div class="rh-detail-title">Rapport de changements ligne par ligne</div>
+                    <span>⚠️ Rapport indisponible — le calcul du diff base de données n'a pas pu aboutir (système occupé pendant la restauration). Les changements système ci-dessous restent fiables.</span>
+                  </div>
+                  <!-- Only claim "identical" when the diff ACTUALLY ran (available
+                       === true). Old restores (no availability flag) or ones whose
+                       diff didn't run show nothing here, never a false "identical". -->
+                  <div
+                    v-else-if="entry.diff && entry.diff.available === true && rhDiffComponents(entry).length === 0"
+                    class="rh-rowdiff-section rh-rowdiff-empty"
+                  >
+                    <div class="rh-detail-title">Rapport de changements ligne par ligne</div>
+                    <span>Aucun changement détecté en base — le contenu restauré était identique à l'état précédent.</span>
+                  </div>
+
+                  <!-- System-level changes (root password, system users, hostname)
+                       — what the DB row-diff can't show. -->
+                  <div
+                    v-if="entry.system_changes && entry.system_changes.checked"
+                    class="rh-syschanges-section"
+                  >
+                    <div class="rh-detail-title">Changements système (hors base)</div>
+                    <div v-if="entry.system_changes.any" class="rh-syschanges-list">
+                      <div v-if="entry.system_changes.root_password_changed" class="rh-syschange rh-syschange-pwd">
+                        🔑 <strong>Mot de passe root</strong> — restauré (différent de l'état avant restauration)
+                      </div>
+                      <div v-for="u in entry.system_changes.users_removed" :key="'ur-'+u" class="rh-syschange rh-syschange-userdel">
+                        👤 Utilisateur système <code>{{ u }}</code> — supprimé par la restauration
+                      </div>
+                      <div v-for="u in entry.system_changes.users_added" :key="'ua-'+u" class="rh-syschange rh-syschange-useradd">
+                        👤 Utilisateur système <code>{{ u }}</code> — ajouté par la restauration
+                      </div>
+                      <div v-if="entry.system_changes.hostname_changed" class="rh-syschange">
+                        🏷️ Hostname — <code>{{ entry.system_changes.hostname_from }}</code> → <code>{{ entry.system_changes.hostname_to }}</code>
+                      </div>
+                    </div>
+                    <div v-else class="rh-syschanges-none">
+                      Aucun changement système détecté (mot de passe root, utilisateurs et hostname inchangés).
+                    </div>
+                  </div>
+
                   <div class="rh-detail-grid">
                     <div class="rh-detail-section">
                       <div class="rh-detail-title">🕐 Chronologie</div>
@@ -693,6 +815,18 @@ export default {
     this.fetchHistory();
   },
   methods: {
+    // Flatten the diff payload from get_restore_history into a list of
+    // components, each with its models[] ready to render. Identical shape
+    // to Backups.vue's diffComponents — keeps the two views consistent.
+    rhDiffComponents(entry) {
+      const diff = entry && entry.diff;
+      if (!diff || !diff.components) return [];
+      return Object.entries(diff.components).map(([name, payload]) => ({
+        name,
+        summary: payload.summary || { added: 0, removed: 0, modified: 0 },
+        models: Object.entries(payload.models || {}).map(([path, m]) => ({ path, ...m })),
+      }));
+    },
     async fetchHistory() {
       this.loading = true;
       try {
@@ -847,795 +981,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.restore-history-page {
-  padding: 24px;
-  min-height: 400px;
-  position: relative;
-}
-
-/* Loading */
-.rh-loading-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  border-radius: 12px;
-}
-.rh-loading-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #fff;
-  padding: 16px 28px;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  font-size: 14px;
-  color: #444;
-}
-.rh-spinner {
-  width: 20px; height: 20px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #1565c0;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Stats bar */
-.rh-stats-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-  padding: 16px 20px;
-  background: #f8f9fc;
-  border-radius: 12px;
-  border: 1px solid #e8eaf0;
-}
-.rh-stat-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 80px;
-  padding: 8px 14px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #e0e4ec;
-}
-.rh-stat-card.success { border-color: #a5d6a7; background: #f1f8e9; }
-.rh-stat-card.danger  { border-color: #ef9a9a; background: #fff3f3; }
-.rh-stat-value { font-size: 22px; font-weight: 700; color: #1a237e; line-height: 1.2; }
-.rh-val-blue   { color: #6a1b9a; }
-.rh-stat-label { font-size: 11px; color: #78909c; margin-top: 2px; text-align: center; }
-.rh-refresh-btn {
-  margin-left: auto;
-  padding: 8px 18px;
-  border: 1.5px solid #1565c0;
-  border-radius: 8px;
-  background: #fff;
-  color: #1565c0;
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.15s;
-}
-.rh-refresh-btn:hover:not(:disabled) { background: #e3f2fd; }
-.rh-refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Filters */
-.rh-filters {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-.rh-search {
-  flex: 1;
-  min-width: 220px;
-  padding: 8px 14px;
-  border: 1.5px solid #dde1ea;
-  border-radius: 8px;
-  font-size: 13px;
-  outline: none;
-  background: #fff;
-}
-.rh-search:focus { border-color: #1565c0; }
-.rh-filter-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.rh-filter-sep { width: 1px; height: 20px; background: #dde1ea; margin: 0 4px; }
-.rh-chip {
-  padding: 5px 12px;
-  border: 1.5px solid #dde1ea;
-  border-radius: 20px;
-  background: #fff;
-  font-size: 12px;
-  color: #546e7a;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.rh-chip.active { border-color: #1565c0; background: #1565c0; color: #fff; }
-.rh-chip:hover:not(.active) { border-color: #90a4ae; }
-
-.rh-chip-type { display: flex; align-items: center; gap: 4px; }
-.rh-chip-type.vm-chip { border-color: #ce93d8; color: #6a1b9a; }
-.rh-chip-type.vm-chip.active { border-color: #6a1b9a; background: #6a1b9a; color: #fff; }
-.rh-chip-vm-icon { font-size: 10px; }
-
-/* Empty */
-.rh-empty { text-align: center; padding: 60px 20px; color: #90a4ae; }
-.rh-empty-icon { font-size: 40px; margin-bottom: 10px; }
-
-/* Table */
-.rh-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #e8eaf0; }
-.rh-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.rh-table thead tr { background: #f3f5fa; border-bottom: 2px solid #e0e4ec; }
-.rh-table th {
-  padding: 10px 14px;
-  text-align: left;
-  font-weight: 600;
-  color: #546e7a;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-.rh-row { border-bottom: 1px solid #f0f2f7; cursor: pointer; transition: background 0.1s; }
-.rh-row:hover { background: #f5f7fc; }
-.rh-row.expanded { background: #eef2fb; }
-
-/* VM snapshot row — distinct purple tint */
-.rh-row-vm { border-left: 3px solid #9c27b0; }
-.rh-row-vm:hover { background: #fdf5ff; }
-.rh-row-vm.expanded { background: #f8f0ff; border-left-color: #7b1fa2; }
-
-.rh-table td { padding: 10px 14px; vertical-align: middle; }
-.rh-expand-cell { width: 28px; color: #90a4ae; }
-.rh-expand-icon { font-size: 14px; }
-
-/* Type badges */
-.rh-type-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}
-.rh-type-badge.backup     { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
-.rh-type-badge.vm         { background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
-
-/* Snap ID in VM row */
-.rh-snap-id-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-family: monospace;
-  font-size: 11px;
-  color: #6a1b9a;
-  background: #f3e5f5;
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid #ce93d8;
-}
-
-/* VM "entière" pill */
-.rh-vm-full-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-  background: #f3e5f5;
-  color: #6a1b9a;
-  border: 1px solid #ce93d8;
-}
-
-/* Date */
-.rh-date-primary { font-weight: 600; color: #263238; font-size: 13px; }
-.rh-date-secondary { font-size: 11px; color: #90a4ae; }
-
-/* Backup ID */
-.rh-backup-id {
-  font-family: monospace;
-  font-size: 12px;
-  color: #37474f;
-  background: #f0f2f7;
-  padding: 2px 7px;
-  border-radius: 4px;
-}
-
-/* Mode badge */
-.rh-mode-badge {
-  padding: 3px 9px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  background: #e8eaf0;
-  color: #455a64;
-}
-.rh-mode-badge.complete, .rh-mode-badge.ui_full, .rh-mode-badge.full { background: #e3f2fd; color: #1565c0; }
-.rh-mode-badge.safe { background: #e8f5e9; color: #2e7d32; }
-.rh-mode-badge.selected_components { background: #fff3e0; color: #e65100; }
-.rh-mode-badge.vm_snapshot { background: #f3e5f5; color: #6a1b9a; }
-
-/* Status badge */
-.rh-status-badge {
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 700;
-  display: inline-block;
-}
-.rh-status-badge.success { background: #e8f5e9; color: #2e7d32; }
-.rh-status-badge.partial_success { background: #fff8e1; color: #f57f17; }
-.rh-status-badge.error { background: #ffebee; color: #c62828; }
-.rh-status-badge.running { background: #e3f2fd; color: #1565c0; }
-.rh-status-badge.queued { background: #f3e5f5; color: #6a1b9a; }
-
-/* Component pills */
-.rh-comp-pills { display: flex; gap: 6px; }
-.rh-pill { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-.rh-pill.ok   { background: #e8f5e9; color: #2e7d32; }
-.rh-pill.fail { background: #ffebee; color: #c62828; }
-.rh-pill.skip { background: #f0f2f7; color: #78909c; }
-
-/* Duration */
-.rh-duration { font-weight: 600; color: #37474f; font-size: 13px; }
-
-/* Stabilisation */
-.rh-stab-badge { padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-.rh-stab-badge.success { background: #e8f5e9; color: #2e7d32; }
-.rh-stab-badge.partial { background: #fff8e1; color: #f57f17; }
-.rh-stab-badge.unknown { background: #f0f2f7; color: #90a4ae; }
-
-/* ── VM Snapshot expanded detail ── */
-.rh-detail-row td { padding: 0; }
-.rh-detail-row-vm td { padding: 0; }
-
-.rh-detail-panel-vm {
-  background: linear-gradient(135deg, #faf5ff 0%, #f8f0ff 100%);
-  border-top: 2px solid #ce93d8;
-  padding: 20px 24px;
-}
-
-.rh-vm-header-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: #fff;
-  border: 1px solid #ce93d8;
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 18px;
-  box-shadow: 0 2px 8px rgba(106, 27, 154, 0.06);
-}
-
-.rh-vm-header-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 52px;
-  height: 52px;
-  background: linear-gradient(135deg, #f3e5f5, #e1bee7);
-  border-radius: 14px;
-  color: #6a1b9a;
-  flex-shrink: 0;
-}
-
-.rh-vm-header-body { flex: 1; }
-.rh-vm-header-title {
-  font-weight: 700;
-  font-size: 14px;
-  color: #4a148c;
-  margin-bottom: 4px;
-}
-.rh-vm-header-sub { font-size: 12px; color: #7b5fa5; line-height: 1.4; }
-
-.rh-vm-header-status {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.rh-vm-status-big {
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.rh-vm-status-big.success { background: #e8f5e9; color: #2e7d32; }
-.rh-vm-status-big.error   { background: #ffebee; color: #c62828; }
-.rh-vm-status-big.running { background: #e3f2fd; color: #1565c0; }
-.rh-vm-duration-big { font-size: 18px; font-weight: 700; color: #6a1b9a; }
-
-/* VM detail grid */
-.rh-vm-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
-}
-
-.rh-vm-info-card {
-  background: #fff;
-  border: 1px solid #e1bee7;
-  border-radius: 10px;
-  padding: 14px 16px;
-}
-
-.rh-vm-info-card--scope { border-color: #ce93d8; }
-
-.rh-vm-card-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 11px;
-  color: #6a1b9a;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
-}
-
-.rh-vm-info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 12px;
-  color: #546e7a;
-  padding: 4px 0;
-  border-bottom: 1px solid #f5f0f8;
-}
-.rh-vm-info-row:last-child { border-bottom: none; }
-.rh-vm-info-label { color: #90a4ae; font-size: 11px; flex-shrink: 0; }
-.rh-vm-snap-code {
-  background: #f3e5f5;
-  padding: 2px 7px;
-  border-radius: 4px;
-  font-size: 11px;
-  color: #4a148c;
-  font-family: monospace;
-  word-break: break-all;
-}
-.rh-vm-snap-code.small { font-size: 10px; }
-
-/* Scope list — restored modules from backend */
-.rh-vm-scope-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
-.rh-vm-scope-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #546e7a; }
-.rh-vm-scope-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.rh-vm-scope-dot.green  { background: #43a047; }
-.rh-vm-scope-dot.orange { background: #fb8c00; }
-.rh-vm-scope-count {
-  margin-left: auto;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  background: #ede7f6; color: #4527a0;
-  border-radius: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-.rh-vm-scope-mod {
-  display: flex; align-items: center; gap: 8px;
-  padding: 7px 9px;
-  background: #f3e5f5;
-  border: 1px solid #ce93d8;
-  border-radius: 7px;
-  font-size: 11.5px;
-  transition: transform 0.1s;
-}
-.rh-vm-scope-mod:hover { transform: translateX(2px); }
-.rh-vm-scope-mod-icon {
-  width: 22px; height: 22px;
-  display: flex; align-items: center; justify-content: center;
-  background: #fff;
-  border-radius: 6px;
-  font-size: 12px;
-  flex-shrink: 0;
-}
-.rh-vm-scope-mod-icon.container { background: #e3f2fd; }
-.rh-vm-scope-mod-icon.service   { background: #fff8e1; }
-.rh-vm-scope-mod-body { flex: 1; min-width: 0; }
-.rh-vm-scope-mod-label { font-weight: 600; color: #1a237e; line-height: 1.2; }
-.rh-vm-scope-mod-path { font-size: 10px; color: #78909c; line-height: 1.3; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rh-vm-scope-mod-path code { background: transparent; padding: 0; font-size: 10px; }
-.rh-vm-scope-mod-tick { color: #2e7d32; font-weight: 800; font-size: 14px; flex-shrink: 0; }
-.rh-vm-scope-empty { font-size: 11.5px; color: #90a4ae; font-style: italic; padding: 6px 2px; }
-
-/* Services / containers restarted around the merge */
-.rh-vm-quiesce-card {
-  margin-top: 14px;
-  padding: 12px 16px 14px;
-  background: #fff;
-  border: 1px solid #e1bee7;
-  border-radius: 9px;
-}
-.rh-vm-quiesce-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.rh-vm-quiesce-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 11px;
-  border-radius: 999px;
-  font-size: 11.5px; font-weight: 600;
-  border: 1px solid;
-}
-.rh-vm-quiesce-pill.service   { background: #fff8e1; border-color: #ffcc80; color: #b45309; }
-.rh-vm-quiesce-pill.container { background: #e3f2fd; border-color: #90caf9; color: #1565c0; }
-.rh-vm-quiesce-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.6);
-}
-
-/* Merge-consumed informational note */
-.rh-vm-merge-note {
-  margin-top: 14px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 1px solid #93c5fd;
-  border-radius: 9px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 12px;
-  color: #1e3a8a;
-  line-height: 1.5;
-}
-.rh-vm-merge-note svg { color: #2563eb; margin-top: 2px; }
-.rh-vm-merge-note.rh-vm-merge-note--ok {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border-color: #6ee7b7;
-  color: #065f46;
-}
-.rh-vm-merge-note.rh-vm-merge-note--ok svg { color: #10b981; }
-.rh-vm-merge-note.rh-vm-merge-note--ok code { background: rgba(16, 185, 129, 0.12); color: #047857; }
-.rh-vm-merge-note code { background: rgba(37, 99, 235, 0.1); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
-.rh-vm-merge-note em { color: #1e40af; font-style: italic; }
-
-/* Database content diff — proof of what was reverted */
-.rh-vm-dbdiff-card {
-  margin-top: 12px;
-  background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%);
-  border: 1px solid #c4b5fd;
-  border-radius: 10px;
-  padding: 12px 14px;
-}
-.rh-vm-dbdiff-card .rh-vm-card-title {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11.5px; font-weight: 700;
-  color: #5b21b6; text-transform: uppercase; letter-spacing: 0.4px;
-  margin-bottom: 10px;
-}
-.rh-vm-dbdiff-count {
-  margin-left: auto;
-  background: rgba(124, 58, 237, 0.12);
-  color: #6d28d9;
-  font-size: 10.5px; font-weight: 600; text-transform: none; letter-spacing: 0;
-  padding: 2px 8px; border-radius: 999px;
-}
-.rh-vm-dbdiff-empty {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: #047857;
-  background: rgba(16, 185, 129, 0.08); border: 1px dashed #6ee7b7;
-  padding: 8px 10px; border-radius: 8px;
-}
-.rh-vm-dbdiff-empty svg { color: #10b981; }
-.rh-vm-dbdiff-summary {
-  display: flex; gap: 10px; margin-bottom: 10px;
-}
-.rh-vm-dbdiff-stat {
-  flex: 1;
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 8px 10px; border-radius: 8px; background: #fff; border: 1px solid #e9d5ff;
-}
-.rh-vm-dbdiff-stat--removed { border-left: 3px solid #dc2626; }
-.rh-vm-dbdiff-stat--added   { border-left: 3px solid #059669; }
-.rh-vm-dbdiff-stat-num { font-size: 18px; font-weight: 700; color: #1f2937; line-height: 1; }
-.rh-vm-dbdiff-stat--removed .rh-vm-dbdiff-stat-num { color: #b91c1c; }
-.rh-vm-dbdiff-stat--added   .rh-vm-dbdiff-stat-num { color: #047857; }
-.rh-vm-dbdiff-stat-lbl { font-size: 11px; font-weight: 600; color: #4b5563; }
-.rh-vm-dbdiff-stat-sub { font-size: 10.5px; color: #6b7280; }
-.rh-vm-dbdiff-groups { display: flex; flex-direction: column; gap: 8px; }
-.rh-vm-dbdiff-group {
-  background: #fff; border: 1px solid #ede9fe; border-radius: 8px; padding: 8px 10px;
-}
-.rh-vm-dbdiff-group-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  margin-bottom: 6px;
-}
-.rh-vm-dbdiff-group-name {
-  font-size: 11.5px; font-weight: 700; color: #5b21b6;
-  text-transform: uppercase; letter-spacing: 0.4px;
-}
-.rh-vm-dbdiff-group-total { font-size: 10.5px; color: #7c3aed; font-weight: 600; }
-.rh-vm-dbdiff-rows { display: flex; flex-direction: column; gap: 4px; }
-.rh-vm-dbdiff-row {
-  display: grid; grid-template-columns: 1fr auto auto;
-  align-items: center; gap: 12px;
-  padding: 4px 6px; border-radius: 6px;
-}
-.rh-vm-dbdiff-row:hover { background: #faf5ff; }
-.rh-vm-dbdiff-row-label { font-size: 12px; color: #1f2937; }
-.rh-vm-dbdiff-row-counts {
-  display: flex; align-items: center; gap: 4px;
-  font-variant-numeric: tabular-nums; font-size: 11.5px; color: #6b7280;
-}
-.rh-vm-dbdiff-before { color: #9ca3af; }
-.rh-vm-dbdiff-after  { color: #1f2937; font-weight: 600; }
-.rh-vm-dbdiff-arrow  { color: #c4b5fd; }
-.rh-vm-dbdiff-row-delta {
-  font-size: 11px; font-weight: 700;
-  padding: 2px 7px; border-radius: 999px;
-  font-variant-numeric: tabular-nums;
-}
-.rh-vm-dbdiff-row-delta--removed { background: #fee2e2; color: #b91c1c; }
-.rh-vm-dbdiff-row-delta--added   { background: #d1fae5; color: #047857; }
-
-/* Description + creator pill */
-.rh-vm-desc {
-  font-size: 12px;
-  color: #1a237e;
-  font-style: italic;
-  text-align: right;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.rh-vm-creator-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10.5px;
-  font-weight: 600;
-  padding: 2px 9px;
-  border-radius: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  background: #ede7f6;
-  color: #4527a0;
-  border: 1px solid #d1c4e9;
-}
-.rh-vm-creator-pill.ai_risk        { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
-.rh-vm-creator-pill.scheduled      { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
-.rh-vm-creator-pill.auto_pre_backup,
-.rh-vm-creator-pill.auto_post_backup { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
-
-/* Phases timeline */
-.rh-vm-phases-card {
-  margin-top: 16px;
-  padding: 14px 18px 18px;
-  background: linear-gradient(180deg, #faf5ff 0%, #f3e5f5 100%);
-  border: 1px solid #ce93d8;
-  border-radius: 10px;
-}
-.rh-vm-phases-track {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 12px;
-  position: relative;
-}
-.rh-vm-phase {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1 1 0;
-  min-width: 0;
-  text-align: center;
-}
-.rh-vm-phase-marker {
-  position: relative;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 22px;
-}
-.rh-vm-phase-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #e0e0e0;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 2px #bdbdbd;
-  position: relative;
-  z-index: 2;
-  transition: all 0.2s;
-}
-.rh-vm-phase-line {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 100%;
-  height: 2px;
-  background: #cfd8dc;
-  z-index: 1;
-}
-.rh-vm-phase-body {
-  margin-top: 8px;
-  padding: 0 4px;
-}
-.rh-vm-phase-label {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #37474f;
-  line-height: 1.25;
-}
-.rh-vm-phase-meta {
-  font-size: 10px;
-  color: #78909c;
-  margin-top: 3px;
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.rh-vm-phase-status { font-weight: 600; }
-.rh-vm-phase-time   { color: #90a4ae; }
-
-/* Phase status colors */
-.rh-vm-phase--done .rh-vm-phase-dot {
-  background: #43a047;
-  box-shadow: 0 0 0 2px #43a047, 0 0 0 5px rgba(67, 160, 71, 0.2);
-}
-.rh-vm-phase--done .rh-vm-phase-line   { background: #43a047; }
-.rh-vm-phase--done .rh-vm-phase-status { color: #2e7d32; }
-
-.rh-vm-phase--running .rh-vm-phase-dot {
-  background: #1e88e5;
-  box-shadow: 0 0 0 2px #1e88e5, 0 0 0 5px rgba(30, 136, 229, 0.25);
-  animation: rh-vm-pulse 1.4s infinite;
-}
-.rh-vm-phase--running .rh-vm-phase-status { color: #1565c0; }
-
-.rh-vm-phase--failed .rh-vm-phase-dot {
-  background: #e53935;
-  box-shadow: 0 0 0 2px #e53935, 0 0 0 5px rgba(229, 57, 53, 0.2);
-}
-.rh-vm-phase--failed .rh-vm-phase-line   { background: #ef9a9a; }
-.rh-vm-phase--failed .rh-vm-phase-status { color: #c62828; }
-
-.rh-vm-phase--pending .rh-vm-phase-status { color: #90a4ae; }
-
-@keyframes rh-vm-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px #1e88e5, 0 0 0 5px rgba(30, 136, 229, 0.25); }
-  50%      { box-shadow: 0 0 0 2px #1e88e5, 0 0 0 9px rgba(30, 136, 229, 0.10); }
-}
-
-/* Message row */
-.rh-vm-message-row { margin-top: 4px; }
-.rh-vm-message {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  line-height: 1.5;
-}
-.rh-vm-message--error { background: #fff3f3; color: #c62828; border: 1px solid #ef9a9a; }
-.rh-vm-message--info  { background: #f0f4ff; color: #1a237e; border: 1px solid #90caf9; }
-
-/* ── Standard backup detail panel ── */
-.rh-detail-panel {
-  background: #f8faff;
-  border-top: 2px solid #c5cae9;
-  padding: 20px 24px;
-}
-.rh-detail-jobid {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  font-size: 12px;
-}
-.rh-detail-label { font-weight: 600; color: #78909c; text-transform: uppercase; font-size: 11px; }
-code {
-  background: #e8eaf0;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  color: #37474f;
-}
-.rh-detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-.rh-detail-section {
-  background: #fff;
-  border: 1px solid #e0e4ec;
-  border-radius: 8px;
-  padding: 14px 16px;
-}
-.rh-detail-title {
-  font-weight: 700;
-  font-size: 12px;
-  color: #455a64;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-.rh-detail-empty { font-size: 12px; color: #90a4ae; }
-
-/* Slowest components */
-.rh-slowest-list { display: flex; flex-direction: column; gap: 8px; }
-.rh-slowest-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-.rh-slowest-name { width: 90px; font-weight: 500; color: #37474f; flex-shrink: 0; }
-.rh-slowest-bar-wrap { flex: 1; background: #e8eaf0; border-radius: 4px; height: 6px; overflow: hidden; }
-.rh-slowest-bar { height: 100%; background: #1565c0; border-radius: 4px; transition: width 0.3s; }
-.rh-slowest-dur { width: 36px; text-align: right; color: #546e7a; font-weight: 600; flex-shrink: 0; }
-
-/* Timing */
-.rh-timing-list { display: flex; flex-direction: column; gap: 6px; }
-.rh-timing-item { display: flex; justify-content: space-between; font-size: 12px; color: #546e7a; }
-.rh-timing-item strong { color: #263238; }
-
-/* Impact banner */
-.rh-impact-banner {
-  background: linear-gradient(135deg, #f0f4ff 0%, #f8faff 100%);
-  border: 1px solid #c5cae9;
-  border-radius: 10px;
-  padding: 14px 18px;
-  margin-bottom: 18px;
-}
-.rh-impact-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-.rh-impact-title { font-weight: 700; font-size: 12px; color: #1a237e; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; }
-.rh-impact-subtitle { font-size: 12px; color: #546e7a; font-style: italic; }
-.rh-impact-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.rh-impact-chip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1.5px solid transparent;
-  cursor: default;
-  transition: transform 0.1s;
-}
-.rh-impact-chip:hover { transform: translateY(-1px); }
-.rh-impact-chip.success { background: #e8f5e9; border-color: #a5d6a7; color: #1b5e20; }
-.rh-impact-chip.failed  { background: #ffebee; border-color: #ef9a9a; color: #b71c1c; }
-.rh-impact-icon { font-size: 14px; line-height: 1; }
-.rh-impact-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.rh-impact-dot.success { background: #43a047; }
-.rh-impact-dot.failed  { background: #e53935; }
-
-/* Component detail table */
-.rh-comp-detail-section { margin-bottom: 16px; }
-.rh-comp-detail-section .rh-detail-title { font-weight: 700; font-size: 12px; color: #455a64; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.03em; }
-.rh-comp-detail-table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e4ec; }
-.rh-comp-detail-table thead tr { background: #f3f5fa; border-bottom: 1.5px solid #e0e4ec; }
-.rh-comp-detail-table th { padding: 7px 12px; text-align: left; font-weight: 600; color: #78909c; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
-.rh-comp-detail-table td { padding: 7px 12px; vertical-align: middle; border-bottom: 1px solid #f0f2f7; }
-.rh-comp-detail-table tbody tr:last-child td { border-bottom: none; }
-.rh-cd-row-failed { background: #fffbfb; }
-.rh-cd-row-success { background: #fff; }
-.rh-cd-status { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 700; }
-.rh-cd-status.success { background: #e8f5e9; color: #2e7d32; }
-.rh-cd-status.failed  { background: #ffebee; color: #c62828; }
-.rh-cd-name { font-family: monospace; font-size: 11px; font-weight: 600; color: #37474f; background: #f0f2f7; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
-.rh-cd-area { color: #455a64; font-size: 12px; white-space: nowrap; }
-.rh-cd-msg { color: #546e7a; font-size: 12px; max-width: 320px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rh-cd-file { font-family: monospace; font-size: 11px; color: #546e7a; white-space: nowrap; }
-.rh-cd-size { color: #78909c; white-space: nowrap; }
-.rh-cd-dur  { font-weight: 600; color: #37474f; white-space: nowrap; }
-.rh-cd-empty { color: #bdbdbd; }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-</style>
+<style scoped lang="scss" src="../../../assets/scss/RestoreHistory.scss"></style>

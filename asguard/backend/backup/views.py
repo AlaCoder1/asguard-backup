@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from backend.backup.notifications import (
     notify_backup_started,
@@ -149,7 +149,9 @@ CRITICAL_SERVICE_CANDIDATES = [
         "key": "openvpn",
         "label": "OpenVPN",
         "description": "Service tunnel VPN",
-        "candidates": ["openvpn-server@server.service", "openvpn-server@server", "openvpn"],
+        # The real instance on this appliance is server_asguard (the only
+        # /etc/openvpn/server/*.conf). @server has no config → always fails.
+        "candidates": ["openvpn-server@server_asguard", "openvpn-server@server.service", "openvpn-server@server", "openvpn"],
         "category": "network",
     },
     {
@@ -486,6 +488,17 @@ def _build_restore_verification(job_payload: dict) -> dict:
             "restored_components": restored_components,
             "failed_components": failed_components,
             "skipped_components": skipped_components,
+            # Name + reason for each component that did NOT restore, so the UI can
+            # show exactly what failed (e.g. "application — uvicorn stop timed out")
+            # instead of a vague global "échec".
+            "failed_details": [
+                {"name": n, "message": (d.get("message") or "")[:200]}
+                for n, d in component_results.items() if d.get("status") == "failed"
+            ],
+            "skipped_details": [
+                {"name": n, "message": (d.get("message") or "")[:200]}
+                for n, d in component_results.items() if d.get("status") == "skipped"
+            ],
         },
         "checks": verification_checks,
         "stabilization": stabilization,
@@ -543,6 +556,15 @@ def _load_dashboard_services() -> list[dict]:
                 sw_out, _, sw_code = _run_readonly_command(
                     ["systemctl", "is-active", "strongswan"], timeout=8)
                 if sw_code == 0 and sw_out.strip() == "active":
+                    running = True
+            # PostgreSQL runs inside docker (app-db-container), not as a host
+            # systemd unit — probing `postgresql.service` always says stopped
+            # and produces a false "database down" everywhere.
+            if not running and name in ("postgresql", "postgres"):
+                dk_out, _, dk_code = _run_readonly_command(
+                    ["docker", "ps", "--filter", "name=app-db-container",
+                     "--format", "{{.Names}}"], timeout=8)
+                if dk_code == 0 and "app-db-container" in dk_out:
                     running = True
             services.append({
                 "name": name,
@@ -2273,15 +2295,17 @@ RISK_ACTIONS = {
         # and capture per-service status so the UI shows which came back.
         "internal": "services_restart",
     },
+    # The two commands below need root (drop_caches / journal vacuum). uvicorn's
+    # sudoers grants systemd-run, so we execute the root part through it.
     "ram_caches": {
         "kind": "intrusive",
         "title": "Vider les caches page/inode/dentry",
-        "cmd": ["bash", "-c", "BEFORE=$(free -m | awk '/^Mem:/ {print $7}'); sync; echo 3 > /proc/sys/vm/drop_caches; AFTER=$(free -m | awk '/^Mem:/ {print $7}'); echo \"Mémoire disponible avant: ${BEFORE} MB\"; echo \"Mémoire disponible après: ${AFTER} MB\"; echo \"Libéré: $((AFTER-BEFORE)) MB\""],
+        "cmd": ["bash", "-c", "BEFORE=$(free -m | awk '/^Mem:/ {print $7}'); sudo -n systemd-run --quiet --wait --pipe --collect bash -c 'sync; echo 3 > /proc/sys/vm/drop_caches'; AFTER=$(free -m | awk '/^Mem:/ {print $7}'); echo \"Mémoire disponible avant: ${BEFORE} MB\"; echo \"Mémoire disponible après: ${AFTER} MB\"; echo \"Libéré: $((AFTER-BEFORE)) MB\""],
     },
     "disk_journal": {
         "kind": "intrusive",
         "title": "Purger les journaux systemd (> 7 jours)",
-        "cmd": ["bash", "-c", "journalctl --vacuum-time=7d 2>&1 | tail -10"],
+        "cmd": ["bash", "-c", "sudo -n systemd-run --quiet --wait --pipe --collect journalctl --vacuum-time=7d 2>&1 | tail -10"],
     },
     "snapshot_lvm": {
         "kind": "intrusive",
@@ -2342,7 +2366,9 @@ def _run_risk_action(action_key: str) -> dict:
             label = svc.get("label") or unit
             try:
                 proc = subprocess.run(
-                    ["systemctl", "restart", unit],
+                    # sudo -n: uvicorn has NOPASSWD systemctl; without it the
+                    # restart silently fails (this exact bug made Auto-Pilot KO).
+                    ["sudo", "-n", "systemctl", "restart", unit],
                     capture_output=True, text=True, timeout=25,
                 )
                 success = proc.returncode == 0
@@ -2400,7 +2426,9 @@ def run_risk_action(request, action_key: str):
     if spec["kind"] == "intrusive":
         confirm = None
         try:
-            confirm = json.loads(request.body or b"{}").get("confirm")
+            # request.data (not request.body) — @api_view already read the stream.
+            data = request.data if isinstance(request.data, dict) else {}
+            confirm = data.get("confirm")
         except Exception:
             confirm = None
         if not confirm:
@@ -2947,9 +2975,12 @@ def get_backup_components(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def create_custom_backup(request):
+    # DRF (@api_view) already consumes the request stream into request.data, so
+    # reading request.body here raises RawPostDataException. Use request.data,
+    # like the other backup/restore views.
     try:
-        payload = json.loads(request.body.decode("utf-8") or "{}")
-    except json.JSONDecodeError:
+        payload = request.data if isinstance(request.data, dict) else {}
+    except Exception:
         return JsonResponse({"status": "error", "message": "Invalid JSON body."}, status=400)
 
     components = payload.get("components", [])
@@ -3058,7 +3089,7 @@ def get_backup_details(request, backup_id):
 @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def restore_backup(request, backup_id):
-    return _launch_detached_restore(backup_id=backup_id, mode="ui_full")
+    return _launch_detached_restore(backup_id=backup_id, mode="ui_full", request=request)
 
 
 @swagger_auto_schema("POST", responses={202: "Accepted"}, operation_summary="FULL RESTORE (COMPLETE — WHOLE VM)")
@@ -3067,10 +3098,170 @@ def restore_backup(request, backup_id):
 @authentication_classes([SessionAuthentication])
 @permission_classes([AllowAny])
 def restore_full_backup(request, backup_id):
-    return _launch_detached_restore(backup_id=backup_id, mode="complete")
+    return _launch_detached_restore(backup_id=backup_id, mode="complete", request=request)
 
 
 # ── Pre-restore preview ──────────────────────────────────────────────────────
+def _current_system_state() -> dict:
+    """Best-effort snapshot of the LIVE OS identity, to diff against the backup
+    in the restore preview. Runs as the uvicorn user; the root shadow hash is
+    read via `sudo -n` (compare-only — never returned to the client)."""
+    import socket
+    state = {"hostname": None, "root_hash": None, "login_users": [], "packages": set()}
+    try:
+        state["hostname"] = socket.gethostname()
+    except Exception:
+        pass
+    real_shells = ("/bin/bash", "/bin/sh", "/usr/bin/bash", "/bin/zsh", "/usr/bin/zsh")
+    try:
+        with open("/etc/passwd") as fh:
+            for line in fh:
+                parts = line.strip().split(":")
+                if len(parts) >= 7 and parts[6] in real_shells and parts[0]:
+                    state["login_users"].append(parts[0])
+    except Exception:
+        pass
+    try:
+        r = subprocess.run(["sudo", "-n", "grep", "^root:", "/etc/shadow"],
+                           capture_output=True, text=True, timeout=5)
+        if r.returncode == 0 and ":" in r.stdout:
+            state["root_hash"] = r.stdout.split(":")[1]
+    except Exception:
+        pass
+    try:
+        r = subprocess.run(["pacman", "-Qq"], capture_output=True, text=True, timeout=20)
+        if r.returncode == 0:
+            state["packages"] = {ln.strip() for ln in r.stdout.splitlines() if ln.strip()}
+    except Exception:
+        pass
+    return state
+
+
+def _preview_system_section(backup_dir, components_meta: dict) -> dict:
+    """Plain-language summary of the SYSTEM/SECURITY content a COMPLETE restore
+    would re-apply: root password, Linux accounts, hostname, installed packages,
+    application code. Read straight from the backup's archives (read-only). This
+    is what tells a non-technical operator 'restoring this will also reset your
+    root password and these accounts' — beyond the per-component DB counts."""
+    import tarfile
+
+    def _member_text(archive_rel: str, member: str) -> str | None:
+        path = backup_dir / archive_rel
+        if not path.exists():
+            return None
+        try:
+            with tarfile.open(path, "r:*") as tar:
+                for cand in (member, "./" + member, member.lstrip("/")):
+                    try:
+                        fh = tar.extractfile(cand)
+                    except KeyError:
+                        fh = None
+                    if fh is not None:
+                        return fh.read().decode("utf-8", "ignore")
+        except Exception:
+            return None
+        return None
+
+    ug = (components_meta.get("users_groups") or {}).get("file")
+    sc = (components_meta.get("system_config") or {}).get("file")
+    has_app = "application" in components_meta
+    has_users = bool(ug)
+    has_syscfg = bool(sc)
+
+    # Root password presence (a real hash, not '*'/'!') from the backup's shadow.
+    root_password = False
+    backup_root_hash = None
+    login_users: list[str] = []
+    users_count = 0
+    shadow = _member_text(ug, "etc/shadow") if ug else None
+    if shadow:
+        for line in shadow.splitlines():
+            if line.startswith("root:"):
+                h = line.split(":")[1] if ":" in line else ""
+                backup_root_hash = h
+                root_password = bool(h) and h not in ("*", "!", "!!")
+                break
+    passwd = (_member_text(ug, "etc/passwd") if ug else None) or (
+        _member_text(sc, "etc/passwd") if sc else None
+    )
+    if passwd:
+        real_shells = ("/bin/bash", "/bin/sh", "/usr/bin/bash", "/bin/zsh")
+        for line in passwd.splitlines():
+            if not line.strip() or line.startswith("#"):
+                continue
+            parts = line.split(":")
+            if len(parts) < 7:
+                continue
+            users_count += 1
+            name, shell = parts[0], parts[6]
+            # Surface only accounts a human can log into — hides ~25 daemon users.
+            if shell in real_shells and name != "":
+                login_users.append(name)
+
+    hostname = None
+    hn = _member_text(sc, "etc/hostname") if sc else None
+    if hn:
+        hostname = hn.strip().splitlines()[0] if hn.strip() else None
+
+    packages_count = None
+    backup_pkgs: set[str] = set()
+    pkg_meta = components_meta.get("packages") or {}
+    pkg_file = pkg_meta.get("file")
+    if pkg_file:
+        p = backup_dir / pkg_file
+        try:
+            if p.exists():
+                lines = [ln.strip() for ln in p.read_text(errors="ignore").splitlines() if ln.strip()]
+                packages_count = len(lines)
+                backup_pkgs = {ln.split()[0] for ln in lines if ln.split()}
+        except Exception:
+            packages_count = None
+
+    # ── Diff against the LIVE system: what will actually CHANGE vs stay identical.
+    cur = _current_system_state()
+    backup_users = set(login_users)
+    cur_users = set(cur["login_users"])
+    root_pw_changes = None
+    if backup_root_hash and cur["root_hash"] is not None:
+        root_pw_changes = (backup_root_hash.strip() != cur["root_hash"].strip())
+    pkg_missing = sorted(backup_pkgs - cur["packages"]) if (backup_pkgs and cur["packages"]) else None
+    diff = {
+        "root_password": {"changes": root_pw_changes},
+        "hostname": {
+            "current": cur["hostname"],
+            "backup": hostname,
+            "changes": bool(hostname and cur["hostname"] and hostname != cur["hostname"]),
+        },
+        "users": {
+            "current": sorted(cur_users),
+            "backup": sorted(backup_users),
+            "added": sorted(backup_users - cur_users),      # created by the restore
+            "removed": sorted(cur_users - backup_users),    # exist now, absent from backup
+        },
+        "packages": {
+            "backup_count": packages_count,
+            "missing": (pkg_missing or [])[:20],
+            "missing_count": (len(pkg_missing) if pkg_missing is not None else None),
+        },
+    }
+
+    return {
+        # 'applicable' = this backup carries OS-level identity (only complete
+        # restore re-applies it; safe/ui_full restores never touch these).
+        "applicable": bool(has_app or has_users or has_syscfg),
+        "whole_vm": has_app,
+        "root_password": root_password,
+        "login_users": sorted(set(login_users)),
+        "users_count": users_count,
+        "hostname": hostname,
+        "packages_count": packages_count,
+        "has_application": has_app,
+        "has_system_config": has_syscfg,
+        "has_users_groups": has_users,
+        "diff": diff,
+    }
+
+
 # Static metadata that explains why some components are intentionally excluded
 # from the UI-safe restore. Surfaced both to the operator (decision support
 # in the confirmation modal) and to the eventual sales pitch ("Asguard tells
@@ -3305,10 +3496,17 @@ def restore_preview(request, backup_id):
     }
     changes_total["total"] = changes_total["added"] + changes_total["removed"] + changes_total["modified"]
 
+    try:
+        system_section = _preview_system_section(backup_dir, components_meta)
+    except Exception as exc:
+        logger.warning("preview system section failed: %s", exc)
+        system_section = {"applicable": False}
+
     return JsonResponse({
         "status":            "ok",
         "backup_id":         backup_id,
         "changes_total":     changes_total,
+        "system":            system_section,
         "backup_type":       meta.get("backup_type") or (
             "full" if "application" in components_meta else "safe"
         ),
@@ -3431,7 +3629,72 @@ def restore_components(request, backup_id):
     return JsonResponse(result, status=status_code)
 
 
-def _launch_detached_restore(backup_id: str, mode: str):
+def _capture_operator_session(request) -> dict | None:
+    """Snapshot the operator's current Django session row so it can be re-injected
+    AFTER a restore overwrites django_session — keeping the browser logged in
+    instead of bouncing it to the login page. Best-effort; never raises."""
+    try:
+        if request is None:
+            return None
+        sk = getattr(getattr(request, "session", None), "session_key", None)
+        if not sk:
+            return None
+        from django.contrib.sessions.models import Session
+        row = Session.objects.filter(session_key=sk).first()
+        if row is None:
+            return None
+        return {
+            "session_key": row.session_key,
+            "session_data": row.session_data,
+            "expire_date": row.expire_date.isoformat(),
+            "applied": False,
+        }
+    except Exception as exc:
+        logger.warning("capture operator session failed: %s", exc)
+        return None
+
+
+def _reinject_preserved_session(payload: dict, state_file) -> dict:
+    """Once a restore reaches a terminal state, re-create the operator's session
+    row (wiped when django_session was restored) so the live browser cookie keeps
+    resolving and the user is NOT sent back to the login page. Runs in the uvicorn
+    Django process (full ORM + DB), idempotent via the 'applied' flag."""
+    ps = payload.get("preserve_session")
+    if not isinstance(ps, dict) or ps.get("applied"):
+        return payload
+    if payload.get("status") not in ("success", "partial_success"):
+        return payload
+    try:
+        # Force a fresh DB connection: the restore dropped/recreated the DB, so a
+        # pooled connection from before the restore may be stale.
+        from django.db import connection
+        connection.close()
+        from django.contrib.sessions.models import Session
+        from django.utils.dateparse import parse_datetime
+        Session.objects.update_or_create(
+            session_key=ps["session_key"],
+            defaults={
+                "session_data": ps["session_data"],
+                "expire_date": parse_datetime(ps["expire_date"]),
+            },
+        )
+        ps["applied"] = True
+        payload["session_preserved"] = True
+    except Exception as exc:
+        # Don't fail the status poll — worst case the user logs in again.
+        logger.warning("re-inject operator session failed: %s", exc)
+        ps["applied"] = True
+        payload["session_preserved"] = False
+        payload["session_preserve_error"] = str(exc)
+    try:
+        with open(state_file, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+    except Exception:
+        pass
+    return payload
+
+
+def _launch_detached_restore(backup_id: str, mode: str, request=None):
     backup_dir = BACKUP_DIR / backup_id
     if not backup_dir.exists() or not backup_dir.is_dir():
         return JsonResponse({"status": "error", "message": f"Backup {backup_id} not found."}, status=404)
@@ -3446,6 +3709,12 @@ def _launch_detached_restore(backup_id: str, mode: str):
     job_id = f"restore_{mode}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{backup_id}"
     state_file = RESTORE_JOBS_DIR / f"{job_id}.json"
     log_file = RESTORE_JOBS_DIR / "logs" / f"{job_id}.log"
+
+    # Rough ETA so the UI can show "estimated time / wait to stabilize" instead of
+    # an open-ended spinner. complete = whole-VM (code swap + uvicorn restart +
+    # service stabilization), so it's the longest.
+    eta_seconds = {"complete": 210, "ui_full": 80, "safe": 50}.get(mode, 120)
+    stabilize_eta_seconds = 120 if mode == "complete" else 30
 
     initial_state = {
         "job_id": job_id,
@@ -3462,6 +3731,14 @@ def _launch_detached_restore(backup_id: str, mode: str):
         "components_progress": {},
         "components_order": [],
         "current_component": None,
+        "estimated_seconds": eta_seconds,
+        "stabilize_estimate_seconds": stabilize_eta_seconds,
+        # Whole-VM restores reset kernel-level state (network profiles, systemd
+        # units, /etc); a clean reboot is the safest way to finish bringing the
+        # restored system up. The overlay surfaces this to the operator.
+        "reboot_recommended": mode == "complete",
+        # Keep the operator logged in across the django_session overwrite.
+        "preserve_session": _capture_operator_session(request),
     }
 
     with open(state_file, "w", encoding="utf-8") as f:
@@ -3494,6 +3771,24 @@ def _launch_detached_restore(backup_id: str, mode: str):
         "--unit", unit_name,
         "--description", f"Asguard {mode} restore {backup_id}",
         "--property=WorkingDirectory=/asguard/asguard",
+        # Survive memory pressure: a COMPLETE restore is I/O- and memory-heavy and
+        # restarts uvicorn from within itself. Make the OOM killer / systemd-oomd
+        # avoid this unit so it is never SIGKILL'd mid-stabilization (which used to
+        # strand the job at status="running" and freeze the progress banner).
+        "--property=OOMScoreAdjust=-900",
+        "--property=OOMPolicy=continue",
+        # Keep the VM responsive while LVM snapshots are active WITHOUT removing
+        # them: the appliance bind-mounts /etc onto the snapshot'd data LV (on
+        # /dev/sdb), so restore writes are copy-on-write amplified and can saturate
+        # that disk until PostgreSQL/dbus time out ("Could not get property") and
+        # the VM freezes. This disk uses mq-deadline, so ionice/IOWeight do nothing
+        # — the lever that works on cgroup-v2 is an absolute write-bandwidth CAP on
+        # the snapshot's disk. We cap writes to /dev/sdb so the COW amplification
+        # can't monopolise it, and lower CPU weight. The /etc payload is small, so
+        # this barely slows the restore but stops the I/O storm.
+        "--property=IOWriteBandwidthMax=/dev/sdb 40M",
+        "--property=IOReadBandwidthMax=/dev/sdb 80M",
+        "--property=CPUWeight=30",
         "/usr/bin/bash",
         "-lc",
         shell_cmd,
@@ -3573,6 +3868,158 @@ def _launch_detached_restore(backup_id: str, mode: str):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+# ── Self-healing for stranded restore jobs ───────────────────────────────────
+# A COMPLETE (whole-VM) restore swaps /asguard/asguard and restarts uvicorn from
+# inside a detached systemd unit. If that unit is SIGKILL'd (OOM, a daemon-reload
+# triggered by the system_config/systemd restore, the uvicorn restart it performs
+# itself…) AFTER the component loop but BEFORE it writes the terminal status, the
+# job file is stranded at status="running" forever: the banner never releases and
+# the restore never appears as finished in history.
+#
+# These helpers let any reader (status poll, /restore/active, history) finalize
+# such a job from the progress it already recorded. The reader runs *inside* the
+# restarted uvicorn, so the mere fact that it executes proves the appliance is
+# back up — we can truthfully report a terminal state.
+_RESTORE_STALE_SECONDS = 150  # no progress write for this long ⇒ runner is dead/hung
+_RESTORE_LOCK_FILE = RESTORE_JOBS_DIR / ".in_restore"
+
+
+def _restore_runner_alive(job_id: str) -> bool:
+    """True if a full_restore_runner.py process for this job is still running.
+    Best-effort: if we can't tell, assume alive (don't finalize prematurely)."""
+    try:
+        for proc in psutil.process_iter(["cmdline"]):
+            cmd = " ".join(proc.info.get("cmdline") or [])
+            if "full_restore_runner.py" in cmd and job_id in cmd:
+                return True
+    except Exception:
+        return True
+    return False
+
+
+def _derive_restore_result_from_progress(payload: dict) -> dict:
+    """Reconstruct a result dict (results/summary/status) from components_progress
+    so a stranded job can be finalized + rendered in history/verification."""
+    cp = payload.get("components_progress") or {}
+    results = {}
+    success = failed = skipped = 0
+    for name, status in cp.items():
+        # Components left "running"/"pending" never completed → count as failed.
+        norm = status if status in ("success", "failed", "skipped") else "failed"
+        if norm == "success":
+            success += 1
+        elif norm == "skipped":
+            skipped += 1
+        else:
+            failed += 1
+        results[name] = {
+            "status": norm,
+            "message": (
+                "Restauré." if norm == "success"
+                else "Ignoré." if norm == "skipped"
+                else "Interrompu avant la fin (suivi perdu)."
+            ),
+        }
+    status = "success" if (failed == 0 and success > 0) else (
+        "partial_success" if success > 0 else "error"
+    )
+    return {
+        "status": status,
+        "backup_id": payload.get("backup_id"),
+        "mode": payload.get("mode"),
+        "results": results,
+        "summary": {"success": success, "failed": failed, "skipped": skipped},
+    }
+
+
+def _maybe_finalize_stale_restore(payload: dict, state_file: Path) -> dict:
+    """If `payload` is a 'running' restore job whose runner is gone, finalize it
+    in place (write terminal status to disk, clear the stale watchdog lock) and
+    return the updated payload. No-op for already-terminal or genuinely-live jobs."""
+    if not isinstance(payload, dict):
+        return payload
+    if payload.get("status") in ("success", "partial_success", "error"):
+        return payload
+    # "running" (loop in progress) and "stabilizing" (loop done, verifying
+    # services) are the two non-terminal states a stranded job can be left in.
+    if payload.get("status") not in ("running", "stabilizing"):
+        return payload
+
+    try:
+        mtime = state_file.stat().st_mtime
+    except Exception:
+        mtime = time.time()
+    age = time.time() - mtime
+    done = payload.get("done") or 0
+    total = payload.get("total") or 0
+
+    loop_finished = total > 0 and done >= total
+    runner_gone = (age > _RESTORE_STALE_SECONDS) and not _restore_runner_alive(payload.get("job_id", ""))
+
+    # Finalize when the component loop completed (only post-work was interrupted)
+    # or the runner has clearly died mid-restore and stopped reporting progress.
+    if not (loop_finished or runner_gone):
+        return payload
+
+    # Prefer the detailed result the runner already persisted (full per-component
+    # detail + row-level diff); fall back to reconstructing it from progress.
+    existing = payload.get("result") or {}
+    if existing.get("results"):
+        result = dict(existing)
+        summ = result.get("summary") or {}
+        if not result.get("status"):
+            result["status"] = "success" if (summ.get("failed", 0) == 0 and summ.get("success", 0) > 0) else (
+                "partial_success" if summ.get("success", 0) > 0 else "error"
+            )
+    else:
+        result = _derive_restore_result_from_progress(payload)
+    # We're executing inside uvicorn ⇒ the app control-plane is up. Confirm nginx
+    # so the operator gets a truthful "système opérationnel" signal.
+    stabilized = True
+    try:
+        ng = subprocess.run(["systemctl", "is-active", "nginx"],
+                            capture_output=True, text=True, timeout=8)
+        stabilized = (ng.stdout or "").strip() == "active"
+    except Exception:
+        stabilized = True
+    result["stabilization"] = {
+        "status": "success" if stabilized else "partial",
+        "details": {"note": "État finalisé automatiquement après reprise du suivi."},
+    }
+    result["self_healed"] = True
+    result["self_heal_note"] = (
+        "Le suivi de la restauration a été interrompu (processus arrêté pendant la "
+        "stabilisation). L'état a été reconstitué depuis la progression enregistrée."
+    )
+
+    final_status = result["status"]
+    if final_status == "success" and not stabilized:
+        final_status = "partial_success"
+
+    payload["status"] = final_status
+    payload["result"] = result
+    payload["self_healed"] = True
+    if not payload.get("finished_at"):
+        payload["finished_at"] = datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat()
+
+    try:
+        _write_backup_job_state(state_file, payload)
+    except Exception:
+        logger.exception("Failed to persist self-healed restore job %s", payload.get("job_id"))
+
+    # Drop the stale watchdog lock if it still points at this job, otherwise the
+    # service watchdog stays hands-off forever.
+    try:
+        if _RESTORE_LOCK_FILE.exists():
+            lock = json.loads(_RESTORE_LOCK_FILE.read_text())
+            if lock.get("job_id") == payload.get("job_id"):
+                _RESTORE_LOCK_FILE.unlink(missing_ok=True)
+    except Exception:
+        pass
+
+    return payload
+
+
 @swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="LIST ALL RESTORE JOBS (HISTORY)")
 @api_view(["GET"])
 @require_http_methods(["GET"])
@@ -3586,6 +4033,7 @@ def get_restore_history(request):
         try:
             with open(state_file, "r", encoding="utf-8") as f:
                 payload = json.load(f)
+            payload = _maybe_finalize_stale_restore(payload, state_file)
 
             result = payload.get("result") or {}
             summary = result.get("summary") or {}
@@ -3644,6 +4092,11 @@ def get_restore_history(request):
                 # the Historique Restores view can render "rule X added,
                 # rule Y removed" retroactively, not just live.
                 "diff": result.get("diff") or None,
+                # OS-level changes (root password, system users, hostname) the
+                # restore made — what the row-diff can't show.
+                "system_changes": result.get("system_changes") or None,
+                # LVM snapshots that were present (kept) during the restore.
+                "lvm_snapshots": result.get("lvm_snapshots") or None,
             })
         except Exception:
             logger.warning("Could not read restore job file %s", state_file.name)
@@ -3745,6 +4198,8 @@ def get_restore_full_status(request, job_id):
     try:
         with open(state_file, "r", encoding="utf-8") as f:
             payload = json.load(f)
+        payload = _maybe_finalize_stale_restore(payload, state_file)
+        payload = _reinject_preserved_session(payload, state_file)
         payload["verification"] = _build_restore_verification(payload)
         return JsonResponse(payload, status=200)
     except Exception as e:
@@ -3775,18 +4230,69 @@ def restore_active(request):
         data = json.loads(latest.read_text())
     except Exception:
         return JsonResponse({"active": False})
+    data = _maybe_finalize_stale_restore(data, latest)
     status = data.get("status", "running")
     finished = status in ("success", "partial_success", "error")
     age = time.time() - latest.stat().st_mtime
+
+    # Has the VM rebooted SINCE this restore finished? If so the restore is history
+    # and the overlay must NOT re-appear on page load (the annoying banner that
+    # comes back after the post-restore reboot). Compare the job file's mtime to
+    # the system boot time.
+    rebooted_since = False
+    try:
+        with open("/proc/uptime") as _f:
+            boot_time = time.time() - float(_f.read().split()[0])
+        rebooted_since = bool(finished and latest.stat().st_mtime < boot_time)
+    except Exception:
+        rebooted_since = False
+
     return JsonResponse({
         "active": (not finished) and age < 1800,   # running + updated within 30 min
         "finished": finished,
+        "rebooted_since": rebooted_since,
         "job_id": data.get("job_id") or latest.stem,
         "backup_id": data.get("backup_id"),
         "mode": data.get("mode"),
         "status": status,
         "age_seconds": int(age),
+        "reboot_at": data.get("reboot_at"),
     })
+
+
+@swagger_auto_schema("POST", responses={202: "Accepted"}, operation_summary="REBOOT THE APPLIANCE")
+@api_view(["POST"])
+@require_http_methods(["POST"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def system_reboot(request):
+    """Reboot the appliance. Offered to the operator from the restore overlay when
+    a restore ends degraded and a clean reboot is the safest way to finish bringing
+    the rolled-back system up. Scheduled a few seconds out so the HTTP response is
+    delivered before the box goes down."""
+    try:
+        # `sudo -n systemctl reboot` (state-changing systemctl must use sudo -n,
+        # uvicorn cannot reboot directly). `--no-block` returns immediately.
+        proc = subprocess.run(
+            ["sudo", "-n", "systemctl", "reboot", "--no-block"],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=15,
+        )
+        if proc.returncode != 0:
+            return JsonResponse(
+                {"status": "error", "message": proc.stdout.strip() or "reboot failed"},
+                status=500,
+            )
+        append_backup_event(
+            kind="restore", title="Appliance reboot requested", severity="warning",
+            status="running", source="restore-overlay",
+        )
+        return JsonResponse(
+            {"status": "rebooting", "message": "Redémarrage de la VM en cours…"},
+            status=202,
+        )
+    except Exception as e:
+        logger.exception("system reboot failed")
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 @swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="GET BACKUP JOB PROGRESS")

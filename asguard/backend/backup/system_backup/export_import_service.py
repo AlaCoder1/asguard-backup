@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 class ExportImportService:
     BACKUP_ROOT = Path("/var/backups/asguard")
     REQUIRED_METADATA = "backup_metadata.json"
+    # Files allowed at the backup root. Components are matched by prefix
+    # (trailing "/"), single files are matched exact. Anything else
+    # → "Unexpected path in archive" error.
     ALLOWED_PREFIXES = (
         "db/", "firewall/", "vpn/", "web/", "ids/",
         "proxy/", "network/", "security/", "certificates/",
@@ -22,7 +25,14 @@ class ExportImportService:
         "ztna/", "ldap/", "ipsec_detailed/", "routing/",
         "vlan/", "vxlan/", "sdwan/", "waf/", "nat/",
         "dhcp/", "gateway/", "double_mask/",
-        "backup_metadata.json"
+        # Backup-level files (no trailing slash = exact match)
+        "backup_metadata.json",
+        # Integrity manifest written by backend/backup/integrity.py.
+        # The signed pair must be allowed through import — otherwise
+        # any backup with anti-tamper protection gets rejected at the
+        # gate, which defeats the whole purpose.
+        "MANIFEST.sha256",
+        "MANIFEST.sig",
     )
 
     @classmethod

@@ -55,7 +55,18 @@ class BackupConfig(AppConfig):
                     _maybe_notify_resource_risk(_resource_risk_alert(live_metrics), live_metrics)
                 except Exception:
                     pass
+                # Auto-Pilot: autonomous remediation cycle (no-op when disabled).
+                try:
+                    from backend.backup.autopilot import autopilot_tick
+                    autopilot_tick()
+                except Exception:
+                    pass
                 time.sleep(60)
+
+        # NOTE: assistant prewarm intentionally removed — loading the local LLM at
+        # boot pushed the hardened appliance into instability (guest CPU-disabled
+        # crashes). The assistant now stays on the safe rule-based engine unless the
+        # (capped) Ollama service is deliberately re-enabled.
 
         threading.Thread(target=_startup_sync_and_catchup, daemon=True).start()
         threading.Thread(target=_background_resource_monitor, daemon=True).start()

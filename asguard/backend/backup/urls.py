@@ -6,6 +6,8 @@ from . import (
     views_alerts,
     views_logs,
     views_cloud,
+    views_assistant,
+    views_autopilot,
     log_intelligence,
 )
 
@@ -22,6 +24,12 @@ urlpatterns = [
     path("logs/tail",                         views_logs.logs_tail,              name="logsTail"),
     # AI Log Intelligence — anomalies, incidents, 30-min forecast, NL summary.
     path("logs/intelligence",                 log_intelligence.logs_intelligence, name="logsIntelligence"),
+    # Assistant Asguard — conseil hors-ligne (sans IA/LLM) : backup, review, firewall
+    path("assistant/ask",                     views_assistant.assistant_ask,     name="assistantAsk"),
+    path("assistant/stream",                  views_assistant.assistant_stream,  name="assistantStream"),
+    # Auto-Pilot — réparation autonome (services / RAM / disque) + journal
+    path("autopilot/status",                  views_autopilot.autopilot_status,  name="autopilotStatus"),
+    path("autopilot/config",                  views_autopilot.autopilot_config,  name="autopilotConfig"),
     path("dashboard-overview", views.get_dashboard_overview, name="getBackupDashboardOverview"),
     path("metrics", views.get_backup_metrics, name="getBackupMetrics"),
     path("metrics/prometheus", views.get_backup_metrics_prometheus, name="getBackupMetricsPrometheus"),
@@ -51,6 +59,8 @@ urlpatterns = [
 
     path("restore-full-status/<str:job_id>", views.get_restore_full_status, name="getRestoreFullStatus"),
     path("restore/active", views.restore_active, name="restoreActive"),
+    # Operator recovery action offered when a restore ends degraded.
+    path("system/reboot", views.system_reboot, name="systemReboot"),
     path("progress/<str:job_id>", views.get_backup_progress, name="getBackupProgress"),
     path("restore-history", views.get_restore_history, name="getRestoreHistory"),
 

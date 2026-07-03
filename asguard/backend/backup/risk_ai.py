@@ -79,14 +79,21 @@ def _piecewise_pressure(value, points):
     return points[-1][1]
 
 
-def _robust_anomaly(value, samples):
-    """Modified z-score using median + MAD. Returns 0-100 anomaly risk."""
+def _robust_anomaly(value, samples, min_mad=3.0):
+    """Modified z-score (median + MAD) → 0-100 anomaly risk. Precision-tuned:
+    - direction-aware: only UPWARD deviations are a risk (memory/CPU dropping is
+      not an anomaly to worry about) → no more false '+100' when a signal falls;
+    - MAD floor: a flat baseline (e.g. RAM steady at 31%) has ~0 MAD, which makes
+      the z-score explode on trivial jitter. Flooring MAD ignores insignificant
+      wobble so we only flag genuine, meaningful jumps."""
     if len(samples) < 6:
         return 0.0
     median = statistics.median(samples)
-    mad = statistics.median([abs(s - median) for s in samples]) or 1.0
-    z = abs(0.6745 * (value - median) / mad)
-    # 3.5 ≈ widely accepted anomaly threshold; map [0..6] → [0..100]
+    mad = max(statistics.median([abs(s - median) for s in samples]), min_mad)
+    dev = value - median
+    if dev <= 0:
+        return 0.0
+    z = 0.6745 * dev / mad
     return _clamp((z / 6.0) * 100.0)
 
 
@@ -297,6 +304,46 @@ def _apply_hysteresis(state, raw_level, smoothed_score):
 
 
 # ───────────────────────── trend / forecast ─────────────────
+def _eta_to(threshold, current, slope_per_min):
+    """Minutes until the score reaches `threshold` at the current rate. Only
+    returns a credible near-term ETA (0<eta<=120 min), else None."""
+    if slope_per_min <= 0.3 or current >= threshold:
+        return None
+    eta = int((threshold - current) / slope_per_min)
+    return eta if 0 < eta <= 120 else None
+
+
+def _update_disk_history(state, disk_pct):
+    """Keep a sparse long-term disk-usage series (≥1 sample/hour, 14 days) so we
+    can forecast when the disk will fill — impossible from the 30-min score
+    history alone."""
+    now = datetime.now(timezone.utc).timestamp()
+    samples = state.get("disk_samples", [])
+    if not samples or (now - samples[-1][0]) >= 3600:
+        samples.append([now, round(_safe_float(disk_pct), 1)])
+        samples = [s for s in samples if now - s[0] <= 14 * 86400][-400:]
+        state["disk_samples"] = samples
+    return samples
+
+
+def _capacity_forecast(samples, current_disk):
+    """Days until the disk reaches 100%, from the long-term fill rate."""
+    cur = round(_safe_float(current_disk))
+    if len(samples) < 2:
+        return {"disk_pct": cur, "eta_days": None, "trend": "collecting", "rate_per_day": 0.0}
+    t0, d0 = samples[0]
+    t1, d1 = samples[-1]
+    span_days = (t1 - t0) / 86400.0
+    if span_days < 0.25:  # <6h of data → not credible yet
+        return {"disk_pct": cur, "eta_days": None, "trend": "collecting", "rate_per_day": 0.0}
+    rate = (d1 - d0) / span_days  # %/day
+    if rate <= 0.05:
+        return {"disk_pct": cur, "eta_days": None, "trend": "stable", "rate_per_day": round(rate, 2)}
+    eta = (100 - cur) / rate
+    eta = int(eta) if 0 < eta <= 3650 else None
+    return {"disk_pct": cur, "eta_days": eta, "trend": "rising", "rate_per_day": round(rate, 2)}
+
+
 def _trend_analysis(score_history):
     if len(score_history) < 5:
         return {
@@ -304,6 +351,8 @@ def _trend_analysis(score_history):
             "slope_per_min": 0.0,
             "forecast_15min": int(score_history[-1] if score_history else 0),
             "confidence": 0.3,
+            "time_to_high_min": None,
+            "time_to_critical_min": None,
         }
     recent = score_history[-12:]
     slope = _linear_slope(recent)
@@ -322,11 +371,15 @@ def _trend_analysis(score_history):
     var = statistics.pvariance(recent) if len(recent) > 1 else 0
     confidence = max(0.4, min(0.95, 0.95 - var / 800.0))
 
+    cur = recent[-1]
     return {
         "direction": direction,
         "slope_per_min": round(slope_per_min, 2),
         "forecast_15min": forecast,
         "confidence": round(confidence, 2),
+        # Predictive ETA to the next danger thresholds (55 = high, 75 = critical).
+        "time_to_high_min": _eta_to(55, cur, slope_per_min),
+        "time_to_critical_min": _eta_to(75, cur, slope_per_min),
     }
 
 
@@ -461,6 +514,18 @@ def analyze_vm_and_services(history_points, live_metrics, services,
     raw_score = weighted_sum / (weight_sum or 1.0)
     raw_score = _clamp(raw_score)
 
+    # Compound risk: several signals stressed at once is more dangerous than the
+    # plain weighted average implies (correlated failure). Amplify accordingly.
+    stressed = [c for c in contributions if c["pressure"] >= 60 or c["anomaly"] >= 65]
+    compound_boost = min(15.0, max(0, len(stressed) - 1) * 7.0)
+    if compound_boost:
+        raw_score = _clamp(raw_score + compound_boost)
+    compound = {
+        "count": len(stressed),
+        "boost": round(compound_boost, 1),
+        "signals": [c["label"] for c in stressed],
+    }
+
     # EWMA smoothing
     previous = history_scores[-1] if history_scores else raw_score
     smoothed = EWMA_ALPHA * raw_score + (1 - EWMA_ALPHA) * previous
@@ -481,6 +546,9 @@ def analyze_vm_and_services(history_points, live_metrics, services,
 
     # Trend & forecast
     trend = _trend_analysis([s["score"] for s in state["history"]])
+
+    # Long-term capacity forecast (disk-full ETA in days).
+    capacity = _capacity_forecast(_update_disk_history(state, root_disk_usage), root_disk_usage)
 
     # Top contributors (sorted by impact on the final score)
     contributions_sorted = sorted(contributions, key=lambda c: c["contribution"], reverse=True)
@@ -503,6 +571,25 @@ def analyze_vm_and_services(history_points, live_metrics, services,
 
     delta = smoothed - (history_scores[-1] if history_scores else smoothed)
     confidence = round(min(95, 60 + history_quality * 35))
+
+    # NEW analysis — "now vs your normal": compare the live score to the
+    # historical baseline (median) so the operator sees deviation from normal,
+    # not just an absolute number. Plus a short alert-likelihood read.
+    all_scores = [s["score"] for s in state["history"]]
+    baseline = int(round(statistics.median(all_scores))) if len(all_scores) >= 5 else smoothed
+    vs_normal = int(round(smoothed - baseline))
+    if trend.get("time_to_critical_min") is not None or level == "critical":
+        alert_likelihood = "élevée"
+    elif trend.get("time_to_high_min") is not None or level == "high" or vs_normal >= 12:
+        alert_likelihood = "modérée"
+    else:
+        alert_likelihood = "faible"
+    insight = {
+        "baseline": baseline,
+        "vs_normal": vs_normal,
+        "alert_likelihood": alert_likelihood,
+        "peak": int(max(all_scores)) if all_scores else smoothed,
+    }
 
     _save_state(state)
 
@@ -530,6 +617,9 @@ def analyze_vm_and_services(history_points, live_metrics, services,
             "services_crash": int(round(features[4].pressure)),
         },
         "trend": trend,
+        "compound": compound,
+        "capacity": capacity,
+        "insight": insight,
         "contributors": top_contributors,
         "all_contributors": contributions_sorted,
         "features": {

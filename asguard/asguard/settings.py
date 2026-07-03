@@ -229,11 +229,15 @@ SWAGGER_SETTINGS = {
             'in': 'header',
             'name': 'X-CSRFToken',
         },
-    }
+    },
+    # Groupe les ~50 endpoints /backup/ par étape du cycle de vie d'une
+    # sauvegarde (Création → Catalogue → Restauration → … → Supervision).
+    # Voir backend/backup/swagger.py.
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'backend.backup.swagger.BackupOrderedAutoSchema',
 }
 
 # jwt_auth/settings.py
-SESSION_COOKIE_AGE = 300000
+SESSION_COOKIE_AGE = 3000000
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE= True
 SESSION_COOKIE_HTTPONLY = True

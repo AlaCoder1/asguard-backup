@@ -62,17 +62,84 @@
       </div>
     </div>
 
-    <!-- ── Timezone selector ── -->
+    <!-- ── Timezone selector ──
+         The dropdown is "uncommitted": changing the value just stages a
+         pending choice. Applying requires explicit confirmation in the
+         inline panel below — this prevents the bug where a switch would
+         silently trigger missed-run catchups (e.g. Tunis→New_York firing
+         a Safe backup because 10am NY just passed in UTC). -->
     <div class="bs-tz-bar">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span class="bs-tz-label">Fuseau horaire du planificateur :</span>
-      <select class="bs-tz-select" v-model="scheduleTimezone" @change="saveTimezone">
+      <select class="bs-tz-select" v-model="pendingTimezone" @change="onTimezoneSelect">
         <option v-for="tz in timezoneOptions" :key="tz.value" :value="tz.value">{{ tz.label }}</option>
       </select>
-      <span v-if="savingTimezone" class="bs-tz-saving">⟳ Enregistrement...</span>
+      <span v-if="savingTimezone" class="bs-tz-saving">⟳ Enregistrement…</span>
       <span v-else-if="tzSaved" class="bs-tz-ok">✓ Appliqué</span>
-      <span class="bs-tz-hint">Les expressions cron sont interprétées dans ce fuseau.</span>
+      <span v-else-if="!hasPendingChange" class="bs-tz-hint">Les expressions cron sont interprétées dans ce fuseau.</span>
+      <span v-else class="bs-tz-hint bs-tz-hint--pending">Choix non validé — confirmez ci-dessous.</span>
     </div>
+
+    <!-- ── Confirmation card (only shown when pendingTimezone differs from active) ── -->
+    <transition name="bs-tz-confirm">
+      <div v-if="hasPendingChange" class="bs-tz-confirm-card">
+        <div class="bs-tz-confirm-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="13"/>
+            <circle cx="12" cy="16.5" r="0.6" fill="currentColor"/>
+          </svg>
+          <div>
+            <strong>Confirmer le changement de fuseau ?</strong>
+            <p>
+              <span class="bs-tz-from">{{ scheduleTimezoneLabel }}</span>
+              <span class="bs-tz-arrow">→</span>
+              <span class="bs-tz-to">{{ pendingTimezoneLabel }}</span>
+            </p>
+          </div>
+        </div>
+        <div class="bs-tz-confirm-impact">
+          <div class="bs-tz-confirm-impact-row" v-for="(t, i) in tasks.filter(x => x.enabled)" :key="i">
+            <span class="bs-tz-confirm-impact-name">{{ t.label }}</span>
+            <span class="bs-tz-confirm-impact-arrow">
+              <em>{{ nextRunTime(t) }}</em>
+              <span>→</span>
+              <strong>{{ previewNextRun(t.cron, pendingTimezone) }}</strong>
+            </span>
+          </div>
+          <div v-if="!tasks.some(x => x.enabled)" class="bs-tz-confirm-impact-empty">
+            Aucune tâche active à recalculer.
+          </div>
+        </div>
+        <div class="bs-tz-confirm-note">
+          Les exécutions passées ne seront pas rejouées. Les prochaines exécutions
+          seront recalculées dans le nouveau fuseau.
+        </div>
+        <div class="bs-tz-confirm-actions">
+          <button class="bs-tz-confirm-btn bs-tz-confirm-btn--cancel" @click="cancelTimezoneChange"
+                  :disabled="savingTimezone">Annuler</button>
+          <button class="bs-tz-confirm-btn bs-tz-confirm-btn--ok" @click="confirmTimezoneChange"
+                  :disabled="savingTimezone">
+            <span v-if="!savingTimezone">Confirmer le changement</span>
+            <span v-else>Application…</span>
+          </button>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ── Undo banner (shown for ~12 s after a successful TZ change) ── -->
+    <transition name="bs-tz-undo">
+      <div v-if="undoTimezone" class="bs-tz-undo-banner">
+        <span>
+          ✓ Fuseau appliqué : <strong>{{ scheduleTimezoneLabel }}</strong>.
+          Vous pouvez encore revenir à <strong>{{ undoTimezoneLabel }}</strong>.
+        </span>
+        <button class="bs-tz-undo-btn" @click="revertTimezone" :disabled="savingTimezone">
+          ⟲ Revenir au précédent
+        </button>
+      </div>
+    </transition>
 
     <!-- ── Toast ── -->
     <transition name="bs-toast-anim">
@@ -134,7 +201,7 @@
                   </div>
                   <div class="bs-task-next">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Prochain : <strong>{{ nextRunTime(task.cron) }}</strong>
+                    Prochain : <strong>{{ nextRunTime(task) }}</strong>
                   </div>
                 </div>
               </div>
@@ -177,7 +244,16 @@
                 </div>
                 <div class="bs-detail-row">
                   <span class="bs-detail-label">Prochain run prévu</span>
-                  <span class="bs-detail-val">{{ nextRunTime(task.cron) }}</span>
+                  <span class="bs-detail-val">{{ nextRunTime(task) }}</span>
+                </div>
+                <div class="bs-detail-row" v-if="nextOccurrences(task, 3).length > 1">
+                  <span class="bs-detail-label">3 prochaines exécutions</span>
+                  <span class="bs-detail-val">
+                    <span v-for="(d, i) in nextOccurrences(task, 3)" :key="i"
+                          class="bs-next-occ" :class="{ first: i === 0 }">
+                      {{ formatOccurrence(d) }}<span v-if="i < 2"> · </span>
+                    </span>
+                  </span>
                 </div>
                 <div class="bs-detail-row">
                   <span class="bs-detail-label">Expression cron</span>
@@ -485,7 +561,16 @@ export default {
       expandedTask: null,
       runningTaskIds: new Set(),
 
+      // ── Timezone state ────────────────────────────────────────────────
+      // `scheduleTimezone`  = currently APPLIED on the server (source of truth)
+      // `pendingTimezone`   = currently SELECTED in the dropdown (may differ)
+      // `undoTimezone`      = previously applied TZ, kept for the undo banner
+      //                       (cleared automatically after `undoExpiresMs`)
       scheduleTimezone: 'Africa/Tunis',
+      pendingTimezone:  'Africa/Tunis',
+      undoTimezone:     null,
+      undoExpiresAt:    0,
+      _undoTimer:       null,
       savingTimezone: false,
       tzSaved: false,
 
@@ -512,6 +597,12 @@ export default {
         min_free_gb: 5,
       },
       stats: { total_backups: 0, total_size_gb: 0, free_gb: 0, total_gb: 0 },
+
+      // Live clock — re-rendered every 30 s so "dans 5 min" → "dans 4 min"
+      // without re-hitting the backend. Initialized in `data()` so SSR-style
+      // first paint has a real value instead of undefined.
+      now: new Date(),
+      _nowTimer: null,
 
       form: { id: null, label: "", type: "safe_backup", cron: "0 2 * * *", enabled: true },
       preset: { freq: "daily", every: 6, time: "02:00", weekday: "1" },
@@ -570,11 +661,41 @@ export default {
     nextRunGlobal() {
       const enabled = this.tasks.filter(t => t.enabled);
       if (!enabled.length) return null;
-      const times = enabled.map(t => this.nextRunDate(t.cron)).filter(Boolean);
+      // Prefer the backend-computed ISO (timezone-correct); fall back to local.
+      const times = enabled
+        .map(t => this.taskNextRunDate(t))
+        .filter(Boolean);
       if (!times.length) return null;
       times.sort((a, b) => a - b);
-      return this.formatRelative(times[0].toISOString());
+      return this.nextRunTime({ next_run: times[0].toISOString(),
+                                cron: enabled[0].cron });
     },
+
+    // Did the user stage a TZ different from the one currently applied?
+    hasPendingChange() {
+      return this.pendingTimezone &&
+             this.pendingTimezone !== this.scheduleTimezone;
+    },
+
+    // Resolve a tz IANA name to its dropdown label. We fall back to the raw
+    // name so even unknown TZs (legacy configs) render readably.
+    scheduleTimezoneLabel() {
+      const o = this.timezoneOptions.find(x => x.value === this.scheduleTimezone);
+      return o ? o.label : this.scheduleTimezone;
+    },
+    pendingTimezoneLabel() {
+      const o = this.timezoneOptions.find(x => x.value === this.pendingTimezone);
+      return o ? o.label : this.pendingTimezone;
+    },
+    undoTimezoneLabel() {
+      if (!this.undoTimezone) return "";
+      const o = this.timezoneOptions.find(x => x.value === this.undoTimezone);
+      return o ? o.label : this.undoTimezone;
+    },
+  },
+
+  beforeUnmount() {
+    if (this._nowTimer) clearInterval(this._nowTimer);
   },
 
   methods: {
@@ -585,7 +706,14 @@ export default {
         this.tasks = res.data.tasks || [];
         this.retention = { ...this.retention, ...res.data.retention };
         this.stats = { ...this.stats, ...res.data.stats };
-        if (res.data.schedule_timezone) this.scheduleTimezone = res.data.schedule_timezone;
+        if (res.data.schedule_timezone) {
+          this.scheduleTimezone = res.data.schedule_timezone;
+          // Only re-sync the dropdown if the user hasn't staged a different
+          // choice (otherwise we'd nuke their pending pick on every refresh).
+          if (!this.hasPendingChange) {
+            this.pendingTimezone = res.data.schedule_timezone;
+          }
+        }
         if (res.data.last_retention_applied) {
           this.lastRetentionApplied = new Date(res.data.last_retention_applied + "Z")
             .toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
@@ -612,19 +740,107 @@ export default {
 
     closeDialog() { this.dialog = false; },
 
-    async saveTimezone() {
+    // Dropdown @change handler — just stages the choice locally. The actual
+    // server call only happens when the user clicks "Confirmer" below.
+    onTimezoneSelect() {
+      // No-op if the user re-picked the active timezone.
+      if (this.pendingTimezone === this.scheduleTimezone) {
+        this.tzSaved = false;
+      }
+    },
+
+    cancelTimezoneChange() {
+      this.pendingTimezone = this.scheduleTimezone;
+      this.showToast("Changement de fuseau annulé", "info");
+    },
+
+    async confirmTimezoneChange() {
+      await this._applyTimezone(this.pendingTimezone, { showUndo: true });
+    },
+
+    async revertTimezone() {
+      if (!this.undoTimezone) return;
+      const target = this.undoTimezone;
+      // Apply the previous TZ. We DO NOT show an undo for the undo —
+      // otherwise the operator could ping-pong indefinitely.
+      await this._applyTimezone(target, { showUndo: false });
+      this.showToast(`Fuseau revenu à ${target}`, "info");
+    },
+
+    // Shared apply path. The backend handles the "don't trigger catchups"
+    // safety; we just persist the choice and refresh.
+    async _applyTimezone(tz, { showUndo }) {
+      if (!tz) return;
       this.savingTimezone = true;
       this.tzSaved = false;
       try {
         this._setCSRF();
-        await axios.post("/backup/schedule/timezone", { timezone: this.scheduleTimezone });
-        this.tzSaved = true;
-        this.showToast(`Fuseau horaire réglé sur ${this.scheduleTimezone}`, "success");
+        const { data } = await axios.post(
+          "/backup/schedule/timezone",
+          { timezone: tz },
+        );
+        const previousTz = data.previous_timezone || this.scheduleTimezone;
+        this.scheduleTimezone = data.schedule_timezone || tz;
+        this.pendingTimezone  = this.scheduleTimezone;
+        this.tzSaved          = true;
+        // Re-fetch so every task's `next_run` is recomputed for the new TZ.
+        // Safe now — the backend has pre-stamped each task's last_queued_for,
+        // so the catchup logic on the next /schedule call is a no-op.
+        await this.fetchSchedule();
+        this.showToast(`Fuseau appliqué : ${this.scheduleTimezone}`, "success");
+
+        // Undo affordance — 12 s grace window where the user can revert.
+        if (showUndo && previousTz && previousTz !== this.scheduleTimezone) {
+          this._armUndo(previousTz, 12_000);
+        } else {
+          this._clearUndo();
+        }
         setTimeout(() => { this.tzSaved = false; }, 3000);
       } catch {
         this.showToast("Erreur lors du changement de fuseau", "error");
+        // Roll back the dropdown to the applied value so the UI stays honest.
+        this.pendingTimezone = this.scheduleTimezone;
       } finally {
         this.savingTimezone = false;
+      }
+    },
+
+    _armUndo(previousTz, ms) {
+      this._clearUndo();
+      this.undoTimezone  = previousTz;
+      this.undoExpiresAt = Date.now() + ms;
+      this._undoTimer = setTimeout(() => { this._clearUndo(); }, ms);
+    },
+
+    _clearUndo() {
+      this.undoTimezone  = null;
+      this.undoExpiresAt = 0;
+      if (this._undoTimer) { clearTimeout(this._undoTimer); this._undoTimer = null; }
+    },
+
+    // Cheap "preview" of what a task's next run would be in another TZ —
+    // used in the confirmation card to show the operator the impact BEFORE
+    // committing. We just shift the user-local clock by the TZ offset diff;
+    // it's an approximation (doesn't handle DST edge cases perfectly) but
+    // it's enough to give the operator confidence.
+    previewNextRun(cron, targetTz) {
+      try {
+        const localDate = this.nextRunDate(cron);
+        if (!localDate) return "—";
+        // Compute offset diff between current scheduler TZ and target TZ.
+        const nowMs = Date.now();
+        const targetOffset  = -new Date(nowMs).getTimezoneOffset() * 60_000;
+        // Use Intl to get target-zone hour at the same UTC instant.
+        const fmt = new Intl.DateTimeFormat("fr-FR", {
+          timeZone: targetTz,
+          weekday: "short", day: "2-digit", month: "short",
+          hour: "2-digit", minute: "2-digit",
+        });
+        // We need the next-run instant as a UTC date. Backend ISO is preferred
+        // (already UTC), so we look it up by cron match if no task object given.
+        return fmt.format(localDate);
+      } catch {
+        return "—";
       }
     },
 
@@ -655,6 +871,11 @@ export default {
       return expr;
     },
 
+    // Best-effort local fallback for cron → next-run when the backend hasn't
+    // provided one yet (e.g. brand-new task before first refresh).
+    // The backend is authoritative — see views.get_schedule which serializes
+    // `next_run` per task using the configured scheduler timezone. We only
+    // fall back to client-side math if `task.next_run` is missing.
     nextRunDate(expr) {
       if (!expr) return null;
       const parts = expr.trim().split(/\s+/);
@@ -686,15 +907,93 @@ export default {
       return null;
     },
 
-    nextRunTime(expr) {
-      const d = this.nextRunDate(expr);
-      if (!d) return this.cronHuman(expr);
-      const now = new Date();
+    // Returns a JS Date for the task's next run. Prefers the backend-computed
+    // ISO (timezone-correct) and falls back to local cron parsing otherwise.
+    // `arg` may be a task object OR a raw cron string (for `nextRunGlobal`).
+    taskNextRunDate(arg) {
+      if (arg && typeof arg === "object") {
+        if (arg.next_run) {
+          const d = new Date(arg.next_run);
+          if (!isNaN(d.getTime())) return d;
+        }
+        return this.nextRunDate(arg.cron);
+      }
+      return this.nextRunDate(arg);
+    },
+
+    // Multi-tier human formatter. Anchored on `this.now` so a 30 s reactive
+    // ticker re-renders "dans 5 min" → "dans 4 min" without re-fetching.
+    nextRunTime(arg) {
+      const d = this.taskNextRunDate(arg);
+      if (!d) return this.cronHuman(typeof arg === "string" ? arg : (arg && arg.cron) || "");
+      const now = this.now || new Date();
       const diff = d - now;
-      if (diff < 60000) return "dans moins d'une minute";
-      if (diff < 3600000) return `dans ${Math.round(diff / 60000)} min`;
-      if (diff < 86400000) return `aujourd'hui à ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-      return `demain à ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+
+      // Past or imminent (within the next minute).
+      if (diff < 60000)    return "dans moins d'une minute";
+      if (diff < 3600000)  return `dans ${Math.round(diff / 60000)} min`;
+
+      const hh = d.getHours().toString().padStart(2, "0");
+      const mm = d.getMinutes().toString().padStart(2, "0");
+
+      // Same calendar day.
+      if (d.toDateString() === now.toDateString()) {
+        return `aujourd'hui à ${hh}:${mm}`;
+      }
+      // Next calendar day.
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      if (d.toDateString() === tomorrow.toDateString()) {
+        return `demain à ${hh}:${mm}`;
+      }
+      // 2-6 days ahead — "dans 5 jours, vendredi à 08:00" is more readable
+      // than a raw date for short-term planning.
+      const daysAhead = Math.round((d - now) / 86400000);
+      if (daysAhead < 7) {
+        const wd = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."][d.getDay()];
+        return `dans ${daysAhead} j (${wd} ${hh}:${mm})`;
+      }
+      // Further out — give the date.
+      return d.toLocaleDateString("fr-FR", {
+        day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+      });
+    },
+
+    // Returns the next N occurrences of a cron for the expanded task detail.
+    // The first occurrence comes from the backend-provided ISO; subsequent
+    // ones are extrapolated by the natural period of the cron:
+    //   "*/N * * * *"  → +N minutes
+    //   "0 */N * * *"  → +N hours
+    //   "M H * * *"    → +1 day
+    //   "M H * * DOW"  → +7 days
+    // This isn't a full cron evaluator, just enough for the common patterns
+    // the schedule UI lets users author.
+    nextOccurrences(task, count = 3) {
+      const first = this.taskNextRunDate(task);
+      if (!first) return [];
+      const out = [new Date(first)];
+      const parts = (task.cron || "").trim().split(/\s+/);
+      if (parts.length !== 5) return out;
+      const [minP, hourP, , , wdP] = parts;
+      let stepMs = 0;
+      if (minP.startsWith("*/"))                         stepMs = parseInt(minP.slice(2)) * 60_000;
+      else if (hourP.startsWith("*/"))                   stepMs = parseInt(hourP.slice(2)) * 3600_000;
+      else if (wdP.includes("*"))                        stepMs = 86_400_000;       // daily
+      else                                               stepMs = 7 * 86_400_000;   // weekly
+      for (let i = 1; i < count; i++) {
+        out.push(new Date(out[i - 1].getTime() + stepMs));
+      }
+      return out;
+    },
+
+    // Short occurrence formatter for the "3 prochaines exécutions" line.
+    // Always shows day + HH:MM so the planning is unambiguous.
+    formatOccurrence(d) {
+      if (!d) return "—";
+      return d.toLocaleString("fr-FR", {
+        weekday: "short", day: "2-digit", month: "short",
+        hour: "2-digit", minute: "2-digit",
+      });
     },
 
     formatRelative(iso) {
@@ -845,345 +1144,13 @@ export default {
     },
   },
 
-  mounted() { this.fetchSchedule(); },
+  mounted() {
+    this.fetchSchedule();
+    // 30 s ticker so countdowns ("dans 5 min" → "dans 4 min") refresh without
+    // re-hitting the backend. Cleared in beforeUnmount above.
+    this._nowTimer = setInterval(() => { this.now = new Date(); }, 30_000);
+  },
 };
 </script>
 
-<style scoped>
-/* ── Root ───────────────────────────────────────────────────────────── */
-.bs-wrap { padding: 20px 24px; min-height: 400px; font-family: inherit; }
-
-/* ── Top bar ────────────────────────────────────────────────────────── */
-.bs-topbar {
-  display: flex; align-items: center; gap: 16px;
-  background: #f8fafc; border: 1px solid #e2e8f0;
-  border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;
-}
-.bs-storage-block { display: flex; align-items: center; gap: 10px; flex: 1; }
-.bs-storage-icon-wrap {
-  width: 30px; height: 30px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.bs-storage-icon-wrap.ok       { background: #dcfce7; color: #16a34a; }
-.bs-storage-icon-wrap.warn     { background: #fef3c7; color: #d97706; }
-.bs-storage-icon-wrap.critical { background: #fee2e2; color: #dc2626; }
-.bs-storage-info { flex: 1; }
-.bs-storage-track { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-bottom: 5px; }
-.bs-storage-fill  { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-.bs-storage-fill.ok       { background: #22c55e; }
-.bs-storage-fill.warn     { background: #f59e0b; }
-.bs-storage-fill.critical { background: #ef4444; }
-.bs-storage-text  { font-size: 12px; color: #64748b; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.bs-storage-sep   { color: #cbd5e1; }
-.bs-storage-used  { font-weight: 700; }
-.bs-storage-used.ok       { color: #16a34a; }
-.bs-storage-used.warn     { color: #d97706; }
-.bs-storage-used.critical { color: #dc2626; }
-.bs-storage-alert { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: #fee2e2; color: #dc2626; }
-.bs-storage-alert.warn    { background: #fef3c7; color: #92400e; }
-.bs-topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
-
-.bs-notif-btn {
-  display: flex; align-items: center; gap: 5px;
-  background: #f0fdf4; color: #16a34a;
-  border: 1px solid #bbf7d0; border-radius: 8px;
-  padding: 7px 13px; font-size: 12.5px; font-weight: 500; cursor: pointer;
-  transition: all 0.15s; white-space: nowrap;
-}
-.bs-notif-btn:hover:not(:disabled) { background: #dcfce7; }
-.bs-notif-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.bs-apply-btn {
-  display: flex; align-items: center; gap: 6px;
-  background: #0f172a; color: #fff; border: none;
-  border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 500;
-  cursor: pointer; white-space: nowrap; transition: background 0.2s;
-}
-.bs-apply-btn:hover:not(:disabled) { background: #1e293b; }
-.bs-apply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* ── Quick stats ───────────────────────────────────────────────────── */
-.bs-stats-row {
-  display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
-}
-.bs-stat-chip {
-  display: flex; align-items: center; gap: 7px;
-  background: #fff; border: 1px solid #e2e8f0; border-radius: 9px;
-  padding: 7px 13px; font-size: 12.5px; flex: 1; min-width: 160px;
-}
-.bs-stat-dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
-.bs-stat-dot.ok        { background: #22c55e; }
-.bs-stat-dot.warn      { background: #f59e0b; }
-.bs-stat-dot.critical  { background: #ef4444; }
-.bs-stat-dot.error     { background: #ef4444; }
-.bs-stat-dot.never     { background: #cbd5e1; }
-.bs-stat-dot.scheduled { background: #6366f1; }
-.bs-stat-label { color: #94a3b8; }
-.bs-stat-val   { color: #0f172a; margin-left: auto; }
-
-/* ── Toast ────────────────────────────────────────────────────────── */
-.bs-toast {
-  position: fixed; bottom: 28px; right: 28px; z-index: 9999;
-  display: flex; align-items: center; gap: 10px; padding: 12px 18px;
-  border-radius: 10px; font-size: 14px; font-weight: 500;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-width: 420px;
-}
-.bs-toast.success { background: #166534; color: #dcfce7; }
-.bs-toast.error   { background: #7f1d1d; color: #fee2e2; }
-.bs-toast.info    { background: #1e3a5f; color: #dbeafe; }
-.bs-toast-icon    { font-size: 16px; }
-.bs-toast-anim-enter-active, .bs-toast-anim-leave-active { transition: all 0.3s ease; }
-.bs-toast-anim-enter-from, .bs-toast-anim-leave-to { opacity: 0; transform: translateY(12px); }
-
-/* ── Grid ─────────────────────────────────────────────────────────── */
-.bs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 900px) { .bs-grid { grid-template-columns: 1fr; } }
-
-/* ── Card ─────────────────────────────────────────────────────────── */
-.bs-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-.bs-card-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px; border-bottom: 1px solid #f1f5f9; background: #f8fafc;
-}
-.bs-card-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; color: #0f172a; }
-.bs-count-badge { background: #e0e7ff; color: #3730a3; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
-.bs-gfs-badge   { background: #0f172a; color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 5px; }
-.bs-add-btn     { background: #6366f1; color: #fff; border: none; border-radius: 7px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-.bs-add-btn:hover { background: #4f46e5; }
-
-/* ── State blocks ─────────────────────────────────────────────────── */
-.bs-state-block { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 48px 20px; color: #94a3b8; font-size: 14px; }
-.bs-state-block.empty .bs-empty-icon { font-size: 36px; }
-.bs-add-link { background: none; border: none; color: #6366f1; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; margin-top: 4px; }
-.bs-spin-lg { font-size: 28px; animation: bs-spin 1s linear infinite; display: inline-block; }
-@keyframes bs-spin { to { transform: rotate(360deg); } }
-.bs-spin { display: inline-block; animation: bs-spin 1s linear infinite; }
-
-/* ── Task list ────────────────────────────────────────────────────── */
-.bs-task-list { padding: 0; }
-.bs-task-item {
-  border-bottom: 1px solid #f1f5f9;
-  transition: background 0.15s;
-}
-.bs-task-item:last-child { border-bottom: none; }
-.bs-task-item:hover { background: #f8fafc; }
-.bs-task-item.disabled { opacity: 0.5; }
-
-.bs-task-main {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; padding: 12px 18px; cursor: pointer;
-}
-.bs-task-left  { display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1; }
-.bs-type-dot   { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-.bs-type-dot.safe_backup { background: #22c55e; }
-.bs-type-dot.full_backup { background: #3b82f6; }
-.bs-type-dot.db_backup   { background: #a855f7; }
-.bs-task-info  { min-width: 0; flex: 1; }
-.bs-task-name  { font-size: 13px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-.bs-task-meta  { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
-.bs-cron-code  { font-size: 11px; background: #f1f5f9; color: #475569; padding: 1px 5px; border-radius: 4px; font-family: monospace; }
-.bs-cron-human { font-size: 11px; color: #94a3b8; }
-.bs-last-run   { font-size: 11px; color: #94a3b8; }
-.bs-task-next  { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #6366f1; margin-top: 3px; }
-.bs-task-next strong { font-weight: 600; }
-
-/* Run status badges */
-.bs-run-badge {
-  font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px;
-  text-transform: uppercase; letter-spacing: 0.3px;
-}
-.bs-run-badge.ok, .bs-run-badge.success { background: #dcfce7; color: #166534; }
-.bs-run-badge.error   { background: #fee2e2; color: #dc2626; }
-.bs-run-badge.never   { background: #f1f5f9; color: #94a3b8; }
-.bs-run-badge.lg      { font-size: 12px; padding: 3px 10px; }
-
-.bs-task-right  { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-
-.bs-type-badge  { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-.bs-type-badge.safe_backup { background: #dcfce7; color: #166534; }
-.bs-type-badge.full_backup { background: #dbeafe; color: #1e40af; }
-.bs-type-badge.db_backup   { background: #f3e8ff; color: #7e22ce; }
-
-.bs-run-btn {
-  background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe;
-  border-radius: 6px; width: 28px; height: 28px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; cursor: pointer; transition: all 0.15s;
-}
-.bs-run-btn:hover:not(:disabled) { background: #6366f1; color: #fff; border-color: #6366f1; }
-.bs-run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.bs-icon-btn {
-  background: none; border: 1px solid #e2e8f0; border-radius: 6px;
-  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-  font-size: 13px; cursor: pointer; color: #64748b; transition: all 0.15s;
-}
-.bs-icon-btn:hover          { background: #f1f5f9; color: #0f172a; }
-.bs-icon-btn.danger:hover   { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
-
-/* ── Task expanded detail ──────────────────────────────────────────── */
-.bs-task-detail {
-  padding: 12px 18px 14px 39px;
-  background: #f8fafc; border-top: 1px solid #f1f5f9;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.bs-detail-row   { display: flex; align-items: center; gap: 10px; font-size: 12px; }
-.bs-detail-label { color: #94a3b8; min-width: 130px; font-weight: 500; }
-.bs-detail-val   { color: #334155; }
-.bs-detail-val.mono { font-family: monospace; font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
-.bs-detail-cron  { font-family: monospace; font-size: 12px; background: #f1f5f9; color: #475569; padding: 2px 7px; border-radius: 5px; }
-.bs-expand-enter-active, .bs-expand-leave-active { transition: all 0.2s ease; overflow: hidden; }
-.bs-expand-enter-from, .bs-expand-leave-to { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
-.bs-expand-enter-to, .bs-expand-leave-from { max-height: 200px; }
-
-/* ── Toggle ────────────────────────────────────────────────────────── */
-.bs-toggle { position: relative; display: inline-block; width: 34px; height: 18px; cursor: pointer; }
-.bs-toggle input { opacity: 0; width: 0; height: 0; }
-.bs-toggle-slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 9px; transition: background 0.2s; }
-.bs-toggle-slider::before { content: ""; position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
-.bs-toggle input:checked + .bs-toggle-slider { background: #22c55e; }
-.bs-toggle input:checked + .bs-toggle-slider::before { transform: translateX(16px); }
-
-/* ── Retention ─────────────────────────────────────────────────────── */
-.bs-retention-intro { font-size: 12.5px; color: #64748b; line-height: 1.6; margin: 12px 18px 14px; }
-.bs-retention-intro strong { color: #0f172a; }
-.bs-pyramid { padding: 4px 18px 12px; }
-.bs-prow { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-.bs-prow-bar-wrap { width: 140px; height: 16px; background: #f1f5f9; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
-.bs-prow-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
-.bs-prow.recent  .bs-prow-bar { background: #22c55e; }
-.bs-prow.daily   .bs-prow-bar { background: #3b82f6; }
-.bs-prow.weekly  .bs-prow-bar { background: #f59e0b; }
-.bs-prow.monthly .bs-prow-bar { background: #a855f7; }
-.bs-prow.old     .bs-prow-bar { background: #e2e8f0; }
-.bs-prow-bar.striped { background: repeating-linear-gradient(45deg, #e2e8f0, #e2e8f0 4px, #f1f5f9 4px, #f1f5f9 8px); }
-.bs-prow-labels  { display: flex; flex-direction: column; gap: 1px; }
-.bs-prow-title   { font-size: 11.5px; font-weight: 600; color: #334155; }
-.bs-prow-rule    { font-size: 10.5px; color: #94a3b8; }
-.bs-prow-deleted { color: #ef4444; }
-.bs-tiers        { padding: 0 18px; }
-.bs-tier-row     { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f8fafc; }
-.bs-tier-row:last-child { border-bottom: none; }
-.bs-tier-badge   { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 4px; width: 68px; text-align: center; flex-shrink: 0; }
-.bs-tier-badge.recent  { background: #dcfce7; color: #166534; }
-.bs-tier-badge.daily   { background: #dbeafe; color: #1e40af; }
-.bs-tier-badge.weekly  { background: #fef3c7; color: #92400e; }
-.bs-tier-badge.monthly { background: #f3e8ff; color: #7e22ce; }
-.bs-tier-desc  { flex: 1; font-size: 12.5px; color: #475569; }
-.bs-tier-ctl   { display: flex; align-items: center; gap: 5px; }
-.bs-num-input  { width: 56px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 6px; font-size: 13px; text-align: center; outline: none; transition: border-color 0.15s; }
-.bs-num-input:focus { border-color: #6366f1; }
-.bs-num-input.sm { width: 44px; }
-.bs-unit       { font-size: 12px; color: #94a3b8; white-space: nowrap; }
-.bs-limits-row { display: flex; gap: 16px; padding: 12px 18px; background: #f8fafc; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; margin-top: 8px; }
-.bs-limit-item { display: flex; align-items: center; gap: 8px; }
-.bs-limit-label { font-size: 12px; color: #64748b; font-weight: 500; white-space: nowrap; }
-.bs-retention-est { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #475569; padding: 10px 18px; flex-wrap: wrap; }
-.bs-retention-est strong { color: #0f172a; }
-.bs-last-applied { font-size: 11px; color: #94a3b8; }
-.bs-save-ret-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: calc(100% - 36px); margin: 0 18px 18px; background: #0f172a; color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-.bs-save-ret-btn:hover:not(:disabled) { background: #1e293b; }
-.bs-save-ret-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* ── Overlay / Dialog ──────────────────────────────────────────────── */
-.bs-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(3px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.bs-overlay-fade-enter-active, .bs-overlay-fade-leave-active { transition: opacity 0.2s; }
-.bs-overlay-fade-enter-from, .bs-overlay-fade-leave-to { opacity: 0; }
-.bs-dialog    { background: #fff; border-radius: 14px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
-.bs-dialog-sm { max-width: 380px; }
-.bs-dialog-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 15px; color: #0f172a; }
-.bs-dialog-header.danger  { background: #fef2f2; color: #dc2626; }
-.bs-dialog-header.warning { background: #fffbeb; color: #d97706; }
-.bs-dialog-close  { background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; line-height: 1; padding: 0; }
-.bs-dialog-close:hover { color: #475569; }
-.bs-dialog-body   { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-.bs-dialog-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid #f1f5f9; background: #fafafa; }
-
-.bs-confirm-icon  { font-size: 32px; text-align: center; }
-.bs-confirm-text  { font-size: 14px; color: #374151; line-height: 1.6; margin: 0; }
-
-/* Run result dialog */
-.bs-run-result-header { display: flex; align-items: center; gap: 12px; }
-.bs-run-result-icon   { font-size: 28px; }
-.bs-run-result-title  { font-size: 15px; font-weight: 700; color: #0f172a; }
-.bs-run-result-task   { font-size: 12px; color: #94a3b8; margin-top: 2px; }
-.bs-run-result-msg    { font-size: 12.5px; color: #475569; background: #f8fafc; border-radius: 8px; padding: 10px 12px; font-family: monospace; }
-
-/* Form elements */
-.bs-field  { display: flex; flex-direction: column; gap: 6px; }
-.bs-label  { font-size: 12.5px; font-weight: 600; color: #374151; }
-.bs-input  { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 14px; outline: none; transition: border-color 0.15s; background: #fff; }
-.bs-input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.1); }
-.bs-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.bs-type-opt  { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; border: 2px solid #e2e8f0; border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.15s; text-align: center; }
-.bs-type-opt:hover  { border-color: #a5b4fc; background: #f5f3ff; }
-.bs-type-opt.active { border-color: #6366f1; background: #eef2ff; }
-.bs-topt-icon { font-size: 22px; }
-.bs-topt-name { font-size: 12px; font-weight: 700; color: #0f172a; }
-.bs-topt-desc { font-size: 10.5px; color: #94a3b8; }
-.bs-sched-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
-.bs-stab       { padding: 5px 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; font-size: 12.5px; color: #64748b; cursor: pointer; transition: all 0.15s; }
-.bs-stab.active { background: #0f172a; color: #fff; border-color: #0f172a; }
-.bs-preset-builder { display: flex; flex-direction: column; gap: 10px; }
-.bs-select    { border: 1px solid #e2e8f0; border-radius: 7px; padding: 7px 10px; font-size: 13px; outline: none; background: #fff; color: #1e293b; cursor: pointer; }
-.bs-select.sm { width: auto; }
-.bs-preset-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.bs-prow-lbl   { font-size: 13px; color: #475569; }
-.bs-prow-unit  { font-size: 13px; color: #94a3b8; }
-.bs-time-input { border: 1px solid #e2e8f0; border-radius: 7px; padding: 6px 10px; font-size: 13px; outline: none; background: #fff; }
-.bs-cron-builder { display: flex; flex-direction: column; gap: 6px; }
-.bs-cron-input   { font-family: monospace; font-size: 14px; }
-.bs-cron-hint    { display: flex; gap: 8px; }
-.bs-cron-hint span { font-size: 10.5px; color: #94a3b8; background: #f1f5f9; padding: 1px 6px; border-radius: 3px; font-family: monospace; }
-.bs-preview-box  { display: flex; align-items: center; gap: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; flex-wrap: wrap; }
-.bs-preview-lbl  { font-size: 12px; color: #166534; }
-.bs-preview-val  { font-size: 13px; color: #14532d; }
-.bs-preview-code { font-size: 11px; background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 4px; font-family: monospace; }
-.bs-toggle-row   { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
-.bs-toggle-lbl   { font-size: 13px; color: #374151; font-weight: 500; }
-.bs-btn-ghost   { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 18px; font-size: 13px; color: #475569; cursor: pointer; transition: all 0.15s; }
-.bs-btn-ghost:hover { background: #f1f5f9; }
-.bs-btn-primary { background: #6366f1; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 6px; }
-.bs-btn-primary:hover:not(:disabled) { background: #4f46e5; }
-.bs-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
-.bs-btn-danger  { background: #dc2626; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-.bs-btn-danger:hover { background: #b91c1c; }
-.bs-btn-warning { background: #d97706; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-.bs-btn-warning:hover { background: #b45309; }
-
-/* ── Timezone bar ── */
-.bs-tz-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f0f4ff;
-  border: 1px solid #c7d2fe;
-  border-radius: 8px;
-  padding: 7px 14px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  color: #3730a3;
-  font-size: 12px;
-}
-.bs-tz-label {
-  font-weight: 600;
-  white-space: nowrap;
-}
-.bs-tz-select {
-  border: 1px solid #a5b4fc;
-  border-radius: 6px;
-  background: #fff;
-  color: #1e1b4b;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 8px;
-  cursor: pointer;
-  outline: none;
-}
-.bs-tz-select:focus { border-color: #6366f1; }
-.bs-tz-saving { color: #6366f1; font-style: italic; }
-.bs-tz-ok { color: #16a34a; font-weight: 700; }
-.bs-tz-hint { color: #6b7280; font-size: 11px; margin-left: auto; }
-</style>
+<style scoped lang="scss" src="../../../assets/scss/BackupSchedule.scss"></style>

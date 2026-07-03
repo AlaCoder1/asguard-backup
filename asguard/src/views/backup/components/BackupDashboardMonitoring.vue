@@ -750,369 +750,140 @@
         </div>
       </div>
 
-      <!-- Compact scope summary + collapsible expert pilot -->
-      <div class="sync-pilot-summary">
-        <div class="sps-left">
-          <div class="sps-eyebrow">SCOPE COURANT</div>
-          <strong class="sps-title">{{ syncSummary.scope_label || "Périmètre par défaut" }}</strong>
-          <span class="sps-sub">{{ syncSelectedCount }}/{{ availableSyncComponents.length }} modules · couverture {{ syncCoveragePercent }}%</span>
-        </div>
-        <div class="sps-presets">
-          <button
-            v-for="preset in syncPresets"
-            :key="preset.key"
-            :class="['sps-preset', { active: activeSyncPreset === preset.key }]"
-            type="button"
-            :title="preset.description"
-            @click="applySyncPreset(preset)"
-          >{{ preset.label }}</button>
-        </div>
-        <div class="sps-actions">
-          <button
-            type="button"
-            class="sps-toggle"
-            :aria-expanded="syncPilotExpanded ? 'true' : 'false'"
-            @click="syncPilotExpanded = !syncPilotExpanded"
-          >
-            <svg viewBox="0 0 12 12" width="11" height="11" fill="none" :style="{ transform: syncPilotExpanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform .2s' }"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            {{ syncPilotExpanded ? "Réduire" : "Personnaliser" }}
-          </button>
-          <button class="hero-btn hero-btn-primary sps-analyze" type="button" :disabled="loading" @click="refreshDashboardAnalysis">
-            Analyser
-          </button>
-        </div>
-      </div>
-
-      <div v-show="syncPilotExpanded" class="sync-orbit">
-          <div class="sync-pilot-card">
-            <div class="sync-pilot-head">
-              <div>
-                <span class="section-kicker">Pilotage intelligent</span>
-              <strong>Choisis ce que tu veux contrôler.</strong>
-              <p>Le bouton d'analyse compare ensuite le système réel avec la base.</p>
-              </div>
-
-            <div class="sync-pilot-stats">
-              <div>
-                <span>Selection preparee</span>
-                <strong>{{ syncSelectedCount }}/{{ availableSyncComponents.length }}</strong>
-              </div>
-              <div>
-                <span>Couverture</span>
-                <strong>{{ syncCoveragePercent }}%</strong>
-              </div>
-            </div>
-          </div>
-
-          <div class="sync-preset-row">
-            <button
-              v-for="preset in syncPresets"
-              :key="preset.key"
-              :class="['sync-preset-btn', { active: activeSyncPreset === preset.key }]"
-              type="button"
-              @click="applySyncPreset(preset)"
-            >
-              <span class="action-hint">Choisir</span>
-              <strong>{{ preset.label }}</strong>
-              <small>{{ preset.description }}</small>
-            </button>
-          </div>
-
-          <div class="sync-scope-banner">
-            <strong>Scope IT utile</strong>
-            <span>Acces, protection, connectivite, tunnels, publication.</span>
-          </div>
-
-          <div class="sync-component-grid">
-            <button
-              v-for="component in availableSyncComponents"
-              :key="component.key"
-              :class="['sync-component-card', { active: isSyncComponentSelected(component.key) }]"
-              type="button"
-              @click="handleSyncComponentCardClick(component.key)"
-            >
-              <span class="sync-component-badge">{{ component.short }}</span>
-              <span class="sync-component-copy">
-                <strong>{{ component.label }}</strong>
-                <small>{{ component.description }}</small>
-              </span>
-              <span class="sync-component-side">
-                <span class="sync-component-state">
-                  {{ isSyncComponentSelected(component.key) ? "inclus" : "pause" }}
-                </span>
-                <span class="action-hint">
-                  {{ isSyncComponentSelected(component.key) ? "Retirer" : "Ajouter" }}
-                </span>
-              </span>
-            </button>
-          </div>
-
-          <div class="sync-toolbar">
-            <div class="sync-toolbar-group">
-              <button
-                :class="['sync-filter-btn', { active: syncViewMode === 'all' }]"
-                type="button"
-                @click="setSyncViewMode('all', { scrollToResults: true })"
-              >
-                Vue
-              </button>
-              <button
-                :class="['sync-filter-btn', { active: syncViewMode === 'drift' }]"
-                type="button"
-                @click="setSyncViewMode('drift', { scrollToResults: true, focusFirst: true })"
-              >
-                A corriger
-              </button>
-              <button
-                :class="['sync-filter-btn', { active: syncViewMode === 'ok' }]"
-                type="button"
-                @click="setSyncViewMode('ok', { scrollToResults: true, focusFirst: true })"
-              >
-                Alignes
-              </button>
-            </div>
-
-            <div class="sync-toolbar-actions">
-              <button class="hero-btn hero-btn-light" type="button" :disabled="loading" @click="selectAllSyncComponents">
-                Tout cocher
-              </button>
-              <button class="hero-btn hero-btn-primary" type="button" :disabled="loading" @click="refreshDashboardAnalysis">
-                Analyser maintenant
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <aside v-if="syncSpotlight" :class="['sync-spotlight-card', syncSpotlight.tone]">
-          <div class="sync-spotlight-top">
-            <span class="section-kicker">{{ syncSpotlight.label }}</span>
-            <span :class="['sync-spotlight-pill', syncSpotlight.tone]">{{ syncSpotlight.badge }}</span>
-          </div>
-
-          <div class="sync-spotlight-score">
-            <div class="sync-spotlight-score-ring">
-              <strong>{{ syncSpotlight.score }}</strong>
-              <span>/100</span>
-            </div>
-            <div class="sync-spotlight-score-copy">
-              <strong>{{ syncSpotlight.title }}</strong>
-              <p>{{ syncSpotlight.copy }}</p>
-            </div>
-          </div>
-
-          <div class="sync-spotlight-highlight">
-            <span>Pourquoi ce module remonte</span>
-            <strong>{{ syncSpotlight.highlight }}</strong>
-          </div>
-
-          <div v-if="syncSpotlight.topDrifts?.length" class="sync-spotlight-list">
-            <div class="sync-spotlight-list-title">Ce qu'il faut verifier en premier</div>
-            <div
-              v-for="item in syncSpotlight.topDrifts"
-              :key="item"
-              class="sync-spotlight-item"
-            >
-              {{ item }}
-            </div>
-          </div>
-
-          <div class="sync-spotlight-stats">
-            <div>
-              <span>Scope actif</span>
-              <strong>{{ syncSummary.scope_label || "-" }}</strong>
-            </div>
-            <div>
-              <span>Ecarts</span>
-              <strong>{{ syncSpotlight.driftCount }}</strong>
-            </div>
-            <div>
-              <span>Etat du scan</span>
-              <strong>{{ syncSpotlight.badge }}</strong>
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      <div class="sync-explainer">
-        <svg class="kpi-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3M8 9.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        Périmètre du dernier contrôle : <strong>{{ syncSummary.scope_label || "-" }}</strong> · affichage <strong>{{ syncDisplayModeLabel }}</strong>.
-      </div>
-
-      <div :class="['sync-result-banner', syncHasResult ? 'ready' : 'empty']">
-        <div class="sync-result-banner-main">
-          <span class="sync-result-icon" aria-hidden="true">
-            <svg v-if="syncHasResult" viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <svg v-else viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3M8 10.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <!-- Bandeau de statut global + actions -->
+      <div :class="['sync-statusline', syncHasResult ? (syncDriftModulesCount > 0 ? 'has-drift' : 'all-ok') : 'pending']">
+        <div class="sync-statusline-main">
+          <span class="sync-statusline-icon">
+            <svg v-if="syncHasResult && syncDriftModulesCount === 0" viewBox="0 0 18 18" fill="none" width="18" height="18"><path d="M3 9l4 4 8-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg v-else-if="syncHasResult" viewBox="0 0 18 18" fill="none" width="18" height="18"><path d="M9 2L1 16h16L9 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 7v4M9 13.2v.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <svg v-else viewBox="0 0 18 18" fill="none" width="18" height="18"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.4"/><path d="M9 5.5v4M9 12v.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </span>
-          <div class="sync-result-copy">
-            <strong>{{ syncStatusLead }}</strong>
-            <p>{{ syncStatusDetail }}</p>
+          <div class="sync-statusline-copy">
+            <strong>{{ syncStatusHeadline }}</strong>
+            <span>{{ syncStatusSub }}</span>
           </div>
         </div>
-        <button class="hero-btn hero-btn-primary sync-result-action" type="button" :disabled="loading" @click="refreshDashboardAnalysis">
-          {{ syncHasResult ? "Mettre à jour l'analyse" : "Lancer l'analyse" }}
-        </button>
-      </div>
-
-      <div ref="syncResultsStart" class="integrity-flow">
-        <div class="flow-node">
-          <span class="flow-dot flow-dot-system"></span>
-          <strong>État réel du système</strong>
-          <small>lu en direct</small>
-        </div>
-        <div class="flow-arrow-wrap">
-          <div class="flow-arrow-line"></div>
-          <span class="flow-arrow-label">comparé</span>
-        </div>
-        <div class="flow-node">
-          <span class="flow-dot flow-dot-backup"></span>
-          <strong>Base de données</strong>
-          <small>ce qui est enregistré</small>
-        </div>
-      </div>
-
-      <div class="integrity-metrics">
-        <div class="integrity-box">
-          <div class="integrity-box-icon">
-            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.5V8.5l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-          </div>
-          <span>{{ syncHasResult ? "Dernière analyse conservée" : "Dernière analyse" }}</span>
-          <strong>{{ formatDate(syncSummary.last_check_at) }}</strong>
-        </div>
-        <div class="integrity-box">
-          <div class="integrity-box-icon integrity-box-icon--blue">
-            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-          </div>
-          <span>Points vérifiés</span>
-          <strong>{{ syncSummary.verified_entities ?? 0 }}</strong>
-        </div>
-        <div class="integrity-box">
-          <div class="integrity-box-icon integrity-box-icon--green">
-            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <span>Modules analysés</span>
-          <strong>{{ syncAnalyzedCount }} / {{ availableSyncComponents.length }}</strong>
-        </div>
-        <div class="integrity-box" :title="syncDriftTooltip">
-          <div :class="['integrity-box-icon', (syncSummary.desync_detected ?? 0) > 0 ? 'integrity-box-icon--orange' : 'integrity-box-icon--green']">
-            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 2L2 14h12L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 7v3M8 11.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-          </div>
-          <span>Différences détectées</span>
-          <strong>{{ syncSummary.desync_detected ?? "-" }}</strong>
-        </div>
-      </div>
-
-      <div class="sync-reading-strip">
-        <div class="sync-reading-box">
-          <span>Alignés</span>
-          <strong class="sync-reading-ok">{{ syncHealthyModulesCount }} module{{ syncHealthyModulesCount > 1 ? "s" : "" }}</strong>
-        </div>
-        <div class="sync-reading-box sync-reading-box--divider">
-          <span>À corriger</span>
-          <strong :class="syncDriftModulesCount > 0 ? 'sync-reading-warn' : ''">{{ syncDriftModulesCount }} module{{ syncDriftModulesCount > 1 ? "s" : "" }}</strong>
-        </div>
-        <div class="sync-reading-box">
-          <span>Principe</span>
-          <strong>Système réel → base</strong>
-        </div>
-      </div>
-
-      <!-- Drift action banner -->
-      <div v-if="syncViewMode === 'drift' && filteredSyncModules.length > 0" class="drift-action-banner">
-        <div class="drift-action-banner-icon">
-          <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M10 2L2 17h16L10 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 8v4M10 14.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </div>
-        <div class="drift-action-banner-body">
-          <strong>{{ filteredSyncModules.length }} module{{ filteredSyncModules.length > 1 ? 's' : '' }} avec des différences détectées</strong>
-          <span>Voici ce qui ne correspond pas entre votre système réel et ce qui est enregistré. Lisez chaque module ci-dessous pour savoir quoi vérifier.</span>
-        </div>
-      </div>
-
-      <div v-if="syncViewMode === 'ok' && filteredSyncModules.length > 0" class="drift-ok-banner">
-        <div class="drift-ok-banner-icon">
-          <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M3 10l5 5L17 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div>
-          <strong>{{ filteredSyncModules.length }} module{{ filteredSyncModules.length > 1 ? 's' : '' }} parfaitement alignés</strong>
-          <span>Ces modules sont synchronisés entre le système réel et la base de données.</span>
-        </div>
-      </div>
-
-      <div class="module-grid">
-        <article
-          v-for="module in filteredSyncModules"
-          :key="module.key"
-          :id="`sync-module-${module.key}`"
-          :class="['module-card', module.status]"
-        >
-          <div class="module-card-head">
-            <div class="module-card-head-left">
-              <span :class="['module-status-dot', module.status === 'ok' ? 'ok' : 'error']"></span>
-              <strong>{{ module.label }}</strong>
-            </div>
-            <span :class="['mini-status', module.status === 'ok' ? 'ok' : 'error']">
-              {{ module.status === "ok" ? "Synchronisé" : "Différences" }}
-            </span>
-          </div>
-          <div class="module-card-subtitle">
-            {{ moduleFriendlyLabel(module.key) }}
-          </div>
-          <small>{{ module.summary }}</small>
-          <div class="module-card-stats">
-            <span class="module-stat">
-              <svg viewBox="0 0 12 12" fill="none" width="10" height="10"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.1"/></svg>
-              {{ module.checked_items }} vérifiés
-            </span>
-            <span class="module-stat module-stat--ok">
-              <svg viewBox="0 0 12 12" fill="none" width="10" height="10"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              {{ module.ok_count || 0 }} OK
-            </span>
-            <span :class="['module-stat', module.drift_count > 0 ? 'module-stat--warn' : '']">
-              <svg viewBox="0 0 12 12" fill="none" width="10" height="10"><path d="M6 1L1 10h10L6 1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
-              {{ module.drift_count }} à corriger
-            </span>
-          </div>
-          <div v-if="module.entities?.length" class="module-entities">
-            <div
-              v-for="entity in module.entities"
-              :key="`${module.key}-${entity.label}`"
-              :class="['entity-chip', entity.status === 'ok' ? 'ok' : 'drift']"
-              :title="`${entity.label}: ${entity.detail}`"
-            >
-              <span class="entity-dot"></span>
-              <strong>{{ entity.label }}</strong>
-              <small>{{ entity.detail }}</small>
-            </div>
-          </div>
-          <ul v-if="module.drifts?.length" class="module-drift-list">
-            <li v-for="drift in module.drifts.slice(0, 3)" :key="`${module.key}-${drift.kind}-${drift.label}`">
-              <svg viewBox="0 0 10 10" fill="none" width="9" height="9" class="drift-item-dot"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1.2"/><path d="M5 3v2M5 6.5v.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
-              {{ drift.detail }}
-            </li>
-            <li v-if="module.drifts.length > 3" class="drift-more">
-              + {{ module.drifts.length - 3 }} autre{{ module.drifts.length - 3 > 1 ? 's' : '' }} différence{{ module.drifts.length - 3 > 1 ? 's' : '' }}
-            </li>
-          </ul>
-          <div v-else class="module-ok-copy">
-            <svg viewBox="0 0 14 14" fill="none" width="13" height="13"><path d="M2 7l3.5 3.5L12 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Tout est en ordre pour ce module.
-          </div>
-        </article>
-
-        <article v-if="filteredSyncModules.length === 0" class="module-empty-state">
-          <div class="module-empty-icon">
-            <svg viewBox="0 0 28 28" fill="none" width="24" height="24"><path d="M5 14h18M14 5l9 9-9 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <strong>{{ syncHasResult ? "Aucun module dans ce filtre" : "Analyse système / base non lancée" }}</strong>
-          <p>
-            {{ syncHasResult
-              ? "Changez le filtre pour revoir le dernier contrôle complet."
-              : "Cliquez sur Lancer l'analyse pour afficher les vrais résultats. Les modules ne sont pas considérés comme des différences avant le scan." }}
-          </p>
-          <button v-if="!syncHasResult" class="hero-btn hero-btn-primary" type="button" :disabled="loading" @click="refreshDashboardAnalysis">
-            Lancer l'analyse
+        <div class="sync-statusline-actions">
+          <button class="sync-scope-link" type="button" @click="syncPilotExpanded = !syncPilotExpanded">
+            {{ syncPilotExpanded ? "Masquer le périmètre" : "Choisir le périmètre" }}
+            ({{ syncSelectedCount }}/{{ availableSyncComponents.length }})
           </button>
-        </article>
+          <button class="hero-btn hero-btn-primary" type="button" :disabled="loading" @click="refreshDashboardAnalysis">
+            {{ loading ? "Analyse en cours…" : (syncHasResult ? "Relancer l'analyse" : "Analyser maintenant") }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Périmètre repliable : quels modules comparer -->
+      <div v-show="syncPilotExpanded" class="sync-picker">
+        <div class="sync-picker-hint">
+          Sélectionnez les modules à inclure dans la comparaison système réel / base, puis lancez l'analyse.
+        </div>
+        <div class="sync-component-grid">
+          <button
+            v-for="component in availableSyncComponents"
+            :key="component.key"
+            :class="['sync-component-card', { active: isSyncComponentSelected(component.key) }]"
+            type="button"
+            @click="handleSyncComponentCardClick(component.key)"
+          >
+            <span class="sync-component-badge">{{ component.short }}</span>
+            <span class="sync-component-copy">
+              <strong>{{ component.label }}</strong>
+              <small>{{ component.description }}</small>
+            </span>
+            <span class="sync-component-side">
+              <span class="sync-component-state">
+                {{ isSyncComponentSelected(component.key) ? "inclus" : "pause" }}
+              </span>
+            </span>
+          </button>
+        </div>
+        <div class="sync-picker-actions">
+          <button class="hero-btn hero-btn-light" type="button" :disabled="loading" @click="selectAllSyncComponents">
+            Tout cocher
+          </button>
+          <button class="hero-btn hero-btn-primary" type="button" :disabled="loading" @click="refreshDashboardAnalysis">
+            Analyser maintenant
+          </button>
+        </div>
+      </div>
+
+      <!-- Tableau compact des résultats -->
+      <div v-if="syncHasResult" ref="syncResultsStart" class="sync-table-wrap">
+        <table class="sync-table">
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Statut</th>
+              <th class="sync-th-num">Vérifiés</th>
+              <th class="sync-th-num">Écarts</th>
+              <th class="sync-th-detail">Détail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="module in syncModules" :key="module.key">
+              <tr :class="['sync-row', module.status]" :id="`sync-module-${module.key}`">
+                <td class="sync-cell-module">
+                  <span :class="['module-status-dot', module.status === 'ok' ? 'ok' : 'error']"></span>
+                  <div class="sync-cell-module-copy">
+                    <strong>{{ module.label }}</strong>
+                    <small>{{ moduleFriendlyLabel(module.key) }}</small>
+                  </div>
+                </td>
+                <td>
+                  <span :class="['mini-status', module.status === 'ok' ? 'ok' : 'error']">
+                    {{ module.status === "ok" ? "Synchronisé" : "Différences" }}
+                  </span>
+                </td>
+                <td class="sync-td-num">{{ module.checked_items }}</td>
+                <td class="sync-td-num">
+                  <strong :class="module.drift_count > 0 ? 'sync-drift-num' : 'sync-ok-num'">{{ module.drift_count }}</strong>
+                </td>
+                <td class="sync-td-detail">
+                  <button
+                    v-if="module.drift_count > 0"
+                    class="sync-detail-btn"
+                    type="button"
+                    @click="toggleSyncRow(module.key)"
+                  >
+                    {{ expandedSyncRows.includes(module.key) ? "Masquer" : "Voir" }}
+                  </button>
+                  <span v-else class="sync-detail-none">—</span>
+                </td>
+              </tr>
+              <tr
+                v-if="expandedSyncRows.includes(module.key) && module.drifts && module.drifts.length"
+                :key="`${module.key}-detail`"
+                class="sync-row-detail"
+              >
+                <td colspan="5">
+                  <ul class="sync-drift-list">
+                    <li v-for="drift in module.drifts" :key="`${module.key}-${drift.kind}-${drift.label}`">
+                      <span class="sync-drift-dot"></span>
+                      <div>
+                        <strong>{{ drift.label }}</strong>
+                        <span>{{ drift.detail }}</span>
+                      </div>
+                    </li>
+                  </ul>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- État vide : analyse jamais lancée -->
+      <div v-else class="sync-empty">
+        <div class="sync-empty-icon">
+          <svg viewBox="0 0 28 28" fill="none" width="24" height="24"><path d="M5 14h18M14 5l9 9-9 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <strong>Analyse système / base non lancée</strong>
+        <p>Cliquez sur « Analyser maintenant » pour comparer l'état réel du système avec ce qui est enregistré en base.</p>
+        <button class="hero-btn hero-btn-primary" type="button" :disabled="loading" @click="refreshDashboardAnalysis">
+          Analyser maintenant
+        </button>
       </div>
     </section>
 
@@ -1185,31 +956,30 @@
           <div class="section-head compact">
             <div class="chart-head-left">
               <div class="chart-icon chart-icon--green">
-                <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M2 4.5h12M3.5 2.5h9A1.5 1.5 0 0 1 14 4v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12V4a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.2"/><path d="M5 9l2 2 4-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M2 11l3.5-4 3 2.5L13 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 4h3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
               <div>
-                <h3>Constellation backup</h3>
-                <div class="chart-copy">Heatmap des dernières archives avec lecture qualité/temps</div>
+                <h3>Tendance santé backup</h3>
+                <div class="chart-copy">Évolution de la qualité des 8 dernières archives</div>
               </div>
             </div>
             <span class="live-pill">8 derniers</span>
           </div>
           <apexchart
-            height="220"
-            type="heatmap"
-            :options="backupHeatmapOptions"
-            :series="backupHeatmapSeries"
+            height="240"
+            type="area"
+            :options="backupTrendOptions"
+            :series="backupTrendSeries"
           ></apexchart>
-          <div class="backup-orbit-strip">
-            <div
-              v-for="point in backupTimelinePoints"
-              :key="`${point.label}-${point.score}`"
-              :class="['backup-orbit-node', point.tone]"
-              :title="`${point.label}: ${point.score}/100`"
-            >
-              <span></span>
-              <strong>{{ point.score }}</strong>
-              <small>{{ point.label }}</small>
+          <div class="backup-trend-summary">
+            <div class="bts-item">
+              <span class="bts-dot bts-dot--ok"></span>
+              <strong>{{ backupTrendSummary.healthy }}/{{ backupTrendSummary.total }}</strong>
+              <small>archives saines</small>
+            </div>
+            <div class="bts-item">
+              <strong>{{ backupTrendSummary.average }}/100</strong>
+              <small>score moyen</small>
             </div>
           </div>
         </article>
@@ -1674,6 +1444,7 @@ export default {
       _aiWsDebounce: null,
       syncViewMode: "all",
       syncPilotExpanded: false,
+      expandedSyncRows: [],
       alertsFilter: "all",
       activeMonitoringTab: "overview",
       selectedSyncComponents: [],
@@ -1943,6 +1714,21 @@ export default {
     syncHealthyModulesCount() {
       if (!this.syncHasResult) return 0;
       return this.syncModules.filter((module) => module.status === "ok").length;
+    },
+    syncStatusHeadline() {
+      if (!this.syncHasResult) return "Analyse système / base non lancée";
+      if (this.syncDriftModulesCount > 0) {
+        const n = this.syncSummary.desync_detected ?? this.syncDriftModulesCount;
+        return `${n} différence${n > 1 ? "s" : ""} détectée${n > 1 ? "s" : ""}`;
+      }
+      return "Tout est synchronisé";
+    },
+    syncStatusSub() {
+      if (!this.syncHasResult) {
+        return "Lancez l'analyse pour comparer l'état réel du système avec la base de données.";
+      }
+      const when = this.formatDate(this.syncSummary.last_check_at);
+      return `${this.syncAnalyzedCount} module${this.syncAnalyzedCount > 1 ? "s" : ""} analysé${this.syncAnalyzedCount > 1 ? "s" : ""} · ${this.syncSummary.verified_entities ?? 0} points vérifiés · dernière analyse ${when}`;
     },
     filteredSyncModules() {
       if (!this.syncHasResult) return [];
@@ -2513,7 +2299,8 @@ export default {
       ];
     },
     resourceCockpitSeries() {
-      return this.resourceCockpitMetrics.map((metric) => metric.value);
+      // Trois jauges seulement : CPU, RAM, Disque systeme.
+      return this.resourceCockpitMetrics.slice(0, 3).map((metric) => metric.value);
     },
     resourcePressureAverage() {
       const values = this.resourceCockpitSeries;
@@ -2533,7 +2320,6 @@ export default {
     resourceCockpitOptions() {
       return {
         chart: {
-          sparkline: { enabled: true },
           animations: {
             enabled: true,
             easing: "easeinout",
@@ -2541,40 +2327,41 @@ export default {
           },
           fontFamily: "inherit",
         },
-        colors: ["#2f8de4", "#20a26d", "#f59e0b", "#06b6d4"],
-        labels: this.resourceCockpitMetrics.map((metric) => metric.label),
+        colors: ["#2f8de4", "#20a26d", "#f59e0b"],
+        labels: this.resourceCockpitMetrics.slice(0, 3).map((metric) => metric.label),
         plotOptions: {
           radialBar: {
-            startAngle: -120,
-            endAngle: 240,
+            startAngle: -135,
+            endAngle: 135,
             hollow: {
-              size: "34%",
-              background: "#f8fbff",
+              size: "42%",
+              background: "transparent",
             },
             track: {
-              background: "#edf2f7",
+              background: "#eef2f7",
               strokeWidth: "100%",
-              margin: 6,
+              margin: 8,
             },
             dataLabels: {
               name: {
                 fontSize: "12px",
                 color: "#64748b",
-                offsetY: 6,
+                offsetY: 24,
               },
               value: {
-                fontSize: "24px",
+                fontSize: "26px",
                 fontWeight: 800,
                 color: "#0f172a",
-                offsetY: -12,
+                offsetY: -16,
                 formatter(value) {
                   return `${Math.round(value)}%`;
                 },
               },
               total: {
                 show: true,
-                label: "Pression",
+                label: "Pression moyenne",
                 color: "#64748b",
+                fontSize: "12px",
                 formatter: () => `${this.resourcePressureAverage}%`,
               },
             },
@@ -2598,61 +2385,75 @@ export default {
         };
       });
     },
-    backupHeatmapSeries() {
+    backupTrendSeries() {
       return [
         {
-          name: "Sante archive",
-          data: this.backupTimelinePoints.map((point) => ({
-            x: point.label,
-            y: point.score,
-          })),
+          name: "Santé archive",
+          data: this.backupTimelinePoints.map((point) => point.score),
         },
       ];
     },
-    backupHeatmapOptions() {
+    backupTrendSummary() {
+      const points = this.backupTimelinePoints;
+      if (!points.length) return { healthy: 0, total: 0, average: 0 };
+      const healthy = points.filter((point) => point.score >= 90).length;
+      const average = Math.round(
+        points.reduce((sum, point) => sum + point.score, 0) / points.length
+      );
+      return { healthy, total: points.length, average };
+    },
+    backupTrendOptions() {
       return {
         chart: {
           toolbar: { show: false },
           fontFamily: "inherit",
           foreColor: "#64748b",
-        },
-        dataLabels: {
-          enabled: true,
-          style: {
-            colors: ["#0f172a"],
-            fontSize: "12px",
-            fontWeight: 800,
-          },
-          formatter(value) {
-            return `${Math.round(value)}`;
+          animations: {
+            enabled: true,
+            easing: "easeinout",
+            speed: 650,
           },
         },
-        plotOptions: {
-          heatmap: {
-            radius: 13,
-            enableShades: false,
-            colorScale: {
-              ranges: [
-                { from: 0, to: 69, color: "#ef4444", name: "fragile" },
-                { from: 70, to: 89, color: "#f59e0b", name: "a surveiller" },
-                { from: 90, to: 100, color: "#20a26d", name: "sain" },
-              ],
-            },
+        colors: ["#20a26d"],
+        dataLabels: { enabled: false },
+        stroke: { curve: "smooth", width: 3 },
+        fill: {
+          type: "gradient",
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.34,
+            opacityTo: 0.04,
+            stops: [0, 100],
           },
+        },
+        markers: {
+          size: 4,
+          colors: ["#ffffff"],
+          strokeColors: "#20a26d",
+          strokeWidth: 2,
+          hover: { size: 6 },
         },
         xaxis: {
-          labels: {
-            style: { fontSize: "11px" },
-          },
+          categories: this.backupTimelinePoints.map((point) => point.label),
+          labels: { style: { fontSize: "11px" } },
+          axisBorder: { show: false },
+          axisTicks: { show: false },
         },
         yaxis: {
+          min: 0,
+          max: 100,
+          tickAmount: 4,
           labels: {
-            style: { fontSize: "11px", fontWeight: 700 },
+            style: { fontSize: "11px" },
+            formatter(value) {
+              return `${Math.round(value)}`;
+            },
           },
         },
         grid: {
           borderColor: "#edf2f7",
-          padding: { left: 8, right: 8 },
+          strokeDashArray: 4,
+          padding: { left: 8, right: 14 },
         },
         tooltip: {
           y: {
@@ -3403,6 +3204,14 @@ export default {
         });
       }
     },
+    toggleSyncRow(moduleKey) {
+      const idx = this.expandedSyncRows.indexOf(moduleKey);
+      if (idx === -1) {
+        this.expandedSyncRows.push(moduleKey);
+      } else {
+        this.expandedSyncRows.splice(idx, 1);
+      }
+    },
     scrollToSyncModule(moduleKey) {
       const target = document.getElementById(`sync-module-${moduleKey}`);
       if (target?.scrollIntoView) {
@@ -3674,191 +3483,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.drp-live-strip {
-  margin: 0 0 18px;
-  padding: 14px;
-  border: 1px solid #dbe3ef;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-}
-
-.drp-live-strip--ok {
-  border-color: #bbf7d0;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 48%);
-}
-
-.drp-live-strip--warning {
-  border-color: #fde68a;
-  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 48%);
-}
-
-.drp-live-strip--error {
-  border-color: #fecaca;
-  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 48%);
-}
-
-.drp-live-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.drp-live-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.drp-live-title strong {
-  display: block;
-  color: #0f172a;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.drp-live-title small,
-.drp-live-updated {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.drp-live-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #22c55e;
-  box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.13);
-  flex: 0 0 auto;
-}
-
-.drp-live-strip--warning .drp-live-dot {
-  background: #f59e0b;
-  box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.16);
-}
-
-.drp-live-strip--error .drp-live-dot {
-  background: #ef4444;
-  box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.16);
-}
-
-.drp-live-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.drp-live-btn {
-  height: 30px;
-  padding: 0 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #f8fafc;
-  color: #334155;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.drp-live-btn:hover:not(:disabled) {
-  background: #e2e8f0;
-}
-
-.drp-metric-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.drp-metric-card {
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.78);
-}
-
-.drp-metric-label {
-  display: block;
-  color: #64748b;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.drp-metric-card strong {
-  display: block;
-  margin-top: 5px;
-  color: #0f172a;
-  font-size: 22px;
-  font-weight: 900;
-  line-height: 1.1;
-}
-
-.drp-metric-card small {
-  display: block;
-  margin-top: 4px;
-  color: #64748b;
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.drp-metric-bar {
-  height: 5px;
-  margin-top: 10px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #e2e8f0;
-}
-
-.drp-metric-bar span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #22c55e;
-}
-
-.drp-metric-card.tone-warning .drp-metric-bar span {
-  background: #f59e0b;
-}
-
-.drp-metric-card.tone-error .drp-metric-bar span {
-  background: #ef4444;
-}
-
-.drp-metric-card.tone-warning strong {
-  color: #b45309;
-}
-
-.drp-metric-card.tone-error strong {
-  color: #b91c1c;
-}
-
-@media (max-width: 1100px) {
-  .drp-metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .drp-live-head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .drp-live-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .drp-metric-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+<style scoped lang="scss" src="../../../assets/scss/BackupDashboardMonitoring.scss"></style>

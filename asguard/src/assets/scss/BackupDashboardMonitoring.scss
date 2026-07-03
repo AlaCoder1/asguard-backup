@@ -1,0 +1,192 @@
+/* ─────────────────────────────────────────────────────────
+   BackupDashboardMonitoring — styles (externalised from the SFC during code
+   review). Still scoped: the .vue references this file via
+   <style scoped src="./BackupDashboardMonitoring.scss">, so vue-loader keeps the
+   data-v hash isolation — no global leakage.
+   ───────────────────────────────────────────────────────── */
+.drp-live-strip {
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.drp-live-strip--ok {
+  border-color: #bbf7d0;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 48%);
+}
+
+.drp-live-strip--warning {
+  border-color: #fde68a;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 48%);
+}
+
+.drp-live-strip--error {
+  border-color: #fecaca;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 48%);
+}
+
+.drp-live-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.drp-live-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.drp-live-title strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.drp-live-title small,
+.drp-live-updated {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.drp-live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.13);
+  flex: 0 0 auto;
+}
+
+.drp-live-strip--warning .drp-live-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.16);
+}
+
+.drp-live-strip--error .drp-live-dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.16);
+}
+
+.drp-live-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.drp-live-btn {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.drp-live-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.drp-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.drp-metric-card {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.drp-metric-label {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.drp-metric-card strong {
+  display: block;
+  margin-top: 5px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.drp-metric-card small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drp-metric-bar {
+  height: 5px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.drp-metric-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #22c55e;
+}
+
+.drp-metric-card.tone-warning .drp-metric-bar span {
+  background: #f59e0b;
+}
+
+.drp-metric-card.tone-error .drp-metric-bar span {
+  background: #ef4444;
+}
+
+.drp-metric-card.tone-warning strong {
+  color: #b45309;
+}
+
+.drp-metric-card.tone-error strong {
+  color: #b91c1c;
+}
+
+@media (max-width: 1100px) {
+  .drp-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .drp-live-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .drp-live-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .drp-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}

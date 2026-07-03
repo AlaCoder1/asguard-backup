@@ -26,7 +26,7 @@ def resultat_check_key(key_to_check):
     'Content-Type': 'application/json'
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload, verify=False)
+    response = requests.request("POST", url, headers=headers, data=payload, verify=False, timeout=10)
     resultat = json.loads(response.text)
     return resultat['rslt']
 
@@ -41,7 +41,7 @@ def get_type_pack_fromk_key(key_to_check):
     'Content-Type': 'application/json'
     }
 
-    response = requests.request("GET", url, headers=headers, data=payload, verify=False)
+    response = requests.request("GET", url, headers=headers, data=payload, verify=False, timeout=10)
     resultat = json.loads(response.text)
     return resultat['type_pack']
 
@@ -56,7 +56,7 @@ def get_use_number_fromk_key(key_to_check):
     'Content-Type': 'application/json'
     }
 
-    response = requests.request("GET", url, headers=headers, data=payload, verify=False)
+    response = requests.request("GET", url, headers=headers, data=payload, verify=False, timeout=10)
     resultat = json.loads(response.text)
     return resultat['UseNumber']
 
@@ -71,7 +71,7 @@ def update_keys(key_to_check):
     'Content-Type': 'application/json'
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload, verify=False)
+    response = requests.request("POST", url, headers=headers, data=payload, verify=False, timeout=10)
     resultat = json.loads(response.text)
     return resultat
 

@@ -52,6 +52,28 @@ def _safe(fn: Callable, name: str) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 0. Network DB ↔ system reconciliation
+# ─────────────────────────────────────────────────────────────────────────────
+# A restore brings back NM profiles (system) and the DB independently. If the
+# backup was taken while they diverged (e.g. a CLI-only edit), the clone would
+# inherit that drift. Re-read the just-restored NM profiles and rewrite the DB
+# (Interface/IP4Config/Vlan/Vxlan) to match — so UI ↔ system ↔ DB agree. Runs
+# after services (profiles loaded) and before firewall rules (which reference
+# the reconciled interfaces).
+def resync_network_db() -> dict:
+    from backend.network.reconcile import reconcile_network_db_from_system
+    rep = reconcile_network_db_from_system()
+    return {
+        "component": "network_db",
+        "status":    "success" if not rep["errors"] else "error",
+        "created":   rep["created"],
+        "updated":   rep["updated"],
+        "stale":     rep["stale"],
+        "errors":    rep["errors"],
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 1. Firewall rules — nft kernel state for table inet filter_<ifname>
 # ─────────────────────────────────────────────────────────────────────────────
 def resync_firewall_rules() -> dict:
@@ -331,6 +353,7 @@ def audit_db_only_components() -> dict:
 #   4. db_only_audit last — read-only census for the UI receipt.
 _PIPELINE: list[tuple[str, Callable]] = [
     ("services",       resync_services),
+    ("network_db",     resync_network_db),
     ("firewall_rules", resync_firewall_rules),
     ("nat",            resync_nat),
     ("routing",        resync_routing),

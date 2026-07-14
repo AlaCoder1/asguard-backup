@@ -4,6 +4,10 @@ import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from django.db import transaction
+
+from backend.network.models import Interface
+from backend.rules.models import Rule
 from .base import ComponentResult, run_cmd, safe_extract, Timer, compute_sha256
 
 logger = logging.getLogger(__name__)
@@ -84,17 +88,35 @@ class SafeRestoreService:
 
         global_status = "success" if failed == 0 else ("failed" if success == 0 else "partial_success")
 
+        # Restoring the components rolls back the DB and the config files, but the
+        # kernel keeps whatever was loaded before (nft ruleset, routing table).
+        # Without this the UI would show restored routes/rules the kernel doesn't
+        # have — the console DR script already does the same in its phase 12.
+        resync = cls._resync_runtime()
+
         return {
             "status": global_status,
             "backup_id": backup_id,
             "mode": "safe_restore_ui",
             "results": results,
+            "resync": resync,
             "summary": {
                 "success": success,
                 "failed": failed,
                 "skipped": skipped,
             },
         }
+
+    @classmethod
+    def _resync_runtime(cls) -> dict:
+        """Re-apply the restored DB state to the kernel. Never raises: a restore
+        that succeeded must not be reported as failed because the resync did."""
+        try:
+            from backend.backup.post_restore_resync import resync_all
+            return resync_all()
+        except Exception as e:
+            logger.exception("Post-restore resync failed")
+            return {"status": "error", "message": str(e)}
 
     @classmethod
     def _verify_component_file(
@@ -125,8 +147,14 @@ class SafeRestoreService:
         """
         Extract archive to / using sudo tar, so root-owned files
         can be restored correctly.
+
+        `--overwrite` is required: config files like /etc/nftables.conf carry
+        extended ACLs (UpApp/uvicorn rwx), and without it GNU tar refuses to
+        replace the existing file ("Cannot open: File exists"), failing the
+        whole component restore on a same-VM restore. Matches the full-restore
+        helper `_extract_archive_to_root`.
         """
-        return run_cmd(["sudo", "/usr/bin/tar", "-xzf", str(archive), "-C", "/"], timeout=timeout)
+        return run_cmd(["sudo", "/usr/bin/tar", "--overwrite", "-xzf", str(archive), "-C", "/"], timeout=timeout)
 
     @classmethod
     def _restore_firewall(cls, backup_dir: Path, component_meta: dict) -> ComponentResult:
@@ -162,6 +190,10 @@ class SafeRestoreService:
                             shutil.copy2(backup_conf, current_conf)
                             run_cmd(["sudo", "/usr/bin/nft", "-f", "/etc/nftables.conf"], timeout=30)
                         return ComponentResult.failed(name, apply_res.get("error", "nft reload failed"))
+
+                    sync_ok, sync_message = cls._restore_firewall_rules_db(tmp_path)
+                    if not sync_ok:
+                        return ComponentResult.failed(name, sync_message)
                 finally:
                     if backup_conf.exists():
                         backup_conf.unlink(missing_ok=True)
@@ -171,7 +203,70 @@ class SafeRestoreService:
             status="success",
             file=component_meta["file"],
             duration_s=t.elapsed,
+            message="Firewall config restored and firewall rule database synchronized.",
         )
+
+    @classmethod
+    def _restore_firewall_rules_db(cls, extracted_root: Path) -> tuple[bool, str]:
+        snapshot_file = extracted_root / "var" / "backups" / "asguard" / "firewall_rules_db.json"
+        if not snapshot_file.exists():
+            return True, "firewall db snapshot missing; nftables config restored only"
+
+        try:
+            payload = json.loads(snapshot_file.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return False, f"Could not read firewall DB snapshot: {exc}"
+
+        rows = payload.get("rules", [])
+        if not isinstance(rows, list):
+            return False, "Invalid firewall DB snapshot format"
+
+        rules_to_create: list[Rule] = []
+        missing_interfaces: list[str] = []
+
+        for row in rows:
+            interface = None
+            interface_ifname = row.get("interface_ifname")
+            interface_name = row.get("interface_name")
+
+            if interface_ifname:
+                interface = Interface.objects.filter(ifname=interface_ifname).first()
+            if interface is None and interface_name:
+                interface = Interface.objects.filter(name_interface=interface_name).first()
+
+            if interface is None:
+                missing_interfaces.append(interface_name or interface_ifname or "unknown-interface")
+                continue
+
+            rules_to_create.append(
+                Rule(
+                    rule=row.get("rule"),
+                    rule_description=row.get("rule_description"),
+                    rule_status=bool(row.get("rule_status", True)),
+                    type_rule=row.get("type_rule"),
+                    policy=row.get("policy"),
+                    protocol=row.get("protocol"),
+                    saddr=row.get("saddr"),
+                    sport=row.get("sport"),
+                    daddr=row.get("daddr"),
+                    dport=row.get("dport"),
+                    position=row.get("position") or 0,
+                    interface=interface,
+                )
+            )
+
+        warning_msg = ""
+        if missing_interfaces:
+            missing_list = ", ".join(sorted(set(missing_interfaces))[:5])
+            warning_msg = f"Interfaces absentes ignorées (cross-VM): {missing_list}"
+            logger.warning("Firewall DB restore: %s", warning_msg)
+
+        with transaction.atomic():
+            Rule.objects.all().delete()
+            if rules_to_create:
+                Rule.objects.bulk_create(rules_to_create)
+
+        return True, warning_msg
 
     @classmethod
     def _restore_vpn(cls, backup_dir: Path, component_meta: dict) -> ComponentResult:

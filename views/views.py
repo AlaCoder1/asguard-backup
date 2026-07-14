@@ -1,7 +1,9 @@
 import subprocess
+from django.conf import settings
 from django.shortcuts import redirect, render
 from django.core import serializers
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 from django.db.models import Q
 import json
 import ast
@@ -910,7 +912,14 @@ def gatways_information(request):
             } for gateway, info in output_data.items()
         ]
         return output_data
+@never_cache
+@login_required(login_url='/')
+def backup_page(request):
+    with open(settings.ENCORE_ENTRYPOINTS_FILE, encoding="utf-8") as entrypoints_file:
+        entrypoints = json.load(entrypoints_file)
 
+    backup_assets = entrypoints.get("entrypoints", {}).get("backup", {})
+    return render(request, 'backup.html', {"backup_assets": backup_assets})
         # return JsonResponse({"gatways_information": output_data})
     
     

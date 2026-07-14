@@ -60,9 +60,22 @@ def update_vlan_sys(old_vlan,parent_interface,vlan_tag,vlan_priority):
 
 def delete_vlan_sys(vlan):
     """function to delete vlan in system"""
+    ifname = vlan.split('@')[0].strip()
+
+    # Drop the filter table FIRST: the loop below bails out on the first command
+    # that writes to stderr (dhcpd4 restart fails when the unit is absent), so
+    # anything placed after it may never run. Without this, every deleted VLAN
+    # leaves an orphan `table inet filter_vlanX` pointing at a dead interface.
+    #
+    # /etc/rules/<ifname> is the PERSISTED copy that the firewall reload rebuilds
+    # the ruleset from — dropping the live table alone is not enough: the table
+    # reappears on the next reload/resync/restore.
+    execute_cmd("nft delete table inet filter_{} 2>/dev/null || true".format(ifname))
+    execute_cmd("rm -rf /etc/rules/{}".format(ifname))
+
     commandes= [
         f"nmcli connection delete {vlan}",
-        "sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(vlan.split('@')[0].strip()),
+        "sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(ifname),
          '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(vlan,vlan),
         "systemctl restart dhcpd4.service"
         ]
@@ -71,7 +84,7 @@ def delete_vlan_sys(vlan):
         if error!="":
             # print(cmd)
             return error
-      
+
     return True
 def convert_priority(priority):
     match priority:

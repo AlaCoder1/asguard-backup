@@ -30,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -83,8 +83,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'backend.ipsecmonitoring',
     'backend.managementLogs',
-    'backend.double_mask',
-    'backend.backup',
+    'backend.double_mask'
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {
@@ -139,14 +138,6 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default=5432, cast=int),
-        # When PostgreSQL is down, libpq otherwise blocks for ~75s on each
-        # connection attempt — long enough to lock up every Daphne worker.
-        # A 5s ceiling fails fast so the appliance stays responsive (AI Risk
-        # Center, login screen) and the failure can actually be alerted on.
-        'OPTIONS': {
-            'connect_timeout': 5,
-        },
-        'CONN_MAX_AGE': 60,
     }
 }
 
@@ -229,15 +220,11 @@ SWAGGER_SETTINGS = {
             'in': 'header',
             'name': 'X-CSRFToken',
         },
-    },
-    # Groupe les ~50 endpoints /backup/ par étape du cycle de vie d'une
-    # sauvegarde (Création → Catalogue → Restauration → … → Supervision).
-    # Voir backend/backup/swagger.py.
-    'DEFAULT_AUTO_SCHEMA_CLASS': 'backend.backup.swagger.BackupOrderedAutoSchema',
+    }
 }
 
 # jwt_auth/settings.py
-SESSION_COOKIE_AGE = 3000000
+SESSION_COOKIE_AGE = 300000
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE= True
 SESSION_COOKIE_HTTPONLY = True
@@ -286,10 +273,6 @@ CELERY_BEAT_SCHEDULE = {
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
-# Allow backup archive uploads up to 2 GB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024 * 1024  # 2 GB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024 * 1024  # 2 GB
 
 LOGGING = {
     "version": 1,

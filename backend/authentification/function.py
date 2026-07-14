@@ -159,7 +159,7 @@ def send_email_to_user(email, code, username):
         msg.add_alternative(html_content, subtype='html')
         msg.get_payload()[0].add_related(img_data, 'image', 'png', cid='qr_code')
     
-    server = smtplib.SMTP(settings.EMAIL_HOST, 587)
+    server = smtplib.SMTP(settings.EMAIL_HOST, 587, timeout=10)
     server.starttls()
     server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
     # msg.attach(MIMEText(html_content, 'plain'))

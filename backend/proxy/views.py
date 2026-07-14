@@ -510,8 +510,6 @@ def addRuleSquid(request):
             value = data['value']
         if write_in_file == True:
             try:
-                with open(file_path, 'a') as file:
-                    file.write(value + '\n')
                 try:
                     language = Profile.objects.get(id=data['user_id']).language
                 except Profile.DoesNotExist:
@@ -521,6 +519,13 @@ def addRuleSquid(request):
                 if (serializerProxyRules.is_valid()):
                     try:
                         serializerProxyRules.save()
+                        # Only touch the ACL file once the rule is known valid and
+                        # persisted. Writing first meant a rejected rule (bad type)
+                        # still landed in the file — an unknown type falls through to
+                        # blocked_subnet.acl, where a non-IP value makes squid refuse
+                        # to start ("FATAL: Bungled squid.conf").
+                        with open(file_path, 'a') as file:
+                            file.write(value + '\n')
                         server_satus = ServerSatus.objects.get(id=1)
                         server_satus.status_server = True
                         server_satus.save()

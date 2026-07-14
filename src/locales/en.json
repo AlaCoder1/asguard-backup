@@ -138,6 +138,8 @@
     "interfaces": "Interfaces",
     "firewall": "Firewall",
     "services": "Services",
+    "backup": "Backup & DRP",
+    "license": "License",
     "reports": "Reports"
   },
   "subtitle": {
@@ -628,6 +630,12 @@
     "servers": "SERVERS",
     "clients": "CLIENTS",
     "listing": "LISTING",
+    "backupDashboardMonitoring": "Dashboard & Monitoring",
+    "backups": "Backups",
+    "vmSnapshot": "VM Snapshot",
+    "schedule": "Schedule",
+    "alertsMailing": "Alerts & Mailing",
+    "logs": "Logs",
     "SNAT": "SNAT",
     "OneToOne": "One To One",
     "DNAT": "DNAT",

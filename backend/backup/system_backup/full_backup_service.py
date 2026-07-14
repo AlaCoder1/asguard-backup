@@ -15,11 +15,16 @@ Modes supportés :
 import json
 import logging
 import platform
+import shutil
 import socket
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from zoneinfo import ZoneInfo
 
+from distro import name
+
+from backend.rules.models import Rule
 from .base import ComponentResult, Timer, compute_sha256, run_cmd
 
 logger = logging.getLogger(__name__)
@@ -34,9 +39,61 @@ class FullBackupService:
     APP_ROOT = Path("/asguard/asguard")
     BACKEND_ROOT = APP_ROOT / "backend"
 
+    FULL_COMPONENTS = [
+        "database",
+        "firewall",
+        "vpn",
+        "web",
+        "ids",
+        "proxy",
+        "network",
+        "security",
+        "certificates",
+        "application",
+        "system_config",
+        "scheduled_tasks",
+        "packages",
+        "systemd_services",
+        "docker_state",
+        "logs",
+        "users_groups",
+        "ztna",
+        "ldap",
+        "ipsec_detailed",
+        "routing",
+        "vlan",
+        "vxlan",
+        "sdwan",
+        "waf",
+        "nat",
+        "dhcp",
+        "gateway",
+        "double_mask",
+    ]
+
+    SAFE_COMPONENTS = [
+        "firewall",
+        "vpn",
+        "ids",
+        "proxy",
+        "network",
+        "certificates",
+        "routing",
+        "nat",
+        "dhcp",
+        "waf",
+        "ztna",
+        "ipsec_detailed",
+        "vlan",
+        "vxlan",
+        "sdwan",
+        "gateway",
+        "double_mask",
+    ]
+
     @classmethod
-    def create_full_backup(cls) -> dict:
-        timestamp = datetime.now(LOCAL_TZ).strftime("%Y-%m-%d_%H-%M-%S")        
+    def create_full_backup(cls, progress_callback=None) -> dict:
+        timestamp = datetime.now(LOCAL_TZ).strftime("%Y-%m-%d_%H-%M-%S")
         backup_id = f"backup_{timestamp}"
         backup_dir = cls.BACKUP_ROOT / backup_id
         backup_dir.mkdir(parents=True, exist_ok=True)
@@ -59,7 +116,6 @@ class FullBackupService:
             "docker_state",
             "logs",
             "users_groups",
-            "vm_snapshot",
             # nouveaux composants UI/fonctionnels
             "ztna",
             "ldap",
@@ -77,7 +133,6 @@ class FullBackupService:
             (backup_dir / sub).mkdir(parents=True, exist_ok=True)
 
         runners = [
-            cls._backup_vm_snapshot,      # volontairement skipped
             cls._backup_database,
             cls._backup_firewall,
             cls._backup_vpn,
@@ -110,7 +165,7 @@ class FullBackupService:
             cls._backup_double_mask,
         ]
 
-        results = cls._run_backup_runners(backup_dir, runners)
+        results = cls._run_backup_runners(backup_dir, runners, progress_callback=progress_callback)
         return cls._finalize_backup(
             backup_id=backup_id,
             backup_dir=backup_dir,
@@ -119,7 +174,7 @@ class FullBackupService:
         )
 
     @classmethod
-    def create_safe_backup(cls) -> dict:
+    def create_safe_backup(cls, progress_callback=None) -> dict:
         """
         Backup SAFE pour l'interface admin :
         composants métier/configuration restaurables depuis l'UI.
@@ -170,7 +225,7 @@ class FullBackupService:
             cls._backup_double_mask,
         ]
 
-        results = cls._run_backup_runners(backup_dir, runners)
+        results = cls._run_backup_runners(backup_dir, runners, progress_callback=progress_callback)
         return cls._finalize_backup(
             backup_id=backup_id,
             backup_dir=backup_dir,
@@ -179,12 +234,136 @@ class FullBackupService:
         )
 
     @classmethod
-    def _run_backup_runners(cls, backup_dir: Path, runners: list) -> dict[str, ComponentResult]:
-        results: dict[str, ComponentResult] = {}
+    def create_custom_backup(cls, components: list[str]) -> dict:
+        selected = cls._normalize_components(components)
+        if not selected:
+            return {
+                "status": "error",
+                "message": "No valid backup components selected.",
+                "available_components": cls.available_components(),
+            }
 
-        for runner in runners:
-            result = runner(backup_dir)
+        timestamp = datetime.now(LOCAL_TZ).strftime("%Y-%m-%d_%H-%M-%S")
+        backup_id = f"backup_custom_{timestamp}"
+        backup_dir = cls.BACKUP_ROOT / backup_id
+
+        try:
+            backup_dir.mkdir(parents=True, exist_ok=True)
+
+            for component in selected:
+                subdir = "db" if component == "database" else component
+                (backup_dir / subdir).mkdir(parents=True, exist_ok=True)
+
+            runners_map = cls._component_runners()
+            runners = [runners_map[component] for component in selected]
+            results = cls._run_backup_runners(backup_dir, runners)
+            return cls._finalize_backup(
+                backup_id=backup_id,
+                backup_dir=backup_dir,
+                results=results,
+                backup_scope="selected_components",
+                selected_components=selected,
+            )
+        except Exception as exc:
+            logger.exception("Custom backup failed before finalization")
+            if backup_dir.exists():
+                shutil.rmtree(backup_dir, ignore_errors=True)
+            return {
+                "status": "error",
+                "backup_id": backup_id,
+                "message": f"Custom backup failed: {exc}",
+                "selected_components": selected,
+            }
+
+    @classmethod
+    def _run_backup_runners(cls, backup_dir: Path, runners: list, progress_callback=None) -> dict[str, ComponentResult]:
+        results: dict[str, ComponentResult] = {}
+        total = len(runners)
+        components_progress: dict[str, str] = {}
+
+        if progress_callback:
+            try:
+                progress_callback({
+                    "components_progress": {},
+                    "current_component": None,
+                    "progress_pct": 0,
+                    "done": 0,
+                    "total": total,
+                })
+            except Exception:
+                pass
+
+        for idx, runner in enumerate(runners):
+            # A component runner must NEVER be able to abort the whole backup. If
+            # one raises an unexpected exception (permission error, missing tool,
+            # DB hiccup…), catch it and record that component as "failed" so the
+            # remaining components still run and — critically — the backup still
+            # reaches _finalize_backup and writes backup_metadata.json. Without
+            # this, a single crashing component left a metadata-less orphan folder
+            # that showed up as a detail-less "Echec total".
+            try:
+                result = runner(backup_dir)
+            except Exception as exc:
+                comp_name = getattr(runner, "__name__", "unknown").replace("_backup_", "") or "unknown"
+                logger.exception("Backup component '%s' crashed — recorded as failed", comp_name)
+                result = ComponentResult(
+                    name=comp_name,
+                    status="failed",
+                    message=f"Composant en erreur : {exc}",
+                )
             results[result.name] = result
+            components_progress[result.name] = result.status
+
+            # Per-component DB snapshot — alongside the component's config
+            # files, dump the PostgreSQL rows it owns (NAT rules, routes,
+            # WAF rules, …) so a component-level restore can roll the
+            # database back too. See backend/backup/component_db.py.
+            try:
+                from backend.backup.component_db import (
+                    has_db_snapshot, dump_component_db, DB_SNAPSHOT_FILENAME,
+                )
+                if result.status != "failed" and has_db_snapshot(result.name):
+                    comp_dir = backup_dir / result.name
+                    comp_dir.mkdir(parents=True, exist_ok=True)
+                    snapshot = dump_component_db(result.name)
+                    with open(comp_dir / DB_SNAPSHOT_FILENAME, "w", encoding="utf-8") as _fh:
+                        import json as _json
+                        _json.dump(snapshot, _fh, indent=2, ensure_ascii=False)
+                # Firewall is intentionally OUT of COMPONENT_MODELS (it keeps its
+                # bespoke restore path), so the generic dump skips it. Write a
+                # snapshot anyway — FOR THE PREVIEW DIFF ONLY. The restore ignores
+                # it (has_db_snapshot('firewall') is False → no double-restore);
+                # this just lets "Aperçu" show changed firewall rules.
+                if result.name == "firewall" and result.status != "failed":
+                    try:
+                        from django.core import serializers as _ser
+                        from backend.rules.models import Rule as _Rule
+                        comp_dir = backup_dir / "firewall"
+                        comp_dir.mkdir(parents=True, exist_ok=True)
+                        import json as _json
+                        with open(comp_dir / DB_SNAPSHOT_FILENAME, "w", encoding="utf-8") as _fh:
+                            _json.dump({
+                                "component": "firewall",
+                                "models": {"rules.Rule": _ser.serialize("json", _Rule.objects.all())},
+                                "counts": {"rules.Rule": _Rule.objects.count()},
+                                "errors": [],
+                            }, _fh, indent=2, ensure_ascii=False)
+                    except Exception as _fexc:
+                        logger.warning("firewall preview snapshot skipped: %s", _fexc)
+            except Exception as _exc:
+                logger.warning("component_db dump skipped for %s: %s", result.name, _exc)
+
+            if progress_callback:
+                try:
+                    progress_callback({
+                        "components_progress": dict(components_progress),
+                        "current_component": result.name,
+                        "progress_pct": int((idx + 1) / total * 100) if total else 100,
+                        "done": idx + 1,
+                        "total": total,
+                    })
+                except Exception:
+                    pass
 
             if result.status == "failed":
                 logger.warning("Backup '%s' failed: %s", result.name, result.message)
@@ -200,24 +379,34 @@ class FullBackupService:
         backup_dir: Path,
         results: dict[str, ComponentResult],
         backup_scope: str,
+        selected_components: list[str] | None = None,
     ) -> dict:
         metadata = cls._build_metadata(
             backup_id=backup_id,
             results=results,
             backup_scope=backup_scope,
+            selected_components=selected_components,
         )
 
         with open(backup_dir / "backup_metadata.json", "w", encoding="utf-8") as fh:
             json.dump(metadata, fh, indent=2)
 
+        # Manifeste d'intégrité signé — écrit en TOUT DERNIER (tous les fichiers,
+        # metadata incluse, sont présents). Permet de détecter avant restauration
+        # toute altération du backup (ransomware, corruption, falsification).
+        # Voir backend/backup/integrity.py. N'échoue jamais le backup.
+        try:
+            from backend.backup.integrity import write_manifest
+            ok_manifest, manifest_msg = write_manifest(backup_dir)
+            logger.info("integrity manifest for %s: %s", backup_id, manifest_msg)
+        except Exception as _exc:
+            logger.warning("integrity manifest skipped for %s: %s", backup_id, _exc)
+
         counts = {"success": 0, "failed": 0, "skipped": 0}
         for r in results.values():
             counts[r.status] = counts.get(r.status, 0) + 1
 
-        overall_status = (
-            "ok" if counts["failed"] == 0
-            else ("partial" if counts["success"] > 0 else "error")
-        )
+        overall_status = cls._compute_overall_status(counts)
 
         return {
             "status": overall_status,
@@ -225,12 +414,81 @@ class FullBackupService:
             "backup_dir": str(backup_dir),
             "components": {name: r.to_dict() for name, r in results.items()},
             "summary": counts,
+            "message": cls._build_summary_message(counts),
             "metadata": metadata,
         }
+
+    @classmethod
+    def _compute_overall_status(cls, counts: dict[str, int]) -> str:
+        if counts.get("failed", 0) > 0:
+            return "error"
+        if counts.get("skipped", 0) > 0:
+            return "partial"
+        return "ok"
+
+    @classmethod
+    def _build_summary_message(cls, counts: dict[str, int]) -> str:
+        success = counts.get("success", 0)
+        failed = counts.get("failed", 0)
+        skipped = counts.get("skipped", 0)
+
+        if failed > 0:
+            return f"Backup completed with errors: {success} succeeded, {failed} failed, {skipped} skipped."
+        if skipped > 0:
+            return f"Backup completed partially: {success} succeeded, {skipped} skipped."
+        return f"Backup completed successfully: {success} component(s) saved."
 
     # -------------------------------------------------------------------------
     # Helpers
     # -------------------------------------------------------------------------
+
+    @classmethod
+    def available_components(cls) -> list[str]:
+        return list(cls._component_runners().keys())
+
+    @classmethod
+    def _normalize_components(cls, components: list[str]) -> list[str]:
+        available = cls._component_runners()
+        selected: list[str] = []
+        for component in components or []:
+            name = str(component).strip()
+            if name in available and name not in selected:
+                selected.append(name)
+        return selected
+
+    @classmethod
+    def _component_runners(cls) -> dict:
+        return {
+            "database": cls._backup_database,
+            "firewall": cls._backup_firewall,
+            "vpn": cls._backup_vpn,
+            "web": cls._backup_web,
+            "ids": cls._backup_ids,
+            "proxy": cls._backup_proxy,
+            "network": cls._backup_network,
+            "security": cls._backup_security,
+            "certificates": cls._backup_certificates,
+            "application": cls._backup_application,
+            "system_config": cls._backup_system_config,
+            "scheduled_tasks": cls._backup_scheduled_tasks,
+            "packages": cls._backup_packages,
+            "systemd_services": cls._backup_systemd_services,
+            "docker_state": cls._backup_docker_state,
+            "logs": cls._backup_logs,
+            "users_groups": cls._backup_users_groups,
+            "ztna": cls._backup_ztna,
+            "ldap": cls._backup_ldap,
+            "ipsec_detailed": cls._backup_ipsec_detailed,
+            "routing": cls._backup_routing,
+            "vlan": cls._backup_vlan,
+            "vxlan": cls._backup_vxlan,
+            "sdwan": cls._backup_sdwan,
+            "waf": cls._backup_waf,
+            "nat": cls._backup_nat,
+            "dhcp": cls._backup_dhcp,
+            "gateway": cls._backup_gateway,
+            "double_mask": cls._backup_double_mask,
+        }
 
     @classmethod
     def _build_component_result_from_file(
@@ -273,7 +531,13 @@ class FullBackupService:
 
         with Timer() as t:
             try:
-                r = run_cmd(["tar", "--ignore-failed-read", "-czf", str(dest)] + sources, timeout=timeout)
+                # sudo: many config paths backed up here (NetworkManager
+                # *.nmconnection profiles, IPsec secrets, nginx/modsec, LDAP) are
+                # root-owned 0600. Run as the uvicorn service user, --ignore-failed-read
+                # would SILENTLY skip them, yielding a "successful" backup whose
+                # system-connections/ is empty — VLANs, tunnels and interface
+                # profiles were never captured (and thus never restorable).
+                r = run_cmd(["sudo", "-n", "/usr/bin/tar", "--ignore-failed-read", "-czf", str(dest)] + sources, timeout=timeout)
                 if not r["success"]:
                     return ComponentResult.failed(name, r.get("error", r.get("stderr", "tar failed")))
             except Exception as exc:
@@ -393,13 +657,72 @@ class FullBackupService:
 
     @classmethod
     def _backup_firewall(cls, backup_dir: Path) -> ComponentResult:
-        return cls._backup_paths_as_tar(
-            backup_dir=backup_dir,
-            name="firewall",
-            relative="firewall/firewall_rules.tar.gz",
-            paths=["/etc/nftables.conf", "/etc/rules", "/etc/iptables"],
-            timeout=60,
-            message_if_empty="No firewall config found",
+        name = "firewall"
+        relative = "firewall/firewall_rules.tar.gz"
+        dest = backup_dir / relative
+        sources = [p for p in ["/etc/nftables.conf", "/etc/rules", "/etc/iptables"] if Path(p).exists()]
+
+        with Timer() as t:
+            try:
+                with TemporaryDirectory(prefix="backup_firewall_") as tmp:
+                    tmp_path = Path(tmp)
+                    snapshot_root = tmp_path / "snapshot"
+                    snapshot_root.mkdir(parents=True, exist_ok=True)
+
+                    metadata_dir = snapshot_root / "var" / "backups" / "asguard"
+                    metadata_dir.mkdir(parents=True, exist_ok=True)
+                    firewall_rules_file = metadata_dir / "firewall_rules_db.json"
+
+                    firewall_rows = []
+                    for rule in Rule.objects.select_related("interface").order_by(
+                        "interface__name_interface",
+                        "type_rule",
+                        "position",
+                        "id",
+                    ):
+                        firewall_rows.append({
+                            "rule": rule.rule,
+                            "rule_description": rule.rule_description,
+                            "rule_status": rule.rule_status,
+                            "type_rule": rule.type_rule,
+                            "policy": rule.policy,
+                            "protocol": rule.protocol,
+                            "saddr": rule.saddr,
+                            "sport": rule.sport,
+                            "daddr": rule.daddr,
+                            "dport": rule.dport,
+                            "position": rule.position,
+                            "interface_ifname": getattr(rule.interface, "ifname", None),
+                            "interface_name": getattr(rule.interface, "name_interface", None),
+                        })
+
+                    firewall_rules_file.write_text(
+                        json.dumps({"rules": firewall_rows}, indent=2),
+                        encoding="utf-8",
+                    )
+
+                    # Store the DB snapshot at its intended RELATIVE path
+                    # (var/backups/asguard/firewall_rules_db.json) via `-C snapshot_root`,
+                    # not the absolute temp dir — otherwise tar bakes the temp path
+                    # (root/tmp/backup_firewall_XXX/...) into the archive and the
+                    # restore's _restore_firewall_rules_db can never find it, silently
+                    # skipping the Rule-table sync. System files go via `-C /`.
+                    tar_cmd = ["sudo", "-n", "/usr/bin/tar", "--ignore-failed-read",
+                               "-czf", str(dest), "-C", str(snapshot_root), "var"]
+                    if sources:
+                        tar_cmd += ["-C", "/"] + [p.lstrip("/") for p in sources]
+                    r = run_cmd(tar_cmd, timeout=60)
+                    if not r["success"]:
+                        return ComponentResult.failed(name, r.get("error", r.get("stderr", "tar failed")))
+            except Exception as exc:
+                return ComponentResult.failed(name, str(exc))
+
+        return cls._build_component_result_from_file(
+            name,
+            relative,
+            dest,
+            t.elapsed,
+            message="Firewall files and firewall DB rules snapshot saved.",
         )
 
     @classmethod
@@ -534,7 +857,7 @@ class FullBackupService:
             try:
                 r = run_cmd(
                     [
-                        "tar",
+                        "sudo", "-n", "/usr/bin/tar",
                         "--ignore-failed-read",
                         "--exclude=/etc/mtab",
                         "-czf",
@@ -637,7 +960,7 @@ class FullBackupService:
                 if custom_systemd.exists():
                     run_cmd(
                         [
-                            "tar",
+                            "sudo", "-n", "/usr/bin/tar",
                             "--ignore-failed-read",
                             "-czf",
                             str(dest_dir / "custom_units.tar.gz"),
@@ -708,44 +1031,42 @@ class FullBackupService:
     @classmethod
     def _backup_logs(cls, backup_dir: Path) -> ComponentResult:
         name = "logs"
-        relative = "logs/system_logs.tar.gz"
-        dest = backup_dir / relative
         logs_dir = backup_dir / "logs"
         logs_dir.mkdir(parents=True, exist_ok=True)
 
-        log_paths = [
+        archive = logs_dir / "system_logs.tar.gz"
+
+        log_sources = [
+            "/var/log/nginx",
+            "/var/log/openvpn",
+            "/var/log/suricata",
+            "/var/log/asguard",
             "/var/log/syslog",
             "/var/log/messages",
             "/var/log/auth.log",
-            "/var/log/nginx",
-            "/var/log/suricata",
-            "/var/log/fail2ban.log",
-            "/var/log/openvpn",
         ]
-        sources = [p for p in log_paths if Path(p).exists()]
+
+        existing_sources = [p for p in log_sources if Path(p).exists()]
 
         with Timer() as t:
-            try:
-                journal_file = logs_dir / "journal_recent.json"
-                r = run_cmd(
-                    ["journalctl", "--since=3 days ago", "--no-pager", "-o", "json", "-n", "10000"],
-                    timeout=120,
-                )
-                if r["success"]:
-                    journal_file.write_text(r["stdout"], encoding="utf-8")
+            if not existing_sources:
+                return ComponentResult.skipped(name, "No log sources found to back up")
 
-                if sources:
-                    rt = run_cmd(["tar", "--ignore-failed-read", "-czf", str(dest)] + sources, timeout=300)
-                    if not rt["success"]:
-                        return ComponentResult.failed(name, rt.get("error", rt.get("stderr", "tar failed")))
-                else:
-                    dest.write_bytes(b"")
+            cmd = ["sudo", "/usr/bin/tar", "-czf", str(archive)] + existing_sources
+            res = run_cmd(cmd, timeout=180)
 
-            except Exception as exc:
-                return ComponentResult.failed(name, str(exc))
+            if not res["success"]:
+                return ComponentResult.failed(name, res.get("error", "logs backup failed"))
 
-        return cls._build_component_result_from_file(name, relative, dest, t.elapsed)
-
+        return ComponentResult(
+            name=name,
+            status="success",
+            file="logs/system_logs.tar.gz",
+            size_mb=archive.stat().st_size / (1024 ** 2),
+            sha256=compute_sha256(archive),
+            duration_s=t.elapsed,
+        )
+    
     @classmethod
     def _backup_users_groups(cls, backup_dir: Path) -> ComponentResult:
         name = "users_groups"
@@ -773,22 +1094,6 @@ class FullBackupService:
                 return ComponentResult.failed(name, str(exc))
 
         return cls._build_component_result_from_file(name, relative, dest, t.elapsed)
-
-    @classmethod
-    def _backup_vm_snapshot(cls, backup_dir: Path) -> ComponentResult:
-        name = "vm_snapshot"
-        snapshot_info_file = backup_dir / "vm_snapshot" / "snapshot_info.json"
-        msg = "VM snapshot temporarily disabled to avoid blocking full backup."
-
-        try:
-            snapshot_info_file.write_text(
-                json.dumps({"status": "skipped", "message": msg}, indent=2),
-                encoding="utf-8",
-            )
-        except Exception as exc:
-            return ComponentResult.failed(name, f"Could not write snapshot_info.json: {exc}")
-
-        return ComponentResult.skipped(name, msg)
 
     # -------------------------------------------------------------------------
     # New UI-aligned modules
@@ -1002,7 +1307,13 @@ class FullBackupService:
     # -------------------------------------------------------------------------
 
     @classmethod
-    def _build_metadata(cls, backup_id: str, results: dict, backup_scope: str) -> dict:
+    def _build_metadata(
+        cls,
+        backup_id: str,
+        results: dict,
+        backup_scope: str,
+        selected_components: list[str] | None = None,
+    ) -> dict:
         counts = {"success": 0, "failed": 0, "skipped": 0}
         for r in results.values():
             counts[r.status] = counts.get(r.status, 0) + 1
@@ -1011,12 +1322,14 @@ class FullBackupService:
         total_duration = sum(r.duration_s for r in results.values())
         non_skipped = counts["success"] + counts["failed"]
         health_score = round(100 * counts["success"] / non_skipped) if non_skipped > 0 else 0
+        overall_status = cls._compute_overall_status(counts)
 
-        return {
+        metadata = {
             "schema_version": SCHEMA_VERSION,
             "backup_id": backup_id,
             "created_at": datetime.now(LOCAL_TZ).isoformat(),            
             "backup_scope": backup_scope,
+            "overall_status": overall_status,
             "health_score": health_score,
             "system": {
                 "hostname": _get_hostname(),
@@ -1032,6 +1345,9 @@ class FullBackupService:
                 "components_skipped": counts["skipped"],
             },
         }
+        if selected_components is not None:
+            metadata["selected_components"] = selected_components
+        return metadata
 
 
 def _get_hostname() -> str:

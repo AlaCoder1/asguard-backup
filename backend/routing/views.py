@@ -1,4 +1,6 @@
+import threading
 from django.http import JsonResponse
+from backend.backup.notifications import notify_routing_change
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
@@ -150,6 +152,7 @@ def create_routing(request):
             routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
                               gateway_interface_instance.metric)
             serializer_routing.save()
+            threading.Thread(target=notify_routing_change, args=("créée", data.get("destination_address", ""), ""), daemon=True).start()
             return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
@@ -190,7 +193,9 @@ def delete_routing(request, id):
                           gateway_interface_instance.metric)
 
         # delete rule from database
+        deleted_dest = routing.destination_address
         routing.delete()
+        threading.Thread(target=notify_routing_change, args=("supprimée", deleted_dest, ""), daemon=True).start()
         return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
         
     except CommandExecutionError:
@@ -263,6 +268,7 @@ def update_routing(request, id):
         serializer_routing = RoutingSerializer(routing, data=data)
         if serializer_routing.is_valid():
             serializer_routing.save()
+            threading.Thread(target=notify_routing_change, args=("modifiée", data.get("destination_address", ""), ""), daemon=True).start()
             return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)

@@ -13,13 +13,26 @@ logger = logging.getLogger(__name__)
 class ExportImportService:
     BACKUP_ROOT = Path("/var/backups/asguard")
     REQUIRED_METADATA = "backup_metadata.json"
+    # Files allowed at the backup root. Components are matched by prefix
+    # (trailing "/"), single files are matched exact. Anything else
+    # → "Unexpected path in archive" error.
     ALLOWED_PREFIXES = (
         "db/", "firewall/", "vpn/", "web/", "ids/",
         "proxy/", "network/", "security/", "certificates/",
         "application/", "system_config/", "scheduled_tasks/",
         "packages/", "systemd_services/", "docker_state/",
         "logs/", "users_groups/", "vm_snapshot/",
-        "backup_metadata.json"
+        "ztna/", "ldap/", "ipsec_detailed/", "routing/",
+        "vlan/", "vxlan/", "sdwan/", "waf/", "nat/",
+        "dhcp/", "gateway/", "double_mask/",
+        # Backup-level files (no trailing slash = exact match)
+        "backup_metadata.json",
+        # Integrity manifest written by backend/backup/integrity.py.
+        # The signed pair must be allowed through import — otherwise
+        # any backup with anti-tamper protection gets rejected at the
+        # gate, which defeats the whole purpose.
+        "MANIFEST.sha256",
+        "MANIFEST.sig",
     )
 
     @classmethod
@@ -47,6 +60,8 @@ class ExportImportService:
         extract_root = None
 
         try:
+            cls.BACKUP_ROOT.mkdir(parents=True, exist_ok=True)
+
             with NamedTemporaryFile(delete=False, suffix=".tar.gz") as temp:
                 for chunk in uploaded_file.chunks():
                     temp.write(chunk)
@@ -134,7 +149,10 @@ class ExportImportService:
 
                     if relative_path == cls.REQUIRED_METADATA:
                         has_metadata = True
-                    elif relative_path and not any(relative_path.startswith(prefix) for prefix in cls.ALLOWED_PREFIXES):
+                    elif relative_path and not any(
+                        relative_path == prefix.rstrip("/") or relative_path.startswith(prefix)
+                        for prefix in cls.ALLOWED_PREFIXES
+                    ):
                         raise ValueError(f"Unexpected path in archive: '{relative_path}'")
 
         if not backup_id:

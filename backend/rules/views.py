@@ -1,3 +1,5 @@
+import threading
+
 from django.http import JsonResponse
 from django.db.models import Q
 from rest_framework.authentication import SessionAuthentication
@@ -13,6 +15,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.views.decorators.http import require_http_methods
 from decouple import config
+from backend.backup.notifications import notify_firewall_rule_change
 @swagger_auto_schema(
     method='post',
     operation_summary="API to delete a rule",
@@ -70,8 +73,15 @@ def delete_rule(request):
                 handle=get_handle_rule(ifname,type_rules,rule)
                 if handle is not None:
                     return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-                
+
+                rule_desc = rules.rule_description or rules.rule
+                iface = ifname
                 rules.delete()
+                threading.Thread(
+                    target=notify_firewall_rule_change,
+                    args=("supprimée", rule_desc, iface, "", type_rules),
+                    daemon=True,
+                ).start()
                 msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
                 status=200
             
@@ -304,6 +314,11 @@ def add_rule(request,name_interface):
           rule_serializer = RuleSerializer(data=data)
           if rule_serializer.is_valid():
             rule_serializer.save()
+            threading.Thread(
+                target=notify_firewall_rule_change,
+                args=("ajoutée", rule_description or "", name_interface, policy or "", type_rule or ""),
+                daemon=True,
+            ).start()
             return JsonResponse({"response": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
           return JsonResponse({"response": rule_serializer.errors}, status=400)
         return JsonResponse({"response": f"{ERROR_MESSAGES_CREATING} {CONSTANT_RULE}"}, status=400)
@@ -394,6 +409,11 @@ def update_rule(request,name_interface):
                     rule_serializer = RuleSerializer(rules_object,data=data)
                     if rule_serializer.is_valid():
                         rule_serializer.save()
+                        threading.Thread(
+                            target=notify_firewall_rule_change,
+                            args=("modifiée", rule_description or "", name_interface, policy or "", type_rules or ""),
+                            daemon=True,
+                        ).start()
                         return JsonResponse({"response": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
                     return JsonResponse({"response": rule_serializer.errors}, status=400)
             return JsonResponse({"response": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"}, status=400)

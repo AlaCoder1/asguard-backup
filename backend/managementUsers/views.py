@@ -1,9 +1,11 @@
 import os
+import threading
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from backend.managementUsers.models import Profile, User, Roles
+from backend.backup.notifications import notify_user_change
 from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission,RoleSerializer
 from backend.managementUsers.functions import add_user_group, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password,delete_directory,change_directory_name
 from backend.managementGroup.serializers import GroupSerializer
@@ -628,6 +630,7 @@ def create_user(request):
                             try:
                                 Group.objects.get(id=group)
                             except Group.DoesNotExist:
+                                rollback_system_user(username)
                                 return JsonResponse({"error": f"{CONSTANT_GROUP} {ERROR_MESSAGES_INEXISTANT}"},status=400)
                             add_user_group(getGroupNameById(group), username)
                         serializer_user = UserSerializerPost(data=data)
@@ -644,16 +647,19 @@ def create_user(request):
                                 serializer_user.save()
                                 serializer_group.save()
                                 Profile.objects.create(user=serializer_user.save())
+                                threading.Thread(target=notify_user_change, args=("créé", username), daemon=True).start()
                                 # Provide a Json Response with the data that was saved
                                 return JsonResponse({"msg": msg}, status=201)
                             # Provide a Json Response with the necessary error information
                             # error_message_group = next(iter(serializer_group.errors.values()))[0]
+                            rollback_system_user(username)
                             return JsonResponse({"error":serializer_group.errors}, status=400)
                         # Provide a Json Response with the necessary error information
                         # error_message = next(iter(serializer_user.errors.values()))[0]
+                        rollback_system_user(username)
                         return JsonResponse({"error":serializer_user.errors}, status=400)
                     else:
-                       
+
                         serializer_user = UserSerializerPostWithoutGroupAndPermission(data=data)
                         gid = getUidGroup()
                         groupname = {"groupname": username}
@@ -665,21 +671,38 @@ def create_user(request):
                         if serializer_user.is_valid():
                             if serializer_group.is_valid():
                                 # If okay, save it on the database
-                                
+
                                 serializer_user.save()
                                 serializer_group.save()
                                 Profile.objects.create(user=serializer_user.save())
+                                threading.Thread(target=notify_user_change, args=("créé", username), daemon=True).start()
                                 # Provide a Json Response with the data that was saved
                                 return JsonResponse({"msg": msg}, status=201)
                             # Provide a Json Response with the necessary error information
+                            rollback_system_user(username)
                             return JsonResponse(serializer_group.errors, status=400)
                         # Provide a Json Response with the necessary error information
+                        rollback_system_user(username)
                         return JsonResponse(serializer_user.errors, status=400)
                     
                 else:
                     return JsonResponse({"msg": f"{ERROR_MESSAGES_CREATING} {CONSTANT_USER}"}, status=400)
             else:
                 return JsonResponse({"msg": f"{ERROR_MESSAGES_INVALID} {CONSTANT_PASSWORD}"}, status=400)
+
+
+def rollback_system_user(username):
+    """Undo add_user() when the database side of the creation fails.
+
+    add_user() runs before the serializers are validated, so every error path
+    after it would otherwise leave an orphan Linux account: present in
+    /etc/passwd, absent from the UI, and impossible to recreate under the same
+    name.
+    """
+    if username_exists(username):
+        delete_user_in_system(username)
+    if os.path.isdir(f"/home/{username}"):
+        delete_directory(username)
 
 
 @swagger_auto_schema(
@@ -736,21 +759,34 @@ def delete_user(request, id):
         return JsonResponse({"error": f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
         # raise ValidationError(f"{CONSTANT_USER} {NOT_FOUND}")
 
-    if not Group.objects.filter(groupname=user.username).exists():
-        return JsonResponse({"error": f"{ERROR_MESSAGES_GROUP_NOT_MATCHING} '{user.username}"}, status=400)
-        # raise ValidationError(f"{GROUP_NOT_MATCHING} '{user.username}'.")
-    else:
-        group = Group.objects.filter(groupname=user.username)
-    # # Execute the command on the remote machine
-    _, stderr = delete_user_in_system(user.username)
-    _, stderr_dir = delete_directory(user.username)
-    # # convert the stderr stream to a string
-    if stderr == "":
-        if stderr_dir == "":
-            user.delete()
-            group.delete()
-            return JsonResponse({"msg": f"{user.username} {SUCCESS_MESSAGES_DELETING}"})
-    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_USER}"}, status=400)
+    deleted_username = user.username
+    group = Group.objects.filter(groupname=deleted_username)
+    home_dir = f"/home/{deleted_username}"
+
+    # A complete restore rolls /etc/passwd back to the backup image, so the Linux
+    # account and its home can already be gone while the DB row survives. Only the
+    # system state that still exists is removed, and the check is on the resulting
+    # state, not on stderr: userdel/rm warn about what is already absent.
+    if username_exists(deleted_username):
+        _, stderr = delete_user_in_system(deleted_username)
+        if username_exists(deleted_username):
+            return JsonResponse(
+                {"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_USER} : {stderr.strip()}"},
+                status=400,
+            )
+
+    if os.path.isdir(home_dir):
+        _, stderr_dir = delete_directory(deleted_username)
+        if os.path.isdir(home_dir):
+            return JsonResponse(
+                {"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_USER} : {stderr_dir.strip()}"},
+                status=400,
+            )
+
+    user.delete()
+    group.delete()
+    threading.Thread(target=notify_user_change, args=("supprimé", deleted_username), daemon=True).start()
+    return JsonResponse({"msg": f"{deleted_username} {SUCCESS_MESSAGES_DELETING}"})
 
 
 @swagger_auto_schema(
@@ -934,9 +970,10 @@ def modify_user(request, id):
                 add_user_group(gg.groupname, newusername)
             user_object.group.set(user_json['group'])
         user_object.save()
+        threading.Thread(target=notify_user_change, args=("modifié", newusername), daemon=True).start()
     else:
         msg = f"{ERROR_MESSAGES_UPDATING} {CONSTANT_USERNAME}"
-    
+
     return JsonResponse({"data": data, "msg": msg})
 
 

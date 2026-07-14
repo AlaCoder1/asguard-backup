@@ -18,6 +18,10 @@ services:
   db:
     image: "postgres:latest"
     container_name: app-db-container
+    # Without this the container does not come back after a reboot: the login
+    # shell then blocks 60s on pg_isready (see /etc/bash.bashrc) before showing
+    # the menu, which looks like a slow boot.
+    restart: always
     environment:
       # POSTGRES_PASSWORD: mypassword
       - POSTGRES_DB=postgres

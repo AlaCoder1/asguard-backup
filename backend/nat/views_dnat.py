@@ -1,4 +1,6 @@
+import threading
 from django.http import JsonResponse
+from backend.backup.notifications import notify_nat_change
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
@@ -116,6 +118,7 @@ def create_dnat(request):
 
                 # Add the rule to the database
                 serializer_dnat.save()
+                threading.Thread(target=notify_nat_change, args=("créée", "DNAT"), daemon=True).start()
                 return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_dnat.errors.values())[0][0]}, status=400)
@@ -146,6 +149,7 @@ def delete_dnat(_, id):
             for dnat_rule in DNat.objects.filter(db_position__gt=dnat.db_position).order_by("db_position"):
                 dnat_rule.db_position -= 1
                 dnat_rule.save()
+            threading.Thread(target=notify_nat_change, args=("supprimée", "DNAT"), daemon=True).start()
             return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
 
         # delete rule from database
@@ -249,8 +253,10 @@ def update_dnat(request, id):
 
                     # Update the rule in the database
                     serializer_dnat.save()
+                    threading.Thread(target=notify_nat_change, args=("modifiée", "DNAT"), daemon=True).start()
                     return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
             serializer_dnat.save()
+            threading.Thread(target=notify_nat_change, args=("modifiée", "DNAT"), daemon=True).start()
             return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
         
         return JsonResponse({"error": list(serializer_dnat.errors.values())[0][0]}, status=400)

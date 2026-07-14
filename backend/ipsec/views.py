@@ -18,6 +18,8 @@ from backend.ipsec.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHO
 from utils.errors_utils import CommandExecutionError
 from .models import ServerIPsec
 from django.views.decorators.http import require_http_methods
+import threading
+from backend.backup.notifications import notify_ipsec_change
 
 
 # Constants
@@ -278,6 +280,7 @@ def create_server_ipsec(request):
 
                 # Add the server to the database
                 serializer_server.save()
+                threading.Thread(target=notify_ipsec_change, args=("créé", conn_name), daemon=True).start()
                 return JsonResponse({"msg": f"{conn_name} {SUCCESS_MESSAGES_CREATING}"}, status=201)
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
     except CommandExecutionError:
@@ -308,8 +311,10 @@ def delete_server_ipsec(_, id):
         
         delete_server_ipsec_in_system(server)
         # delete from database
+        deleted_name = server.conn_name
         server.delete()
-        return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+        threading.Thread(target=notify_ipsec_change, args=("supprimé", deleted_name), daemon=True).start()
+        return JsonResponse({"msg": f"{deleted_name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
     except ServerIPsec.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except IP4Config.DoesNotExist:
@@ -474,6 +479,7 @@ def update_server_ipsec(request, id):
 
                 # Add the server to the database
                 serializer_server.save()
+                threading.Thread(target=notify_ipsec_change, args=("modifié", server.conn_name), daemon=True).start()
                 return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
         
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)

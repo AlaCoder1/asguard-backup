@@ -10,7 +10,7 @@ import secrets
 def send_email_to_user(email, password, username):
     subject = 'Welcome ' + username
     message = f'Welcome {username},\n\nThis is your account:\n* EMAIL: {email}\n* PASSWORD: {password}\n\nBest regards'
-    server = smtplib.SMTP(settings.EMAIL_HOST, 587)
+    server = smtplib.SMTP(settings.EMAIL_HOST, 587, timeout=10)
     server.starttls()
     server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
     msg = MIMEText(message)

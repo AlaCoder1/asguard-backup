@@ -170,7 +170,7 @@ class OpenvpnMgmtInterface(object):
     def get_location(self,address):
         api_url = f"https://ipinfo.io/{address}/json"
         try:
-            response = requests.get(api_url)
+            response = requests.get(api_url, timeout=5)
             data = response.json()
             
             # Extract relevant information

@@ -104,7 +104,13 @@ class LVMSnapshotService:
     # uvicorn user — prepend sudo. systemctl + docker are here because the
     # restore_snapshot quiesce path stops services and the Postgres container.
     _SUDO_CMDS = {"vgs", "lvs", "lvcreate", "lvremove", "lvconvert", "lvchange",
-                  "mount", "umount", "systemctl", "docker"}
+                  "mount", "umount", "systemctl", "docker", "tar"}
+
+    # Identity/config files that cannot be bind-mounted onto the LV because their
+    # editors rewrite them with rename() (EBUSY on a mountpoint — useradd would
+    # break). They are tarred onto the LV just before lvcreate, so the snapshot
+    # freezes them like everything else, and untarred back after the merge.
+    IDENTITY_ARCHIVE = MOUNT_POINT / "system" / "identity.tar.gz"
 
     @classmethod
     def _run(cls, *cmd, timeout: int = 60) -> tuple[bool, str, str]:
@@ -126,6 +132,50 @@ class LVMSnapshotService:
             return False, "", "Timeout"
         except Exception as e:
             return False, "", str(e)
+
+    # ── Identity capture / replay ──────────────────────────────────────────────
+
+    @classmethod
+    def _capture_identity_files(cls) -> str | None:
+        """Freeze the rename()-hostile UI files onto the LV, just before lvcreate.
+
+        Written straight into the LV so the snapshot picks them up like any other
+        file on the volume. Returns an error string, or None on success.
+        """
+        from backend.backup.system_backup.lvm_migration_service import SNAPSHOT_CAPTURE_FILES
+
+        sources = [p for p in SNAPSHOT_CAPTURE_FILES if Path(p).exists()]
+        if not sources:
+            return None
+
+        ok, _, err = cls._run(
+            "tar", "--ignore-failed-read", "-czf", str(cls.IDENTITY_ARCHIVE),
+            *sources, timeout=60,
+        )
+        if not ok:
+            return err or "tar (capture identité) échoué"
+        return None
+
+    @classmethod
+    def _replay_identity_files(cls) -> str | None:
+        """Put the captured files back on the rootfs, after the merge.
+
+        Runs against the *reverted* LV, so the archive holds the snapshot-time
+        version. A snapshot taken before this feature existed has no archive —
+        that is a no-op, not an error. A corrupt archive is refused rather than
+        extracted: a truncated /etc/passwd would lock the appliance out.
+        """
+        if not cls.IDENTITY_ARCHIVE.exists():
+            return None
+
+        ok, _, err = cls._run("tar", "-tzf", str(cls.IDENTITY_ARCHIVE), timeout=30)
+        if not ok:
+            return f"archive identité illisible, restauration ignorée: {err}"
+
+        ok, _, err = cls._run("tar", "-xzf", str(cls.IDENTITY_ARCHIVE), "-C", "/", timeout=60)
+        if not ok:
+            return err or "tar (rejeu identité) échoué"
+        return None
 
     # ── System / LVM info ──────────────────────────────────────────────────────
 
@@ -500,6 +550,10 @@ class LVMSnapshotService:
 
         cls._save_meta(snap_name, description or "Snapshot LVM", created_by="manual")
 
+        # Must happen before lvcreate: these files live on the rootfs, so the only
+        # way into the snapshot is to copy them onto the LV first.
+        identity_error = cls._capture_identity_files()
+
         started = time.time()
         ok, out, err = cls._run(
             "lvcreate", "-L", snap_size, "-s",
@@ -543,12 +597,21 @@ class LVMSnapshotService:
                        created_by="manual", extra={"duration_seconds": duration})
         cls._apply_retention()
 
-        return {
+        result = {
             "status": "success",
             "snap_id": snap_name,
             "message": f"Snapshot LVM '{snap_name}' créé avec succès.",
             "duration_seconds": duration,
         }
+        if identity_error:
+            # The LVM snapshot itself is valid; only the users/sudoers/cron
+            # capture failed, so the restore would not roll those back.
+            result["warning"] = (
+                f"Snapshot créé, mais la capture des comptes et fichiers "
+                f"système a échoué : {identity_error}. Un retour arrière sur ce "
+                f"snapshot ne restaurera pas les utilisateurs."
+            )
+        return result
 
     # ── Restore ────────────────────────────────────────────────────────────────
 
@@ -841,6 +904,7 @@ class LVMSnapshotService:
         quiesce_errors: list[str] = []
         stage_errors: list[str] = []
         restore_preserve_errors: list[str] = []
+        identity_replay_error: str | None = None
 
         # 0. Capture snapshot metadata BEFORE the merge consumes everything.
         # We use this to recreate an identical snapshot at the end so the
@@ -925,6 +989,12 @@ class LVMSnapshotService:
         # step 7 so /var/backups/asguard points at the LV again.
         if ok_mnt:
             restore_preserve_errors = cls._restore_preserved_backups()
+
+        # 7ter. Replay the users/sudoers/cron files captured at snapshot time.
+        # The LV is reverted at this point, so the archive we read is the one
+        # frozen in the snapshot. Runs before the services restart so they come
+        # back up against the rolled-back identity.
+        identity_replay_error = cls._replay_identity_files() if ok_mnt else None
 
         # 8. Restart services then containers (containers last — Postgres needs
         #    its data dir bind-mount back in place first).
@@ -1028,6 +1098,8 @@ class LVMSnapshotService:
         cls._set_restore_lock(False)
 
         problems = bind_errors + quiesce_errors + stage_errors + restore_preserve_errors
+        if identity_replay_error:
+            problems.append(f"restauration des comptes système : {identity_replay_error}")
         if recreate_error:
             problems.append(f"recréation snapshot : {recreate_error}")
         if nft_rebuild.get("status") == "error":

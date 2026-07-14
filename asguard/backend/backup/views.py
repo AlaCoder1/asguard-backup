@@ -74,6 +74,7 @@ RESTORE_JOBS_DIR = BACKUP_DIR / "restore_jobs"
 BACKUP_JOBS_DIR = BACKUP_DIR / "backup_jobs"
 SYNC_SUMMARY_CACHE_FILE = BACKUP_DIR / "dashboard_last_sync_summary.json"
 FULL_RESTORE_RUNNER = Path("/asguard/asguard/full_restore_runner.py")
+SCHEDULED_BACKUP_RUNNER = Path("/asguard/asguard/scheduled_backup_runner.py")
 PYTHON_BIN = "/usr/bin/python"
 _LAST_DASHBOARD_SYNC_SUMMARY = None
 _BACKUP_RESULTS_CACHE = {"expires_at": 0.0, "results": None}
@@ -274,7 +275,13 @@ def _normalize_backup_metadata(backup_dir: Path, metadata: dict) -> dict:
     skipped_names = {name for name, data in normalized_components.items() if data.get("status") == "skipped"}
     critical_skipped = skipped_names - NON_CRITICAL_COMPONENTS
     if counts["failed"] > 0:
-        overall_status = "error"
+        # A single failed component out of many is a PARTIAL backup, not a total
+        # loss: the other components are still fully restorable. Only call it a
+        # hard "error" when nothing succeeded at all. This keeps the status honest
+        # ("Incomplet" instead of a scary red "Echec") and — crucially — keeps the
+        # backup visible with its per-component detail so the operator can see
+        # exactly which component failed and why.
+        overall_status = "partial" if counts["success"] > 0 else "error"
     elif critical_skipped:
         overall_status = "partial"
     else:
@@ -285,6 +292,100 @@ def _normalize_backup_metadata(backup_dir: Path, metadata: dict) -> dict:
     normalized["health_score"] = health_score
     normalized["overall_status"] = overall_status
     return normalized
+
+
+# A backup folder without metadata younger than this is treated as in-progress;
+# older than this it is treated as an interrupted run and surfaced as failed.
+# Comfortably longer than any real backup (safe ≈ 2 s, full ≈ 6 s) yet short
+# enough that a dead run shows up on the next dashboard poll.
+_INCOMPLETE_BACKUP_STALE_SECONDS = 600  # 10 minutes
+
+
+def _write_json_atomic(path: Path, payload) -> None:
+    """Write JSON via a temp file + atomic rename so a reader never sees a
+    half-written (and thus corrupt) file. Preserves owner/mode when possible."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+    os.replace(tmp, path)
+
+
+def _load_backup_metadata_resilient(meta_file: Path):
+    """Read backup_metadata.json, tolerating (and self-healing) common on-disk
+    corruption so a damaged file never makes a backup vanish from the UI.
+
+    Returns the parsed dict, or None if nothing usable could be recovered.
+
+    Strategy: a strict json.load fails on the most common real-world corruption
+    we've seen — a trailing stray '}' or other junk appended after an otherwise
+    valid document (e.g. a metadata writer that ran twice). json.JSONDecoder.
+    raw_decode parses the first complete JSON value from the start and ignores
+    anything after it, which recovers exactly those cases. When we recover a doc
+    that differs from the raw bytes, we rewrite the file cleanly (best-effort) so
+    it's healthy on the next read."""
+    try:
+        raw = meta_file.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    stripped = raw.strip()
+    if not stripped:
+        return None  # empty file — nothing to recover
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        pass
+    # Salvage: decode the first valid JSON value, ignore trailing garbage.
+    try:
+        obj, _end = json.JSONDecoder().raw_decode(stripped)
+    except Exception:
+        return None
+    if not isinstance(obj, dict):
+        return None
+    # Self-heal the file so it's clean going forward (best-effort, never fatal).
+    try:
+        _write_json_atomic(meta_file, obj)
+        logger.info("Self-healed corrupt backup metadata: %s", meta_file.parent.name)
+    except Exception:
+        logger.warning("Could not rewrite salvaged metadata for %s", meta_file.parent.name)
+    return obj
+
+
+def _append_damaged_backup_entry(results: list[dict], d: Path, now: float) -> None:
+    """Surface an on-disk backup whose metadata is unreadable as a VISIBLE entry
+    instead of dropping it. Only for folders that (a) actually contain real data
+    and (b) are old enough not to be an in-progress run — a fresh metadata-less
+    folder is a backup mid-write, and a zero-byte folder is a dead leftover swept
+    by retention. The entry is flagged damaged so the UI can show/inspect/delete
+    it without pretending it's a healthy, restorable backup."""
+    try:
+        real_size = sum(p.stat().st_size for p in d.rglob("*") if p.is_file())
+    except Exception:
+        real_size = 0
+    if real_size <= 0:
+        return  # empty/dead leftover — nothing restorable
+    if (now - d.stat().st_mtime) < _INCOMPLETE_BACKUP_STALE_SECONDS:
+        return  # too new — likely an in-progress backup still writing metadata
+    name = d.name
+    if name.startswith("backup_safe_"):
+        backup_type = "safe"
+    elif name.startswith("backup_custom_"):
+        backup_type = "custom"
+    else:
+        backup_type = "full"
+    results.append({
+        "type": backup_type,
+        "scope": "metadata_damaged",
+        "id": name,
+        "filename": name,
+        "size_bytes": real_size,
+        "modified_at": datetime.fromtimestamp(d.stat().st_mtime).isoformat(),
+        "health_score": 0,
+        "overall_status": "metadata_damaged",
+        "components_success": 0,
+        "components_failed": 0,
+        "components_skipped": 0,
+        "metadata": {},
+    })
 
 
 def _collect_backup_results() -> list[dict]:
@@ -302,8 +403,15 @@ def _collect_backup_results() -> list[dict]:
             meta_file = d / "backup_metadata.json"
             if meta_file.exists():
                 try:
-                    with open(meta_file, "r", encoding="utf-8") as f:
-                        meta = _normalize_backup_metadata(d, json.load(f))
+                    raw_meta = _load_backup_metadata_resilient(meta_file)
+                    if raw_meta is None:
+                        # Metadata present but unreadable (empty/garbage) — do NOT
+                        # silently drop the backup. If the folder holds real data,
+                        # surface it as a visible "damaged" entry so the operator
+                        # can inspect/delete it; if empty, it's a dead leftover.
+                        _append_damaged_backup_entry(results, d, now)
+                        continue
+                    meta = _normalize_backup_metadata(d, raw_meta)
 
                     backup_scope = meta.get("backup_scope", "unknown")
                     if backup_scope == "safe_restore_ui":
@@ -345,6 +453,18 @@ def _collect_backup_results() -> list[dict]:
                     })
                 except Exception:
                     logger.warning("Could not read metadata for backup %s", d.name)
+                    # Never let a parse/normalize error hide an on-disk backup:
+                    # fall back to a visible "damaged" entry when real data exists.
+                    try:
+                        _append_damaged_backup_entry(results, d, now)
+                    except Exception:
+                        logger.exception("damaged-entry fallback failed for %s", d.name)
+            # A metadata-less folder is either an IN-PROGRESS backup (metadata is
+            # written last) or dead leftover — it is never restorable, so it is
+            # intentionally NOT listed here. Showing them as red "Echec" entries
+            # only created confusion (e.g. a folder mid-deletion briefly loses its
+            # metadata and would flash as a phantom failure). Dead leftovers are
+            # reclaimed silently by _sweep_stale_orphan_backups() during retention.
 
     for pattern in BACKUP_PATTERNS:
         for p in BACKUP_DIR.glob(pattern):
@@ -2791,6 +2911,8 @@ def create_full_backup(request):
                 detail=result.get("message", ""),
                 extra={"job_id": job_id, "backup_type": "full_backup", "summary": result.get("summary", {})},
             )
+            if ok:
+                _auto_apply_retention_after_backup(backup_id_result)
         except Exception as exc:
             import traceback
             try:
@@ -2849,7 +2971,6 @@ def create_safe_backup(request):
         "total": 0,
         "result": None,
     })
-    append_backup_event(kind="backup", title="Full backup queued", severity="info", status="queued", source="api", ref_id=job_id)
 
     def _make_cb():
         def _cb(progress):
@@ -2904,6 +3025,8 @@ def create_safe_backup(request):
                 detail=result.get("message", ""),
                 extra={"job_id": job_id, "backup_type": "safe_backup", "summary": result.get("summary", {})},
             )
+            if ok:
+                _auto_apply_retention_after_backup(backup_id_result)
         except Exception as exc:
             import traceback
             try:
@@ -2958,6 +3081,9 @@ def get_backup_components(request):
     return JsonResponse({
         "status": "ok",
         "backup_components": FullBackupService.available_components(),
+        # Which components each preset actually captures — lets the UI show
+        # exactly what Full vs Safe include instead of a flat identical list.
+        "safe_components": list(FullBackupService.SAFE_COMPONENTS),
         "restore_components": RestoreService.available_restore_components(
             request.GET.get("backup_id")
         ),
@@ -3009,6 +3135,8 @@ def create_custom_backup(request):
         kwargs={"message": f"Composants : {', '.join(components)}"},
         daemon=True,
     ).start()
+    if _ok:
+        _auto_apply_retention_after_backup(result.get("backup_id", ""))
     return JsonResponse(result, status=status_code)
 
 
@@ -4295,6 +4423,50 @@ def system_reboot(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+# No progress write for this long while still "running" ⇒ the backup worker
+# (daemon thread or detached unit) died mid-run. Comfortably longer than any real
+# config backup (safe ≈ 2 s, full ≈ 6 s) so a live-but-busy run is never killed.
+_BACKUP_STALE_SECONDS = 180
+
+
+def _maybe_finalize_stale_backup(payload: dict, job_file: Path) -> dict:
+    """If `payload` is a 'running' backup job whose worker has stopped writing
+    progress, finalize it as an error so the UI stops polling forever.
+
+    A manual backup runs in a daemon thread (no systemd unit to probe), so the
+    single reliable liveness signal is the job file's freshness: the progress
+    callback rewrites it on every component, so a stale mtime while still
+    "running" means the worker was killed (e.g. uvicorn reload) mid-backup.
+    Mirrors _maybe_finalize_stale_restore for the restore side."""
+    if not isinstance(payload, dict) or payload.get("status") != "running":
+        return payload
+    try:
+        age = time.time() - job_file.stat().st_mtime
+    except OSError:
+        return payload
+    if age <= _BACKUP_STALE_SECONDS:
+        return payload
+    payload = dict(payload)
+    payload["status"] = "error"
+    payload["finished_at"] = datetime.now(timezone.utc).isoformat()
+    existing = payload.get("result") or {}
+    if not existing.get("message"):
+        payload["result"] = {**existing,
+                             "message": "Sauvegarde interrompue : le worker s'est arrêté "
+                                        "avant la fin (probable redémarrage). Relancez la sauvegarde."}
+    try:
+        _write_backup_job_state(job_file, payload)
+        _invalidate_backup_results_cache()
+        append_backup_event(
+            kind="backup", title="Backup finalized as interrupted", severity="warning",
+            status="error", source="self-heal", ref_id=payload.get("job_id", ""),
+            detail="Worker stopped writing progress; job auto-finalized.",
+        )
+    except Exception:
+        logger.warning("Could not persist stale-backup finalization for %s", payload.get("job_id"))
+    return payload
+
+
 @swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="GET BACKUP JOB PROGRESS")
 @api_view(["GET"])
 @require_http_methods(["GET"])
@@ -4307,6 +4479,7 @@ def get_backup_progress(request, job_id):
     try:
         with open(job_file, "r", encoding="utf-8") as f:
             payload = json.load(f)
+        payload = _maybe_finalize_stale_backup(payload, job_file)
         return JsonResponse(payload, status=200)
     except Exception as e:
         logger.exception("Failed to read backup job %s", job_id)
@@ -4341,9 +4514,14 @@ def delete_backup(request, backup_id):
         return JsonResponse({"status": "error", "message": f"Backup {backup_id} not found."}, status=404)
 
     try:
-        import shutil
         if backup_dir.exists() and backup_dir.is_dir():
-            shutil.rmtree(backup_dir)
+            # Atomic-ish full removal (with sudo rm -rf fallback for root-owned
+            # component archives) so a delete never leaves a metadata-less stump.
+            if not _remove_backup_dir(backup_dir):
+                return JsonResponse(
+                    {"status": "error", "message": f"Backup {backup_id} could not be fully deleted."},
+                    status=500,
+                )
         elif legacy_backup and legacy_backup.is_file():
             legacy_backup.unlink()
         _invalidate_backup_results_cache()
@@ -4377,6 +4555,110 @@ def export_backup(request, backup_id):
     response = FileResponse(open(export_path, "rb"), content_type="application/gzip")
     response["Content-Disposition"] = f'attachment; filename="asguard_export_{backup_id}.tar.gz"'
     return response
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  SECTION: BACKUP DE-DUPLICATION — "Analyse intelligente du stockage"
+#  Detects backups holding the SAME configuration (deterministic content
+#  fingerprint, no LLM) so redundant copies can be reclaimed. See dedup.py.
+# ═════════════════════════════════════════════════════════════════════════════
+@swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="ANALYZE DUPLICATE BACKUPS")
+@api_view(["GET"])
+@require_http_methods(["GET"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def dedup_analysis(request):
+    """Groups of backups with identical configuration + reclaimable space."""
+    from backend.backup import dedup
+    try:
+        items = _collect_backup_results()
+        result = dedup.find_duplicate_groups(items)
+        result["status"] = "ok"
+        result["reclaimable_mb"] = round(result["reclaimable_bytes"] / (1024 ** 2), 2)
+        # Friendly labels for the UI.
+        for g in result["groups"]:
+            g["reclaimable_mb"] = round(g["reclaimable_bytes"] / (1024 ** 2), 2)
+        return JsonResponse(result)
+    except Exception as e:
+        logger.exception("dedup analysis failed")
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="COMPARE TWO BACKUPS")
+@api_view(["GET"])
+@require_http_methods(["GET"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def dedup_compare(request):
+    """Config similarity between two backups (?a=<id>&b=<id>)."""
+    from backend.backup import dedup
+    a = (request.GET.get("a") or "").strip()
+    b = (request.GET.get("b") or "").strip()
+    if not a or not b:
+        return JsonResponse({"status": "error", "message": "Params 'a' et 'b' requis."}, status=400)
+    for bid in (a, b):
+        if not bid.startswith("backup_") or not (BACKUP_DIR / bid).is_dir():
+            return JsonResponse({"status": "error", "message": f"Backup introuvable: {bid}"}, status=404)
+    try:
+        result = dedup.compare(a, b)
+        result["status"] = "ok"
+        return JsonResponse(result)
+    except Exception as e:
+        logger.exception("dedup compare failed")
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@swagger_auto_schema("POST", responses={200: "OK"}, operation_summary="CLEAN UP DUPLICATE BACKUPS")
+@api_view(["POST"])
+@require_http_methods(["POST"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+def dedup_cleanup(request):
+    """Delete redundant duplicate backups, keeping the newest of each identical
+    group. Optional body {"fingerprint": "..."} restricts to a single group.
+
+    Safety: the deletion set is (re)computed server-side from the current on-disk
+    state — a client can never trick this into deleting a 'keep' copy or a
+    non-duplicate. Nothing is deleted unless the operator triggered this call."""
+    from backend.backup import dedup
+    fingerprint = (request.data.get("fingerprint") or "").strip() or None
+    try:
+        items = _collect_backup_results()
+        to_delete = dedup.redundant_ids(items, only_group=fingerprint)
+        if not to_delete:
+            return JsonResponse({"status": "ok", "deleted": [], "freed_mb": 0,
+                                 "message": "Aucun doublon à nettoyer."})
+        size_by_id = {it["id"]: int(it.get("size_bytes", 0) or 0) for it in items}
+        deleted, freed = [], 0
+        for bid in to_delete:
+            d = BACKUP_DIR / bid
+            if d.is_dir() and _remove_backup_dir(d):
+                freed += size_by_id.get(bid, 0)
+                deleted.append(bid)
+                # Drop the cached fingerprint of a removed backup.
+                try:
+                    (dedup._CACHE_DIR / f"{bid}.json").unlink(missing_ok=True)
+                except Exception:
+                    pass
+        _invalidate_backup_results_cache()
+        append_backup_event(
+            kind="backup", title="Doublons nettoyés", severity="warning",
+            status="success", source="api", ref_id="",
+            detail=f"{len(deleted)} backup(s) redondant(s) supprimé(s), "
+                   f"{round(freed/(1024**2),1)} MB libérés.",
+            extra={"deleted": deleted},
+        )
+        return JsonResponse({
+            "status": "ok",
+            "deleted": deleted,
+            "count": len(deleted),
+            "freed_bytes": freed,
+            "freed_mb": round(freed / (1024 ** 2), 2),
+            "message": f"{len(deleted)} doublon(s) supprimé(s), {round(freed/(1024**2),1)} MB libérés.",
+        })
+    except Exception as e:
+        logger.exception("dedup cleanup failed")
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -4526,8 +4808,25 @@ def _safe_parse_datetime(value: str | None):
         return None
 
 
+def _backup_dir_is_complete(d: Path) -> bool:
+    """A backup folder is only trustworthy once its metadata is written.
+
+    ``backup_metadata.json`` is written LAST, after every component succeeds, so
+    its presence is the single reliable "this backup actually finished" signal.
+    A folder without it is either in-progress or was interrupted (e.g. uvicorn
+    killed the old daemon thread mid-run)."""
+    return (d / "backup_metadata.json").exists()
+
+
 def _latest_backup_after(moment: datetime) -> bool:
-    return any(backup_dt >= moment for _, backup_dt in _list_backups_with_dates())
+    # Only COMPLETE backups count. A half-written folder (no metadata) must never
+    # make the catchup believe the slot was satisfied — that is what silently
+    # marked the schedule "OK" while no usable backup existed.
+    return any(
+        backup_dt >= moment
+        for d, backup_dt in _list_backups_with_dates()
+        if _backup_dir_is_complete(d)
+    )
 
 
 def _get_next_scheduled_task(tasks: list[dict], tz_name: str | None = None) -> dict | None:
@@ -4670,9 +4969,72 @@ def _mark_scheduled_task_queued(task: dict, *, reason: str):
     task["last_queue_reason"] = reason
 
 
+def _run_scheduled_task_in_thread(task_id: str):
+    # Fallback path only. Non-daemon so a *graceful* uvicorn reload waits for the
+    # backup to finish instead of killing it mid-write. (A hard SIGKILL still
+    # kills it — which is exactly why the detached systemd unit below is the
+    # primary path.)
+    threading.Thread(target=_execute_scheduled_task, args=(task_id,), daemon=False).start()
+
+
 def _start_scheduled_task_thread(task_id: str):
-    thread = threading.Thread(target=_execute_scheduled_task, args=(task_id,), daemon=True)
-    thread.start()
+    """Launch a scheduled backup so it SURVIVES a uvicorn reload/restart.
+
+    Primary path: a transient ``systemd-run`` unit (like the restore pipeline),
+    fully decoupled from the web worker's lifecycle. Fallback: an in-process
+    thread, used only if launching the unit fails (e.g. systemd-run missing in a
+    dev box) so we never regress to doing nothing.
+    """
+    config = _read_schedule_config()
+    task = next((t for t in config.get("tasks", []) if t.get("id") == task_id), None)
+    backup_type = (task or {}).get("type", "") if task else ""
+
+    if not SCHEDULED_BACKUP_RUNNER.exists():
+        logger.warning("Scheduled backup runner missing at %s — using in-process thread", SCHEDULED_BACKUP_RUNNER)
+        _run_scheduled_task_in_thread(task_id)
+        return
+
+    unit_name = f"asguard-backup-{backup_type or 'task'}-{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    cmd = [
+        "sudo", "-n", "systemd-run",
+        "--unit", unit_name,
+        "--description", f"Asguard scheduled backup {task_id}",
+        # Run as the same identity as the web worker so file ownership under
+        # /var/backups/asguard stays consistent with manually-triggered backups.
+        "--property=User=uvicorn",
+        "--property=Group=uvicorn",
+        "--property=WorkingDirectory=/asguard/asguard",
+        # A backup must never be the process the OOM killer picks — that is the
+        # exact failure that left half-written folders behind.
+        "--property=OOMScoreAdjust=-800",
+        "--property=OOMPolicy=continue",
+        PYTHON_BIN, str(SCHEDULED_BACKUP_RUNNER), task_id,
+    ]
+    try:
+        launch = subprocess.run(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, timeout=20, check=False,
+        )
+        if launch.returncode == 0:
+            logger.info("Scheduled backup unit started: %s | %s", unit_name, launch.stdout.strip())
+            append_backup_event(
+                kind="schedule",
+                title="Scheduled backup launched (detached)",
+                severity="info",
+                status="running",
+                source="systemd-run",
+                ref_id=task_id,
+                detail=launch.stdout.strip(),
+                extra={"unit_name": unit_name, "backup_type": backup_type},
+            )
+            return
+        logger.error("systemd-run for backup failed rc=%s output=%s — falling back to thread",
+                     launch.returncode, launch.stdout.strip())
+    except Exception:
+        logger.exception("Failed to launch detached scheduled backup — falling back to thread")
+
+    # Detached launch failed — never leave the slot unhandled.
+    _run_scheduled_task_in_thread(task_id)
 
 
 # How long after a scheduled slot we wait before the page-load/startup fallback
@@ -4816,6 +5178,43 @@ def _sync_crontab(tasks, tz_name: str | None = None):
     if clean:
         crontab_content += "\n"
     subprocess.run(["crontab", "-"], input=crontab_content, text=True, check=True)
+    # Defensive: our tasks belong ONLY in the uvicorn crontab (the one Django
+    # manages here). If asguard_task lines ever leak into *root's* crontab —
+    # e.g. Django's BackupConfig.ready() ran once under a root-context shell, or
+    # ids_ips update_config() rewrote root's crontab preserving stale copies —
+    # cronie fires the SAME scheduled run twice (once as root, once as uvicorn),
+    # producing duplicate backups + duplicate notifications. Scrub root's
+    # crontab of asguard_task lines (leaving root's own jobs intact) so a slot
+    # can only ever fire once. Best-effort: needs passwordless sudo.
+    _scrub_root_crontab_asguard_tasks()
+
+
+def _scrub_root_crontab_asguard_tasks():
+    """Remove any `# asguard_task:` lines from root's crontab (best-effort).
+
+    Backup tasks must live only in the uvicorn crontab. Duplicate copies in
+    root's crontab make each scheduled slot fire twice."""
+    try:
+        listing = subprocess.run(
+            ["sudo", "-n", "crontab", "-l"],
+            capture_output=True, text=True,
+        )
+        if listing.returncode != 0:
+            return
+        lines = listing.stdout.splitlines()
+        kept = [ln for ln in lines if "# asguard_task:" not in ln]
+        if len(kept) == len(lines):
+            return  # nothing to remove
+        payload = "\n".join(kept)
+        if kept:
+            payload += "\n"
+        subprocess.run(
+            ["sudo", "-n", "crontab", "-"],
+            input=payload, text=True, check=True,
+        )
+    except Exception:
+        # Best-effort cleanup — never break crontab sync over this.
+        pass
 
 
 def _list_backups_with_dates():
@@ -4850,7 +5249,58 @@ def _list_backups_with_dates():
     return sorted(result, key=lambda x: x[1], reverse=True)
 
 
+def _remove_backup_dir(d: Path) -> bool:
+    """Delete a backup folder completely, even though some component archives are
+    root-owned (created via `sudo tar`). shutil.rmtree works when the *directories*
+    are uvicorn-owned (they are), but we fall back to `sudo -n rm -rf` so a delete
+    can NEVER leave a half-removed, metadata-less stump behind (which used to show
+    up as a phantom "Echec" entry)."""
+    try:
+        shutil.rmtree(d)
+    except Exception as exc:
+        logger.warning("rmtree failed for %s (%s) — trying sudo rm -rf", d.name, exc)
+        try:
+            subprocess.run(["sudo", "-n", "rm", "-rf", str(d)], timeout=60, check=False)
+        except Exception:
+            logger.exception("sudo rm -rf also failed for %s", d.name)
+    gone = not d.exists()
+    if gone:
+        # Drop the cached dedup fingerprint so it can't pile up after deletions.
+        try:
+            (BACKUP_DIR / "dedup_cache" / f"{d.name}.json").unlink(missing_ok=True)
+        except Exception:
+            pass
+    return gone
+
+
+def _sweep_stale_orphan_backups() -> int:
+    """Silently reclaim dead, metadata-less backup folders (interrupted runs).
+
+    A folder with no backup_metadata.json older than the stale grace is never an
+    in-progress backup (those finalize in seconds) and is not restorable, so it is
+    pure wasted space. We delete it instead of displaying it — surfacing these as
+    red failures only confused operators. Best-effort; never raises."""
+    swept = 0
+    try:
+        for d in BACKUP_DIR.glob("backup_*"):
+            if not d.is_dir() or (d / "backup_metadata.json").exists():
+                continue
+            try:
+                age = time.time() - d.stat().st_mtime
+            except OSError:
+                continue
+            if age >= _INCOMPLETE_BACKUP_STALE_SECONDS and _remove_backup_dir(d):
+                swept += 1
+                logger.info("Swept interrupted backup leftover: %s", d.name)
+    except Exception:
+        logger.exception("Orphan backup sweep failed")
+    if swept:
+        _invalidate_backup_results_cache()
+    return swept
+
+
 def _apply_gfs_retention(retention):
+    _sweep_stale_orphan_backups()
     now = datetime.utcnow()
     recent_hours = int(retention.get("recent_keep_hours", 24))
     daily_days = int(retention.get("daily_keep_days", 7))
@@ -4920,7 +5370,46 @@ def _apply_gfs_retention(retention):
         except Exception as exc:
             logger.warning("Could not delete backup %s: %s", d, exc)
 
+    # Deleting folders changes the listing — drop the cached results so the very
+    # next GET /backup (list) reflects the pruning immediately. Without this the
+    # UI kept showing the just-deleted backups until the 8 s cache TTL expired,
+    # forcing a manual page refresh. (Also covers the auto-retention paths.)
+    if deleted:
+        _invalidate_backup_results_cache()
+
     return {"kept": len(keep), "deleted": deleted, "total_deleted": len(deleted)}
+
+
+def _auto_apply_retention_after_backup(ref_id: str = "", source: str = "api"):
+    """Apply GFS retention after ANY successful backup (manual or scheduled).
+
+    Previously only *scheduled* backups pruned old copies; manual backups
+    ("+ Nouveau backup") accumulated until the operator clicked "Appliquer la
+    rétention". Now every successful backup enforces the same policy so the
+    store never grows unbounded between manual retention clicks. Best-effort:
+    a retention failure must never mark the backup itself as failed."""
+    try:
+        config = _read_schedule_config()
+        retention_cfg = {**DEFAULT_RETENTION, **config.get("retention", {})}
+        ret_result = _apply_gfs_retention(retention_cfg)
+        config["last_retention_applied"] = datetime.utcnow().isoformat()
+        _write_schedule_config(config)
+        deleted = ret_result.get("total_deleted", 0)
+        if deleted:
+            append_backup_event(
+                kind="retention",
+                title="Backup retention applied (auto)",
+                severity="info",
+                status="success",
+                source=source,
+                ref_id=ref_id,
+                detail=f"{deleted} backup(s) deleted after backup",
+                extra=ret_result,
+            )
+        return ret_result
+    except Exception as ret_exc:
+        logger.warning("Auto-retention after backup %s failed: %s", ref_id, ret_exc)
+        return None
 
 
 @swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="GET BACKUP SCHEDULE & RETENTION CONFIG")

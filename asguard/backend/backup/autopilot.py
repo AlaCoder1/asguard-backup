@@ -83,6 +83,89 @@ def _cooled_down(action: str, cooldown_min: int, now: float) -> bool:
     return (now - _last_fired.get(action, 0.0)) >= cooldown_min * 60
 
 
+def _boot_enabled(unit: str) -> bool:
+    """True if the unit is meant to run at boot. Auto-Pilot only restarts these:
+    services the operator intentionally keeps off must never be force-started."""
+    try:
+        import subprocess
+        r = subprocess.run(["systemctl", "is-enabled", unit],
+                           capture_output=True, text=True, timeout=5)
+        return r.stdout.strip() in ("enabled", "enabled-runtime", "static")
+    except Exception:
+        return False
+
+
+def assess() -> dict:
+    """Live, read-only health snapshot: what Auto-Pilot sees *right now* and what
+    it would (or would not) do. Powers the 'Dernière vérification' heartbeat so the
+    operator always gets feedback — even when the correct action is to do nothing."""
+    cfg = load_config()
+    rules = cfg.get("rules", {})
+    would_restart, skipped_disabled = [], []
+    ram_pct = disk_pct = None
+
+    if rules.get("services", True):
+        try:
+            from backend.backup.views import (_load_dashboard_services,
+                                              CRITICAL_SERVICE_CANDIDATES)
+            critical = set()
+            for sd in CRITICAL_SERVICE_CANDIDATES:
+                critical.update(c.replace(".service", "") for c in sd["candidates"])
+            for s in _load_dashboard_services():
+                if s.get("running") or s.get("name") not in critical:
+                    continue
+                label = s.get("label") or s.get("name")
+                (would_restart if _boot_enabled(s.get("name")) else skipped_disabled).append(label)
+        except Exception:
+            logger.exception("[autopilot] assess services failed")
+
+    if rules.get("ram", True):
+        try:
+            import psutil
+            ram_pct = round(psutil.virtual_memory().percent)
+        except Exception:
+            pass
+    if rules.get("disk", True):
+        try:
+            import shutil
+            du = shutil.disk_usage("/")
+            disk_pct = round(du.used / du.total * 100)
+        except Exception:
+            pass
+
+    ram_hot = ram_pct is not None and ram_pct >= float(cfg.get("ram_threshold_pct", 90))
+    disk_hot = disk_pct is not None and disk_pct >= float(cfg.get("disk_threshold_pct", 90))
+    pending = bool(would_restart) or ram_hot or disk_hot
+
+    if not cfg.get("enabled"):
+        verdict, tone = "Auto-Pilot désactivé — supervision en pause.", "off"
+    elif pending:
+        bits = []
+        if would_restart:
+            bits.append(f"{len(would_restart)} service(s) à relancer")
+        if ram_hot:
+            bits.append(f"RAM {ram_pct}%")
+        if disk_hot:
+            bits.append(f"disque {disk_pct}%")
+        verdict, tone = "Intervention imminente : " + ", ".join(bits) + ".", "act"
+    elif skipped_disabled:
+        verdict = (f"Système sain. {len(skipped_disabled)} service(s) arrêté(s) "
+                   f"volontairement (ignorés) : " + ", ".join(skipped_disabled[:6]) + ".")
+        tone = "healthy"
+    else:
+        verdict, tone = "Système sain — rien à réparer.", "healthy"
+
+    return {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "verdict": verdict,
+        "tone": tone,                     # off | healthy | act
+        "would_restart": would_restart,
+        "skipped_disabled": skipped_disabled,
+        "ram_pct": ram_pct,
+        "disk_pct": disk_pct,
+    }
+
+
 def _fire(action_key: str, trigger: str, cfg: dict, now: float) -> None:
     """Run one remediation via the shared playbook runner + journal + notify."""
     from backend.backup.views import _run_risk_action  # runtime import (no cycle)
@@ -137,14 +220,6 @@ def autopilot_tick() -> None:
                     critical = set()
                     for sd in CRITICAL_SERVICE_CANDIDATES:
                         critical.update(c.replace(".service", "") for c in sd["candidates"])
-
-                    def _boot_enabled(unit: str) -> bool:
-                        try:
-                            r = subprocess.run(["systemctl", "is-enabled", unit],
-                                               capture_output=True, text=True, timeout=5)
-                            return r.stdout.strip() in ("enabled", "enabled-runtime", "static")
-                        except Exception:
-                            return False
 
                     down = [s for s in _load_dashboard_services()
                             if not s.get("running") and s.get("name") in critical
@@ -217,4 +292,5 @@ def status() -> dict:
         "journal": list(reversed(journal[-20:])),
         "interventions": len(journal),
         "last_intervention": journal[-1]["ts"] if journal else None,
+        "assessment": assess(),
     }

@@ -28,11 +28,14 @@ def get_list_all_server_ipsec():
         id_ipsec = config['pk']
         config.pop('pk')
         config['fields']['id'] = id_ipsec
-        config['fields']['hash_algorithm_ph1'] = list(config['fields']['hash_algorithm_ph1'].split(','))
-        config['fields']['dh_key_group'] = list(config['fields']['dh_key_group'].split(','))
+        # These columns are nullable: a half-created or restored-from-empty row
+        # would otherwise crash the whole IPsec page on `None.split(',')`.
+        for field in ('hash_algorithm_ph1', 'dh_key_group', 'hash_algorithm_ph2'):
+            value = config['fields'].get(field)
+            config['fields'][field] = value.split(',') if value else []
         if config['fields']['protocol'] == 'ESP':
-            config['fields']['encryption_algorithm_ph2'] = list(config['fields']['encryption_algorithm_ph2'].split(','))
-        config['fields']['hash_algorithm_ph2'] = list(config['fields']['hash_algorithm_ph2'].split(','))
+            value = config['fields'].get('encryption_algorithm_ph2')
+            config['fields']['encryption_algorithm_ph2'] = value.split(',') if value else []
         list_ipsec.append(config['fields'])
     return list_ipsec
     

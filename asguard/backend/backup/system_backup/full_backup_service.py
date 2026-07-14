@@ -294,7 +294,23 @@ class FullBackupService:
                 pass
 
         for idx, runner in enumerate(runners):
-            result = runner(backup_dir)
+            # A component runner must NEVER be able to abort the whole backup. If
+            # one raises an unexpected exception (permission error, missing tool,
+            # DB hiccup…), catch it and record that component as "failed" so the
+            # remaining components still run and — critically — the backup still
+            # reaches _finalize_backup and writes backup_metadata.json. Without
+            # this, a single crashing component left a metadata-less orphan folder
+            # that showed up as a detail-less "Echec total".
+            try:
+                result = runner(backup_dir)
+            except Exception as exc:
+                comp_name = getattr(runner, "__name__", "unknown").replace("_backup_", "") or "unknown"
+                logger.exception("Backup component '%s' crashed — recorded as failed", comp_name)
+                result = ComponentResult(
+                    name=comp_name,
+                    status="failed",
+                    message=f"Composant en erreur : {exc}",
+                )
             results[result.name] = result
             components_progress[result.name] = result.status
 
@@ -685,11 +701,17 @@ class FullBackupService:
                         encoding="utf-8",
                     )
 
-                    tar_sources = [str(snapshot_root)] + sources
-                    r = run_cmd(
-                        ["sudo", "-n", "/usr/bin/tar", "--ignore-failed-read", "-czf", str(dest)] + tar_sources,
-                        timeout=60,
-                    )
+                    # Store the DB snapshot at its intended RELATIVE path
+                    # (var/backups/asguard/firewall_rules_db.json) via `-C snapshot_root`,
+                    # not the absolute temp dir — otherwise tar bakes the temp path
+                    # (root/tmp/backup_firewall_XXX/...) into the archive and the
+                    # restore's _restore_firewall_rules_db can never find it, silently
+                    # skipping the Rule-table sync. System files go via `-C /`.
+                    tar_cmd = ["sudo", "-n", "/usr/bin/tar", "--ignore-failed-read",
+                               "-czf", str(dest), "-C", str(snapshot_root), "var"]
+                    if sources:
+                        tar_cmd += ["-C", "/"] + [p.lstrip("/") for p in sources]
+                    r = run_cmd(tar_cmd, timeout=60)
                     if not r["success"]:
                         return ComponentResult.failed(name, r.get("error", r.get("stderr", "tar failed")))
             except Exception as exc:

@@ -44,6 +44,9 @@
               <component :is="tab.component" />
             </v-window-item>
           </v-window>
+
+          <!-- Widget flottant "Optimisation du stockage" (dédup) -->
+          <BackupDedup />
         </div>
       </template>
     </base-layout>
@@ -61,6 +64,7 @@ import BackupDashboardMonitoring from "./components/BackupDashboardMonitoring.vu
 import RestoreHistory from "./components/RestoreHistory.vue";
 import BackupCloud from "./components/BackupCloud.vue";
 import BackupRiskCenter from "./components/BackupRiskCenter.vue";
+import BackupDedup from "./components/BackupDedup.vue";
 import { useNotifStore } from "@/store/modules/notifications.js";
 
 export default {
@@ -76,6 +80,7 @@ export default {
     RestoreHistory,
     BackupCloud,
     BackupRiskCenter,
+    BackupDedup,
   },
   inject: ["emitter"],
 

@@ -5,7 +5,7 @@ Exposes the dry-run / status / apply / rollback / audit endpoints used by the
 Backup & DRP UI to extend snapshot coverage to system configurations.
 """
 
-import threading
+import subprocess
 import uuid
 from pathlib import Path
 
@@ -76,17 +76,27 @@ def lvm_migration_apply(request):
 
     job_id = f"mig_{uuid.uuid4().hex[:10]}"
 
-    def worker():
-        try:
-            Mig.apply(dry_run=False, ids=ids, job_id=job_id)
-        except Exception as e:
-            from .system_backup.lvm_migration_service import _write_job, JOBS_DIR
-            _write_job(JOBS_DIR / f"{job_id}.json", {
-                "job_id": job_id, "status": "error", "error": str(e),
-            })
+    # Root, not in-process: the migration reads 0600 files, creates mountpoints
+    # under root-owned dirs and must own them (a /etc/sudoers.d owned by uvicorn
+    # makes sudo refuse to run). systemd-run detaches it, so restarting a service
+    # that takes uvicorn down with it cannot kill the migration midway.
+    cmd = [
+        "sudo", "-n", "systemd-run",
+        f"--unit=asguard-lvm-mig-{job_id}",
+        "--collect",
+        "/usr/bin/python", "/asguard/asguard/lvm_migration_runner.py", job_id,
+    ]
+    if ids:
+        cmd.append(",".join(ids))
 
-    t = threading.Thread(target=worker, daemon=True, name=f"lvm-mig-{job_id}")
-    t.start()
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    if r.returncode != 0:
+        return JsonResponse(
+            {"status": "error",
+             "error": (r.stderr or r.stdout or "systemd-run a échoué").strip()},
+            status=500,
+        )
+
     return JsonResponse({"status": "queued", "job_id": job_id})
 
 

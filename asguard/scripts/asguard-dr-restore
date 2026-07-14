@@ -282,13 +282,23 @@ phase "PHASE 4 — PAQUETS SYSTÈME"
 if [[ $SKIP_PACKAGES -eq 1 ]]; then
     warn "--skip-packages : phase ignorée"
 else
-    pkg_list="$BACKUP_DIR/packages/packages.txt"
-    if [[ -f "$pkg_list" ]]; then
+    # The backup names the list after the distro's package manager. Arch is the
+    # appliance's OS, so pacman_packages.txt is the one that actually exists;
+    # packages.txt is kept as a fallback for RPM/DEB-based targets.
+    pkg_list=""
+    for candidate in pacman_packages.txt packages.txt; do
+        [[ -f "$BACKUP_DIR/packages/$candidate" ]] && { pkg_list="$BACKUP_DIR/packages/$candidate"; break; }
+    done
+
+    if [[ -n "$pkg_list" ]]; then
+        log "Liste de paquets : $(basename "$pkg_list")"
         missing=()
         while IFS= read -r line; do
             pkg=$(echo "$line" | awk '{print $1}' | head -c 100)
             [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
-            if ! rpm -q "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null; then
+            if ! pacman -Q "$pkg" &>/dev/null \
+               && ! rpm -q "$pkg" &>/dev/null \
+               && ! dpkg -s "$pkg" &>/dev/null; then
                 missing+=("$pkg")
             fi
         done < "$pkg_list"
@@ -296,7 +306,9 @@ else
             warn "Paquets manquants : ${#missing[@]}"
             log "Premiers manquants : ${missing[@]:0:10}"
             if [[ $DRY_RUN -eq 0 ]]; then
-                if command -v dnf &>/dev/null; then
+                if command -v pacman &>/dev/null; then
+                    run pacman -S --needed --noconfirm "${missing[@]}" || warn "Certains paquets n'ont pas pu être installés"
+                elif command -v dnf &>/dev/null; then
                     run dnf install -y "${missing[@]}" || warn "Certains paquets n'ont pas pu être installés"
                 elif command -v apt-get &>/dev/null; then
                     run apt-get install -y "${missing[@]}" || warn "Certains paquets n'ont pas pu être installés"
@@ -306,7 +318,7 @@ else
             ok "Tous les paquets requis sont déjà présents"
         fi
     else
-        warn "Liste de paquets absente : $pkg_list"
+        warn "Liste de paquets absente sous $BACKUP_DIR/packages/"
     fi
 fi
 
@@ -322,8 +334,11 @@ ok "Stack applicatif arrêté"
 
 # ── Phase 6 + 7 + 8: Restore /etc, systemd, application ─────────────────────
 phase "PHASE 6 — RESTAURATION /etc (system_config)"
-sysconf_tar="$BACKUP_DIR/system_config/system_config.tar.gz"
-if [[ -f "$sysconf_tar" ]]; then
+sysconf_tar=""
+for candidate in etc.tar.gz system_config.tar.gz; do
+    [[ -f "$BACKUP_DIR/system_config/$candidate" ]] && { sysconf_tar="$BACKUP_DIR/system_config/$candidate"; break; }
+done
+if [[ -n "$sysconf_tar" ]]; then
     # Preserve current /etc minus mounts so we can roll back if needed.
     run tar -czf "$PRESERVE_DIR/etc-before.tar.gz" \
         --exclude="/etc/asguard" --exclude="/etc/openvpn" \
@@ -331,15 +346,42 @@ if [[ -f "$sysconf_tar" ]]; then
         --exclude="/etc/rules" --exclude="/etc/nftables.conf" \
         --exclude="/etc/dhcpd.conf" --exclude="/etc/dhcpd6.conf" \
         /etc 2>/dev/null
-    run tar -xzf "$sysconf_tar" -C / 2>/dev/null
-    ok "/etc restauré"
+    # fstab/crypttab describe the SOURCE machine's disks (UUIDs, LVM volume,
+    # bind mounts). Restoring them onto a target whose disks differ makes
+    # systemd block ~90s per missing device on EVERY boot. The target's own
+    # fstab is authoritative; the appliance bind mounts are re-added below,
+    # but only if the LV they depend on actually exists here.
+    run tar -xzf "$sysconf_tar" -C / \
+        --exclude="etc/fstab" --exclude="etc/fstab.*" --exclude="etc/crypttab" \
+        2>/dev/null
+    ok "/etc restauré (fstab de la cible préservé)"
+
+    if [[ $DRY_RUN -eq 0 ]] && lvs asguard-vg/asguard-data &>/dev/null; then
+        src_fstab=$(mktemp)
+        tar -xzOf "$sysconf_tar" etc/fstab > "$src_fstab" 2>/dev/null || true
+        added=0
+        while IFS= read -r line; do
+            [[ "$line" != *"asguard-lvm-migration"* && "$line" != *"/var/asguard_data"* ]] && continue
+            grep -qF "$line" /etc/fstab && continue
+            echo "$line" >> /etc/fstab
+            added=$((added + 1))
+        done < "$src_fstab"
+        rm -f "$src_fstab"
+        [[ $added -gt 0 ]] && ok "Montages appliance réinjectés dans /etc/fstab : $added"
+        run systemctl daemon-reload
+    else
+        warn "LV asguard-vg/asguard-data absent ici — montages LVM NON réinjectés (normal sur cible sans 2e disque)"
+    fi
 else
     warn "system_config non trouvé — phase ignorée"
 fi
 
 phase "PHASE 7 — RESTAURATION systemd custom"
-sysd_tar="$BACKUP_DIR/systemd_services/systemd.tar.gz"
-if [[ -f "$sysd_tar" ]]; then
+sysd_tar=""
+for candidate in custom_units.tar.gz systemd.tar.gz; do
+    [[ -f "$BACKUP_DIR/systemd_services/$candidate" ]] && { sysd_tar="$BACKUP_DIR/systemd_services/$candidate"; break; }
+done
+if [[ -n "$sysd_tar" ]]; then
     run tar -xzf "$sysd_tar" -C / 2>/dev/null
     run systemctl daemon-reload
     ok "Unit files restaurées + daemon-reload"
@@ -348,16 +390,39 @@ else
 fi
 
 phase "PHASE 8 — RESTAURATION /asguard/asguard"
-app_tar="$BACKUP_DIR/application/application.tar.gz"
-if [[ -f "$app_tar" ]]; then
+app_tar=""
+for candidate in asguard_app.tar.gz application.tar.gz; do
+    [[ -f "$BACKUP_DIR/application/$candidate" ]] && { app_tar="$BACKUP_DIR/application/$candidate"; break; }
+done
+
+if [[ -n "$app_tar" ]]; then
     if [[ -d "$ASGUARD_ROOT" ]]; then
         run mv "$ASGUARD_ROOT" "${ASGUARD_ROOT}.pre-dr-${TIMESTAMP}"
     fi
     run mkdir -p "$ASGUARD_ROOT"
-    run tar -xzf "$app_tar" -C "$ASGUARD_ROOT" --strip-components=1 2>/dev/null
-    ok "Application restaurée sous $ASGUARD_ROOT"
+    # Entries are stored as asguard/asguard/<file>, so two levels must be
+    # stripped to land <file> directly under $ASGUARD_ROOT.
+    strip=$(tar -tzf "$app_tar" 2>/dev/null | head -1 | awk -F/ '{print NF-1}')
+    [[ "$strip" -ge 1 ]] 2>/dev/null || strip=2
+    run tar -xzf "$app_tar" -C "$ASGUARD_ROOT" --strip-components="$strip" 2>/dev/null
+    ok "Application restaurée sous $ASGUARD_ROOT (strip=$strip)"
+
+    # node_modules is excluded from backups: re-point the stable symlink so
+    # node tooling still works on the recovered appliance.
+    if [[ ! -e "$ASGUARD_ROOT/node_modules" && -d /asguard/node_modules ]]; then
+        run ln -sfn /asguard/node_modules "$ASGUARD_ROOT/node_modules"
+    fi
+
+    # Python dependencies are NOT part of the package list — the restored code
+    # can require libs (boto3, …) that the target never had. Without this the
+    # app restores but fails to import.
+    if [[ -f "$ASGUARD_ROOT/requirements.txt" && $DRY_RUN -eq 0 ]]; then
+        log "Installation des dépendances Python…"
+        run pip install --break-system-packages -r "$ASGUARD_ROOT/requirements.txt" \
+            || warn "Certaines dépendances Python n'ont pas pu être installées"
+    fi
 else
-    warn "application.tar.gz non trouvé — phase ignorée"
+    warn "Archive applicative non trouvée sous $BACKUP_DIR/application/ — phase ignorée"
 fi
 
 # ── Phase 9: Database ───────────────────────────────────────────────────────
@@ -404,18 +469,26 @@ fi
 
 # ── Phase 11: Docker state ──────────────────────────────────────────────────
 phase "PHASE 11 — DOCKER (images + volumes)"
-docker_state="$BACKUP_DIR/docker_state/docker_state.json"
-if [[ -f "$docker_state" ]]; then
-    log "Liste Docker présente — recréation des containers manquants..."
-    jq -r '.containers[]? | .Image' "$docker_state" 2>/dev/null | sort -u | while read -r img; do
-        [[ -z "$img" || "$img" == "null" ]] && continue
+docker_images="$BACKUP_DIR/docker_state/docker_images.txt"
+if [[ -f "$docker_images" ]]; then
+    log "Liste Docker présente — récupération des images manquantes..."
+    # Tab-separated: <repo:tag>\t<id>\t<size>
+    while IFS=$'\t' read -r img _rest; do
+        img=$(echo "$img" | tr -d '[:space:]')
+        [[ -z "$img" || "$img" == "<none>:<none>" ]] && continue
         if ! docker image inspect "$img" &>/dev/null; then
             run docker pull "$img" || warn "Pull échoué : $img"
         fi
-    done
+    done < "$docker_images"
     ok "Images Docker vérifiées"
+
+    # Bring the stack back up from the restored compose file.
+    if [[ -f "$ASGUARD_ROOT/docker-compose.yml" && $DRY_RUN -eq 0 ]]; then
+        run docker compose -f "$ASGUARD_ROOT/docker-compose.yml" up -d \
+            || warn "docker compose up a échoué — vérifier manuellement"
+    fi
 else
-    warn "docker_state.json absent — phase ignorée"
+    warn "docker_images.txt absent — phase ignorée"
 fi
 
 # ── Phase 12: Apply firewall ────────────────────────────────────────────────

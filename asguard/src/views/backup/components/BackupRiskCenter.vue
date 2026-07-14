@@ -140,9 +140,24 @@
             <strong><i class="mdi mdi-history"></i> Journal des interventions</strong>
             <span>{{ autopilot.interventions || 0 }} au total</span>
           </div>
+          <!-- Heartbeat: always shows what Auto-Pilot just evaluated, even when it
+               correctly does nothing — so the operator always has feedback. -->
+          <div v-if="autopilot.assessment" class="rc-ap-heartbeat"
+               :class="'hb-' + autopilot.assessment.tone">
+            <i :class="{
+                 'mdi mdi-shield-check': autopilot.assessment.tone === 'healthy',
+                 'mdi mdi-flash-alert': autopilot.assessment.tone === 'act',
+                 'mdi mdi-pause-circle': autopilot.assessment.tone === 'off'
+               }"></i>
+            <div class="rc-ap-hb-body">
+              <strong>{{ autopilot.assessment.verdict }}</strong>
+              <small>Dernière vérification : {{ new Date(autopilot.assessment.ts).toLocaleTimeString() }}
+                · contrôle automatique toutes les ~60 s</small>
+            </div>
+          </div>
           <div v-if="!autopilot.journal.length" class="rc-ap-empty">
             {{ autopilot.config.enabled
-               ? '✅ Aucune intervention nécessaire — le système est sain.'
+               ? 'Aucune réparation déclenchée pour l’instant — l’Auto-Pilot n’agit que si un service prévu au boot tombe, ou si la RAM/le disque dépasse le seuil.'
                : 'Active l’Auto-Pilot pour que l’IA répare toute seule.' }}
           </div>
           <div v-for="(e, i) in autopilot.journal.slice(0, 5)" :key="i"
@@ -779,7 +794,7 @@ export default {
     // ── Auto-Pilot (autonomous remediation) ──────────────────────────────
     const autopilot = ref({
       config: { enabled: false, rules: {}, ram_threshold_pct: 90, disk_threshold_pct: 90, cooldown_min: 30 },
-      journal: [], interventions: 0,
+      journal: [], interventions: 0, assessment: null,
     });
     const loadAutopilot = async () => {
       try {
@@ -791,7 +806,10 @@ export default {
       try {
         const { data } = await axios.post("/backup/autopilot/config",
           { enabled: !autopilot.value.config.enabled });
-        if (data && data.ok) autopilot.value.config = data.config;
+        if (data && data.ok) {
+          autopilot.value.config = data.config;
+          await loadAutopilot();   // refresh heartbeat verdict for the new state
+        }
       } catch (e) { /* ignore */ }
     };
     let apTimer = null;

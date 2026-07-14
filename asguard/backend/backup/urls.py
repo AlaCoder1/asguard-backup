@@ -44,6 +44,11 @@ urlpatterns = [
     path("create-custom-backup", views.create_custom_backup, name="createCustomBackup"),
     path("components", views.get_backup_components, name="getBackupComponents"),
 
+    # Storage de-duplication ("Analyse intelligente du stockage")
+    path("dedup/analysis", views.dedup_analysis, name="dedupAnalysis"),
+    path("dedup/compare", views.dedup_compare, name="dedupCompare"),
+    path("dedup/cleanup", views.dedup_cleanup, name="dedupCleanup"),
+
     path("<str:backup_id>/details", views.get_backup_details, name="getBackupDetails"),
 
     # SAFE restore = sans application

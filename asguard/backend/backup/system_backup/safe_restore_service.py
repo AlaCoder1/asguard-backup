@@ -88,17 +88,35 @@ class SafeRestoreService:
 
         global_status = "success" if failed == 0 else ("failed" if success == 0 else "partial_success")
 
+        # Restoring the components rolls back the DB and the config files, but the
+        # kernel keeps whatever was loaded before (nft ruleset, routing table).
+        # Without this the UI would show restored routes/rules the kernel doesn't
+        # have — the console DR script already does the same in its phase 12.
+        resync = cls._resync_runtime()
+
         return {
             "status": global_status,
             "backup_id": backup_id,
             "mode": "safe_restore_ui",
             "results": results,
+            "resync": resync,
             "summary": {
                 "success": success,
                 "failed": failed,
                 "skipped": skipped,
             },
         }
+
+    @classmethod
+    def _resync_runtime(cls) -> dict:
+        """Re-apply the restored DB state to the kernel. Never raises: a restore
+        that succeeded must not be reported as failed because the resync did."""
+        try:
+            from backend.backup.post_restore_resync import resync_all
+            return resync_all()
+        except Exception as e:
+            logger.exception("Post-restore resync failed")
+            return {"status": "error", "message": str(e)}
 
     @classmethod
     def _verify_component_file(
@@ -129,8 +147,14 @@ class SafeRestoreService:
         """
         Extract archive to / using sudo tar, so root-owned files
         can be restored correctly.
+
+        `--overwrite` is required: config files like /etc/nftables.conf carry
+        extended ACLs (UpApp/uvicorn rwx), and without it GNU tar refuses to
+        replace the existing file ("Cannot open: File exists"), failing the
+        whole component restore on a same-VM restore. Matches the full-restore
+        helper `_extract_archive_to_root`.
         """
-        return run_cmd(["sudo", "/usr/bin/tar", "-xzf", str(archive), "-C", "/"], timeout=timeout)
+        return run_cmd(["sudo", "/usr/bin/tar", "--overwrite", "-xzf", str(archive), "-C", "/"], timeout=timeout)
 
     @classmethod
     def _restore_firewall(cls, backup_dir: Path, component_meta: dict) -> ComponentResult:

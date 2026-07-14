@@ -48,7 +48,10 @@ LOCAL_TZ = ZoneInfo("Africa/Tunis")
 # ────────────────────────────────────────────────────────────────────────────
 
 FSTAB_MARKER = "# asguard-lvm-migration"
-LOCK_FILE = Path("/var/lock/asguard-migration.lock")
+# Kept off the LV and out of /var/lock: the app runs as `uvicorn`, which cannot
+# write to /var/lock, and a lock living on the snapshotable volume would be
+# resurrected stale by a rollback.
+LOCK_FILE = Path("/var/lib/asguard/migration.lock")
 AUDIT_DIR = Path("/var/log/asguard")
 JOBS_DIR = Path("/var/backups/asguard/migration_jobs")
 PRE_MIGRATION_BACKUP_DIR = Path("/var/backups/asguard/pre_migration")
@@ -77,6 +80,52 @@ DEFAULT_ITEMS: list[dict] = [
     {"id": "dhcp6",        "source": "/etc/dhcpd6.conf",      "type": "file", "service": None,              "optional": True},
     {"id": "postgres",     "source": "/var/lib/docker/volumes/asguard_pgdb/_data",
                            "type": "dir",  "service": None,   "container": "app-db-container", "optional": False},
+
+    # Périmètre UI restant. Seuls des répertoires ici : un fichier isolé ne peut
+    # pas être bind-mounté quand son éditeur le réécrit par rename() (EBUSY sur
+    # un point de montage) — /etc/passwd & co passent par SNAPSHOT_CAPTURE_FILES.
+    {"id": "suricata_rules", "source": "/var/lib/suricata/rules", "type": "dir", "service": "suricata", "optional": True},
+    {"id": "nginx",          "source": "/etc/nginx",              "type": "dir", "service": "nginx",    "optional": True},
+    {"id": "networkmanager", "source": "/etc/NetworkManager",     "type": "dir", "service": None,       "optional": True},
+    # Scope = what the Asguard UI manages. Pure OS plumbing stays off the LV:
+    # /etc/systemd/system (the UI starts and stops services, it does not author
+    # units) and /etc/sudoers.d (nothing in the UI edits it — and putting it on
+    # the LV made snapshot restore unmount its own sudo rights halfway through).
+    {"id": "swanctl",        "source": "/etc/swanctl",            "type": "dir", "service": None,       "optional": True},
+    {"id": "ipsec_d",        "source": "/etc/ipsec.d",            "type": "dir", "service": None,       "optional": True},
+    {"id": "easyrsa",        "source": "/etc/easy-rsa",           "type": "dir", "service": None,       "optional": True},
+    {"id": "ssl_private",    "source": "/etc/ssl/private",        "type": "dir", "service": None,       "optional": True},
+    {"id": "pki",            "source": "/asguard/asguard/pki",    "type": "dir", "service": None,       "optional": True},
+    {"id": "cron_d",         "source": "/etc/cron.d",             "type": "dir", "service": None,       "optional": True},
+    {"id": "cron_spool",     "source": "/var/spool/cron",         "type": "dir", "service": None,       "optional": True},
+    {"id": "openldap",       "source": "/etc/openldap",           "type": "dir", "service": None,       "optional": True},
+]
+
+# Chemins du périmètre UI qui ne peuvent PAS être bind-mountés, pour deux raisons.
+#
+# 1. rename() — useradd, passwd, visudo et crontab écrivent un fichier temporaire
+#    puis le renomment sur la cible, et rename() sur un point de montage échoue
+#    avec EBUSY. Bind-mounter /etc/passwd casserait la création d'utilisateur.
+#
+# 2. /etc/sudoers.d s'auto-décapite. La restauration d'un snapshot démonte les
+#    bind-mounts avant le merge ; en démontant celui-ci elle supprime les règles
+#    NOPASSWD d'uvicorn, donc son propre droit d'exécuter umount/lvconvert/mount.
+#    Le rollback s'interrompt au milieu, LV non mergé et montages en vrac.
+#
+# Ces chemins sont copiés sur le LV juste avant le lvcreate (ils entrent ainsi
+# dans le snapshot comme le reste du volume) et rejoués après le merge. La
+# couverture est identique ; seul le mécanisme diffère.
+SNAPSHOT_CAPTURE_FILES: list[str] = [
+    # Users page — the Linux accounts mirroring the `user` table.
+    "/etc/passwd",
+    "/etc/shadow",
+    "/etc/group",
+    "/etc/gshadow",
+    # Schedule page.
+    "/etc/crontab",
+    # IPsec page.
+    "/etc/ipsec.conf",
+    "/etc/ipsec.secrets",
 ]
 
 
@@ -223,6 +272,19 @@ class LVMMigrationService:
         return ok and out == "active"
 
     @classmethod
+    def _service_failed(cls, service: Optional[str]) -> bool:
+        """True when systemd reports the unit as failed.
+
+        Deliberately narrower than `not active`: a service that is merely stopped
+        can be migrated and started back up, whereas a *failed* one cannot pass
+        the post-migration health-check no matter what we do.
+        """
+        if not service:
+            return False
+        _, out, _ = cls._run("systemctl", "is-failed", service, timeout=5)
+        return out.strip() == "failed"
+
+    @classmethod
     def _du_bytes(cls, path: Path) -> int:
         if not path.exists():
             return 0
@@ -266,6 +328,17 @@ class LVMMigrationService:
             else:
                 status.state = "inconsistent"
                 status.note = "Source absente mais marquée non-optionnelle."
+        elif cls._service_failed(item.get("service")) and not status.is_bind_mounted:
+            # Migrating an item means stopping its service, moving its files and
+            # restarting it — the final health-check can only fail if the service
+            # is already broken, and the item would be rolled back every single
+            # run. Keep it out of the attempt (and out of the coverage ratio)
+            # until the service is repaired; it comes back on its own then.
+            status.state = "not_applicable"
+            status.note = (
+                f"Service « {item['service']} » en échec sur ce système — "
+                f"à réparer avant de pouvoir le migrer."
+            )
         elif status.is_bind_mounted and status.target_exists:
             status.state = "migrated"
             if not status.in_fstab:

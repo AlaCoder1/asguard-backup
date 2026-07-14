@@ -282,20 +282,40 @@
         <div class="component-picker">
           <div class="component-picker-head">
             <strong>Composants</strong>
+            <span :class="['cp-count', 'cp-count-' + createMode]">
+              {{ createIncludedCount }} / {{ backupComponents.length }} inclus
+            </span>
             <button
+              v-if="createMode === 'custom'"
               class="link-btn"
               type="button"
-              :disabled="createMode !== 'custom'"
               @click="selectedCreateComponents = backupComponents.slice()"
             >
               Tout sélectionner
             </button>
           </div>
+          <p class="cp-hint">{{ componentHint }}</p>
+
           <div class="component-grid">
-          <label v-for="component in backupComponents" :key="component" class="check-row">
-            <input v-model="selectedCreateComponents" :value="component" type="checkbox" :disabled="createMode !== 'custom'" />
-            <span>{{ component }}</span>
-          </label>
+            <!-- Custom : cases interactives -->
+            <template v-if="createMode === 'custom'">
+              <label v-for="component in backupComponents" :key="component" class="check-row cp-row cp-selectable">
+                <input v-model="selectedCreateComponents" :value="component" type="checkbox" />
+                <span class="cp-name">{{ component }}</span>
+              </label>
+            </template>
+            <!-- Full / Safe : état d'inclusion en lecture seule -->
+            <template v-else>
+              <div
+                v-for="component in backupComponents"
+                :key="component"
+                :class="['check-row', 'cp-row', 'cp-static', createComponentIncluded(component) ? 'cp-in' : 'cp-out']"
+              >
+                <span class="cp-mark">{{ createComponentIncluded(component) ? '✓' : '—' }}</span>
+                <span class="cp-name">{{ component }}</span>
+                <span v-if="!createComponentIncluded(component)" class="cp-tag">non inclus</span>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -1267,6 +1287,7 @@ export default {
       createDialog: false,
       createMode: "full",
       backupComponents: [],
+      safeComponents: [],
       selectedCreateComponents: [],
       restoreDialog: false,
       restoreTarget: null,
@@ -1715,6 +1736,20 @@ export default {
       };
       return meta[this.createMode] || meta.full;
     },
+    createIncludedCount() {
+      if (this.createMode === "full") return this.backupComponents.length;
+      if (this.createMode === "safe") {
+        return this.backupComponents.filter((c) => this.safeComponents.includes(c)).length;
+      }
+      return this.selectedCreateComponents.length;
+    },
+    componentHint() {
+      if (this.createMode === "full")
+        return "Le mode Full capture l'intégralité de la plateforme — application, base de données et système compris.";
+      if (this.createMode === "safe")
+        return "Le mode Safe ne capture que la configuration réseau & sécurité. L'application, la base et l'état système ne sont pas inclus.";
+      return "Coche exactement les composants à embarquer — rien n'est sélectionné par défaut.";
+    },
     restoreModeMeta() {
       const meta = {
         safe: {
@@ -1952,6 +1987,7 @@ export default {
         params: backupId ? { backup_id: backupId } : {},
       });
       this.backupComponents = response.data?.backup_components || [];
+      this.safeComponents = response.data?.safe_components || [];
       this.restoreComponents = response.data?.restore_components || [];
     },
     stopRestorePolling() {
@@ -2644,6 +2680,11 @@ export default {
     //  - "covered"   : this mode WILL restore it (green ✓)
     //  - "protected" : this mode never touches it — critical/host item (grey 🛡)
     // Full restores everything; Safe protects the socle/OS/identity list.
+    createComponentIncluded(component) {
+      if (this.createMode === "full") return true;
+      if (this.createMode === "safe") return this.safeComponents.includes(component);
+      return this.selectedCreateComponents.includes(component);
+    },
     componentCoverage(component) {
       if (this.restoreMode === "complete") return "covered";
       if (this.restoreMode === "safe") {

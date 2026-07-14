@@ -677,6 +677,19 @@
 .rc-ap-journal-head span { font-size: 11px; color: #94a3b8; font-weight: 700; }
 .rc-ap-empty { padding: 22px 10px; text-align: center; color: #94a3b8; font-size: 12.5px; font-weight: 600;
   background: #f8fafc; border-radius: 10px; }
+/* Heartbeat — always-visible "what did Auto-Pilot just see" banner */
+.rc-ap-heartbeat { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px;
+  border-radius: 11px; margin-bottom: 10px; border: 1px solid transparent; }
+.rc-ap-heartbeat i { font-size: 19px; flex-shrink: 0; margin-top: 1px; }
+.rc-ap-hb-body { min-width: 0; }
+.rc-ap-hb-body strong { display: block; font-size: 12.5px; line-height: 1.35; }
+.rc-ap-hb-body small { display: block; margin-top: 3px; font-size: 10.5px; color: #64748b; }
+.rc-ap-heartbeat.hb-healthy { background: #f0fdf4; border-color: #bbf7d0; }
+.rc-ap-heartbeat.hb-healthy i, .rc-ap-heartbeat.hb-healthy strong { color: #15803d; }
+.rc-ap-heartbeat.hb-act { background: #fffbeb; border-color: #fde68a; }
+.rc-ap-heartbeat.hb-act i, .rc-ap-heartbeat.hb-act strong { color: #b45309; }
+.rc-ap-heartbeat.hb-off { background: #f8fafc; border-color: #e2e8f0; }
+.rc-ap-heartbeat.hb-off i, .rc-ap-heartbeat.hb-off strong { color: #64748b; }
 .rc-ap-entry { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px;
   margin-bottom: 6px; background: #f8fafc; }
 .rc-ap-entry.ok i { color: #16a34a; } .rc-ap-entry.ko i { color: #dc2626; }

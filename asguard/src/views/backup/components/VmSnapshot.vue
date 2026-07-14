@@ -257,8 +257,31 @@
           <div v-else class="lvm-plan-loading">Calcul du plan…</div>
 
           <div class="lvm-modal-foot">
-            <span class="lvm-plan-note">Mode build + dry-run uniquement — la migration réelle est désactivée dans cette release.</span>
-            <button class="lvm-btn-ghost" @click="showPlanModal = false">Fermer</button>
+            <span v-if="migrationError" class="lvm-plan-note lvm-plan-note-err">{{ migrationError }}</span>
+            <span v-else-if="migrationJob" class="lvm-plan-note">
+              Migration en cours — {{ coverageItemLabel(migrationJob.current) }}
+              ({{ (migrationJob.items || []).length }}/{{ migrationTotal }})
+            </span>
+            <span v-else-if="migrationArmed" class="lvm-plan-note lvm-plan-note-warn">
+              Un snapshot de sécurité est pris avant de commencer. L'interface peut se figer
+              quelques secondes pendant la migration de nginx — la migration continue côté serveur.
+            </span>
+            <span v-else class="lvm-plan-note">
+              Les éléments migrés entrent dans le périmètre des snapshots.
+            </span>
+            <button class="lvm-btn-ghost" @click="closePlanModal">Fermer</button>
+            <button
+              v-if="migrationPlan && migrationPlan.summary && migrationPlan.summary.to_migrate"
+              class="lvm-btn-primary"
+              :disabled="migrationRunning"
+              @click="applyMigration"
+            >
+              <template v-if="migrationRunning">Migration en cours…</template>
+              <template v-else-if="migrationArmed">
+                Confirmer — migrer {{ migrationPlan.summary.to_migrate }} élément(s)
+              </template>
+              <template v-else>Lancer la migration</template>
+            </button>
           </div>
         </div>
       </div>
@@ -807,6 +830,12 @@ export default {
       showCoverageDetails: false,
       showPlanModal:     false,
       migrationPlan:     null,
+      migrationArmed:    false,   // first click arms, second click fires
+      migrationRunning:  false,
+      migrationJob:      null,
+      migrationError:    null,
+      migrationTotal:    0,
+      migrationPollTimer: null,
     }
   },
 
@@ -938,6 +967,7 @@ export default {
   beforeUnmount() {
     clearInterval(this.jobPollTimer)
     clearInterval(this.nowTimer)
+    clearInterval(this.migrationPollTimer)
   },
 
   methods: {
@@ -977,6 +1007,8 @@ export default {
     async openPlanModal() {
       this.showPlanModal = true
       this.migrationPlan = null
+      this.migrationArmed = false
+      this.migrationError = null
       try {
         const res = await axios.get(`${API}/lvm-migration/plan`)
         this.migrationPlan = res.data
@@ -984,6 +1016,63 @@ export default {
         console.error('Plan load failed', e)
         this.migrationPlan = { actions: [], summary: {}, warnings: ['Erreur de chargement du plan.'] }
       }
+    },
+
+    closePlanModal() {
+      this.showPlanModal = false
+      this.migrationArmed = false
+    },
+
+    async applyMigration() {
+      // Two-step: the first click only arms the button. Migrating moves live
+      // config off the rootfs and rewrites fstab — not something to fire on a
+      // stray click.
+      if (!this.migrationArmed) {
+        this.migrationArmed = true
+        return
+      }
+
+      this.migrationRunning = true
+      this.migrationError = null
+      this.migrationTotal = this.migrationPlan?.summary?.to_migrate || 0
+
+      try {
+        const res = await axios.post(`${API}/lvm-migration/apply`, { dry_run: false })
+        if (!res.data?.job_id) {
+          throw new Error(res.data?.error || 'Réponse inattendue du serveur.')
+        }
+        this.pollMigration(res.data.job_id)
+      } catch (e) {
+        this.migrationRunning = false
+        this.migrationArmed = false
+        this.migrationError = e.response?.data?.error || e.message || 'Échec du lancement.'
+      }
+    },
+
+    pollMigration(jobId) {
+      clearInterval(this.migrationPollTimer)
+      this.migrationPollTimer = setInterval(async () => {
+        try {
+          const res = await axios.get(`${API}/lvm-migration/progress/${jobId}`)
+          this.migrationJob = res.data
+
+          if (res.data.status === 'completed' || res.data.status === 'error') {
+            clearInterval(this.migrationPollTimer)
+            this.migrationRunning = false
+            this.migrationArmed = false
+            if (res.data.status === 'error') {
+              this.migrationError = res.data.error || 'La migration a échoué.'
+            } else {
+              this.migrationJob = null
+              this.showPlanModal = false
+            }
+            this.loadAll()   // refresh the coverage gauge
+          }
+        } catch (e) {
+          // nginx is restarted mid-migration, so the API is briefly unreachable.
+          // That is expected: keep polling instead of declaring failure.
+        }
+      }, 2000)
     },
 
     coverageItemLabel(id) {
@@ -996,6 +1085,23 @@ export default {
         suricata:     'IDS/IPS (Suricata)',
         squid:        'Proxy (Squid)',
         modsecurity:  'WAF (ModSecurity)',
+        postgres:        'Base de données',
+        rules:           'Règles de pare-feu',
+        dhcp4:           'DHCP v4',
+        dhcp6:           'DHCP v6',
+        suricata_rules:  'Règles IDS/IPS',
+        nginx:           'Serveur web / WAF',
+        networkmanager:  'Interfaces réseau',
+        systemd_units:   'Services système',
+        sudoers_d:       'Droits administrateur',
+        swanctl:         'IPsec (swanctl)',
+        ipsec_d:         'IPsec (certificats)',
+        easyrsa:         'Autorité de certification',
+        ssl_private:     'Clés privées TLS',
+        pki:             'PKI Asguard',
+        cron_d:          'Tâches planifiées',
+        cron_spool:      'Tâches planifiées (utilisateurs)',
+        openldap:        'Annuaire LDAP',
       }
       return map[id] || id
     },

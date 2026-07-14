@@ -300,6 +300,19 @@ class RestoreService:
             logger.exception("fstab reconcile failed (non-fatal)")
             fstab_reconcile = {"mode": "unknown", "changed": False}
 
+        # Re-assert write access to the backup root. A COMPLETE/DR restore swaps
+        # the LV / bind mount carrying /var/backups/asguard, which can reset its
+        # owner to root:root and — worse — leave the POSIX ACL mask at r-x, which
+        # silently strips the write bit even from the `user:uvicorn:rwx` entry
+        # (`#effective:r-x`). Django runs as uvicorn, so every subsequent
+        # scheduled backup then dies with `[Errno 13] Permission denied` creating
+        # its folder. Repair the mask/ACL here so backups keep working after a
+        # restore. Best-effort — must never turn a successful restore into a failure.
+        try:
+            cls._reconcile_backup_root_permissions()
+        except Exception:
+            logger.exception("backup-root permission reconcile failed (non-fatal)")
+
         # Post-restore diff — capture the live DB state again and compare
         # against the pre-snapshot to give the operator a row-level
         # report (which rules vanished, which ZTNA identities reappeared,
@@ -311,6 +324,10 @@ class RestoreService:
         _empty_diff = {"components": {}, "totals": {
             "added": 0, "removed": 0, "modified": 0, "changed_components": 0,
         }, "available": False}
+
+        def _resync_runtime():
+            from backend.backup.post_restore_resync import resync_all
+            return resync_all()
 
         def _compute_post_diff():
             from backend.backup.restore_diff import snapshot_db_state, diff_db_states
@@ -328,6 +345,15 @@ class RestoreService:
         post_system = cls._capture_system_identity()
         system_changes = cls._diff_system_identity(pre_system, post_system)
 
+        # Push the restored DB state back into the kernel (nft ruleset, routing
+        # table, NAT). The components restore files + DB rows; without this the UI
+        # would list routes and rules the kernel never received. Bounded and
+        # non-fatal: a failed resync must not turn a good restore into a failure.
+        resync_payload = _run_bounded(
+            _resync_runtime, timeout=120,
+            default={"status": "error", "message": "resync timed out"},
+        )
+
         return {
             "status": global_status,
             "backup_id": backup_id,
@@ -338,6 +364,7 @@ class RestoreService:
                 "failed": failed,
                 "skipped": skipped,
             },
+            "resync": resync_payload,
             "diff": diff_payload,
             "system_changes": system_changes,
             "fstab_reconcile": fstab_reconcile,
@@ -539,6 +566,34 @@ class RestoreService:
             if attempt < 2:
                 run_cmd(["sleep", "2"], timeout=4)
         return False
+
+    @classmethod
+    def _reconcile_backup_root_permissions(cls) -> dict:
+        """Ensure the uvicorn service account can still create backup folders
+        under /var/backups/asguard after a restore. A COMPLETE restore swaps the
+        underlying LV/bind mount and can reset the backup root to root:root with
+        an ACL mask of r-x — which cancels the write bit on the uvicorn ACL entry
+        (`user:uvicorn:rwx  #effective:r-x`), so scheduled backups then fail with
+        Permission denied. We re-grant the uvicorn/UpApp ACLs, force the mask back
+        to rwx, and set the same defaults so newly created backup folders inherit
+        write access. Best-effort via sudo -n; failures are logged, never raised."""
+        root = str(cls.BACKUP_ROOT)
+        acl_spec = "u:uvicorn:rwx,u:UpApp:rwx,m::rwx"
+        cmds = [
+            # setgid + group-write so new subfolders inherit the group and stay writable
+            ["sudo", "-n", "chmod", "2775", root],
+            # live ACL entries + mask (fixes the r-x mask that strips write)
+            ["sudo", "-n", "setfacl", "-m", acl_spec, root],
+            # default ACL so future backup folders inherit the write grant
+            ["sudo", "-n", "setfacl", "-d", "-m", acl_spec, root],
+        ]
+        results = {}
+        for cmd in cmds:
+            r = run_cmd(cmd, timeout=15)
+            results[cmd[2]] = bool(r.get("success"))
+        changed = any(results.values())
+        logger.info("backup-root permission reconcile: %s", results)
+        return {"changed": changed, "results": results}
 
     @classmethod
     def _reconcile_fstab_native(cls) -> dict:

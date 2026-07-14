@@ -1,0 +1,22 @@
+[Unit]
+# Routes (`ip route add`), nft rules and NAT live in kernel memory only: nothing
+# replays them at boot, so after a reboot the UI still lists them while the
+# kernel has none. This unit re-applies the DB state to the kernel on every
+# boot, which is the same pipeline the DR restore runs in its phase 12.
+Description=Asguard — re-apply firewall/NAT/routing from DB to kernel at boot
+After=network-online.target docker.service nftables.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/asguard/asguard
+# PostgreSQL runs in a container: the resync reads the DB, so wait for it to
+# accept connections instead of failing on a cold boot.
+ExecStartPre=/bin/bash -c 'for i in $(seq 1 60); do pg_isready -q -h localhost -p 5391 -U postgres && exit 0; sleep 2; done; exit 1'
+ExecStart=/usr/bin/python /asguard/asguard/manage.py shell -c "from backend.backup.post_restore_resync import resync_all; import json; print(json.dumps(resync_all().get('summary', {})))"
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

@@ -116,3 +116,7 @@
 npm-debug.log
 
 yarn-error.log
+
+# Généré par yarn install — ne doit jamais être versionné
+node_modules
+node_modules/

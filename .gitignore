@@ -127,3 +127,11 @@ pki.pre-asguard-migration/
 # Archives locales de code
 asguard_fixes.tar.gz
 *.tar.gz
+
+# Livrables PFE / soutenance — restent en local, hors du dépôt
+img/
+DEMO_DR_CHECKLIST.md
+DOCUMENTATION_BACKUP_DRP.md
+PREP_ENTRETIEN_TECHNIQUE.md
+RAPPORT_SOUTENANCE_BACKUP_DRP.md
+Rapport_PFE_Backup_DRP_Asguard.docx

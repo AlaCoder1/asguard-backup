@@ -18,8 +18,7 @@
           <div
             v-else
             class="bap-pill bap-pill--warn"
-            title="Cliquer pour configurer les alertes"
-            @click="activeTab = 'Alertes & Mailing'"
+            title="Alertes non configurées"
           >
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L12 11.5H1L6.5 1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.5 5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="6.5" cy="9.5" r=".7" fill="currentColor"/></svg>
             Alertes non configurées
@@ -44,9 +43,6 @@
               <component :is="tab.component" />
             </v-window-item>
           </v-window>
-
-          <!-- Widget flottant "Optimisation du stockage" (dédup) -->
-          <BackupDedup />
         </div>
       </template>
     </base-layout>
@@ -56,15 +52,9 @@
 <script>
 import BaseLayout from "@/layouts/layout.vue";
 import Backups from "./components/Backups.vue";
-import VmSnapshot from "./components/VmSnapshot.vue";
-import BackupSchedule from "./components/BackupSchedule.vue";
-import BackupAlertsMailing from "./components/BackupAlertsMailing.vue";
-import BackupLogs from "./components/BackupLogs.vue";
-import BackupDashboardMonitoring from "./components/BackupDashboardMonitoring.vue";
 import RestoreHistory from "./components/RestoreHistory.vue";
-import BackupCloud from "./components/BackupCloud.vue";
-import BackupRiskCenter from "./components/BackupRiskCenter.vue";
-import BackupDedup from "./components/BackupDedup.vue";
+import VmSnapshot from "./components/VmSnapshot.vue";
+import BackupLogs from "./components/BackupLogs.vue";
 import { useNotifStore } from "@/store/modules/notifications.js";
 
 export default {
@@ -72,15 +62,9 @@ export default {
   components: {
     BaseLayout,
     Backups,
-    VmSnapshot,
-    BackupSchedule,
-    BackupAlertsMailing,
-    BackupLogs,
-    BackupDashboardMonitoring,
     RestoreHistory,
-    BackupCloud,
-    BackupRiskCenter,
-    BackupDedup,
+    VmSnapshot,
+    BackupLogs,
   },
   inject: ["emitter"],
 
@@ -95,15 +79,10 @@ export default {
       liveClock: "",
       _clockInterval: null,
       tabs: [
-        { id: 1, label: "Dashboard & Monitoring", component: BackupDashboardMonitoring },
-        { id: 2, label: "AI Risk Center", component: BackupRiskCenter },
-        { id: 3, label: "Backups", component: Backups },
-        { id: 4, label: "Historique Restores", component: RestoreHistory },
-        { id: 5, label: "VM Snapshot", component: VmSnapshot },
-        { id: 6, label: "Schedule", component: BackupSchedule },
-        { id: 7, label: "Cloud Storage", component: BackupCloud },
-        { id: 8, label: "Alertes & Mailing", component: BackupAlertsMailing },
-        { id: 9, label: "Logs", component: BackupLogs },
+        { id: 1, label: "Backups", component: Backups },
+        { id: 2, label: "Historique Restores", component: RestoreHistory },
+        { id: 3, label: "Snapshot", component: VmSnapshot },
+        { id: 4, label: "Logs", component: BackupLogs },
       ],
     };
   },
@@ -113,21 +92,22 @@ export default {
     },
   },
   mounted() {
+    const DEFAULT_TAB = "Backups";
     const upgradeKey = "backup-drp-metrics-ui";
-    if (localStorage.getItem(upgradeKey) !== "v2") {
-      localStorage.setItem("backup-tab", "Dashboard & Monitoring");
-      localStorage.setItem(upgradeKey, "v2");
+    if (localStorage.getItem(upgradeKey) !== "v3-clean") {
+      localStorage.setItem("backup-tab", DEFAULT_TAB);
+      localStorage.setItem(upgradeKey, "v3-clean");
     }
-    const savedTab = localStorage.getItem("backup-tab") || "Dashboard & Monitoring";
+    const savedTab = localStorage.getItem("backup-tab") || DEFAULT_TAB;
     this.activeTab = this.tabs.some((tab) => tab.label === savedTab)
       ? savedTab
-      : "Dashboard & Monitoring";
+      : DEFAULT_TAB;
 
     this.emitter.on("reload-tabs", () => {
-      const tab = localStorage.getItem("backup-tab") || "Dashboard & Monitoring";
+      const tab = localStorage.getItem("backup-tab") || DEFAULT_TAB;
       this.activeTab = this.tabs.some((item) => item.label === tab)
         ? tab
-        : "Dashboard & Monitoring";
+        : DEFAULT_TAB;
     });
 
     const tick = () => {

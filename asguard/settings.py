@@ -141,10 +141,16 @@ DATABASES = {
         'PORT': config('DB_PORT', default=5432, cast=int),
         # When PostgreSQL is down, libpq otherwise blocks for ~75s on each
         # connection attempt — long enough to lock up every Daphne worker.
-        # A 5s ceiling fails fast so the appliance stays responsive (AI Risk
+        # We keep a low ceiling so the appliance stays responsive (AI Risk
         # Center, login screen) and the failure can actually be alerted on.
+        # NOTE: 5s was too tight when LVM snapshots are kept on the DB volume:
+        # a Postgres checkpoint can stall on the copy-on-write layer for ~25s,
+        # during which the postmaster is too busy to accept a new backend, so
+        # a 5s connect gave a spurious OperationalError 500. 15s absorbs that
+        # stall while still failing fast if the DB is genuinely down. The COW
+        # spikes are additionally tamed via wal_compression + bgwriter tuning.
         'OPTIONS': {
-            'connect_timeout': 5,
+            'connect_timeout': 15,
         },
         'CONN_MAX_AGE': 60,
     }

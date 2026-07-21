@@ -73,6 +73,18 @@ def delete_vlan_sys(vlan):
     execute_cmd("nft delete table inet filter_{} 2>/dev/null || true".format(ifname))
     execute_cmd("rm -rf /etc/rules/{}".format(ifname))
 
+    # Symmetry with creation (rules.functions: create ADDS an
+    # `include "/etc/rules/<if>/nftables.conf";` line to the master file). Delete
+    # must REMOVE it — otherwise the include is left dangling and nft's atomic
+    # load fails at the next reload/restart/reboot ("File not found"), taking the
+    # whole firewall down. /etc/nftables.conf is a BIND-MOUNT, so we truncate it
+    # in place (`cat > file`) — `sed -i` would rename over it and fail EBUSY. The
+    # redirection needs root, hence `sudo bash -c` (execute_cmd only sudo's argv[0]).
+    execute_cmd(
+        'bash -c \'t="/tmp/.asguard_nft_clean.$$"; '
+        'grep -Fv "/etc/rules/{0}/nftables.conf" /etc/nftables.conf > "$t" '
+        '&& cat "$t" > /etc/nftables.conf; rm -f "$t"\''.format(ifname))
+
     commandes= [
         f"nmcli connection delete {vlan}",
         "sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(ifname),

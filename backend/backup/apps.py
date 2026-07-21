@@ -55,12 +55,6 @@ class BackupConfig(AppConfig):
                     _maybe_notify_resource_risk(_resource_risk_alert(live_metrics), live_metrics)
                 except Exception:
                     pass
-                # Auto-Pilot: autonomous remediation cycle (no-op when disabled).
-                try:
-                    from backend.backup.autopilot import autopilot_tick
-                    autopilot_tick()
-                except Exception:
-                    pass
                 time.sleep(60)
 
         # NOTE: assistant prewarm intentionally removed — loading the local LLM at

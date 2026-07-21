@@ -19,7 +19,6 @@ from backend.backup.notifications import (
     notify_vm_resource_resolved,
 )
 from backend.backup.observability import append_backup_event, read_backup_events
-from backend.backup.risk_ai import analyze_vm_and_services
 from backend.backup.system_backup.cloud_storage import CloudStorageService
 
 from django.http import JsonResponse, FileResponse
@@ -2532,68 +2531,6 @@ def _run_risk_action(action_key: str) -> dict:
                 "title": spec["title"], "kind": spec["kind"]}
 
 
-@swagger_auto_schema("POST", responses={200: "OK"}, operation_summary="RUN AI RISK ACTION")
-@api_view(["POST"])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def run_risk_action(request, action_key: str):
-    # No DB-backed authentication here: the AI Risk Center exists precisely to
-    # diagnose situations where PostgreSQL itself may be down. SessionAuthentication
-    # would query django_session and block the whole worker when the DB is gone.
-    spec = RISK_ACTIONS.get(action_key)
-    if not spec:
-        return JsonResponse({"ok": False, "error": "Action inconnue"}, status=404)
-    if spec["kind"] == "intrusive":
-        confirm = None
-        try:
-            # request.data (not request.body) — @api_view already read the stream.
-            data = request.data if isinstance(request.data, dict) else {}
-            confirm = data.get("confirm")
-        except Exception:
-            confirm = None
-        if not confirm:
-            return JsonResponse({"ok": False, "error": "Confirmation requise",
-                                 "needs_confirm": True, "title": spec["title"],
-                                 "kind": spec["kind"]}, status=400)
-    result = _run_risk_action(action_key)
-    return JsonResponse(result)
-
-
-@swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="AI RISK ANALYSIS")
-@api_view(["GET"])
-@require_http_methods(["GET"])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def get_risk_ai_analysis(request):
-    services = _load_dashboard_services()
-    live_metrics = _get_live_metrics()
-    history = _load_monitoring_history(limit=80)
-    try:
-        root_total, root_used, _ = shutil.disk_usage("/")
-        root_usage = round((root_used / root_total) * 100) if root_total else 0
-    except Exception:
-        root_usage = 0
-
-    latest_backup = (_collect_backup_results() or [None])[0]
-    backup_risk = 0
-    if latest_backup:
-        backup_risk = 100 - int(latest_backup.get("health_score", 100) or 100)
-        if latest_backup.get("overall_status") in {"error", "failed"}:
-            backup_risk = 95
-        elif latest_backup.get("overall_status") == "partial":
-            backup_risk = max(backup_risk, 70)
-
-    return JsonResponse(
-        analyze_vm_and_services(
-            history_points=history,
-            live_metrics=live_metrics,
-            services=services,
-            root_disk_usage=root_usage,
-            backup_risk=backup_risk,
-        )
-    )
-
-
 @swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="PING BACKUP MODULE")
 @api_view(["GET"])
 @require_http_methods(["GET"])
@@ -4557,110 +4494,6 @@ def export_backup(request, backup_id):
     return response
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-#  SECTION: BACKUP DE-DUPLICATION — "Analyse intelligente du stockage"
-#  Detects backups holding the SAME configuration (deterministic content
-#  fingerprint, no LLM) so redundant copies can be reclaimed. See dedup.py.
-# ═════════════════════════════════════════════════════════════════════════════
-@swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="ANALYZE DUPLICATE BACKUPS")
-@api_view(["GET"])
-@require_http_methods(["GET"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([AllowAny])
-def dedup_analysis(request):
-    """Groups of backups with identical configuration + reclaimable space."""
-    from backend.backup import dedup
-    try:
-        items = _collect_backup_results()
-        result = dedup.find_duplicate_groups(items)
-        result["status"] = "ok"
-        result["reclaimable_mb"] = round(result["reclaimable_bytes"] / (1024 ** 2), 2)
-        # Friendly labels for the UI.
-        for g in result["groups"]:
-            g["reclaimable_mb"] = round(g["reclaimable_bytes"] / (1024 ** 2), 2)
-        return JsonResponse(result)
-    except Exception as e:
-        logger.exception("dedup analysis failed")
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
-
-
-@swagger_auto_schema("GET", responses={200: "OK"}, operation_summary="COMPARE TWO BACKUPS")
-@api_view(["GET"])
-@require_http_methods(["GET"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([AllowAny])
-def dedup_compare(request):
-    """Config similarity between two backups (?a=<id>&b=<id>)."""
-    from backend.backup import dedup
-    a = (request.GET.get("a") or "").strip()
-    b = (request.GET.get("b") or "").strip()
-    if not a or not b:
-        return JsonResponse({"status": "error", "message": "Params 'a' et 'b' requis."}, status=400)
-    for bid in (a, b):
-        if not bid.startswith("backup_") or not (BACKUP_DIR / bid).is_dir():
-            return JsonResponse({"status": "error", "message": f"Backup introuvable: {bid}"}, status=404)
-    try:
-        result = dedup.compare(a, b)
-        result["status"] = "ok"
-        return JsonResponse(result)
-    except Exception as e:
-        logger.exception("dedup compare failed")
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
-
-
-@swagger_auto_schema("POST", responses={200: "OK"}, operation_summary="CLEAN UP DUPLICATE BACKUPS")
-@api_view(["POST"])
-@require_http_methods(["POST"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([AllowAny])
-def dedup_cleanup(request):
-    """Delete redundant duplicate backups, keeping the newest of each identical
-    group. Optional body {"fingerprint": "..."} restricts to a single group.
-
-    Safety: the deletion set is (re)computed server-side from the current on-disk
-    state — a client can never trick this into deleting a 'keep' copy or a
-    non-duplicate. Nothing is deleted unless the operator triggered this call."""
-    from backend.backup import dedup
-    fingerprint = (request.data.get("fingerprint") or "").strip() or None
-    try:
-        items = _collect_backup_results()
-        to_delete = dedup.redundant_ids(items, only_group=fingerprint)
-        if not to_delete:
-            return JsonResponse({"status": "ok", "deleted": [], "freed_mb": 0,
-                                 "message": "Aucun doublon à nettoyer."})
-        size_by_id = {it["id"]: int(it.get("size_bytes", 0) or 0) for it in items}
-        deleted, freed = [], 0
-        for bid in to_delete:
-            d = BACKUP_DIR / bid
-            if d.is_dir() and _remove_backup_dir(d):
-                freed += size_by_id.get(bid, 0)
-                deleted.append(bid)
-                # Drop the cached fingerprint of a removed backup.
-                try:
-                    (dedup._CACHE_DIR / f"{bid}.json").unlink(missing_ok=True)
-                except Exception:
-                    pass
-        _invalidate_backup_results_cache()
-        append_backup_event(
-            kind="backup", title="Doublons nettoyés", severity="warning",
-            status="success", source="api", ref_id="",
-            detail=f"{len(deleted)} backup(s) redondant(s) supprimé(s), "
-                   f"{round(freed/(1024**2),1)} MB libérés.",
-            extra={"deleted": deleted},
-        )
-        return JsonResponse({
-            "status": "ok",
-            "deleted": deleted,
-            "count": len(deleted),
-            "freed_bytes": freed,
-            "freed_mb": round(freed / (1024 ** 2), 2),
-            "message": f"{len(deleted)} doublon(s) supprimé(s), {round(freed/(1024**2),1)} MB libérés.",
-        })
-    except Exception as e:
-        logger.exception("dedup cleanup failed")
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 #  BACKUP SCHEDULE & RETENTION
 # ─────────────────────────────────────────────────────────────────────────────
@@ -5527,8 +5360,50 @@ def run_scheduled_task(request, task_id):
         return JsonResponse({"status": "error", "message": "Task not found."}, status=404)
     if not task.get("enabled", True):
         return JsonResponse({"status": "error", "message": "Task disabled."}, status=400)
+
+    # A manual "run now" click from the UI passes force=1 and always runs.
+    # The cron curl passes no flag, so it is de-duplicated against the scheduled
+    # SLOT (below) exactly like the page-load catchup.
+    force = str(request.GET.get("force", request.POST.get("force", ""))).lower() in ("1", "true", "yes")
+
+    # De-dup key = the scheduled SLOT this run belongs to, computed identically to
+    # _queue_due_schedule_catchups (cron converted to UTC, previous matching slot).
+    # A late cron retry (uvicorn was down at the slot, curl succeeds hours later)
+    # still resolves to the SAME slot, and the catchup writes the SAME key — so a
+    # given slot can be handled by cron OR catchup, never both. This is the fix for
+    # the "two safe backups for one missed run" duplicate.
+    slot_key = None
+    if not force:
+        tz_name = _get_schedule_tz(config)
+        previous_run = _compute_cron_run(
+            _cron_local_to_utc(task.get("cron", ""), tz_name), reverse=True
+        )
+        if previous_run:
+            slot_key = previous_run.isoformat()
+            # Already queued/handled for this exact slot → don't run a second time.
+            if task.get("last_queued_for") == slot_key:
+                return JsonResponse(
+                    {"status": "skipped", "task_id": task_id,
+                     "message": "Slot already handled — no duplicate backup."},
+                    status=200,
+                )
+            # A complete backup already exists after the slot (e.g. catchup ran) →
+            # mark satisfied and skip.
+            if _latest_backup_after(previous_run):
+                task["last_run_at"] = slot_key
+                task["last_run_status"] = "ok"
+                task["last_run_message"] = "Backup already found after scheduled time."
+                _write_schedule_config(config)
+                return JsonResponse(
+                    {"status": "skipped", "task_id": task_id,
+                     "message": "Backup already exists for this slot — no duplicate."},
+                    status=200,
+                )
+
     _mark_scheduled_task_queued(task, reason="scheduled_run")
-    task["last_queued_for"] = datetime.now().replace(second=0, microsecond=0).isoformat()
+    # Stamp the SLOT key (not now()) so the catchup shares the same marker and
+    # won't fire a duplicate. Manual force runs have no slot → stamp the minute.
+    task["last_queued_for"] = slot_key or datetime.now().replace(second=0, microsecond=0).isoformat()
     _write_schedule_config(config)
     # Run backup in a non-daemon thread so the cron curl returns immediately
     # and all notification threads complete independently of the HTTP lifecycle

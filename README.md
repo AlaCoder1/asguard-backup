@@ -1,87 +1,181 @@
-###### Initialization for the generation of the ISO
+# Asguard — Module Sauvegarde & Reprise après sinistre (DR)
 
-pip install -r requirements.txt --break-system-packages
+Module de **sauvegarde, restauration et reprise après sinistre** pour l'appliance
+de sécurité Asguard (pare-feu / firewall). Cette version livre le mécanisme de
+backup/restore ; les modules complémentaires ont été retirés.
 
-yarn install
+## Fonctionnalités
 
-yarn build
+L'interface expose quatre onglets :
 
-docker-compose up -d
+| Onglet | Rôle |
+|--------|------|
+| **Backups** | Création de sauvegardes (safe / full / DB) et restauration |
+| **Historique Restores** | Journal des restaurations avec rapport de différences (avant/après) |
+| **Snapshot** | Points de restauration LVM (retour arrière quasi instantané) |
+| **Logs** | Timeline d'audit et journal système |
 
-python manage.py makemigrations
+Points clés du mécanisme :
 
+- **Trois types de sauvegarde** : `safe` (configuration seule, ~4,5 Mo),
+  `full` (configuration + dump PostgreSQL + code applicatif + `/etc` + services
+  systemd) et `db` (dump PostgreSQL brut).
+- **Sauvegarde par composant** : 17 composants (firewall, VPN, IDS, proxy, NAT,
+  routing, DHCP, WAF, ZTNA, VLAN, etc.) — fichiers de configuration **et** lignes
+  correspondantes en base de données.
+- **Restauration honnête** : un rapport de différences ligne par ligne
+  (`ajoutés / supprimés / modifiés`) est produit après chaque restauration,
+  calculé par comparaison de l'état de la base avant/après.
+- **Anti-altération** : chaque sauvegarde est signée par un manifeste
+  SHA-256 + HMAC, vérifié avant toute restauration.
+- **Reprise après sinistre** : le script `scripts/asguard-dr-restore` reconstruit
+  une appliance complète sur une VM neuve à partir d'une sauvegarde `full`.
+- **Resynchronisation automatique** : après une restauration et à chaque
+  démarrage, l'état de la base (règles nftables, NAT, routes) est réappliqué au
+  noyau (`asguard-resync.service`).
+
+## Stack technique
+
+- **Backend** : Django 5.2 (Python 3.13), Django Channels / Daphne (WebSocket)
+- **Frontend** : Vue 3, Vuetify, Element-Plus, ag-grid — build via webpack (`yarn build`)
+- **Base de données** : PostgreSQL (conteneur Docker, port `5391`)
+- **Reverse proxy** : Nginx
+
+## Démarrage rapide
+
+> Testé sur Arch Linux. Sur Arch, `pip install` direct est refusé
+> (`externally-managed-environment`) — utiliser un environnement virtuel, ou
+> l'option `--break-system-packages` comme dans la séquence complète ci-dessous.
+
+```bash
+git clone https://github.com/AlaCoder1/asguard-backup.git
+cd asguard-backup
+
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+docker compose up -d          # PostgreSQL (port 5391)
 python manage.py migrate
 
-//to collect static data of swagger UI in production
+yarn install
+yarn build                    # génère le dossier static/
 
-python manage.py collectstatic //with making DEBUG=False 
+python manage.py runserver    # ou daphne / uvicorn en production
+```
+
+Interface accessible sur `http://127.0.0.1:8000/`.
+
+## Structure du dépôt
+
+```
+backend/          # Applications Django
+  backup/         # Moteur de sauvegarde/restauration
+    system_backup/  # Services : full_backup, restore, safe_restore, cloud, LVM…
+    views.py        # API REST /backup/*
+    urls.py         # Routes
+  ...             # rules, nat, vlan, ipsec, proxy, ztna, network…
+src/              # Frontend Vue 3
+  views/backup/   # Interface du module (index.vue + components/)
+asguard/          # Paquet Django (settings.py, urls.py, asgi.py, wsgi.py)
+scripts/          # asguard-dr-restore, asguard-resync.service…
+manage.py
+docker-compose.yml
+requirements.txt
+```
+
+## Stockage des sauvegardes
+
+Les sauvegardes vivent sur le système de fichiers sous `/var/backups/asguard/`
+(aucune dépendance à PostgreSQL pour les stocker). Chaque sauvegarde est un
+dossier horodaté contenant `backup_metadata.json`, le manifeste signé et une
+archive `.tar.gz` par composant.
+
+## API principale (`/backup/`)
+
+| Méthode | Route | Rôle |
+|---------|-------|------|
+| POST | `create-safe-backup` / `create-full-backup` | Sauvegarde asynchrone (retourne un `job_id`) |
+| GET | `progress/<job_id>` | Progression d'une sauvegarde |
+| GET | `getAllBackups` | Liste des sauvegardes |
+| GET | `<id>/verify-integrity` | Vérification SHA-256 + HMAC |
+| GET | `<id>/restore-preview` | Aperçu de ce qui sera restauré |
+| POST | `<id>/restore` / `<id>/restore-full` | Restauration (safe / complète) |
+| GET | `restore-full-status/<job_id>` | Progression d'une restauration |
+| GET | `restore-history` | Historique des restaurations |
+| GET / POST | `schedule` … | Planification et rétention |
+| GET / POST | `vm-snapshot/*` | Snapshots LVM |
+
+---
+
+## Annexe — Initialisation complète de l'appliance
+
+Séquence d'initialisation d'origine (génération de l'ISO / première mise en
+service de l'appliance complète).
+
+```bash
+pip install -r requirements.txt --break-system-packages
+yarn install
+yarn build
+docker-compose up -d
+python manage.py makemigrations
+python manage.py migrate
+
+# collecte des fichiers statiques (Swagger UI) en production, avec DEBUG=False
+python manage.py collectstatic
 
 python manage.py create_wheel_group
-
 python manage.py init_roles_db
 python manage.py generate_user -u root -p root -r admin
-
 python manage.py init_ASGUARD
-
 python manage.py init_organisation -o Asguard
+```
 
-###### Init Firewall services
+### Souscription
 
-#### subscription
-1/ ## init features
-    python manage.py init_features_for_subscription
-2/ ## init subscription
-    python manage.py init_subscription
-3/ ## add new features
-    python manage.py add_feature_in_subscription -f `feature_name` -p `feature_price`
+```bash
+python manage.py init_features_for_subscription
+python manage.py init_subscription
+python manage.py add_feature_in_subscription -f <feature_name> -p <feature_price>
+```
 
-#### services
+### Services
+
+```bash
 python manage.py init_services
 
-#### commande to init squid 
+# Squid
 python manage.py create_files_squid
-python manage.py  init_conf_squid
+python manage.py init_conf_squid
 python manage.py init_squid_conf_bd
-
 iptables --flush
 
-#### Nat
+# NAT
 python manage.py init_rules_nat
 
-#### IPsec start
+# IPsec
 python manage.py start_ipsec
-    
-#### suricata
+
+# Suricata
 python manage.py init_suricata_file
 sudo suricata-update
 sudo python manage.py init_config_suricata
 
-#### Routing
+# Routing / réglages
 python manage.py init_routing
-
-#### timezone
 python manage.py init_timezone_bd
-
-#### settings
 python manage.py init_generale_settings_bd
 
-#### WAF
+# WAF
 python manage.py init_waf_config
 
-#### Logs
+# Logs
 python manage.py init_logs
-
-
-### Logs rotation 
-python manage.py init_logrotate_script 
-python manage.py init_logrotate 
+python manage.py init_logrotate_script
+python manage.py init_logrotate
 python manage.py init_logrotate_timer
-
-### init cron for logs firewall
 python manage.py init_log_firewall
 
-### init default interface configuration 
+# Interface réseau + réglages généraux
 python manage.py init_interface_settings
-
-### init settings general
 python manage.py init_settings
+```

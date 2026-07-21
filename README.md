@@ -63,7 +63,96 @@ yarn build                    # génère le dossier static/
 python manage.py runserver    # ou daphne / uvicorn en production
 ```
 
-Interface accessible sur `http://127.0.0.1:8000/`.
+L'interface backup est accessible sur `http://127.0.0.1:8000/asguard/backup`
+(le routeur front est monté sous la base `/asguard/`).
+
+## Intégration dans une appliance Asguard existante
+
+Si l'appliance Asguard (firewall) tourne déjà et qu'on veut simplement **y
+ajouter le module de sauvegarde**, il n'est pas nécessaire de repartir de zéro.
+Les autres applications (rules, nat, vlan, ipsec, proxy, ztna…) sont déjà
+présentes — le module s'appuie dessus.
+
+### 1. Copier les fichiers du module
+
+```
+backend/backup/                     → backend/backup/
+src/views/backup/                   → src/views/backup/
+src/store/modules/notifications.js  → src/store/modules/notifications.js
+scripts/asguard-dr-restore          → scripts/ (script DR console)
+scripts/asguard-resync.service      → scripts/ (unit systemd)
+```
+
+### 2. Câbler le backend (`asguard/settings.py`)
+
+```python
+INSTALLED_APPS = [
+    # …
+    'backend.backup',
+]
+
+REST_FRAMEWORK = {
+    # …
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'backend.backup.swagger.BackupOrderedAutoSchema',
+}
+
+DATABASES = {
+    'default': {
+        # …
+        'OPTIONS': {'connect_timeout': 15},   # évite un faux 500 pendant un snapshot LVM
+    }
+}
+```
+
+### 3. Câbler les routes (`asguard/urls.py`)
+
+```python
+from views.views import backup_page          # sert la page (SPA Vue)
+
+urlpatterns = [
+    # …
+    path("backup/", backup_page),
+    path("backup/", include("backend.backup.urls")),
+]
+```
+
+Ajouter aussi la vue `backup_page` dans `views/views.py` (elle rend le template
+qui charge l'application Vue).
+
+### 4. Câbler le frontend
+
+`src/router/router.js` :
+```js
+import BackupComponent from '../views/backup/index.vue';
+// …
+{ path: '/backup', component: BackupComponent },
+```
+
+`src/layouts/TheSidebar.vue` — ajouter l'entrée de menu :
+```js
+{ title: "sideBar.backup", href: "/backup", active: "backup" }
+```
+
+### 5. Dépendances Python (`requirements.txt`)
+
+Le module ajoute deux paquets par rapport au firewall de base :
+
+```
+psutil==7.0.0
+boto3==1.43.2
+```
+
+### 6. Appliquer
+
+```bash
+pip install psutil boto3
+python manage.py migrate backup      # crée les tables du module
+yarn build                           # recompile le frontend
+```
+
+> Les correctifs apportés à d'autres applications (`backend/vlan/functions.py`,
+> `backend/ipsec/list_ipsec.py`, `backend/proxy/views.py`) sont des corrections
+> firewall **optionnelles** — utiles mais non requises pour le module backup.
 
 ## Structure du dépôt
 

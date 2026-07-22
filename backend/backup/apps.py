@@ -9,25 +9,6 @@ class BackupConfig(AppConfig):
         import threading
         import time
 
-        def _startup_sync_and_catchup():
-            time.sleep(8)
-            try:
-                from backend.backup.views import (
-                    _read_schedule_config,
-                    _sync_crontab,
-                    _queue_due_schedule_catchups,
-                )
-                config = _read_schedule_config()
-                from backend.backup.views import _get_schedule_tz
-                _sync_crontab(config.get("tasks", []), _get_schedule_tz(config))
-                # at_startup=True: the VM just booted, so any past slot with no
-                # backup was genuinely missed (VM was off / booting at the
-                # planned hour). Recover it immediately without the grace delay
-                # — this is the "VM démarrée après le cron" recovery path.
-                _queue_due_schedule_catchups(config, at_startup=True)
-            except Exception:
-                pass
-
         def _background_resource_monitor():
             """
             Permanent background thread — checks RAM/CPU every 60s and sends
@@ -62,5 +43,4 @@ class BackupConfig(AppConfig):
         # crashes). The assistant now stays on the safe rule-based engine unless the
         # (capped) Ollama service is deliberately re-enabled.
 
-        threading.Thread(target=_startup_sync_and_catchup, daemon=True).start()
         threading.Thread(target=_background_resource_monitor, daemon=True).start()

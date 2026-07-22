@@ -13,12 +13,8 @@ urlpatterns = [
     path("logs/timeline",                     views_logs.logs_timeline,          name="logsTimeline"),
     path("logs/stats",                        views_logs.logs_stats,             name="logsStats"),
     path("logs/tail",                         views_logs.logs_tail,              name="logsTail"),
-    # dashboard-overview / metrics / events feed the shared notification store
-    # (header badge, sidebar) — kept even though the Monitoring tab is not shipped.
+    # dashboard-overview feeds the shared notification store (header badge, sidebar).
     path("dashboard-overview", views.get_dashboard_overview, name="getBackupDashboardOverview"),
-    path("metrics", views.get_backup_metrics, name="getBackupMetrics"),
-    path("metrics/prometheus", views.get_backup_metrics_prometheus, name="getBackupMetricsPrometheus"),
-    path("events", views.get_backup_events, name="getBackupEvents"),
     path("getAllBackups", views.get_all_backups, name="getAllBackups"),
 
     path("create-db-backup", views.create_db_backup, name="createDbBackup"),
@@ -50,17 +46,6 @@ urlpatterns = [
     path("<str:backup_id>/delete", views.delete_backup, name="deleteBackup"),
     path("<str:backup_id>/export", views.export_backup, name="exportBackup"),
     path("import", views.import_backup, name="importBackup"),
-
-    # Schedule & Retention
-    path("schedule", views.get_schedule, name="getSchedule"),
-    path("schedule/task", views.save_schedule_task, name="saveScheduleTask"),
-    path("schedule/task/<str:task_id>", views.delete_schedule_task, name="deleteScheduleTask"),
-    path("schedule/run/<str:task_id>", views.run_scheduled_task, name="runScheduledTask"),
-    path("schedule/retention", views.update_retention, name="updateRetention"),
-    path("schedule/apply-retention", views.apply_retention_now, name="applyRetentionNow"),
-    path("schedule/timezone", views.update_schedule_timezone, name="updateScheduleTimezone"),
-
-    path("telegram-test", views.test_telegram, name="telegramTest"),
 
     # VM Snapshots
     path("vm-snapshot/running-jobs",                  views_vm_snapshot.vm_snapshot_running_jobs,    name="vmSnapshotRunningJobs"),

@@ -73,7 +73,6 @@ RESTORE_JOBS_DIR = BACKUP_DIR / "restore_jobs"
 BACKUP_JOBS_DIR = BACKUP_DIR / "backup_jobs"
 SYNC_SUMMARY_CACHE_FILE = BACKUP_DIR / "dashboard_last_sync_summary.json"
 FULL_RESTORE_RUNNER = Path("/asguard/asguard/full_restore_runner.py")
-SCHEDULED_BACKUP_RUNNER = Path("/asguard/asguard/scheduled_backup_runner.py")
 PYTHON_BIN = "/usr/bin/python"
 _LAST_DASHBOARD_SYNC_SUMMARY = None
 _BACKUP_RESULTS_CACHE = {"expires_at": 0.0, "results": None}

@@ -18,7 +18,7 @@ from backend.backup.notifications import (
     notify_vm_resource_risk,
     notify_vm_resource_resolved,
 )
-from backend.backup.observability import append_backup_event, read_backup_events
+from backend.backup.observability import append_backup_event
 from backend.backup.system_backup.cloud_storage import CloudStorageService
 
 from django.http import JsonResponse, FileResponse

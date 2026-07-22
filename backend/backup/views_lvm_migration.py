@@ -7,7 +7,6 @@ Backup & DRP UI to extend snapshot coverage to system configurations.
 
 import subprocess
 import uuid
-from pathlib import Path
 
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, authentication_classes, permission_classes

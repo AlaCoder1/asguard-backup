@@ -29,7 +29,6 @@ import logging
 import os
 import shutil
 import subprocess
-import threading
 import time
 import uuid
 from contextlib import contextmanager

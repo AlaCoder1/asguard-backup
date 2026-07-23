@@ -115,7 +115,6 @@
     </v-main>
 
     <TheFooter />
-    <AsguardAssistant />
   </v-layout>
 </template>
 
@@ -128,7 +127,6 @@ import axios from "axios";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { user_privilege } from "@/mixins/user_privilege.js";
 import VButton from "@/components/VButton.vue";
-import AsguardAssistant from "@/components/AsguardAssistant.vue";
 
 export default {
   name: "BaseLayout",
@@ -138,7 +136,6 @@ export default {
     TheSidebarVue,
     licenseSidebar,
     TheFooter,
-    AsguardAssistant,
   },
   props: {
     title: {

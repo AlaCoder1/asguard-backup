@@ -74,7 +74,6 @@ Tout le stockage est **sur disque**, jamais en base : racine `/var/backups/asgua
 
 **Résultat** : un dossier autonome contenant des `.tar.gz`, le dump SQL, les
 `component_db.json` et `backup_metadata.json`. Il peut être copié, exporté, ou
-répliqué dans le cloud S3.
 
 ---
 
@@ -142,7 +141,6 @@ donc réellement supprimée — fichiers et base reviennent à l'état sauvegard
 | **`/etc` complet** | `_backup_system_config` (l.791) : `tar` de tout `/etc` | extraction vers `/` | ✅ Oui (mode Full/DR) |
 | **Règles firewall** (`/etc/nftables.conf`, `/etc/rules`) | `_backup_firewall` + export DB `firewall_rules_db.json` | `_restore_firewall` : flush + reload + `_restore_firewall_rules_db` | ✅ Oui, fichiers **et** base |
 | **VPN / IPsec** (`/etc/openvpn`, `/etc/swanctl`…) | `_backup_vpn` | `_restore_vpn` | ✅ Oui |
-| **Tâches planifiées** (`/etc/crontab`, `/etc/cron.*`) | `_backup_scheduled_tasks` (l.817) | extraction | ✅ Oui |
 | **Services systemd personnalisés** | `_backup_systemd_services` | `_restore_systemd_services` | ✅ Oui |
 
 Nuance honnête à présenter à l'évaluateur :
@@ -174,10 +172,8 @@ un état figé sans dépendre de VMware.
 C'est la réponse à « la VM est détruite ». Procédure :
 
 1. **Les sauvegardes ont survécu** — parce qu'elles sont répliquées **hors-site**
-   dans le cloud S3 (`cloud_storage.py`, endpoints `/backup/cloud/*`). Même si la
    VM disparaît, le dossier `backup_<TS>` est récupérable.
 
-2. **Installer une VM Asguard neuve**, y copier (ou télécharger depuis le cloud) le
    dossier `backup_<TS>` dans `/var/backups/asguard/`.
 
 3. **Lancer le script `scripts/asguard-dr-restore`** — il reconstruit l'appareil
@@ -205,7 +201,6 @@ C'est la réponse à « la VM est détruite ». Procédure :
    pas les mêmes noms d'interfaces réseau.
 
 **Résumé pour l'évaluateur** : un appareil détruit se reconstruit à partir d'une
-seule archive `backup_<TS>` (conservée hors-site dans le cloud) + le script
 `asguard-dr-restore`. C'est ce qui fait du module un vrai **plan de reprise
 après sinistre**, pas un simple outil d'archivage.
 
@@ -218,8 +213,7 @@ Ils sont désormais regroupés par **étape du cycle de vie d'une sauvegarde**
 (`backend/backup/swagger.py` + `SWAGGER_SETTINGS` dans `asguard/settings.py`) :
 
 1. Création — 2. Catalogue & Archives — 3. Restauration —
-4. Planification & Rétention — 5. Cloud — 6. VM Snapshot & DRP —
-7. Alertes & Notifications — 8. Logs & Audit — 9. Supervision & Risk Center.
+4. VM Snapshot & DRP — 5. Logs & Audit.
 
 Le préfixe numéroté force Swagger à les afficher dans l'ordre réel du processus.
 La règle de classement est centralisée et automatique (déduite de l'URL) — aucun

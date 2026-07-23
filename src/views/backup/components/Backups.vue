@@ -1477,20 +1477,6 @@ export default {
         { id: "same",    label: "Identiques",          count: same },
       ];
     },
-    previewSummaryText() {
-      const all = this.previewCardsAll;
-      if (!all.length) return "";
-      let inBackup = 0, current = 0;
-      for (const c of all) { inBackup += c.inBackup; current += c.current; }
-      const delta = inBackup - current;
-      if (delta === 0) {
-        return `<strong>${inBackup}</strong> éléments en base — <strong class="pos">identiques à l'état actuel</strong>.`;
-      }
-      if (delta > 0) {
-        return `<strong>${inBackup}</strong> éléments dans le backup, soit <strong class="pos">+${delta}</strong> de plus qu'actuellement (<strong>${current}</strong>).`;
-      }
-      return `<strong>${inBackup}</strong> éléments dans le backup, soit <strong class="neg">${delta}</strong> de moins qu'actuellement (<strong>${current}</strong>).`;
-    },
     // ── Aperçu : résumé "humain" en haut de la modale ───────────────────────
     // changes_total = vrai diff de CONTENU (ajoutés/supprimés/modifiés), pas un
     // simple écart de comptes — détecte une règle modifiée en place.
@@ -2119,10 +2105,6 @@ export default {
             this.startRestorePolling(saved.jobId, saved.backupId, saved.modeLabel);
           }
         });
-    },
-    closeRestoreMonitor() {
-      if (this.restoreMonitor.progressActive) return;
-      this.restoreMonitor.visible = false;
     },
     openRestoreMonitor({ backupId, modeLabel, title, subtitle, status = "running", statusLabel = "Running", progressActive = true, verification = null, progressPct = 0, done = 0, total = 0, liveComponents = null, diff = null, selfHealed = false, phase = "", etaSeconds = null, stabilizeEtaSeconds = null, cloneNetwork = undefined, mode = undefined, systemChanges = undefined }) {
       const prev = this.restoreMonitor || {};
@@ -3080,16 +3062,6 @@ export default {
     typeClass(type) {
       return type === "database_only" ? "db" : type;
     },
-    scopeLabel(scope) {
-      const labels = {
-        bare_metal_disaster_recovery: "Full disaster recovery",
-        full_clone: "Full clone",
-        safe_restore_ui: "Safe restore UI",
-        selected_components: "Custom components",
-        legacy_database_only: "DB only",
-      };
-      return labels[scope] || scope || "-";
-    },
     healthClass(health) {
       if (health >= 100) return "health-ok";
       if (health >= 80) return "health-warning";
@@ -3145,10 +3117,6 @@ export default {
         skipped: "SKIP",
       };
       return labels[status] || status;
-    },
-    importStageName(stage) {
-      const labels = { uploading: "Upload", processing: "Traitement", done: "Terminé", error: "Erreur" };
-      return labels[stage] || stage;
     },
     notify(message, color = "success") {
       this.snackbarText = message;

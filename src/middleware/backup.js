@@ -1,5 +1,4 @@
 import '../assets/scss/backup.scss';
-import '../assets/scss/backup-monitoring.scss';
 import { createApp } from "vue";
 import { createI18n } from "vue-i18n";
 import store from "../store/index.js";

@@ -78,7 +78,6 @@ présentes — le module s'appuie dessus.
 ```
 backend/backup/                     → backend/backup/
 src/views/backup/                   → src/views/backup/
-src/store/modules/notifications.js  → src/store/modules/notifications.js
 scripts/asguard-dr-restore          → scripts/ (script DR console)
 scripts/asguard-resync.service      → scripts/ (unit systemd)
 ```
@@ -159,7 +158,7 @@ yarn build                           # recompile le frontend
 ```
 backend/          # Applications Django
   backup/         # Moteur de sauvegarde/restauration
-    system_backup/  # Services : full_backup, restore, safe_restore, cloud, LVM…
+    system_backup/  # Services : full_backup, restore, LVM snapshots…
     views.py        # API REST /backup/*
     urls.py         # Routes
   ...             # rules, nat, vlan, ipsec, proxy, ztna, network…
@@ -191,7 +190,6 @@ archive `.tar.gz` par composant.
 | POST | `<id>/restore` / `<id>/restore-full` | Restauration (safe / complète) |
 | GET | `restore-full-status/<job_id>` | Progression d'une restauration |
 | GET | `restore-history` | Historique des restaurations |
-| GET / POST | `schedule` … | Planification et rétention |
 | GET / POST | `vm-snapshot/*` | Snapshots LVM |
 
 ---

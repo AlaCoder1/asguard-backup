@@ -2536,12 +2536,3 @@ def import_backup(request):
         extra={"filename": getattr(uploaded_file, "name", "")},
     )
     return JsonResponse(result, status=status_code)
-
-
-# ── Cloud Storage API ──────────────────────────────────────────────────────────
-# Extracted to views_cloud.py during the code-review cleanup. The endpoints
-# (cloud_config, cloud_test, cloud_list, cloud_sync, cloud_backup_history)
-# remain reachable under /backup/cloud/* — see urls.py for the route map.
-
-
-# ── In-app alerts ──────────────────────────────────────────────────────────────

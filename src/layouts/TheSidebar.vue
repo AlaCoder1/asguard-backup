@@ -41,11 +41,6 @@
                   <span class="ml-7 sidebarTitle">{{ $t(item.title) }}</span>
                 </div>
 
-                <!-- Badge: absolute right du list-item, centré verticalement -->
-                <span
-                  v-if="item.active === 'backup' && notifStore.count > 0"
-                  class="sidebar-badge"
-                >{{ notifStore.count > 99 ? '99+' : notifStore.count }}</span>
 
                 <v-list-item-title
                   class="float-right mr-5"
@@ -81,19 +76,6 @@
         </template>
       </v-list>
 
-      <!-- Monitor actif footer -->
-      <div class="sidebar-monitor">
-        <div class="sidebar-live-row">
-          <span class="sidebar-live-dot"></span>
-          <span class="sidebar-live-label">LIVE</span>
-          <span class="sidebar-live-clock">{{ liveClock }}</span>
-        </div>
-        <div class="sidebar-monitor-label">Monitor actif</div>
-        <div class="sidebar-autobackup" :class="notifStore.autoBackupOn ? 'on' : 'off'">
-          <span class="sidebar-autobackup-dot"></span>
-          Auto-backup {{ notifStore.autoBackupOn ? 'ON' : 'OFF' }}
-        </div>
-      </div>
     </div>
     <div v-else>
       <div
@@ -111,37 +93,24 @@
                 <span class="ml-5"
                   ><i :class="item.icon" class="icon-custom"></i
                 ></span>
-                <span
-                  v-if="item.active === 'backup' && notifStore.count > 0"
-                  class="sidebar-badge sidebar-badge--rail"
-                >{{ notifStore.count > 99 ? '99+' : notifStore.count }}</span>
               </div>
             </v-list-item>
           </a>
         </template>
       </v-list>
 
-      <!-- Monitor actif footer (rail) -->
-      <div class="sidebar-monitor sidebar-monitor--rail">
-        <span class="sidebar-live-dot"></span>
-      </div>
     </div>
   </v-navigation-drawer>
 </template>
 
 <script>
 import { useAuthStore } from "../store/modules/auth";
-import { useNotifStore } from "../store/modules/notifications.js";
 
 const storeAuth = useAuthStore();
 
 export default {
   name: "TheSidebar",
 
-  setup() {
-    const notifStore = useNotifStore();
-    return { notifStore };
-  },
 
   data() {
     return {
@@ -149,7 +118,6 @@ export default {
       drawer: true,
       rail: false,
       mini: false,
-      liveClock: "",
       _clockInterval: null,
       items: [
         {
@@ -341,17 +309,8 @@ export default {
     let userInfo = JSON.parse(retriveInfo);
     this.user = userInfo;
 
-    const tick = () => {
-      const now = new Date();
-      this.liveClock = now.toTimeString().slice(0, 8);
-    };
-    tick();
-    this._clockInterval = setInterval(tick, 1000);
   },
 
-  beforeUnmount() {
-    if (this._clockInterval) clearInterval(this._clockInterval);
-  },
 
   methods: {
     filteredSubItems(item) {

@@ -13,8 +13,6 @@ urlpatterns = [
     path("logs/timeline",                     views_logs.logs_timeline,          name="logsTimeline"),
     path("logs/stats",                        views_logs.logs_stats,             name="logsStats"),
     path("logs/tail",                         views_logs.logs_tail,              name="logsTail"),
-    # dashboard-overview feeds the shared notification store (header badge, sidebar).
-    path("dashboard-overview", views.get_dashboard_overview, name="getBackupDashboardOverview"),
     path("getAllBackups", views.get_all_backups, name="getAllBackups"),
 
     path("create-db-backup", views.create_db_backup, name="createDbBackup"),
@@ -79,7 +77,4 @@ urlpatterns = [
     path("lvm-migration/rollback",                views_lvm_migration.lvm_migration_rollback, name="lvmMigrationRollback"),  # support
     path("lvm-migration/audit",                   views_lvm_migration.lvm_migration_audit,    name="lvmMigrationAudit"),     # support
 
-    # In-app alerts
-    path("in-app-alerts",            views.get_in_app_alerts,       name="getInAppAlerts"),
-    path("in-app-alerts/mark-read",  views.mark_in_app_alerts_read, name="markInAppAlertsRead"),
 ]

@@ -546,27 +546,6 @@ class FullBackupService:
         return cls._build_component_result_from_file(name, relative, dest, t.elapsed)
 
     @classmethod
-    def _write_text_component(
-        cls,
-        *,
-        backup_dir: Path,
-        name: str,
-        relative: str,
-        content: str,
-        message: str = "",
-    ) -> ComponentResult:
-        dest = backup_dir / relative
-        dest.parent.mkdir(parents=True, exist_ok=True)
-
-        with Timer() as t:
-            try:
-                dest.write_text(content, encoding="utf-8")
-            except Exception as exc:
-                return ComponentResult.failed(name, str(exc))
-
-        return cls._build_component_result_from_file(name, relative, dest, t.elapsed, message=message)
-
-    @classmethod
     def _run_cmd_to_text_component(
         cls,
         *,

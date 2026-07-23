@@ -84,10 +84,6 @@ class RestoreService:
         )
 
     @classmethod
-    def restore_full(cls, backup_id: str) -> dict:
-        return cls.restore_full_safe(backup_id)
-
-    @classmethod
     def restore_components(cls, backup_id: str, components: list[str]) -> dict:
         return cls._restore_full(
             backup_id,

@@ -2422,12 +2422,6 @@ def _write_schedule_config(config):
 # plus the longest backup duration so we never race a run that fired on time.
 _MISSED_RUN_GRACE = timedelta(minutes=15)
 
-# Off-LV marker written by LVMSnapshotService.restore_snapshot for the duration
-# of a merge. While it is present the data volume (backups + schedule_config)
-# is mid-rollback, so every past slot looks "missed" — we must NOT catch up or
-# we flood the operator with bogus backups + "Sauvegarde manquée" alerts.
-_LVM_RESTORE_LOCK     = Path("/var/lib/asguard/lvm/.restore_in_progress")
-_RESTORE_LOCK_MAX_AGE = timedelta(minutes=30)
 
 
 def _list_backups_with_dates():

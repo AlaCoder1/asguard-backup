@@ -12,7 +12,6 @@ from pathlib import Path
 from backend.backup.observability import append_backup_event
 
 from django.http import JsonResponse, FileResponse
-from django.db.models import Q
 from django.views.decorators.http import require_http_methods
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -40,17 +39,6 @@ from .system_backup.full_backup_service import FullBackupService
 from .system_backup.restore_service import RestoreService
 from .system_backup.export_import_service import ExportImportService
 from .system_backup.base import compute_sha256
-from backend.dashboard.functions import get_system_infomations
-from backend.dashboard.models import MonitoringData
-from backend.network.models import Interface, IP4Config, IP6Config
-from backend.nat.models import SNat, OneToOneNat, DNat
-from backend.nat import utils_system as nat_utils_system
-from backend.rules.models import Rule
-from backend.openvpn.models import ServerOpenvpn
-from backend.ipsec.models import ServerIPsec
-from backend.ids_ips.models import suricatafile, SuricataInterface
-from backend.proxy.models import ProxyRules, ProxyUser, ServerSatus
-from backend.proxy.function import extract_names_from_file
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,5 @@
 import json
 import subprocess
-import threading
 from pathlib import Path
 
 from django.http import JsonResponse
@@ -14,7 +13,6 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
-from backend.backup.notifications import notify_service_action
 
 _WD_CONFIG   = Path("/etc/asguard/watchdog_config.json")
 _WD_INCIDENTS = Path("/var/log/asguard/watchdog_incidents.json")
@@ -177,7 +175,6 @@ def set_actions_service(request):
            else:
                msg=db_update
                status=400
-           threading.Thread(target=notify_service_action, args=(service, action, db_update is True), daemon=True).start()
         else:
             state = aux.get("state", {})
             if state:
@@ -188,7 +185,6 @@ def set_actions_service(request):
             error_detail = aux.get("error")
             msg=f"{msg_err} {error_detail}".strip()
             status=400
-            threading.Thread(target=notify_service_action, args=(service, action, False), daemon=True).start()
 
         return JsonResponse({"msg": msg}, status=status)
 

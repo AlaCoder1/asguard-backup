@@ -62,10 +62,5 @@ class LogsSuricataConsumer(AsyncWebsocketConsumer):
                 _last_ids_notif_time = time.monotonic()
                 sample = alert_lines[0][:120] if alert_lines else ""
                 loop = asyncio.get_event_loop()
-                try:
-                    from backend.backup.notifications import notify_ids_alert
-                    await loop.run_in_executor(None, notify_ids_alert, len(alert_lines), sample)
-                except Exception as exc:
-                    logger.error("IDS notification failed: %s", exc)
 
             await asyncio.sleep(900)

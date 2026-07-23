@@ -1,6 +1,4 @@
-import threading
 from django.http import JsonResponse
-from backend.backup.notifications import notify_nat_change
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, Schema
@@ -129,7 +127,6 @@ def create_snat(request):
 
                 # Add the rule to the database
                 serializer_snat.save()
-                threading.Thread(target=notify_nat_change, args=("créée", "SNAT"), daemon=True).start()
                 return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_snat.errors.values())[0][0]}, status=400)
@@ -160,7 +157,6 @@ def delete_snat(_, id):
             for snat_rule in SNat.objects.filter(db_position__gt=snat.db_position).order_by("db_position"):
                 snat_rule.db_position -= 1
                 snat_rule.save()
-            threading.Thread(target=notify_nat_change, args=("supprimée", "SNAT"), daemon=True).start()
             return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
 
         # delete rule from database
@@ -277,12 +273,10 @@ def update_snat(request, id):
 
                     # Update the rule in the database
                     serializer_snat.save()
-                    threading.Thread(target=notify_nat_change, args=("modifiée", "SNAT"), daemon=True).start()
                     return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
                 return JsonResponse({"error": list(serializer_snat.errors.values())[0][0]}, status=400)
 
             serializer_snat.save()
-            threading.Thread(target=notify_nat_change, args=("modifiée", "SNAT"), daemon=True).start()
             return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_snat.errors.values())[0][0]}, status=400)

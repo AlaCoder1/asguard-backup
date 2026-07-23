@@ -573,7 +573,7 @@ def logs_tail(request):
         # failed/inactive — without the operator having to dig through logs.
         diag = {}
         try:
-            from backend.backup.notifications import _diagnose_service_failure
+            from backend.backup.service_diagnostics import _diagnose_service_failure
             diag = _diagnose_service_failure(unit) or {}
         except Exception:
             pass

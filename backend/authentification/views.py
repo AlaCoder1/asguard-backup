@@ -74,10 +74,8 @@ from drf_yasg.openapi import TYPE_ARRAY, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING,
 from datetime import datetime, timedelta
 
 import json
-import threading
 import stripe
 import ldap
-from backend.backup.notifications import notify_user_login
 
 from backend.authentification.function import get_plan_ids_by_descriptions, group_descriptions_by_plan
 
@@ -237,11 +235,6 @@ def authentication(request):
  
         # Connection with username and password
         message, current_user, status = normal_connect(request, data)
-        _ip = request.META.get("REMOTE_ADDR", "")
-        if status == 200:
-            threading.Thread(target=notify_user_login, args=(username, _ip, True, "login"), daemon=True).start()
-        else:
-            threading.Thread(target=notify_user_login, args=(username, _ip, False, "failed"), daemon=True).start()
         return JsonResponse({'message': message, "currentUser": current_user}, status=status)
  
  
@@ -279,7 +272,6 @@ def logout_view(request):
     username = request.user.username if request.user.is_authenticated else "unknown"
     _ip = request.META.get("REMOTE_ADDR", "")
     logout(request)
-    threading.Thread(target=notify_user_login, args=(username, _ip, True, "logout"), daemon=True).start()
     return JsonResponse({"msg": SUCCESS_MESSAGES_LOGOUT})
  
 # @swagger_auto_schema(

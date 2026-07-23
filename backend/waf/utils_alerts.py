@@ -2,7 +2,6 @@ from datetime import datetime
 from pathlib import Path
 import json
 import re
-import threading
 import time
 
 from backend.waf.constant_variables import PATH_LOG_WAF
@@ -56,12 +55,6 @@ def _maybe_notify_waf(new_count: int, samples: list) -> None:
     state["last_sent"] = now
     _save_waf_notify_state(state)
 
-    from backend.backup.notifications import notify_waf_alert
-    threading.Thread(
-        target=notify_waf_alert,
-        args=(new_count, samples),
-        daemon=True,
-    ).start()
 
 
 def synchronize_database_waf_alert():

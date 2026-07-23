@@ -22,8 +22,6 @@ from utils.errors_utils import CommandExecutionError
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 
 from django.views.decorators.http import require_http_methods
-import threading
-from backend.backup.notifications import notify_certificate_change
 # Constants
 CONSTANT_CA = _("Certificate Authority")
 CONSTANT_OPENVPN_SERVER = _("openvpn server")
@@ -169,7 +167,6 @@ def create_cert_auth(request):
                 if serializer_ca.is_valid():
                     # Add the server to the database
                     serializer_ca.save()
-                    threading.Thread(target=notify_certificate_change, args=("créé", name, "CA"), daemon=True).start()
                     return JsonResponse({"msg": f"{name} {(SUCCESS_MESSAGES_CREATING)}"}, status=201)
             
             return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
@@ -198,7 +195,6 @@ def create_cert_auth(request):
                 if serializer_ca.is_valid():
                     
                     serializer_ca.save()
-                    threading.Thread(target=notify_certificate_change, args=("créé", name, "CA import"), daemon=True).start()
                     return JsonResponse({"msg": f"{name} {(SUCCESS_MESSAGES_CREATING)}"}, status=201)
                 
             return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
@@ -229,7 +225,6 @@ def delete_cert_auth(_, id):
             # delete from database
             deleted_name = ca.name
             ca.delete()
-            threading.Thread(target=notify_certificate_change, args=("supprimé", deleted_name, "CA"), daemon=True).start()
             return JsonResponse({"msg": f"{deleted_name} {(SUCCESS_MESSAGES_DELETING)}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CA}, {CONSTANT_USED_ITEM} {CONSTANT_CERT}"}, status=400)
     
@@ -428,7 +423,6 @@ def create_certificate(request):
 
                     if serializer_cert.is_valid():
                         serializer_cert.save()
-                        threading.Thread(target=notify_certificate_change, args=("créé", name, "Certificat"), daemon=True).start()
                         return JsonResponse({"msg": f"{name} {(SUCCESS_MESSAGES_CREATING)}"}, status=201)
                 else:
                     return JsonResponse({"error": "Authority valide date is expired"}, status=400)
@@ -460,7 +454,6 @@ def create_certificate(request):
                 serializer_cert = CertificateSerializer(data=cert_data)
                 if serializer_cert.is_valid():
                     serializer_cert.save()
-                    threading.Thread(target=notify_certificate_change, args=("créé", name, "Certificat import"), daemon=True).start()
                     return JsonResponse({"msg": f"{name} {(SUCCESS_MESSAGES_CREATING)}"}, status=201)
                 
             return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
@@ -498,7 +491,6 @@ def delete_certificate(_, id):
             # delete from database
             deleted_cert_name = cert.name
             cert.delete()
-            threading.Thread(target=notify_certificate_change, args=("supprimé", deleted_cert_name, "Certificat"), daemon=True).start()
             return JsonResponse({"msg": f"{deleted_cert_name} {(SUCCESS_MESSAGES_DELETING)}"}, status=201)
         elif list_server_vpn > 0:
             return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} {CONSTANT_OPENVPN_SERVER}"}, status=400)
@@ -545,7 +537,6 @@ def revoke_certificate(request, id):
                 # Revoking all the certificates in system and generate a crl file
                 revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
                 cert_serializer.save()
-                threading.Thread(target=notify_certificate_change, args=("révoqué", cert.name, "Certificat"), daemon=True).start()
                 return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
             
             return JsonResponse({"error": list(cert_serializer.errors.values())[0][0]}, status=400)

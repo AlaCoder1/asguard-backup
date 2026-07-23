@@ -1,11 +1,9 @@
 import os
-import threading
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from backend.managementUsers.models import Profile, User, Roles
-from backend.backup.notifications import notify_user_change
 from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission,RoleSerializer
 from backend.managementUsers.functions import add_user_group, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password,delete_directory,change_directory_name
 from backend.managementGroup.serializers import GroupSerializer
@@ -647,7 +645,6 @@ def create_user(request):
                                 serializer_user.save()
                                 serializer_group.save()
                                 Profile.objects.create(user=serializer_user.save())
-                                threading.Thread(target=notify_user_change, args=("créé", username), daemon=True).start()
                                 # Provide a Json Response with the data that was saved
                                 return JsonResponse({"msg": msg}, status=201)
                             # Provide a Json Response with the necessary error information
@@ -675,7 +672,6 @@ def create_user(request):
                                 serializer_user.save()
                                 serializer_group.save()
                                 Profile.objects.create(user=serializer_user.save())
-                                threading.Thread(target=notify_user_change, args=("créé", username), daemon=True).start()
                                 # Provide a Json Response with the data that was saved
                                 return JsonResponse({"msg": msg}, status=201)
                             # Provide a Json Response with the necessary error information
@@ -785,7 +781,6 @@ def delete_user(request, id):
 
     user.delete()
     group.delete()
-    threading.Thread(target=notify_user_change, args=("supprimé", deleted_username), daemon=True).start()
     return JsonResponse({"msg": f"{deleted_username} {SUCCESS_MESSAGES_DELETING}"})
 
 
@@ -970,7 +965,6 @@ def modify_user(request, id):
                 add_user_group(gg.groupname, newusername)
             user_object.group.set(user_json['group'])
         user_object.save()
-        threading.Thread(target=notify_user_change, args=("modifié", newusername), daemon=True).start()
     else:
         msg = f"{ERROR_MESSAGES_UPDATING} {CONSTANT_USERNAME}"
 

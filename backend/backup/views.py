@@ -44,108 +44,20 @@ logger = logging.getLogger(__name__)
 
 BACKUP_DIR = Path("/var/backups/asguard")
 BACKUP_PATTERNS = ["asguard_backup_*.dump", "asguard_db_*.dump"]
-RESOURCE_RISK_STATE_FILE = Path("/var/log/asguard/resource_risk_notify.json")
-IN_APP_ALERTS_FILE = Path("/var/backups/asguard/in_app_alerts.json")
 
 RESTORE_JOBS_DIR = BACKUP_DIR / "restore_jobs"
 BACKUP_JOBS_DIR = BACKUP_DIR / "backup_jobs"
-SYNC_SUMMARY_CACHE_FILE = BACKUP_DIR / "dashboard_last_sync_summary.json"
 FULL_RESTORE_RUNNER = Path("/asguard/asguard/full_restore_runner.py")
 PYTHON_BIN = "/usr/bin/python"
-_LAST_DASHBOARD_SYNC_SUMMARY = None
 _BACKUP_RESULTS_CACHE = {"expires_at": 0.0, "results": None}
-_DASHBOARD_SERVICES_CACHE = {"expires_at": 0.0, "services": None}
 _DASHBOARD_OVERVIEW_CACHE = {}
 _CACHE_LOCK = threading.RLock()
 BACKUP_RESULTS_CACHE_SECONDS = 8
-DASHBOARD_SERVICES_CACHE_SECONDS = 8
-DASHBOARD_OVERVIEW_CACHE_SECONDS = 4
 
 # Components that are expected to be absent/skipped on a firewall appliance.
 # Their absence does NOT degrade backup status or restore readiness.
 NON_CRITICAL_COMPONENTS = {"vm_snapshot", "vm_snapshot_pre", "vm_snapshot_post"}
 
-CRITICAL_SERVICE_CANDIDATES = [
-    {
-        "key": "sshd",
-        "label": "SSH",
-        "description": "Acces d'administration distant",
-        "candidates": ["sshd", "ssh"],
-        "category": "access",
-    },
-    {
-        "key": "nginx",
-        "label": "Nginx",
-        "description": "Publication web et reverse proxy",
-        "candidates": ["nginx"],
-        "category": "platform",
-    },
-    {
-        "key": "uvicorn",
-        "label": "Uvicorn",
-        "description": "Runtime applicatif principal",
-        "candidates": ["uvicorn", "asguard", "gunicorn"],
-        "category": "platform",
-    },
-    {
-        "key": "postgresql",
-        "label": "PostgreSQL",
-        "description": "Base de donnees systeme",
-        "candidates": ["postgresql", "postgresql.service"],
-        "category": "data",
-    },
-    {
-        "key": "docker",
-        "label": "Docker",
-        "description": "Moteur de conteneurs local",
-        "candidates": ["docker"],
-        "category": "platform",
-    },
-    {
-        "key": "nftables",
-        "label": "Firewall nftables",
-        "description": "Application des regles firewall systeme",
-        "candidates": ["nftables"],
-        "category": "security",
-    },
-    {
-        "key": "suricata",
-        "label": "Suricata",
-        "description": "Moteur IDS / IPS",
-        "candidates": ["suricata"],
-        "category": "security",
-    },
-    {
-        "key": "squid",
-        "label": "Squid",
-        "description": "Proxy et filtrage web",
-        "candidates": ["squid"],
-        "category": "security",
-    },
-    {
-        "key": "openvpn",
-        "label": "OpenVPN",
-        "description": "Service tunnel VPN",
-        # The real instance on this appliance is server_asguard (the only
-        # /etc/openvpn/server/*.conf). @server has no config → always fails.
-        "candidates": ["openvpn-server@server_asguard", "openvpn-server@server.service", "openvpn-server@server", "openvpn"],
-        "category": "network",
-    },
-    {
-        "key": "ipsec",
-        "label": "IPsec / StrongSwan",
-        "description": "Service tunnel IPsec",
-        "candidates": ["strongswan", "strongswan-starter", "ipsec"],
-        "category": "network",
-    },
-    {
-        "key": "fail2ban",
-        "label": "Fail2ban",
-        "description": "Protection d'administration",
-        "candidates": ["fail2ban"],
-        "category": "security",
-    },
-]
 
 LEGACY_COMPONENT_PATHS = {
     "database": "db/postgres.dump",
@@ -603,10 +515,6 @@ def _build_restore_verification(job_payload: dict) -> dict:
 
 # Structural / non-rule lines in `nft list ruleset` output — never counted
 # as duplicate "rules" because they legitimately repeat across chains.
-_NFT_STRUCTURAL_PREFIXES = (
-    "table ", "chain ", "set ", "map ", "element", "type ", "policy ",
-    "comment ", "flags ", "elements ", "}", "{",
-)
 
 
 # Sustained-pressure thresholds. The frontend (TheHeading.vue) polls
@@ -615,21 +523,14 @@ _NFT_STRUCTURAL_PREFIXES = (
 # polls before we fire a notification. This kills the "spike → instant alert
 # → score back to 17/100" false-positive loop. Single-sample spikes are
 # visible in the UI but no longer page the operator.
-RESOURCE_RISK_POLL_SECONDS = 30
 RESOURCE_RISK_REQUIRED_STREAK = 4        # ~2 min sustained
-RESOURCE_RISK_CRITICAL_CPU = 95          # %
-RESOURCE_RISK_HIGH_CPU = 92              # %
-RESOURCE_RISK_CRITICAL_MEM = 95          # %
-RESOURCE_RISK_HIGH_MEM = 92              # %
 # Resolution hysteresis: how many consecutive polls with no alert before we
 # declare the incident resolved. Without this, a brief CPU dip from 100→91→100
 # triggers a "résolu" notification then a fresh critical alert seconds later —
 # flapping that spams the operator.
-RESOURCE_RISK_RESOLVE_STREAK = 3         # ~1m30s sustained calm
 # Global cooldown: minimum interval between two alerts of any kind. Even if
 # incident_active was cleared (flapping safety net), do not re-page within
 # this window.
-RESOURCE_RISK_GLOBAL_COOLDOWN = 600      # 10 min
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -2390,17 +2291,7 @@ DEFAULT_RETENTION = {
     "min_free_gb": 5,
 }
 
-TASK_ENDPOINT_MAP = {
-    "safe_backup": "create-safe-backup",
-    "full_backup": "create-full-backup",
-    "db_backup": "create-db-backup",
-}
 
-TASK_SERVICE_MAP = {
-    "safe_backup": FullBackupService.create_safe_backup,
-    "full_backup": FullBackupService.create_full_backup,
-    "db_backup": SystemBackupService.create_db_backup,
-}
 
 
 def _read_schedule_config():
@@ -2420,7 +2311,6 @@ def _write_schedule_config(config):
 # How long after a scheduled slot we wait before the page-load/startup fallback
 # treats it as missed. Must comfortably exceed the cron retry window (~5 min)
 # plus the longest backup duration so we never race a run that fired on time.
-_MISSED_RUN_GRACE = timedelta(minutes=15)
 
 
 

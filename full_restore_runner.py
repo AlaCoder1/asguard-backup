@@ -79,26 +79,6 @@ def _read_ntfy_config():
         return None
 
 
-def send_ntfy_direct(title: str, body: str, priority: str = "default", tags: str = "shield"):
-    """Send ntfy push notification using only stdlib (no requests/Django needed)."""
-    nt = _read_ntfy_config()
-    if not nt:
-        return
-    topic = nt["topic"].strip()
-    try:
-        import urllib.request as _ur
-        req = _ur.Request(
-            f"https://ntfy.sh/{topic}",
-            data=body.encode("utf-8"),
-            method="POST",
-        )
-        req.add_header("Title", title.encode("ascii", "replace").decode())
-        req.add_header("Priority", priority)
-        req.add_header("Tags", tags)
-        with _ur.urlopen(req, timeout=10):
-            pass
-    except Exception as exc:
-        print(f"[ntfy_direct] {exc}")
 
 
 # ── restore mode lock (tells watchdog: don't interfere) ──────────────────────
@@ -148,7 +128,6 @@ def make_progress_callback(state_file: Path):
             if comp_status == "running" and last_phase_notified.get(current_comp) != "running":
                 last_phase_notified[current_comp] = "running"
                 title, body, priority = _PHASE_NOTIFS[current_comp]
-                send_ntfy_direct(title, body, priority, "arrows_counterclockwise,shield")
 
     return _callback
 
@@ -313,7 +292,6 @@ def main():
         django.setup()
 
         from backend.backup.system_backup.restore_service import RestoreService
-        from backend.backup.notifications import notify_restore_started, notify_restore_completed
 
         # Merge so the ETA fields the API seeded (estimated_seconds /
         # stabilize_estimate_seconds) survive into the running state.
@@ -333,28 +311,8 @@ def main():
         })
         write_json(state_file, base_state)
 
-        # ── Notify: restore started ─────────────────────────────────────────
-        try:
-            notify_restore_started(backup_id, mode)
-        except Exception as _e:
-            print(f"[{utc_now()}] notify_restore_started failed (non-blocking): {_e}")
 
         # Direct ntfy backup (in case Django/email path fails after network restore)
-        send_ntfy_direct(
-            title=f"🔄 Restauration {mode_label} démarrée",
-            body=(
-                f"Backup : {backup_id}\n"
-                +
-                (
-                    "Mode UI-safe : le moteur applicatif et les services de boot ne seront pas remplacés à chaud.\n"
-                    if mode == "ui_full"
-                    else "⚠️  L'interface sera indisponible ~2-5 min.\n"
-                )
-                + "Des notifications seront envoyées à chaque étape."
-            ),
-            priority="high",
-            tags="arrows_counterclockwise,rotating_light,shield",
-        )
 
         print(f"[{utc_now()}] FULL RESTORE STARTED: backup_id={backup_id}, job_id={job_id}, mode={mode}")
 
@@ -411,14 +369,7 @@ def main():
             # PostgreSQL must be back before uvicorn is useful: the app and the
             # CLI login menu both query port 5391. Bring the DB container up first.
             try:
-                db_recovered = force_db_recovery()
-                if not db_recovered:
-                    send_ntfy_direct(
-                        title="⚠️  PostgreSQL ne répond pas après restauration",
-                        body="La base de données n'est pas encore disponible — nouvelle tentative automatique...",
-                        priority="urgent",
-                        tags="warning,floppy_disk,rotating_light",
-                    )
+                force_db_recovery()
             except Exception as _dbe:
                 print(f"[{utc_now()}] DB recovery step failed (non-fatal): {_dbe}")
 
@@ -429,13 +380,6 @@ def main():
                 uvicorn_recovered = (uvicorn_active.stdout or "").strip() == "active"
             else:
                 uvicorn_recovered = force_uvicorn_recovery()
-            if not uvicorn_recovered:
-                send_ntfy_direct(
-                    title="⚠️  Uvicorn ne répond pas après restauration",
-                    body="L'interface n'est pas encore disponible — nouvelle tentative automatique...",
-                    priority="urgent",
-                    tags="warning,shield,rotating_light",
-                )
 
             print(f"[{utc_now()}] STARTING POST-RESTORE STABILIZATION...")
             stabilize_ok, stabilize_info = wait_for_system_stabilization(max_attempts=30, delay_seconds=4)
@@ -489,17 +433,6 @@ def main():
         clear_restore_mode()
 
         # ── Notify: restore completed ───────────────────────────────────────
-        try:
-            notify_restore_completed(
-                backup_id=backup_id,
-                mode=mode,
-                success=(final_status_label == "success"),
-                duration_s=duration_s,
-                components_ok=components_ok,
-                components_failed=components_failed,
-            )
-        except Exception as _e:
-            print(f"[{utc_now()}] notify_restore_completed failed (non-blocking): {_e}")
 
         # Summarise the OS-level changes the restore made, so the push tells the
         # operator exactly what reverted (password, system users, hostname).
@@ -522,18 +455,6 @@ def main():
 
         # Direct ntfy final status (independent of Django)
         ok = final_status_label in ("success", "partial_success")
-        send_ntfy_direct(
-            title=f"{'✅ Restauration terminée' if ok else '❌ Restauration échouée'} — {mode_label}",
-            body=(
-                f"Backup : {backup_id}\n"
-                f"Composants OK : {components_ok} | KO : {components_failed}\n"
-                f"Durée : {int(duration_s)}s\n"
-                f"{'✅ Système opérationnel.' if stabilize_ok else '⚠️  Stabilisation incomplète — vérifiez uvicorn.'}"
-                f"{sys_block}{snap_block}"
-            ),
-            priority="default" if ok else "urgent",
-            tags="white_check_mark,shield" if ok else "x,shield,rotating_light",
-        )
 
         print(f"[{utc_now()}] FULL RESTORE FINISHED: status={final_status_label}, mode={mode}")
         print(json.dumps(result, indent=2))
@@ -566,17 +487,6 @@ def main():
             except Exception:
                 pass
             clear_restore_mode()
-            try:
-                send_ntfy_direct(
-                    title=f"✅ Restauration terminée (vérif. partielle) — {mode_label}",
-                    body=(f"Backup : {backup_id}\n"
-                          f"Composants OK : {summ.get('success', 0)} | KO : {summ.get('failed', 0)}\n"
-                          f"La restauration s'est appliquée ; la stabilisation finale n'a pas pu être "
-                          f"confirmée (système chargé). Rechargez l'interface."),
-                    priority="default", tags="white_check_mark,shield",
-                )
-            except Exception:
-                pass
             print(f"[{utc_now()}] RESTORE COMPLETED but post-step crashed → {recovered_status}: {exc}")
             print(tb)
             return 0
@@ -598,12 +508,6 @@ def main():
 
         clear_restore_mode()
 
-        send_ntfy_direct(
-            title="❌ Erreur critique — Restauration plantée",
-            body=f"Backup : {backup_id}\nErreur : {str(exc)[:200]}\nConsultez les logs : {log_file}",
-            priority="urgent",
-            tags="x,shield,rotating_light",
-        )
 
         print(f"[{utc_now()}] FULL RESTORE CRASHED: {exc}")
         print(tb)

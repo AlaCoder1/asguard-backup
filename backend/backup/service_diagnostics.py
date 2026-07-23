@@ -6,6 +6,42 @@ l'onglet Logs dans la bannière « Cause technique ». Ne lève jamais d'excepti
 
 import re
 
+_SERVICE_CAUSE_PATTERNS: list[tuple[str, str]] = [
+    (r"Address already in use",
+     "Port déjà utilisé par un autre processus (collision de port)"),
+    (r"bind\(\) to .*:(\d+) failed.*?\((\d+):",
+     "Échec du bind() sur le port — adresse occupée ou permission refusée"),
+    (r"Permission denied",
+     "Accès refusé (capacité manquante ou permission filesystem)"),
+    (r"No such file or directory",
+     "Fichier de configuration ou binaire introuvable"),
+    (r"could not load .*?certificate",
+     "Certificat TLS introuvable ou illisible"),
+    (r"emerg.*?\[crit\].*?config",
+     "Erreur fatale dans la configuration"),
+    (r"unknown directive",
+     "Directive inconnue dans la configuration"),
+    (r"syntax error|Configuration parsing error",
+     "Erreur de syntaxe dans le fichier de configuration"),
+    (r"Failed to start.*?Dependency failed",
+     "Dépendance systemd échouée"),
+    (r"Failed to start.*?Condition.*?failed",
+     "Condition de démarrage non satisfaite (ConditionPath/ConditionUser…)"),
+    (r"Main process exited.*?code=exited.*?status=(\d+)",
+     "Le processus principal a quitté avec un code d'erreur"),
+    (r"Killed.*?signal=SIGKILL|out-of-memory",
+     "Processus tué par OOM killer (mémoire insuffisante)"),
+    (r"timed out",
+     "Démarrage trop lent — timeout systemd dépassé"),
+    (r"connection refused",
+     "Connexion refusée vers une dépendance (DB, upstream, socket)"),
+    (r"nginx: \[emerg\] (.+)",
+     "Erreur nginx : {0}"),
+    (r"could not bind .*?:(\d+)",
+     "Impossible de binder le port — conflit ou privilège insuffisant"),
+]
+
+
 def _diagnose_service_failure(unit: str) -> dict:
     """Probe systemctl + journalctl to extract a structured technical cause
     for a failed service. Never raises — returns an empty dict on any error.

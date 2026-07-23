@@ -869,7 +869,7 @@ export default {
       return map[s] || "—";
     },
     creatorLabel(c) {
-      const map = { manual: "Manuel", auto_pre_backup: "Auto · avant backup", auto_post_backup: "Auto · après backup", ai_risk: "IA Risk Center", scheduled: "Planifié" };
+      const map = { manual: "Manuel", auto_pre_backup: "Auto · avant backup", auto_post_backup: "Auto · après backup" };
       return map[c] || c;
     },
     // Human-friendly label + kind for each restored bind-mount + container.

@@ -20,69 +20,6 @@
     </header>
 
     <!-- ─── Intelligence des logs — bandeau santé + à retenir ─── -->
-    <section class="bl-intel" :class="'tone-' + (intel.overall_state || 'idle')">
-      <!-- Bandeau santé : état clair + tendance -->
-      <div class="bl-intel-banner">
-        <div class="bl-intel-banner-main">
-          <span class="bl-intel-status" :class="'st-' + (intel.overall_state || 'idle')">
-            <span class="bl-intel-status-dot"></span>
-          </span>
-          <div class="bl-intel-banner-text">
-            <h3 class="bl-intel-headline">{{ headline }}</h3>
-            <p class="bl-intel-summary" v-if="intel.summary">{{ intel.summary }}</p>
-          </div>
-        </div>
-        <div class="bl-intel-trend" :class="'trend-' + trendChip.cls">
-          <span class="bl-intel-trend-cap">Tendance</span>
-          <span class="bl-intel-trend-val">
-            <span class="bl-intel-trend-arrow">{{ trendChip.arrow }}</span>{{ trendChip.label }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Ligne de chiffres clés, en langage clair -->
-      <div class="bl-intel-statline" v-if="intel.counts">
-        <span class="bl-intel-stat ok">{{ intel.counts.backups_ok || 0 }} sauvegardes OK</span>
-        <template v-if="intel.counts.backups_ko">
-          <span class="bl-intel-stat-sep">·</span>
-          <span class="bl-intel-stat ko">{{ intel.counts.backups_ko }} à vérifier</span>
-        </template>
-        <span class="bl-intel-stat-sep">·</span>
-        <span class="bl-intel-stat">{{ intel.counts.errors || 0 }} erreur(s) sur 24 h</span>
-      </div>
-
-      <!-- À retenir : liste d'éléments prioritaires en langage clair -->
-      <div class="bl-intel-retenir">
-        <div class="bl-intel-retenir-cap">À retenir</div>
-        <ul class="bl-intel-insights">
-          <li v-for="ins in insights" :key="ins.id"
-              class="bl-intel-insight" :class="['sev-' + ins.sev, { clickable: ins.incident }]"
-              @click="ins.incident && toggleIncident(ins.incident.id)">
-            <span class="bl-intel-insight-icon">{{ ins.icon }}</span>
-            <div class="bl-intel-insight-body">
-              <div class="bl-intel-insight-row">
-                <span class="bl-intel-insight-text">{{ ins.text }}</span>
-                <span class="bl-intel-insight-when" v-if="ins.when">{{ ins.when }}</span>
-              </div>
-              <div class="bl-intel-insight-sub" v-if="ins.sub">{{ ins.sub }}</div>
-              <!-- Détails repliables (incident uniquement) -->
-              <div v-if="ins.incident && expandedIncidents.has(ins.incident.id)"
-                   class="bl-intel-insight-events">
-                <div v-for="(ev, j) in ins.incident.events" :key="j"
-                     class="bl-intel-insight-event" :class="'sev-' + ev.severity">
-                  <span class="ev-ts">{{ formatTime(ev.ts) }}</span>
-                  <span class="ev-src">{{ ev.source }}</span>
-                  <span class="ev-title">{{ ev.title }}</span>
-                </div>
-              </div>
-            </div>
-            <span class="bl-intel-insight-chevron" v-if="ins.incident">{{
-              expandedIncidents.has(ins.incident.id) ? '▾' : '▸'
-            }}</span>
-          </li>
-        </ul>
-      </div>
-    </section>
 
     <!-- ─── KPI row ─── -->
     <section class="bl-kpis">
@@ -342,21 +279,6 @@ export default {
       tabCounts: { all: 0, system_change: 0, alert: 0, auth: 0 },
       filters: { q: "", severity: "all", since: "24h" },
 
-      // AI Log Intelligence — anomaly / incident / forecast snapshot
-      // produced by backend log_intelligence.logs_intelligence.
-      intel: {
-        overall_state: "idle",        // healthy | watch | degraded | critical
-        summary: "",
-        anomalies: [],
-        incidents: [],
-        forecast: { predicted_state: "idle", confidence_pct: 0,
-                    rationale: "", series: [] },
-        stats: { events_analyzed: 0 },
-      },
-      // Set of incident IDs the user expanded to see the underlying events.
-      // Vue 3's reactivity tracks the Set reference, so toggleIncident() must
-      // assign a fresh Set rather than mutating in place.
-      expandedIncidents: new Set(),
 
       // Server activity (parsed journalctl)
       serverUnit: "uvicorn",
@@ -387,62 +309,11 @@ export default {
 
     // ── Intelligence des logs ───────────────────────────────────────────
     // Plain-language headline for the health banner (no model jargon).
-    headline() {
-      return { healthy:  "Système sain", watch:    "Vigilance",
-               degraded: "Dégradé",      critical: "Critique",
-               idle:     "Analyse en cours" }[this.intel.overall_state] || "—";
-    },
     // Trend chip — derived from the forecast direction, shown as a simple
     // arrow + word. No percentage, no slope, no confidence figure.
-    trendChip() {
-      const f = this.intel.forecast || {};
-      const dir = f.direction
-        || ({ stable: "flat", watch: "flat", risk: "up" }[f.predicted_state] || "flat");
-      return {
-        up:   { cls: "up",   arrow: "↗", label: "En hausse" },
-        down: { cls: "down", arrow: "↘", label: "En baisse" },
-        flat: { cls: "flat", arrow: "→", label: "Stable" },
-      }[dir];
-    },
     // Single prioritized "À retenir" feed merging failed backups, correlated
     // incidents and anomalies into plain-language items. Incidents stay
     // expandable so an operator can drill into the underlying events.
-    insights() {
-      const out = [];
-      const c = this.intel.counts || {};
-      if (c.backups_ko) {
-        out.push({
-          id: "bko", sev: "warning", icon: "⚠",
-          text: `${c.backups_ko} sauvegarde${c.backups_ko > 1 ? "s" : ""} en échec — à vérifier`,
-        });
-      }
-      for (const inc of (this.intel.incidents || [])) {
-        const comps = (inc.components || []).join(", ");
-        out.push({
-          id: "inc-" + inc.id,
-          sev: inc.severity || "warning",
-          icon: inc.severity === "critical" ? "⛔" : "⚠",
-          text: inc.root_cause || (comps ? `Incident sur ${comps}` : "Incident détecté"),
-          sub: comps ? `${comps} · ${inc.event_count} événements` : "",
-          when: this.relativeTime(inc.started_at),
-          incident: inc,
-        });
-      }
-      for (const a of (this.intel.anomalies || [])) {
-        out.push({
-          id: "anom-" + a.id,
-          sev: a.severity || "info",
-          icon: "ℹ",
-          text: a.title || `Pic d'activité sur « ${a.source} »`,
-          sub: a.detail || "",
-        });
-      }
-      if (!out.length) {
-        out.push({ id: "ok", sev: "success", icon: "✓",
-                   text: "Aucune anomalie inhabituelle détectée." });
-      }
-      return out;
-    },
     filteredServer() {
       if (!this.serverFilter) return this.serverEntries;
       const q = this.serverFilter.toLowerCase();
@@ -455,7 +326,6 @@ export default {
   mounted() {
     this.refreshAll();
     this.scheduleLive();
-    this.loadIntelligence();
   },
   beforeUnmount() { this.clearTimers(); },
   watch: {
@@ -471,10 +341,6 @@ export default {
       this._timers.stats    = setInterval(this.reloadStats,        8000);
       this._timers.timeline = setInterval(this.reloadTimeline,     5000);
       this._timers.server   = setInterval(this.reloadServer,       4000);
-      // Intelligence is a heavier compute, refresh slower (15 s) — anomalies
-      // and incidents don't change second-by-second, and we don't want the
-      // 24h aggregator running 12× per minute.
-      this._timers.intel    = setInterval(this.loadIntelligence,  15000);
     },
     debouncedReload() {
       clearTimeout(this._searchTimer);
@@ -594,23 +460,7 @@ export default {
       } catch (e) {}
     },
 
-    // ── AI Log Intelligence ─────────────────────────────────────────────
-    // Single GET → backend computes anomalies + incidents + 30-min forecast
-    // + NL summary in one pass. We don't merge incrementally because the
-    // detection thresholds depend on the *full* 24h baseline anyway.
-    async loadIntelligence() {
-      try {
-        const { data } = await axios.get(`${API}/logs/intelligence`);
-        this.intel = data;
-      } catch (e) { /* transient errors are harmless — UI keeps last snapshot */ }
-    },
 
-    toggleIncident(id) {
-      // Replace the Set reference so Vue 3 detects the change.
-      const next = new Set(this.expandedIncidents);
-      next.has(id) ? next.delete(id) : next.add(id);
-      this.expandedIncidents = next;
-    },
 
     stateLabel(s) {
       return { healthy:  "Sain",       watch:    "Vigilance",

@@ -34,7 +34,6 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 from rest_framework.permissions import AllowAny
 import psutil
 
-from .system_backup.backup_service import SystemBackupService
 from .system_backup.full_backup_service import FullBackupService
 from .system_backup.restore_service import RestoreService
 from .system_backup.export_import_service import ExportImportService
@@ -548,30 +547,6 @@ def ping(request):
 # ═════════════════════════════════════════════════════════════════════════════
 #  SECTION: BACKUP CREATION  — db / full / safe / custom backup endpoints
 # ═════════════════════════════════════════════════════════════════════════════
-@swagger_auto_schema("POST", responses={200: "OK"}, operation_summary="CREATE DATABASE BACKUP (LEGACY)")
-@api_view(["POST"])
-@require_http_methods(["POST"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([AllowAny])
-def create_db_backup(request):
-    append_backup_event(kind="backup", title="DB backup started", severity="info", status="running", source="api")
-    result = SystemBackupService.create_db_backup()
-    _invalidate_backup_results_cache()
-    ok = result.get("status") == "ok"
-    backup_id = result.get("backup_id") or Path(result.get("file", "")).stem
-    append_backup_event(
-        kind="backup",
-        title="DB backup completed" if ok else "DB backup failed",
-        severity="success" if ok else "error",
-        status="success" if ok else "error",
-        source="api",
-        ref_id=backup_id,
-        detail=result.get("message", ""),
-        extra={"backup_type": "db_backup", "file": result.get("file", "")},
-    )
-    return JsonResponse(result)
-
-
 @swagger_auto_schema("POST", responses={200: "OK"}, operation_summary="CREATE FULL BACKUP (DISASTER RECOVERY)")
 @api_view(["POST"])
 @require_http_methods(["POST"])
@@ -1383,39 +1358,6 @@ def restore_preview(request, backup_id):
             "console TTY après redémarrage."
         ),
     })
-
-
-@swagger_auto_schema("GET", responses={200: "OK", 404: "Not Found"},
-                     operation_summary="VERIFY BACKUP INTEGRITY")
-@api_view(["GET"])
-@require_http_methods(["GET"])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def verify_backup_integrity(request, backup_id):
-    """Contrôle anti-falsification d'un backup.
-
-    Recalcule l'empreinte SHA-256 de chaque fichier du backup et la compare au
-    manifeste signé (HMAC) écrit à la création. Détecte : fichier altéré
-    (ransomware/corruption), fichier manquant, fichier intrus, manifeste
-    falsifié. Lecture seule — aucun effet de bord.
-    """
-    backup_dir = Path(_BACKUP_ROOT) / backup_id
-    if not backup_dir.exists():
-        return JsonResponse(
-            {"status": "error", "message": f"Backup '{backup_id}' introuvable"},
-            status=404,
-        )
-    try:
-        from backend.backup.integrity import verify_manifest
-        report = verify_manifest(backup_dir)
-    except Exception as exc:
-        return JsonResponse(
-            {"status": "error", "message": f"Vérification impossible: {exc}"},
-            status=500,
-        )
-
-    report["backup_id"] = backup_id
-    return JsonResponse(report)
 
 
 @swagger_auto_schema(

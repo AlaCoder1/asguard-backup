@@ -224,16 +224,6 @@ def vm_snapshot_restore(request, snap_id):
     return JsonResponse({"status": "queued", "job_id": job_id, "started_at": started_at}, status=202)
 
 
-@api_view(["GET"])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def vm_snapshot_restore_status(request, job_id):
-    data = Svc.read_job(job_id)
-    if data is None:
-        return JsonResponse({"error": "Job introuvable"}, status=404)
-    return JsonResponse(data)
-
-
 # ── Delete ─────────────────────────────────────────────────────────────────────
 
 @api_view(["DELETE"])
@@ -287,16 +277,3 @@ def vm_snapshot_last_restore(request):
 
 
 # ── Cancel (kept for API compatibility) ────────────────────────────────────────
-
-@api_view(["POST"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def vm_snapshot_cancel(request, job_id):
-    job_file = Svc.JOBS_DIR / f"{job_id}.json"
-    try:
-        data = json.loads(job_file.read_text()) if job_file.exists() else {}
-        data.update({"status": "cancelled", "error": "Annulé par l'utilisateur."})
-        job_file.write_text(json.dumps(data, indent=2))
-    except Exception:
-        pass
-    return JsonResponse({"cancelled": True})

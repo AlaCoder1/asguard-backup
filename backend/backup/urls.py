@@ -15,7 +15,6 @@ urlpatterns = [
     path("logs/tail",                         views_logs.logs_tail,              name="logsTail"),
     path("getAllBackups", views.get_all_backups, name="getAllBackups"),
 
-    path("create-db-backup", views.create_db_backup, name="createDbBackup"),
     path("create-full-backup", views.create_full_backup, name="createFullBackup"),
     path("create-safe-backup", views.create_safe_backup, name="createSafeBackup"),
     path("create-custom-backup", views.create_custom_backup, name="createCustomBackup"),
@@ -31,8 +30,6 @@ urlpatterns = [
     path("<str:backup_id>/restore-components", views.restore_components, name="restoreComponents"),
     # Pre-restore preview: what WILL be restored vs what will be SKIPPED + why.
     path("<str:backup_id>/restore-preview", views.restore_preview, name="restorePreview"),
-    # Anti-tamper: SHA-256 + HMAC integrity check of a backup before restoring it.
-    path("<str:backup_id>/verify-integrity", views.verify_backup_integrity, name="verifyBackupIntegrity"),
 
     path("restore-full-status/<str:job_id>", views.get_restore_full_status, name="getRestoreFullStatus"),
     path("restore/active", views.restore_active, name="restoreActive"),
@@ -55,9 +52,7 @@ urlpatterns = [
     path("vm-snapshot/progress/<str:job_id>",        views_vm_snapshot.vm_snapshot_progress,       name="vmSnapshotProgress"),
     path("vm-snapshot/config",                       views_vm_snapshot.vm_snapshot_config,         name="vmSnapshotConfig"),
     path("vm-snapshot/<str:snap_id>/restore",        views_vm_snapshot.vm_snapshot_restore,        name="vmSnapshotRestore"),
-    path("vm-snapshot/restore-status/<str:job_id>",              views_vm_snapshot.vm_snapshot_restore_status, name="vmSnapshotRestoreStatus"),
     path("vm-snapshot/<str:snap_id>/delete",         views_vm_snapshot.vm_snapshot_delete,         name="vmSnapshotDelete"),
-    path("vm-snapshot/<str:job_id>/cancel",          views_vm_snapshot.vm_snapshot_cancel,          name="vmSnapshotCancel"),
 
     # ─── LVM coverage migration ───────────────────────────────────────────────
     # Extends snapshot scope by bind-mounting /etc/* config paths onto the
